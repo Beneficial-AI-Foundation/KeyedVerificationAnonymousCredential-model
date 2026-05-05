@@ -1,0 +1,26 @@
+name = "KVAC"
+version = "0.1.0"
+keywords = ["formal verification", "cryptography"]
+defaultTargets = ["KVAC"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+# Mathlib pinned to v4.28.0-rc1 to match the toolchain above and
+# the version curve25519-dalek-lean-verify transitively uses (via
+# aeneas), so the two dependencies coexist without version conflict.
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.28.0-rc1"
+
+[[require]]
+name = "Curve25519Dalek"
+git = "https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify.git"
+rev = "master"
+
+[[lean_lib]]
+name = "KVAC"
