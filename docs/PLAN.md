@@ -33,6 +33,26 @@ The dependencies between the paper's three ingredients run bottom-up: the new al
      Signal Private Group System (§5)   — the application that motivated it all
 ```
 
+## Specification vs. implementation
+
+This formalization is structured to verify libsignal's Rust implementation against the paper's claims, and the directory layout under `KVAC/` mirrors the libsignal crate hierarchy for that reason. However, the *protocol specification itself* — what the KVAC, the verifiable encryption scheme, and the Signal Private Group System mean mathematically — is independent of any particular implementation. Two design commitments encode this:
+
+- **`KVAC/Core/` stays implementation-agnostic.** It defines abstract typeclasses (prime-order group, random-oracle interfaces, encoding typeclass) without committing to a specific curve, a specific hash function, or a specific oracle-semantics framework. Concrete instances live in separate files. In particular, `KVAC/Core/` does not import VCV-io.
+- **`KVAC/Security/IdealFunctionality.lean` (Track L₁) is the abstract protocol spec.** Theorems about the protocol's correctness and security are stated against this ideal functionality, not against libsignal-specific data structures.
+
+A consequence concerning oracle semantics: BAIF uses the [VCV-io Lean library](https://github.com/Verified-zkEVM/VCV-io) for game-based computational proofs (Phase 5), but VCV-io makes specific modeling choices (oracle computations as a particular free-monad / polynomial-functor construction). To avoid baking those choices into the protocol surface, VCV-io enters only at the point where security games are *constructed* — typically inside `KVAC/Security/`. The abstract interfaces in `KVAC/Core/` are statable in plain Lean and do not depend on VCV-io. This leaves room for an alternative formalization of oracle semantics (for example a more general categorical framework along the double-categorical or polynomial-functor direction) without rewriting the spec layer.
+
+Concretely, `KVAC/Core/Hash.lean` defines the random-oracle interfaces (`HashToG`, `HashToZq`, `Derive`) abstractly. The VCV-io binding lives in a separate file, `KVAC/Instances/VCVioOracle.lean`, which implements those interfaces using VCV-io's `OracleSpec` infrastructure. That file is introduced by the first security track that needs a game-based reduction — typically **Track I** (encryption security, Theorems 7, 10, 13) — and is then shared with Tracks J and K. Earlier tracks (B, C, D, E, F, G, H) work against `Core/Hash.lean` only and never see the VCV-io binding. If the project later wants to switch to a different oracle-semantics framework, only `Instances/VCVioOracle.lean` and the security tracks that import it would need to change; everything else is statement-level abstract.
+
+All concrete bindings — the verified Ristretto255 instance, the VCV-io oracle binding, and any future concrete plug-ins — live in `KVAC/Instances/` and only there. Two import rules make the boundary enforceable:
+
+- `Examples/` and `Security/` (when constructing a security game) may import from `Instances/`.
+- No other directory may. Theorems and definitions outside `Examples/` and `Instances/` are stated against the abstract typeclasses in `Core/`, never against a concrete type.
+
+A one-line CI grep over imports is sufficient to enforce this once the project has more than the initial scaffold.
+
+If a clean factoring of "abstract spec" away from "libsignal-shaped implementation" emerges naturally as Phases 1–3 develop, we may extract an explicit `KVAC/Spec/` directory in a follow-up. For v1 we keep the layout flat to avoid premature abstraction — but the design discipline above is non-negotiable: no track may rely on libsignal-specific structure inside `KVAC/Core/` or in the statement of an `IdealFunctionality` theorem.
+
 ## Stack alignment: paper ↔ libsignal Rust
 
 The Lean stack mirrors the libsignal Rust stack one crate at a time:
@@ -50,10 +70,17 @@ Everything is bespoke — no external proving system is involved at any layer. T
 
 ```
 KVAC/
-├── Core/
+├── Core/                              [abstract API — no concrete commitments]
 │   ├── Group.lean                     [Track 0]
 │   ├── Hash.lean                      [Track 0]
 │   └── Encoding.lean                  [Track 0]
+├── Instances/                         [concrete bindings; the only place
+│   │                                   Ristretto255 / VCV-io appear]
+│   ├── Ristretto.lean                 [Track A — local binding to dalek-verified
+│   │                                   Ristretto255 + Encodable instance]
+│   └── VCVioOracle.lean               [Phase 5 — VCV-io binding for the
+│                                       abstract Hash interfaces; introduced
+│                                       by Track I, shared with J and K]
 ├── Poksho/
 │   ├── Sigma/
 │   │   ├── Statement.lean             [Track B]
@@ -82,8 +109,68 @@ KVAC/
 │   ├── IdealFunctionality.lean        [Track L₁]
 │   └── Simulator.lean                 [Track L₂]
 └── Examples/
-    └── SignalGroupExample.lean
+    └── SignalGroupExample.lean        [imports Instances/Ristretto for a
+                                        concrete protocol run]
 ```
+
+### Module dependency graph
+
+The diagram below shows how the layers depend on each other. `Core/` defines the abstract API; `Instances/` binds it to concrete cryptographic implementations; the libsignal-shaped layers (`Poksho/`, `ZkCredential/`, `ZkGroup/`, `System/`) build up the protocol implementation against the abstract API; `Security/` reasons about the implementation under cryptographic assumptions; `Examples/` runs the protocol concretely against `Instances/Ristretto`.
+
+```mermaid
+graph TD
+  Dalek["curve25519-dalek-lean-verify"]:::ext
+  VCVio["VCV-io"]:::ext
+
+  Core["Core/<br/>Group, Hash, Encoding"]:::core
+
+  Ristretto["Instances/Ristretto"]:::inst
+  VCVioOracle["Instances/VCVioOracle"]:::inst
+
+  Poksho["Poksho/<br/>(sigma DSL, verifiable encryption)"]:::impl
+  ZkCredential["ZkCredential/<br/>(MAC, KVAC issuance &amp; presentation)"]:::impl
+  ZkGroup["ZkGroup/<br/>(credentials, ciphertexts)"]:::impl
+  System["System/<br/>(protocol operations)"]:::impl
+
+  Security["Security/<br/>(theorems, reductions, simulator)"]:::sec
+  Examples["Examples/<br/>(concrete protocol runs)"]:::ex
+
+  Dalek --> Ristretto
+  VCVio --> VCVioOracle
+
+  Core --> Ristretto
+  Core --> VCVioOracle
+  Core --> Poksho
+  Core --> ZkCredential
+  Core --> ZkGroup
+
+  Poksho --> ZkCredential
+  ZkCredential --> ZkGroup
+  ZkGroup --> System
+
+  Poksho --> Security
+  ZkCredential --> Security
+  ZkGroup --> Security
+  System --> Security
+  VCVioOracle --> Security
+
+  Ristretto --> Examples
+  System --> Examples
+
+  classDef ext fill:#e1e1e1,stroke:#666,color:#000
+  classDef core fill:#f0e6f7,stroke:#6f42c1,color:#000
+  classDef inst fill:#fff4e6,stroke:#cc7a00,color:#000
+  classDef impl fill:#e8f4f8,stroke:#0366d6,color:#000
+  classDef sec fill:#fde4e4,stroke:#cc0000,color:#000
+  classDef ex fill:#e6f4e1,stroke:#28a745,color:#000
+```
+
+Two things to read off this graph:
+
+- **The implementation layers (`Poksho/`, `ZkCredential/`, `ZkGroup/`, `System/`) depend only on `Core/`, never on `Instances/`.** This is the import discipline from the "Specification vs. implementation" section above. Whatever a track in these layers proves is stated abstractly over `[PrimeOrderGroup G]` etc., not against Ristretto255 specifically.
+- **`Instances/Ristretto` and `Instances/VCVioOracle` are independent of each other.** They bind disjoint parts of `Core/` (group + encoding vs. hash) and are needed in different downstream contexts (`Examples/` vs. `Security/`), so a refactor on one side does not affect the other.
+
+### Wave grouping
 
 The `[Track X]` annotations on each leaf indicate which independent work track owns that file. Tracks are organised into four **waves** based on the dependencies between them:
 
@@ -108,14 +195,30 @@ These typeclasses are designed once (Track 0) and remain **stable** for the life
 
 ### What Track A delivers
 
-Track A is **upstream work in [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify)** — its deliverable is a PR (or sequence of PRs) to that repository, not files in this one. The two pieces of functionality it covers are:
+Track A has two deliverables: an upstream PR and a small local binding file.
 
-- **Elligator-inverse.** Elligator2 maps a 32-byte string to a Ristretto group element; the *inverse* recovers a 32-byte string that hashes to a given group element. The inverse is what Signal's fork of `curve25519-dalek` adds, and it is what `EncodeToG` (CPZ19 §6) uses to embed a UID or profile key into the group reversibly. Without Elligator-inverse, `Core/Encoding.lean`'s `Encodable` typeclass cannot be instantiated for Ristretto255.
-- **Ristretto byte-decoding.** Validating that a raw 32-byte string is a canonical Ristretto element. Required end-to-end for parsing `UidCiphertext` and `ProfileKeyCiphertext` from the wire (Track F).
+- **Upstream PR(s) to [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify)** adding two pieces of functionality:
+  - **Elligator-inverse.** Elligator2 maps a 32-byte string to a Ristretto group element; the *inverse* recovers a 32-byte string that hashes to a given group element. The inverse is what Signal's fork of `curve25519-dalek` adds, and it is what `EncodeToG` (CPZ19 §6) uses to embed a UID or profile key into the group reversibly. Without Elligator-inverse, the `Encodable` typeclass cannot be instantiated for Ristretto255.
+  - **Ristretto byte-decoding.** Validating that a raw 32-byte string is a canonical Ristretto element. Required end-to-end for parsing `UidCiphertext` and `ProfileKeyCiphertext` from the wire.
+- **Local binding file `KVAC/Instances/Ristretto.lean`** providing `instance PrimeOrderGroup Ristretto.Element` and the corresponding `Encodable` instance, wiring the upstream-verified definitions into the abstract typeclasses of `KVAC/Core/`. Small — one or two pages of Lean — but it is the *only* place in this repository where Ristretto255 is named outside `Examples/`. Per the "Specification vs. implementation" section, every other track works against the abstract typeclasses.
 
-When Track A lands upstream, this project bumps its `lakefile.toml` pin of `Curve25519Dalek` to a commit that includes the new functionality, and Tracks C, F and any others that need a real `EncodeToG` / `DecodeFromG` can then provide a concrete instance instead of an axiomatized one.
+When Track A's upstream PR lands, the project bumps its `lakefile.toml` pin of `Curve25519Dalek` to the new commit and the local binding file becomes provable (rather than axiomatized). At that point `Examples/SignalGroupExample.lean` can run a concrete protocol instance and downstream tracks gain a working concrete instantiation without changing any of their own source.
 
-Track A is listed here even though its commits land elsewhere because it is on the critical path for the encryption story to be end-to-end real, and because surfacing it at the project level lets us coordinate the timing.
+Track A is listed in this repository's track board even though its main commits land elsewhere because (i) it is on the critical path for the encryption story to be end-to-end real, (ii) the local binding file is in this repo, and (iii) surfacing it at the project level lets us coordinate the timing.
+
+### What lives in `KVAC/Examples/`
+
+`Examples/SignalGroupExample.lean` is a small concrete run of the protocol — Alice creating a group containing herself and Bob, Bob fetching the membership list, and a `decide` (or `native_decide`) sanity check that the round-trip recovers the expected member list. It is the analogue of PQXDH's [`X3DHExample.lean`](https://github.com/Beneficial-AI-Foundation/PQXDH/blob/main/PQXDHLean/Examples/X3DHExample.lean).
+
+Strictly speaking, no theorem in the formalization plan requires `Examples/`: every correctness and security result is stated abstractly over `[PrimeOrderGroup G]` and would still be valid in its absence. We keep it for three reasons:
+
+- **Sanity check.** A vacuous typeclass design — one that "works abstractly" but has no sensible concrete instantiation — would not survive an end-to-end concrete run. The example forces every layer to compose with `Instances/Ristretto` and produce an actual answer.
+- **Documentation by example.** A new contributor opening the project gets an end-to-end illustration of how the API fits together. That tends to be more useful as a starting point than reading half a dozen abstract files.
+- **Where Track A's value becomes visible.** `Instances/Ristretto` exists so that the protocol can actually be run over a real curve. `Examples/` is the place that exercises that path. Without it, the binding file is unreachable from the rest of the project except through security games.
+
+Practical scheduling: `Examples/SignalGroupExample.lean` is part of Track H (System operations) and is naturally written *last* — after `System/Operations.lean` is complete and after Track A's local `Instances/Ristretto.lean` is in place. The file is small (50–100 lines), and its `decide`-based correctness check should evaluate quickly.
+
+If scope pressure becomes severe, dropping `Examples/` is a reasonable cut — but I'd consider it a regrettable one, since the sanity-check value is high relative to the cost.
 
 ## Phases
 
@@ -124,7 +227,7 @@ Track A is listed here even though its commits land elsewhere because it is on t
 - Bring [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) in as a Lake dependency. The repository already provides Aeneas-extracted definitions and an in-progress proof effort for Ristretto group operations, scalar arithmetic and Elligator2.
 - Audit coverage of additional functionality required by Signal's fork of `curve25519-dalek`: in particular **Elligator-inverse** and the Ristretto byte-decoding routines (CPZ19, §6). If absent upstream, this is the first concrete contribution back upstream (Track A).
 - Vendor [`signalapp/libsignal`](https://github.com/signalapp/libsignal) at a pinned commit so reviewers can unambiguously point at "Rust line X, file Y."
-- Define and centrally review the three files in `KVAC/Core/` (`Group.lean`, `Hash.lean`, `Encoding.lean`) — the shared API contract that Tracks B, C, D and F import (**Track 0**). This is the gating step before most of Wave 1 can begin. See "What lives in `KVAC/Core/`" above for what each file is meant to contain.
+- Define and centrally review the three files in `KVAC/Core/` (`Group.lean`, `Hash.lean`, `Encoding.lean`) — the shared API contract that Tracks B, C, D and F import (**Track 0**). This is the gating step before most of Wave 1 can begin. See "What lives in `KVAC/Core/`" above for what each file is meant to contain. Per the "Specification vs. implementation" section, `KVAC/Core/` must not import VCV-io and must not depend on libsignal-specific structure.
 
 ### Phase 1 — `Poksho/`: sigma-protocol DSL + verifiable encryption
 

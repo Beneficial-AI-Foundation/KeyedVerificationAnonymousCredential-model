@@ -71,10 +71,12 @@ A single track that establishes the shared typeclass shape every dependent Wave 
 
 These tracks can be picked up in any order once Track 0 has been merged. Tracks A and L₁ are independent of Track 0 and can start immediately, even before Track 0 lands.
 
-- [ ] **Track A** — Elligator-inverse and Ristretto byte-decoding
-  - Modules: _none in this repo_ — work happens in [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify)
-  - Depends on: nothing
-  - **Upstream:** the deliverable is a PR to the dalek repo, not a file here. See [`PLAN.md`](PLAN.md) (section "What Track A delivers") for the full scope.
+- [ ] **Track A** — Elligator-inverse, Ristretto byte-decoding, and the local Ristretto binding
+  - Modules:
+    - Upstream PR(s) to [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) — Elligator-inverse + Ristretto byte-decoding
+    - `KVAC/Instances/Ristretto.lean` — local binding wiring the upstream definitions into the abstract typeclasses of `KVAC/Core/`
+  - Depends on: nothing (the local binding file may be drafted against axiomatized stubs while the upstream PR is in review, then finished once it lands)
+  - See [`PLAN.md`](PLAN.md) (sections "What Track A delivers" and "Specification vs. implementation") for the full scope and the import discipline that puts this binding in `Instances/`.
 - [ ] **Track B** — Sigma-protocol DSL with proven meta-theory
   - Modules: `KVAC/Poksho/Sigma/{Statement, Protocol, MetaTheory, FiatShamir}.lean`
   - Depends on: Track 0
@@ -99,7 +101,9 @@ These tracks can be picked up in any order once Track 0 has been merged. Tracks 
   - Modules: `KVAC/ZkCredential/{Issuance, Presentation, BlindIssuance}.lean`
   - Depends on: Track B (Sigma DSL), Track D (algebraic MAC)
 - [ ] **Track I** — Encryption security reductions (Theorems 7, 10, 13; Lemma 11)
-  - Modules: `KVAC/Security/EncryptionSecurity.lean`
+  - Modules:
+    - `KVAC/Security/EncryptionSecurity.lean` — the reductions themselves
+    - `KVAC/Instances/VCVioOracle.lean` — VCV-io binding for the abstract Hash typeclasses, introduced here as it is the first track to need game-based reductions; subsequently shared with Tracks J and K
   - Depends on: Track C
 - [ ] **Track J** — MAC security (Theorem 14, case analysis on Type 1/2/3 forgeries)
   - Modules: `KVAC/Security/MACSecurity.lean`
@@ -114,8 +118,10 @@ These tracks can be picked up in any order once Track 0 has been merged. Tracks 
   - Modules: `KVAC/Security/KVACSecurity.lean`
   - Depends on: Track E
 - [ ] **Track H** — System operations and end-to-end correctness
-  - Modules: `KVAC/System/Operations.lean`, `KVAC/Examples/SignalGroupExample.lean`
-  - Depends on: Track G
+  - Modules:
+    - `KVAC/System/Operations.lean` — each operation of CPZ19 §§5.6–5.7 as a state transition, with end-to-end correctness theorems analogous to PQXDH's `X3DH_handshake_correct`
+    - `KVAC/Examples/SignalGroupExample.lean` — a concrete protocol run against `Instances/Ristretto`, with a `decide` sanity check; serves as both a smoke test for the abstraction and onboarding documentation. See [`PLAN.md`](PLAN.md) (section "What lives in `KVAC/Examples/`") for the rationale.
+  - Depends on: Track G; the Examples file additionally depends on Track A's local binding `Instances/Ristretto.lean` and is naturally written last.
 - [ ] **Track L₂** — Simulator argument (or `sorry` for v1)
   - Modules: `KVAC/Security/Simulator.lean`
   - Depends on: Tracks E, G, H, I, J, K
