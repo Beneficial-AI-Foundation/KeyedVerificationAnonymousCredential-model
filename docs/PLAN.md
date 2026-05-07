@@ -2,307 +2,335 @@
 
 This document is the canonical formalization plan for the project. It describes what is being formalized, how the work is structured into layered Lean modules, and what's targeted versus deferred for the first version. For the current status of each track and to claim work, see [`TRACKS.md`](TRACKS.md). Contributors should additionally read the [Style Guide](STYLE_GUIDE.md) and the [Workflow and PR Guide](WORKFLOW_AND_PR_GUIDE.md).
 
-The reference paper, cited throughout as **CPZ19**, is Chase, Perrin and Zaverucha, *The Signal Private Group System and Anonymous Credentials Supporting Efficient Verifiable Encryption*, [IACR ePrint 2019/1416](https://eprint.iacr.org/2019/1416). Section numbers refer to this paper.
+The reference paper, cited throughout as **O24**, is Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, [IACR ePrint 2024/1552](https://eprint.iacr.org/2024/1552). Section numbers refer to this paper.
 
-> **Status:** This plan is a tentative working proposal, not a fixed contract. Phase boundaries, module layout, scope decisions, and security targets reflect the current understanding of the paper and the libsignal implementation. They may evolve — sometimes substantially — as the team digs deeper into the proofs and the production code. Significant revisions are discussed on the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before they land here.
+> **Status:** This plan is a tentative working proposal, not a fixed contract. Phase boundaries, module layout, scope decisions, and security targets reflect the current understanding of the paper. They may evolve — sometimes substantially — as the team digs deeper into the proofs. Significant revisions are discussed on the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before they land here.
 
 ## Background
 
-We formalize, in Lean 4, the keyed-verification anonymous credential (KVAC) construction of Chase, Perrin and Zaverucha ([IACR ePrint 2019/1416](https://eprint.iacr.org/2019/1416)) — the verifiable encryption it enables, and the Signal Private Group System built on top. The paper introduces three principal cryptographic ingredients:
+We formalize, in Lean 4, the keyed-verification anonymous credential (KVAC) framework of O24, and two concrete instantiations:
 
-1. A new algebraic MAC over a prime-order group $\mathbb{G}$ whose attributes may be group elements, scalars, or a mix (CPZ19, §3.1).
-2. A KVAC built on that MAC, with non-blinded and blind issuance protocols and a multi-show unlinkable presentation (CPZ19, §3.2 and §5.10).
-3. A deterministic, symmetric-key, CCA-secure verifiable encryption scheme with unique ciphertexts (CPZ19, §4.1).
+- **μCMZ** (Sec. 5) — an improved version of the Chase–Meiklejohn–Zaverucha 2014 scheme, with O(1) issuance cost (down from O(n)), statistical anonymity, and security proved in the algebraic group model under the 3-DL assumption. Deployed by Signal, Tor, and NYM.
+- **μBBS** (Sec. 6) — an improved version of the BBDT17 / BBS-MAC scheme, with one fewer group element per signature, alignment with the IETF BBS draft, and security proved in the algebraic group model under q-DL.
 
-All proofs of knowledge are instances of the generalized linear Schnorr proof system, made non-interactive via Fiat–Shamir, and all primitives operate inside a single prime-order group instantiated by Ristretto255. The entire ZKP infrastructure is built on sigma protocols; no external SNARK or STARK framework is involved. This is the key design lever for the formalization: the only proof system we need to model is sigma protocols, whose theory is small and textbook.
+The paper introduces a new abstract framework for KVACs (Sec. 4) with two security notions:
+
+1. **Anonymity**, a strong indistinguishability notion that requires a simulator covering both issuance and presentation.
+2. **Extractability**, a strengthened unforgeability notion that requires extractors recovering attributes from issuance/presentation messages, including in multi-user settings with man-in-the-middle adversaries.
+
+A weaker notion of **one-more unforgeability** is also defined (Sec. 5.6, 6.6) for use in anonymous-token applications.
 
 ## Cryptographic dependency flow
 
-The dependencies between the paper's three ingredients run bottom-up: the new algebraic MAC enables the KVAC, the KVAC's group-element attributes enable the verifiable encryption, and all three are composed in the Signal Private Group System.
+The paper's structure is bottom-up: an abstract KVAC framework is defined; two concrete schemes are then proven to realize it.
 
 ```
-        new algebraic MAC (§3.1)
-                 │
-                 ▼
-        new KVAC (§3.2 + §5.10)         — the cryptographic novelty
-                 │
-                 ▼
-     verifiable encryption (§4)         — uses KVAC's group-element attributes
-                 │
-                 ▼
-     Signal Private Group System (§5)   — the application that motivated it all
+                 algebraic MAC (Sec. 3.2)
+                         │
+                         ▼
+         abstract KVAC framework (Sec. 4)
+                         │
+                ┌────────┴────────┐
+                ▼                 ▼
+          μCMZ (Sec. 5)     μBBS (Sec. 6)
+                │                 │
+                └────────┬────────┘
+                         ▼
+            extensions (Sec. 8) — deferred
+                         │
+            designated-verifier SNARKs
+                  (Sec. 7) — deferred
 ```
+
+The **bidirectional point**: any scheme that proves it satisfies the abstract framework automatically inherits the framework's downstream consequences (composition with extensions, security implications). A new scheme can be plugged in without touching extensions, and a new extension can be applied to any existing scheme.
 
 ## Specification vs. implementation
 
-This formalization is structured to verify libsignal's Rust implementation against the paper's claims, and the directory layout under `KVAC/` mirrors the libsignal crate hierarchy for that reason. However, the *protocol specification itself* — what the KVAC, the verifiable encryption scheme, and the Signal Private Group System mean mathematically — is independent of any particular implementation. Two design commitments encode this:
+This formalization is **paper-driven, not implementation-driven**. The directory layout under `KVAC/` mirrors the paper's section structure. Concrete deployments (Signal's libsignal, the IETF BBS draft, Tor's Lox bridges, etc.) are *instances* of the abstract framework — never the framework itself. Two design commitments encode this:
 
-- **`KVAC/Core/` stays implementation-agnostic.** It defines abstract typeclasses (prime-order group, random-oracle interfaces, encoding typeclass) without committing to a specific curve, a specific hash function, or a specific oracle-semantics framework. Concrete instances live in separate files. In particular, `KVAC/Core/` does not import VCV-io.
-- **`KVAC/Security/IdealFunctionality.lean` (Track L₁) is the abstract protocol spec.** Theorems about the protocol's correctness and security are stated against this ideal functionality, not against libsignal-specific data structures.
+- **`KVAC/Core/` and `KVAC/Framework/` stay implementation-agnostic.** They define abstract typeclasses (prime-order group, hash functions, ZK proof system, algebraic MAC) and the abstract KVAC syntax / correctness / anonymity / extractability definitions, without committing to a specific curve, hash function, oracle-semantics framework, or deployment.
+- **The abstract framework is paper-faithful.** `Framework/Syntax`, `Framework/Correctness`, `Framework/Anonymity`, and `Framework/Extractability` mirror Definitions 4.2–4.5 of O24 directly. Both μCMZ and μBBS prove their constructions satisfy these same paper-level definitions. This structurally prevents over-specialization to one scheme.
 
-A consequence concerning oracle semantics: BAIF uses the [VCV-io Lean library](https://github.com/Verified-zkEVM/VCV-io) for game-based computational proofs (Phase 5), but VCV-io makes specific modeling choices (oracle computations as a particular free-monad / polynomial-functor construction). To avoid baking those choices into the protocol surface, VCV-io enters only at the point where security games are *constructed* — typically inside `KVAC/Security/`. The abstract interfaces in `KVAC/Core/` are statable in plain Lean and do not depend on VCV-io. This leaves room for an alternative formalization of oracle semantics (for example a more general categorical framework along the double-categorical or polynomial-functor direction) without rewriting the spec layer.
+A consequence concerning oracle semantics: BAIF uses the [VCV-io Lean library](https://github.com/Verified-zkEVM/VCV-io) for game-based computational proofs (Phase 5), but VCV-io makes specific modeling choices (oracle computations as a particular free-monad / polynomial-functor construction). To avoid baking those choices into the protocol surface, VCV-io enters only at the point where security games are *constructed* — typically inside `KVAC/Schemes/.../Anonymity.lean`, `Extractability.lean`, and `OneMoreUnforgeability.lean`. The abstract interfaces in `KVAC/Core/` and `KVAC/Framework/` are statable in plain Lean and do not depend on VCV-io.
 
-Concretely, `KVAC/Core/Hash.lean` defines the random-oracle interfaces (`HashToG`, `HashToZq`, `Derive`) abstractly. The VCV-io binding lives in a separate file, `KVAC/Instances/VCVioOracle.lean`, which implements those interfaces using VCV-io's `OracleSpec` infrastructure. That file is introduced by the first security track that needs a game-based reduction — typically **Track I** (encryption security, Theorems 7, 10, 13) — and is then shared with Tracks J and K. Earlier tracks (B, C, D, E, F, G, H) work against `Core/Hash.lean` only and never see the VCV-io binding. If the project later wants to switch to a different oracle-semantics framework, only `Instances/VCVioOracle.lean` and the security tracks that import it would need to change; everything else is statement-level abstract.
+Concretely, `KVAC/Core/Hash.lean` defines the random-oracle interfaces abstractly. The VCV-io binding lives in a separate file, `KVAC/Instances/VCVioOracle.lean`, which is introduced by the first security track that needs a game-based reduction. Earlier tracks work against `Core/Hash.lean` only.
 
 All concrete bindings — the verified Ristretto255 instance, the VCV-io oracle binding, and any future concrete plug-ins — live in `KVAC/Instances/` and only there. Two import rules make the boundary enforceable:
 
-- `Examples/` and `Security/` (when constructing a security game) may import from `Instances/`.
-- No other directory may. Theorems and definitions outside `Examples/` and `Instances/` are stated against the abstract typeclasses in `Core/`, never against a concrete type.
+- `Examples/` and security tracks (when constructing a security game) may import from `Instances/`.
+- No other directory may. Theorems and definitions outside `Examples/` and `Instances/` are stated against the abstract typeclasses in `Core/` and `Framework/`, never against a concrete type.
 
-A one-line CI grep over imports is sufficient to enforce this once the project has more than the initial scaffold.
+## Stack alignment: paper section ↔ Lean directory
 
-If a clean factoring of "abstract spec" away from "libsignal-shaped implementation" emerges naturally as Phases 1–3 develop, we may extract an explicit `KVAC/Spec/` directory in a follow-up. For v1 we keep the layout flat to avoid premature abstraction — but the design discipline above is non-negotiable: no track may rely on libsignal-specific structure inside `KVAC/Core/` or in the statement of an `IdealFunctionality` theorem.
-
-## Stack alignment: paper ↔ libsignal Rust
-
-The Lean stack mirrors the libsignal Rust stack one crate at a time:
-
-| Paper concept | libsignal crate | Lean directory |
+| Paper section | Lean directory | What's there |
 |---|---|---|
-| Group $\mathbb{G}$ (Ristretto255), scalar arithmetic | `curve25519-dalek` (Signal fork) | external dependency: [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) |
-| Generalized Schnorr / `PK{...}` proofs (§2.4) | `poksho` | `KVAC/Poksho/` |
-| KVAC primitive (§§3.1, 3.2, 5.10) | `zkcredential` | `KVAC/ZkCredential/` |
-| Auth, profile-key, group endorsements (§5) | `zkgroup` | `KVAC/ZkGroup/` |
+| Sec. 3 (Preliminaries) | `KVAC/Preliminaries/` | Cryptographic assumptions, ZK argument syntax, anonymous-token syntax |
+| Sec. 4 (KVAC framework) | `KVAC/Framework/` | Abstract syntax, correctness, anonymity, extractability |
+| Sec. 5 (μCMZ) | `KVAC/Schemes/MicroCMZ/` | Construction + security per the 2024 paper |
+| Sec. 6 (μBBS) | `KVAC/Schemes/MicroBBS/` | Construction + security per the 2024 paper |
+| Sec. 9 (Σ-protocols) | `KVAC/ProofSystems/` | Sigma protocols, Fiat–Shamir, straight-line extraction |
+| (none — supporting algebra) | `KVAC/Core/` | Group, hash, ZK proof, algebraic MAC typeclasses |
+| (none — concrete bindings) | `KVAC/Instances/` | Ristretto255, VCV-io |
+| (none — runnable code) | `KVAC/Examples/` | Concrete μCMZ run |
 
-Everything is bespoke — no external proving system is involved at any layer. The only proof system we model is sigma protocols + Fiat–Shamir.
+Sec. 7 (designated-verifier SNARKs) and Sec. 8 (credential extensions) are not in v1 scope; see [Future works](#future-works).
 
 ## Module layout
 
 ```
 KVAC/
-├── Core/                              [abstract API — no concrete commitments]
-│   ├── Group.lean                     [Track 0]
-│   ├── Hash.lean                      [Track 0]
-│   └── Encoding.lean                  [Track 0]
-├── Instances/                         [concrete bindings; the only place
-│   │                                   Ristretto255 / VCV-io appear]
-│   ├── Ristretto.lean                 [Track A — local binding to dalek-verified
-│   │                                   Ristretto255 + Encodable instance]
-│   └── VCVioOracle.lean               [Phase 5 — VCV-io binding for the
-│                                       abstract Hash interfaces; introduced
-│                                       by Track I, shared with J and K]
-├── Poksho/
-│   ├── Sigma/
-│   │   ├── Statement.lean             [Track B]
-│   │   ├── Protocol.lean              [Track B]
-│   │   ├── MetaTheory.lean            [Track B]
-│   │   └── FiatShamir.lean            [Track B]
-│   └── Encryption.lean                [Track C]
-├── ZkCredential/
-│   ├── MACGGM.lean                    [Track D]
-│   ├── MAC.lean                       [Track D]
-│   ├── Issuance.lean                  [Track E]
-│   ├── Presentation.lean              [Track E]
-│   └── BlindIssuance.lean             [Track E]
-├── ZkGroup/
-│   ├── Data.lean                      [Track F]
-│   ├── AuthCredential.lean            [Track G]
-│   ├── ProfileKeyCredential.lean      [Track G]
-│   └── Ciphertext.lean                [Track F]
-├── System/
-│   └── Operations.lean                [Track H]
-├── Security/
-│   ├── Assumptions.lean               [shared]
-│   ├── EncryptionSecurity.lean        [Track I]
-│   ├── MACSecurity.lean               [Track J]
-│   ├── KVACSecurity.lean              [Track K]
-│   ├── IdealFunctionality.lean        [Track L₁]
-│   └── Simulator.lean                 [Track L₂]
+├── Core/                                  [shared abstract algebra]
+│   ├── Group.lean                         [prime-order group typeclass]
+│   ├── Hash.lean                          [random-oracle / hash interfaces]
+│   ├── ZKProof.lean                       [generic NIZK / proof-of-knowledge typeclass]
+│   └── AlgebraicMAC.lean                  [Sec. 3.2 — algebraic MAC syntax]
+├── Preliminaries/                         [Sec. 3]
+│   ├── Assumptions.lean                   [DL, DDH, q-DL, q-DDHI, AGM, GGM]
+│   ├── ZKArguments.lean                   [Sec. 3.3 — knowledge soundness, simulation extractability]
+│   └── AnonymousTokens.lean               [Sec. 3.4 — anonymous-token syntax + OMUF game]
+├── ProofSystems/                          [Sec. 9 + supporting proof technology]
+│   ├── SigmaProtocol.lean                 [Σ-protocol theory]
+│   ├── FiatShamir.lean                    [non-interactive transformation]
+│   └── StraightLineExtraction.lean        [Sec. 9 — for AGM-based proofs]
+├── Framework/                             [Sec. 4 — abstract KVAC]
+│   ├── Syntax.lean                        [§4.1 — KVAC = (S, K, I, P)]
+│   ├── Correctness.lean                   [§4.2]
+│   ├── Anonymity.lean                     [§4.3 — statistical and everlasting forward]
+│   └── Extractability.lean                [§4.4 — implies CMZ14 unforgeability]
+├── Schemes/                               [concrete instantiations of Framework/]
+│   ├── MicroCMZ/                          [Sec. 5]
+│   │   ├── Construction.lean              [§5.1 — protocol]
+│   │   ├── AlgebraicMAC.lean              [§5.3 — μCMZ as algebraic MAC]
+│   │   ├── Anonymity.lean                 [§5.4]
+│   │   ├── Extractability.lean            [§5.5]
+│   │   └── OneMoreUnforgeability.lean     [§5.6 — for anonymous-token variant]
+│   └── MicroBBS/                          [Sec. 6]
+│       ├── Construction.lean              [§6.1]
+│       ├── AlgebraicMAC.lean              [§6.3]
+│       ├── Anonymity.lean                 [§6.4]
+│       ├── Extractability.lean            [§6.5]
+│       └── OneMoreUnforgeability.lean     [§6.6]
+├── Instances/                             [concrete bindings; the only place
+│   │                                       Ristretto255 / VCV-io appear]
+│   ├── Ristretto.lean                     [Track Ex — local binding to dalek-verified
+│   │                                       Ristretto255; bundled with Examples/ConcreteRun
+│   │                                       and the lakefile dalek dependency in one PR]
+│   └── VCVioOracle.lean                   [Phase 5 — VCV-io binding for the abstract
+│                                           Hash interfaces; introduced by the first
+│                                           security track to need a game-based reduction]
 └── Examples/
-    └── SignalGroupExample.lean        [imports Instances/Ristretto for a
-                                        concrete protocol run]
+    └── ConcreteRun.lean                   [a μCMZ run over Ristretto255]
 ```
 
 ### Module dependency graph
 
-The diagram below shows how the layers depend on each other. `Core/` defines the abstract API; `Instances/` binds it to concrete cryptographic implementations; the libsignal-shaped layers (`Poksho/`, `ZkCredential/`, `ZkGroup/`, `System/`) build up the protocol implementation against the abstract API; `Security/` reasons about the implementation under cryptographic assumptions; `Examples/` runs the protocol concretely against `Instances/Ristretto`.
-
 ```mermaid
 graph TD
-  Dalek["curve25519-dalek-lean-verify"]:::ext
   VCVio["VCV-io"]:::ext
+  Dalek["curve25519-dalek-lean-verify<br/>(deferred dependency)"]:::ext
 
-  Core["Core/<br/>Group, Hash, Encoding"]:::core
+  Core["Core/<br/>Group, Hash, ZKProof, AlgebraicMAC"]:::core
 
-  Ristretto["Instances/Ristretto"]:::inst
-  VCVioOracle["Instances/VCVioOracle"]:::inst
+  Pre["Preliminaries/<br/>Assumptions, ZKArguments, AnonymousTokens"]:::pre
+  PS["ProofSystems/<br/>Sigma, FiatShamir, StraightLineExtraction"]:::pre
 
-  Poksho["Poksho/<br/>(sigma DSL, verifiable encryption)"]:::impl
-  ZkCredential["ZkCredential/<br/>(MAC, KVAC issuance &amp; presentation)"]:::impl
-  ZkGroup["ZkGroup/<br/>(credentials, ciphertexts)"]:::impl
-  System["System/<br/>(protocol operations)"]:::impl
+  FW["Framework/<br/>Syntax, Correctness, Anonymity, Extractability"]:::fw
 
-  Security["Security/<br/>(theorems, reductions, simulator)"]:::sec
-  Examples["Examples/<br/>(concrete protocol runs)"]:::ex
+  CMZ["Schemes/MicroCMZ/<br/>Construction, AlgebraicMAC,<br/>Anonymity, Extractability, OMUF"]:::scheme
+  BBS["Schemes/MicroBBS/<br/>Construction, AlgebraicMAC,<br/>Anonymity, Extractability, OMUF"]:::scheme
 
-  Dalek --> Ristretto
-  VCVio --> VCVioOracle
+  RTto["Instances/Ristretto"]:::inst
+  VCVO["Instances/VCVioOracle"]:::inst
 
-  Core --> Ristretto
-  Core --> VCVioOracle
-  Core --> Poksho
-  Core --> ZkCredential
-  Core --> ZkGroup
+  Examples["Examples/ConcreteRun"]:::ex
 
-  Poksho --> ZkCredential
-  ZkCredential --> ZkGroup
-  ZkGroup --> System
+  Core --> Pre
+  Core --> PS
+  Core --> FW
+  Core --> CMZ
+  Core --> BBS
+  Core --> RTto
+  Core --> VCVO
 
-  Poksho --> Security
-  ZkCredential --> Security
-  ZkGroup --> Security
-  System --> Security
-  VCVioOracle --> Security
+  Pre --> FW
+  Pre --> CMZ
+  Pre --> BBS
 
-  Ristretto --> Examples
-  System --> Examples
+  PS --> CMZ
+  PS --> BBS
+
+  FW --> CMZ
+  FW --> BBS
+
+  CMZ --> Examples
+
+  Dalek --> RTto
+  VCVio --> VCVO
+
+  RTto --> Examples
+
+  VCVO --> CMZ
+  VCVO --> BBS
 
   classDef ext fill:#e1e1e1,stroke:#666,color:#000
   classDef core fill:#f0e6f7,stroke:#6f42c1,color:#000
+  classDef pre fill:#e0f2fe,stroke:#0284c7,color:#000
+  classDef fw fill:#dcfce7,stroke:#16a34a,color:#000
+  classDef scheme fill:#fef3c7,stroke:#ca8a04,color:#000
   classDef inst fill:#fff4e6,stroke:#cc7a00,color:#000
-  classDef impl fill:#e8f4f8,stroke:#0366d6,color:#000
-  classDef sec fill:#fde4e4,stroke:#cc0000,color:#000
   classDef ex fill:#e6f4e1,stroke:#28a745,color:#000
 ```
 
-Two things to read off this graph:
+The `[Track X]` annotations in TRACKS.md indicate which independent work track owns each file. Tracks are organised into four **waves** based on the dependencies between them:
 
-- **The implementation layers (`Poksho/`, `ZkCredential/`, `ZkGroup/`, `System/`) depend only on `Core/`, never on `Instances/`.** This is the import discipline from the "Specification vs. implementation" section above. Whatever a track in these layers proves is stated abstractly over `[PrimeOrderGroup G]` etc., not against Ristretto255 specifically.
-- **`Instances/Ristretto` and `Instances/VCVioOracle` are independent of each other.** They bind disjoint parts of `Core/` (group + encoding vs. hash) and are needed in different downstream contexts (`Examples/` vs. `Security/`), so a refactor on one side does not affect the other.
-
-### Wave grouping
-
-The `[Track X]` annotations on each leaf indicate which independent work track owns that file. Tracks are organised into four **waves** based on the dependencies between them:
-
-- **Wave 0** (Track 0) — defines the three files in `KVAC/Core/`, the shared API that most of Wave 1 imports. Must land before its dependents can begin.
-- **Wave 1** (Tracks A, B, C, D, F, L₁) — start once Track 0 lands and run in parallel. Tracks A and L₁ don't actually need Track 0 (A is fully upstream, L₁ is pure spec) and can begin even earlier.
-- **Wave 2** (Tracks E, G, I, J) — unblock once their Wave 1 prerequisites land.
-- **Wave 3** (Tracks H, K, L₂) — final integration; depend on multiple Wave 2 tracks.
+- **Wave 0** (Track 0) — foundational; start immediately. Gating step before Wave 1 can begin.
+- **Wave 1** (Tracks Pre, Σ, F1) — start once Track 0 lands.
+- **Wave 2** (Tracks F2, CMZ-C, BBS-C) — Framework anonymity/extractability, plus each scheme's construction.
+- **Wave 3** (Tracks CMZ-{M,A,E,OMUF}, BBS-{M,A,E,OMUF}, V) — the two schemes' security tracks plus the VCV-io binding.
+- **Wave 4** (Track Ex) — concrete run, Ristretto binding, and Lake dependency on `curve25519-dalek-lean-verify` all bundled into one PR.
 
 The full dependency graph between tracks, and the current claim status of each, are in [`TRACKS.md`](TRACKS.md).
 
-### What lives in `KVAC/Core/`
+## Module breakdown
 
-The three files in `KVAC/Core/` together form the abstract API the rest of the formalization is written against. They are the deliverable of Track 0 and are imported by Tracks B, C, D and F.
+This section describes each module's role and contents. Each subsection lists the files in that module along with a short description of what each file contains, the relevant section of O24, and the track that owns it. Track-level details (dependencies, status, claim instructions) are in [`TRACKS.md`](TRACKS.md).
 
-- **`Core/Group.lean`** — the prime-order group typeclass (`PrimeOrderGroup G`) with its order, generator, and basic axioms. Concrete instances live in separate files and are swapped in via Lake.
-- **`Core/Hash.lean`** — random-oracle interfaces for the paper's `HashToG`, `HashToZq` and `Derive` functions (CPZ19 §2.1, §6). For early phases these are opaque; for Phase 5 security work they are backed by VCV-io oracle semantics.
-- **`Core/Encoding.lean`** — the `Encodable` typeclass for `EncodeToG` / `DecodeFromG` (CPZ19 §6). Captures the multi-valued nature of decoding: one group element corresponds to several candidate plaintexts, and the round-trip property selects the canonical one.
+### `KVAC/Core/` — abstract algebra (Track 0)
 
-These typeclasses are designed once (Track 0) and remain **stable** for the life of the project. Concrete *instances* — first axiomatized, later swapped for the verified Ristretto255 from `curve25519-dalek-lean-verify` — change over time, but the API surface above does not. Theorems are stated over `[PrimeOrderGroup G]` rather than `Ristretto.Element`, which keeps proofs about "the protocol over any DDH-secure prime-order group" rather than tied to a specific curve.
+The shared API contract that every higher layer imports. These typeclasses are designed once (Track 0) and remain **stable** for the life of the project. Concrete *instances* — first axiomatised, later swapped for verified instances — change over time, but the API surface above does not. Per the "Specification vs. implementation" section, `KVAC/Core/` must not import VCV-io and must not depend on any deployment-specific structure.
 
-`Security/Assumptions.lean` plays an analogous role on the security side: it collects DDH, DLP, ROM and the `MAC_GGM` uf-cma assumption in one place, so that all security tracks share identical statements.
+- **`Core/Group.lean`** — prime-order group typeclass (`PrimeOrderGroup G`) with its order, generator, and basic axioms. Concrete instances live in `Instances/`.
+- **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). Opaque initially; backed by VCV-io oracle semantics in security tracks.
+- **`Core/ZKProof.lean`** — generic NIZK / proof-of-knowledge typeclass following the syntax of Sec. 3.3 (setup, prover, verifier; properties: completeness, knowledge soundness, zero-knowledge, simulation-extractability).
+- **`Core/AlgebraicMAC.lean`** — algebraic MAC typeclass following Sec. 3.2 (Definition 3.1: setup, key-gen, MAC, verify; UF-CMVA security game).
 
-### What Track A delivers
+### `KVAC/Preliminaries/` — Sec. 3 (Track Pre)
 
-Track A has two deliverables: an upstream PR and a small local binding file.
+Cryptographic background that the schemes rely on.
 
-- **Upstream PR(s) to [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify)** adding two pieces of functionality:
-  - **Elligator-inverse.** Elligator2 maps a 32-byte string to a Ristretto group element; the *inverse* recovers a 32-byte string that hashes to a given group element. The inverse is what Signal's fork of `curve25519-dalek` adds, and it is what `EncodeToG` (CPZ19 §6) uses to embed a UID or profile key into the group reversibly. Without Elligator-inverse, the `Encodable` typeclass cannot be instantiated for Ristretto255.
-  - **Ristretto byte-decoding.** Validating that a raw 32-byte string is a canonical Ristretto element. Required end-to-end for parsing `UidCiphertext` and `ProfileKeyCiphertext` from the wire.
-- **Local binding file `KVAC/Instances/Ristretto.lean`** providing `instance PrimeOrderGroup Ristretto.Element` and the corresponding `Encodable` instance, wiring the upstream-verified definitions into the abstract typeclasses of `KVAC/Core/`. Small — one or two pages of Lean — but it is the *only* place in this repository where Ristretto255 is named outside `Examples/`. Per the "Specification vs. implementation" section, every other track works against the abstract typeclasses.
+- **`Preliminaries/Assumptions.lean`** — DL, DDH, q-DL, q-DDHI, gap-DL assumptions, plus the AGM and GGM frameworks (Sec. 3.1). All security tracks share these statements.
+- **`Preliminaries/ZKArguments.lean`** — abstract NIZK syntax with knowledge-soundness, zero-knowledge, and simulation-extractability properties (Sec. 3.3).
+- **`Preliminaries/AnonymousTokens.lean`** — anonymous-token syntax and the one-more unforgeability (OMUF) game (Sec. 3.4).
 
-When Track A's upstream PR lands, the project bumps its `lakefile.toml` pin of `Curve25519Dalek` to the new commit and the local binding file becomes provable (rather than axiomatized). At that point `Examples/SignalGroupExample.lean` can run a concrete protocol instance and downstream tracks gain a working concrete instantiation without changing any of their own source.
+### `KVAC/ProofSystems/` — Sec. 9 (Track Σ)
 
-Track A is listed in this repository's track board even though its main commits land elsewhere because (i) it is on the critical path for the encryption story to be end-to-end real, (ii) the local binding file is in this repo, and (iii) surfacing it at the project level lets us coordinate the timing.
+The proof-system technology underpinning every credential proof. The paper's security proofs (Sec. 5, Sec. 6) lean heavily on straight-line extraction; building proven meta-theory here pays off across every later layer.
 
-### What lives in `KVAC/Examples/`
+- **`ProofSystems/SigmaProtocol.lean`** — Σ-protocol theory: completeness, special soundness, honest-verifier zero-knowledge.
+- **`ProofSystems/FiatShamir.lean`** — non-interactive transformation in the random oracle model.
+- **`ProofSystems/StraightLineExtraction.lean`** — straight-line extraction in the AGM (Sec. 9). Required by both schemes' extractability proofs.
 
-`Examples/SignalGroupExample.lean` is a small concrete run of the protocol — Alice creating a group containing herself and Bob, Bob fetching the membership list, and a `decide` (or `native_decide`) sanity check that the round-trip recovers the expected member list. It is the analogue of PQXDH's [`X3DHExample.lean`](https://github.com/Beneficial-AI-Foundation/PQXDH/blob/main/PQXDHLean/Examples/X3DHExample.lean).
+### `KVAC/Framework/` — Sec. 4, abstract KVAC (Tracks F1, F2)
 
-Strictly speaking, no theorem in the formalization plan requires `Examples/`: every correctness and security result is stated abstractly over `[PrimeOrderGroup G]` and would still be valid in its absence. We keep it for three reasons:
+The four files mirror Definitions 4.2–4.5 of O24 directly. These definitions are scheme-agnostic — both μCMZ and μBBS prove their constructions satisfy these *same* paper-level definitions, which is the formalization-correctness guarantee of the framework.
 
-- **Sanity check.** A vacuous typeclass design — one that "works abstractly" but has no sensible concrete instantiation — would not survive an end-to-end concrete run. The example forces every layer to compose with `Instances/Ristretto` and produce an actual answer.
-- **Documentation by example.** A new contributor opening the project gets an end-to-end illustration of how the API fits together. That tends to be more useful as a starting point than reading half a dozen abstract files.
-- **Where Track A's value becomes visible.** `Instances/Ristretto` exists so that the protocol can actually be run over a real curve. `Examples/` is the place that exercises that path. Without it, the binding file is unreachable from the rest of the project except through security games.
+- **`Framework/Syntax.lean`** (§4.1) — A KVAC scheme is a tuple of algorithms `(S, K, I, P)` parametrized by a credential predicate family. Definition 4.2.
+- **`Framework/Correctness.lean`** (§4.2) — Honestly-generated credentials presented under valid predicates always verify. Definition 4.3.
+- **`Framework/Anonymity.lean`** (§4.3) — Real-vs-simulated indistinguishability game with statistical and everlasting-forward variants. Definition 4.4.
+- **`Framework/Extractability.lean`** (§4.4) — Multi-user MITM extraction game. Definition 4.5; implies the original CMZ14 unforgeability via a simple reduction (formalised as a lemma).
 
-Practical scheduling: `Examples/SignalGroupExample.lean` is part of Track H (System operations) and is naturally written *last* — after `System/Operations.lean` is complete and after Track A's local `Instances/Ristretto.lean` is in place. The file is small (50–100 lines), and its `decide`-based correctness check should evaluate quickly.
+### `KVAC/Schemes/MicroCMZ/` — Sec. 5 (Tracks CMZ-C, CMZ-M, CMZ-A, CMZ-E, CMZ-OMUF)
 
-If scope pressure becomes severe, dropping `Examples/` is a reasonable cut — but I'd consider it a regrettable one, since the sanity-check value is high relative to the cost.
+The first concrete instantiation of the abstract framework. Improvements over CMZ14: O(1) issuance cost, statistical anonymity, security in AGM under 3-DL.
 
-## Phases
+- **`Schemes/MicroCMZ/Construction.lean`** (§5.1) — protocol description: KeyGen, Setup, Issue (with predicate $\phi$), Present.
+- **`Schemes/MicroCMZ/AlgebraicMAC.lean`** (§5.3) — Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n).
+- **`Schemes/MicroCMZ/Anonymity.lean`** (§5.4) — Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZK proof system.
+- **`Schemes/MicroCMZ/Extractability.lean`** (§5.5) — Theorem 5.2: μCMZ is extractable in AGM.
+- **`Schemes/MicroCMZ/OneMoreUnforgeability.lean`** (§5.6) — Theorem 5.3: the anonymous-token variant μCMZ$_{AT}$ is one-more unforgeable in AGM under 2-DL.
 
-### Phase 0 — Foundations
+### `KVAC/Schemes/MicroBBS/` — Sec. 6 (Tracks BBS-C, BBS-M, BBS-A, BBS-E, BBS-OMUF)
 
-- Bring [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) in as a Lake dependency. The repository already provides Aeneas-extracted definitions and an in-progress proof effort for Ristretto group operations, scalar arithmetic and Elligator2.
-- Audit coverage of additional functionality required by Signal's fork of `curve25519-dalek`: in particular **Elligator-inverse** and the Ristretto byte-decoding routines (CPZ19, §6). If absent upstream, this is the first concrete contribution back upstream (Track A).
-- Vendor [`signalapp/libsignal`](https://github.com/signalapp/libsignal) at a pinned commit so reviewers can unambiguously point at "Rust line X, file Y."
-- Define and centrally review the three files in `KVAC/Core/` (`Group.lean`, `Hash.lean`, `Encoding.lean`) — the shared API contract that Tracks B, C, D and F import (**Track 0**). This is the gating step before most of Wave 1 can begin. See "What lives in `KVAC/Core/`" above for what each file is meant to contain. Per the "Specification vs. implementation" section, `KVAC/Core/` must not import VCV-io and must not depend on libsignal-specific structure.
+The second concrete instantiation, parallel in structure to MicroCMZ. Improvements over BBDT17: one fewer group element per signature, alignment with the IETF BBS draft, security in AGM under (q+2)-DL.
 
-### Phase 1 — `Poksho/`: sigma-protocol DSL + verifiable encryption
+- **`Schemes/MicroBBS/Construction.lean`** (§6.1) — protocol description.
+- **`Schemes/MicroBBS/AlgebraicMAC.lean`** (§6.3) — μBBS as an algebraic MAC (Theorems 6.6, 6.8, 6.9).
+- **`Schemes/MicroBBS/Anonymity.lean`** (§6.4) — analogue of Theorem 5.8 for μBBS, with the technical caveat around messages satisfying $\sum_i m_i G_i = -G_0$ (Equation 7).
+- **`Schemes/MicroBBS/Extractability.lean`** (§6.5) — μBBS is extractable in AGM. Requires the DDH oracle augmentation in the algebraic-MAC unforgeability game (one of the technical contributions of the paper).
+- **`Schemes/MicroBBS/OneMoreUnforgeability.lean`** (§6.6) — Theorem 6.12: μBBS$_{AT}$ is one-more unforgeable. Best attack is $O(\sqrt{q})$ via Cheon's attack; ~20 bits of security loss.
 
-The central formalization decision lives in this phase: build a real sigma-protocol DSL with proven meta-theory rather than treating NIZK as a black box. Because the entire libsignal stack is sigma protocols and Fiat–Shamir, the cost of the DSL pays back at every higher layer.
+### `KVAC/Instances/` — concrete bindings (Tracks Ex, V)
 
-1. `Poksho/Sigma/Statement.lean` — inductive type for generalized linear statements: predicates of the form $Y = \prod_i G_i^{x_i}$ with public bases, secret exponents, and AND/OR composition.
-2. `Poksho/Sigma/Protocol.lean` — the generic `(commit, challenge, response)` triple and the verifier equation.
-3. `Poksho/Sigma/MetaTheory.lean` — completeness, special soundness with knowledge extractor, honest-verifier zero knowledge with simulator. Proved **once**, used everywhere.
-4. `Poksho/Sigma/FiatShamir.lean` — non-interactive transformation in the random oracle model, including the SHO/HMAC-SHA256 stateful-hash construction used in `poksho`.
-5. `Poksho/Encryption.lean` — the verifiable encryption scheme (CPZ19, §4.1): `KeyGen`, `Enc`, `Dec`, `Prove`, `Verify`, with correctness, the unique-ciphertexts property, and correctness under adversarially chosen keys.
+The only place Ristretto255 and VCV-io appear. Two import rules make the boundary enforceable: only `Examples/` and security tracks (when constructing a security game) may import from `Instances/`; no other directory may.
 
-### Phase 2 — `ZkCredential/`: KVAC
+- **`Instances/Ristretto.lean`** (Track Ex) — local binding of the abstract `PrimeOrderGroup` typeclass to the verified Ristretto255 instance from `curve25519-dalek-lean-verify`. Produced as part of Track Ex; the Lake dependency on `curve25519-dalek-lean-verify` is added in the same PR. Until Track Ex lands, this file does not exist and the lakefile does not import dalek. **μBBS curve note:** Ristretto255 is a valid concrete instance only for μCMZ — μBBS requires a curve larger than Ristretto255 for 128-bit security, which is out of v1 scope.
+- **`Instances/VCVioOracle.lean`** (Track V) — VCV-io binding of the abstract Hash typeclass, introduced by the first security track that needs a game-based reduction (typically Track CMZ-A) and shared with all subsequent security tracks. Implements the random-oracle interfaces in `Core/Hash.lean` using VCV-io's `OracleSpec` infrastructure.
 
-1. `ZkCredential/MACGGM.lean` — Definition 1 of CPZ19 with the uf-cma security claim left as an axiom.
-2. `ZkCredential/MAC.lean` — the new algebraic MAC of CPZ19 §3.1, supporting attributes of sum type `Group 𝔾 | Scalar ℤ_q`, with provable correctness.
-3. `ZkCredential/Issuance.lean` — the issuance proof $\pi_I$; completeness should follow directly from Phase 1.
-4. `ZkCredential/Presentation.lean` — presentations $\pi_A$, $\pi_P$ from §5.12–5.13. The algebraic identity $Z = C_V / (W \cdot C_{x_0}^{x_0} \cdot C_{x_1}^{x_1} \cdot \prod_i C_{y_i}^{y_i}) = I^z$ on page 37 of CPZ19 is a clean target for Mathlib's `ring`/`group` automation.
-5. `ZkCredential/BlindIssuance.lean` — §5.10, with ElGamal encryption of blinded attributes and homomorphic computation of $(S_1, S_2)$.
+### `KVAC/Examples/` — concrete protocol run (Track Ex)
 
-### Phase 3 — `ZkGroup/`: protocol-specific proofs and data objects
+- **`Examples/ConcreteRun.lean`** — a small evaluable Lean script exercising the μCMZ protocol end-to-end against `Instances/Ristretto`, with a `decide` (or `native_decide`) sanity check. Smoke-tests that the abstract typeclasses can be coherently instantiated; serves as documentation by example; catches abstraction mismatches between `Core/`, `Framework/`, and `Instances/`.
 
-1. `ZkGroup/Data.lean` — `UID`, `ProfileKey`, `*Commitment`, `*Version`, the chain `GroupMasterKey → GroupSecretParams → GroupPublicParams`, `UidCiphertext`, `ProfileKeyCiphertext`, `Role`.
-2. `ZkGroup/AuthCredential.lean` and `ZkGroup/ProfileKeyCredential.lean` — attribute layouts as in §5.9 and §5.10, plus *Response* and *Presentation* structures, each instantiating one statement through the Phase 1 DSL.
-3. `ZkGroup/Ciphertext.lean` — the constructors of §5.11 and decryption with the post-decryption checks $E_1 \ne 1$ and $E_1 = (M_1')^{a_1}$.
+Track Ex bundles three things into a single PR: this example file, the `Instances/Ristretto.lean` binding, and the addition of `curve25519-dalek-lean-verify` to `lakefile.toml`. None of these is needed before Wave 4 — every Wave 1–3 track works against the abstract prime-order group, so deferring the Lake dependency to Track Ex keeps earlier builds light.
 
-### Phase 4 — `System/`: the Signal Private Group System
-
-1. `System/Operations.lean` — each operation of §5.6 and §5.7 as a state transition over server and user state, with end-to-end correctness theorems analogous to PQXDH's `X3DH_handshake_correct`.
-2. `Examples/SignalGroupExample.lean` — a concrete small run, mirroring PQXDH's `X3DHExample`.
-
-### Phase 5 — `Security/`
-
-1. `Security/Assumptions.lean` — DDH, DLP, `MAC_GGM` uf-cma, the random oracle model. Reuses PQXDH conventions.
-2. `Security/EncryptionSecurity.lean` — Definitions 6, 8, 9, 12 and Theorems 5, 7, 10, 13 with Lemma 11; each is one or two game hops.
-3. `Security/MACSecurity.lean` — Theorem 14 by case analysis on Type 1, 2 and 3 forgeries.
-4. `Security/KVACSecurity.lean` — the five properties of [CMZ14].
-5. `Security/IdealFunctionality.lean` — Appendix A of CPZ19, in honest-server and malicious-server cases.
-6. `Security/Simulator.lean` — Appendix B. Given that CPZ19 §9 explicitly admits the published proof is a sketch, this is descoped to "state the theorem with `sorry`" for v1.
+No theorem in the formalization plan strictly requires `Examples/`. It can be cut if scope pressure becomes severe; for v1 the cost is low (~50–100 lines, written once when Track CMZ-C has landed) and the sanity-check value is high.
 
 ## Security results targeted
 
-The theorems and lemmas below are the formal statements we aim to either prove or state-with-`sorry` in v1. Numbering follows CPZ19.
+The theorems and lemmas below are the formal statements we aim to either prove or state-with-`sorry` in v1. Numbering follows O24.
 
 | Result | Statement | Assumption | v1 status |
 |---|---|---|---|
-| Thm. 5 | $f_k(x) = x^k$ is a wPRF | DDH | proved |
-| Thm. 7 | Encryption is CPA secure | DDH + RO | proved |
-| Thm. 10 | Encryption has unique ciphertexts and adversarial-key correctness | RO (`HashToG`, `Derive`) | proved |
-| Lem. 11 | $H(m)^{a_1}$ is a suf-cma MAC | DDH + RO | proved |
-| Thm. 13 | Encryption is CCA secure | DDH + RO | proved |
-| Thm. 14 | New algebraic MAC is suf-cmva | DDH + RO + `MAC_GGM` uf-cma | proved (uf-cma left as axiom) |
-| §7.4 | KVAC properties: correctness, unforgeability, anonymity, blind issuance, key-parameter consistency | DDH + DLP + ZK soundness/extractability | proved |
-| Thm. 16 | Encryption satisfies selective opening | generic group model | **stated; left as axiom** |
-| App. A, B | Real protocol UC-realizes ideal functionality $\mathcal{F}$ | composition of the above | **honest-server case proved; malicious-server case stated with `sorry`** |
+| Sec. 3.2 | Algebraic MAC UF-CMVA game (definition) | — | proved syntax; security depends on construction |
+| Sec. 3.3 | NIZK simulation-extractability (definition) | — | proved syntax |
+| Sec. 4.3 | Anonymity game (statistical / everlasting-forward) | — | proved definition |
+| Sec. 4.4 | Extractability game | — | proved definition |
+| Lem. 5.4 | μCMZ algebraic MAC UF-CMVA, $n=1$ case | 3-DL + AGM | proved |
+| Lem. 5.5 | μCMZ algebraic MAC UF-CMVA, general $n$ | 3-DL + AGM | proved |
+| Thm. 5.1 | μCMZ is an algebraic MAC | 3-DL + AGM | proved |
+| Thm. 5.2 | μCMZ is an extractable KVAC | 3-DL + AGM + ZKP | proved |
+| Thm. 5.3 | μCMZ$_{AT}$ is one-more unforgeable | 2-DL + AGM | proved |
+| Thm. 5.8 | μCMZ is anonymous | knowledge-sound ZKP | proved |
+| Thms. 6.6, 6.8–6.9 | μBBS algebraic MAC + extractability | (q+2)-DL + AGM | proved |
+| Thm. 6.12 | μBBS$_{AT}$ is one-more unforgeable | $\sqrt{q}$-DL + AGM | proved |
+| (analogue) | μBBS anonymity | knowledge-sound ZKP | proved |
 
-The supporting cryptographic assumptions (DDH, DLP, ROM, `MAC_GGM` uf-cma) live in `KVAC/Security/Assumptions.lean` so that every security track shares identical statements.
+The supporting cryptographic assumptions (DL, DDH, q-DL, q-DDHI, AGM) live in `KVAC/Preliminaries/Assumptions.lean` so that all security tracks share identical statements.
 
-## Items deferred from v1
+## Future works
 
-Three items are explicitly out of scope for the first version, all because the underlying technique is either expensive to formalize or acknowledged informal in the source paper.
+The items below are explicitly **deferred from v1**. They are valuable contributions that build on what v1 produces, but they are not prerequisites for landing a complete v1. Within this section, items are listed in priority order: cleanup and hardening of the v1 codebase comes first; new features come after.
 
-- **Theorem 16 (selective opening, generic group model).** Left as an axiom. A formalization of the generic group model is a substantial separate project that would not be reusable elsewhere in this repository.
-- **Rigorous Appendix B simulation proof.** Stated in `KVAC/Security/Simulator.lean` and left as `sorry`. CPZ19 §9 itself notes that the published proof is a sketch and identifies "making this proof rigorous" as future work that formal methods may help with.
-- **`MAC_GGM` uf-cma.** Left as an axiom unless a contributor has appetite for the GGM detour. CPZ19 §9 notes that ongoing work is developing a new proof of Theorem 14 that replaces this assumption with DDH directly.
+### Cleanup / hardening passes (top priority post-v1)
+
+These items consolidate what's needed to take the v1 codebase from "complete" to "production-grade." They should be addressed before adding any of the new-feature future works below.
+
+- Replace any `sorry` introduced as a deliberate descope with a real proof.
+- Tighten security bounds where the initial proofs took the cleanest path rather than the tightest.
+- Audit pass over the full Mathlib import graph for proof-fragility hot spots.
+- Verso Blueprint documentation generation.
+
+### Credential extensions (O24, Sec. 8)
+
+The paper defines three extensions that compose with any KVAC system satisfying the abstract framework. None is in v1; all become accessible once `Framework/` and at least one scheme have landed.
+
+- **Time-based policies (§8.1).** Attach an expiration time to a credential; prove at presentation that the current time is within the validity window. Lowest cost — implemented as a predicate over a credential attribute. Deployment analogue: CPZ19's "redemption date." Expected work: 1–2 weeks.
+- **Rate-limiting (§8.2).** A user can produce at most $\ell$ valid presentations per scope. Combines a Dodis–Yampolskiy PRF (Theorem 8.7, q-DDHI assumption) with the one-more unforgeability of the underlying KVAC. Expected work: 3–4 weeks. Deployment analogue: Apple iCloud Private Relay, RFC 9578.
+- **Pseudonyms (§8.3).** A user produces a stable pseudonym per scope, unlinkable across scopes. Reuses 70%+ of the rate-limiting PRF infrastructure. Expected work: 3–4 weeks if rate-limiting has landed, ~6 if it's the first PRF-based extension. Deployment analogue: Tor, anonymous login systems, IETF KB25 draft.
+
+If any extension is added to active scope later, recommended order: rate-limiting → pseudonyms → time-based.
+
+### Designated-verifier SNARKs (O24, Sec. 7)
+
+The paper builds **dvKZG** (designated-verifier Kate–Zaverucha–Goldberg polynomial commitments without pairings) and an IOP compiler that yields fully-succinct designated-verifier zk-SNARKs over any prime-order group. As an example application, the paper provides a constant-sized range proof for KVAC attributes.
+
+This is largely orthogonal to the rest of the project. It enables richer credential predicates (range proofs, complex access policies) than sigma protocols can express efficiently. Formalisation cost is substantial — polynomial commitments, an IOP compiler, malicious-verifier zero knowledge — and probably warrants either a dedicated subdirectory or its own repository (e.g., `dvkzg-lean-verify`).
+
+Deferred indefinitely. Mentioned here for future contributors who may want to take it on.
+
+### μBBS Examples
+
+`Examples/ConcreteRun` for v1 covers μCMZ over Ristretto255. A μBBS concrete run requires a ~300–384-bit curve (e.g., the BLS12-381 base curve, used without pairings) for 128-bit security under q-DL. Out of scope for v1; nice-to-have once a verified larger-curve instance is available.
 
 ## Recommendations for contributors
 
 Three strategic notes worth keeping in mind from day one.
 
-1. **Use libsignal as the specification, not the paper.** The Rust source at [`signalapp/libsignal`](https://github.com/signalapp/libsignal) is what Signal actually runs in production. Where the paper and the code disagree (and they will — the paper has been revised through 2020), the code is what gets shipped. When a discrepancy comes up in review, the deployed code wins; the paper guides the proof structure.
+1. **Drive `Framework/` from O24's Definitions 4.2–4.5, not from μCMZ's algebra.** Definitions 4.2–4.5 are scheme-agnostic; if the typeclass shapes mirror them directly, both μCMZ and μBBS will fit without contortions. If `Framework/` ends up "shaped like" μCMZ (which lands first), μBBS will fight the typeclasses. The defence against this is to write Framework/ against a paper proof rather than against the first scheme being implemented.
 
-2. **Build the sigma-protocol DSL with proven meta-theory early.** The bespoke nature of the libsignal ZKP stack only pays off if we lean into it. Treating NIZK as an axiom is faster in Phase 1 but forfeits the savings in every later phase, since every credential proof becomes one-line instantiation against the DSL once the meta-theorems are in place.
+2. **Build the sigma-protocol DSL and straight-line extraction infrastructure with proven meta-theory early.** The paper's security proofs in Sec. 5 and Sec. 6 lean heavily on straight-line extraction (Sec. 9). Treating the proof system as an axiom is faster initially but forfeits the savings in every later phase, since every credential proof becomes one-line instantiation against the DSL once the meta-theorems are in place.
 
-3. **Coordinate with the maintainers of [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) on Elligator-inverse coverage.** CPZ19 §6 notes that Signal's fork of `curve25519-dalek` adds Elligator-inverse and Ristretto byte-decoding routines, which `EncodeToG`/`DecodeFromG` rely on. If those aren't yet covered upstream, verifying them is the natural first contribution back to that repository (Track A).
+3. **Don't add `curve25519-dalek-lean-verify` to `lakefile.toml` until Track Ex is on the agenda.** The 2024 paper does not require any Ristretto-specific functionality; everything is stated over an abstract prime-order group. Adding the dependency too early bloats the build for tracks that don't need it. Track Ex's single PR adds the Lake dependency, the binding file, and the example together.
 
 ## What to do next
 
-See [`TRACKS.md`](TRACKS.md) for the current status of each track and to claim work. Get in touch via the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before starting on Track B (the sigma DSL), since its API shape is reviewed centrally before any track that depends on it can begin.
+See [`TRACKS.md`](TRACKS.md) for the current status of each track and to claim work. Get in touch via the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before starting on Track 0 (Core typeclasses) or Track Σ (sigma-protocol DSL), since their API shapes are reviewed centrally before any track that depends on them can begin.

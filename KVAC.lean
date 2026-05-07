@@ -1,3 +1,4 @@
 import KVAC.Core.Group
 import KVAC.Core.Hash
-import KVAC.Core.Encoding
+import KVAC.Core.ZKProof
+import KVAC.Core.AlgebraicMAC
