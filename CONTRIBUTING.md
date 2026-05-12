@@ -2,7 +2,7 @@
 
 We can all benefit in many ways from interacting with each other! Contributions are very welcome.
 
-This project formalizes, in Lean 4, the keyed-verification anonymous credential (KVAC) construction of [Chase, Perrin and Zaverucha (IACR ePrint 2019/1416)](https://eprint.iacr.org/2019/1416) — the verifiable encryption it enables, and the Signal Private Group System built on top of them.
+This project formalizes, in Lean 4, the keyed-verification anonymous credential (KVAC) framework of [Orrù, *Revisiting Keyed-Verification Anonymous Credentials* (IACR ePrint 2024/1552)](https://eprint.iacr.org/2024/1552), together with two concrete instantiations (μCMZ and μBBS).
 
 - For an orientation to the project, read the [formalization plan](docs/PLAN.md). For the current status of each track and to claim work, see the [tracks board](docs/TRACKS.md).
 
@@ -16,7 +16,7 @@ This project formalizes, in Lean 4, the keyed-verification anonymous credential 
 lake build
 ```
 
-The first build fetches [Mathlib](https://github.com/leanprover-community/mathlib4) and [`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) and may take 10–20 minutes. Subsequent builds use the cache.
+The first build fetches [Mathlib](https://github.com/leanprover-community/mathlib4) and may take 10–20 minutes. Subsequent builds use the cache.
 
 ## Questions
 
