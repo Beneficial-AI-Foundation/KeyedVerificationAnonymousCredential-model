@@ -31,33 +31,54 @@ Contributions are very welcome. Start by reading [`CONTRIBUTING.md`](CONTRIBUTIN
 When a track is split into sub-issues, list them as nested bullets under the track (as Track 0 is below).
 
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
-    - [ ] `Core/Group.lean` (#18) 🚧 WIP
-    - [ ] `Core/Hash.lean` (#19)
-    - [ ] `Core/ZKProof.lean` (#20)
-    - [ ] `Core/AlgebraicMAC.lean` (#21)
+    - [ ] `Core/Group.lean` ([#18]) 🚧 WIP
+    - [ ] `Core/Hash.lean` ([#19])
+    - [ ] `Core/ZKProof.lean` ([#20])
+    - [ ] `Core/AlgebraicMAC.lean` ([#21])
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
-    - [ ] Track Pre — Preliminaries (#2)
-    - [ ] Track Σ — ProofSystems (#3)
-    - [ ] Track F1 — Framework syntax and correctness (#4)
+    - [ ] Track Pre — Preliminaries ([#2])
+    - [ ] Track Σ — ProofSystems ([#3])
+    - [ ] Track F1 — Framework syntax and correctness ([#4])
 - [ ] **Wave 2** — framework anonymity/extractability, scheme constructions
-    - [ ] Track F2 — Framework anonymity and extractability (#5)
-    - [ ] Track CMZ-C — μCMZ construction (#6)
-    - [ ] Track BBS-C — μBBS construction (#7)
+    - [ ] Track F2 — Framework anonymity and extractability ([#5])
+    - [ ] Track CMZ-C — μCMZ construction ([#6])
+    - [ ] Track BBS-C — μBBS construction ([#7])
 - [ ] **Wave 3** — security tracks (μCMZ and μBBS)
-    - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) (#8)
-    - [ ] Track V — VCV-io oracle binding (#9)
-    - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) (#10)
-    - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) (#11)
-    - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) (#12)
-    - [ ] Track BBS-M — μBBS as algebraic MAC (#13)
-    - [ ] Track BBS-A — μBBS anonymity (#14)
-    - [ ] Track BBS-E — μBBS extractability (#15)
-    - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) (#16)
+    - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
+    - [ ] Track V — VCV-io oracle binding ([#9])
+    - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
+    - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
+    - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
+    - [ ] Track BBS-M — μBBS as algebraic MAC ([#13])
+    - [ ] Track BBS-A — μBBS anonymity ([#14])
+    - [ ] Track BBS-E — μBBS extractability ([#15])
+    - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) ([#16])
 - [ ] **Wave 4** — concrete μCMZ run with Ristretto255
-    - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency (#17)
+    - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency ([#17])
 
 Per-track status and dependency graph in [`docs/TRACKS.md`](docs/TRACKS.md).
 
 ## License
 
 [MIT](LICENSE).
+
+[#2]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/2
+[#3]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/3
+[#4]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/4
+[#5]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/5
+[#6]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/6
+[#7]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/7
+[#8]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/8
+[#9]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/9
+[#10]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/10
+[#11]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/11
+[#12]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/12
+[#13]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/13
+[#14]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/14
+[#15]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/15
+[#16]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/16
+[#17]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/17
+[#18]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/18
+[#19]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/19
+[#20]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/20
+[#21]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/21
