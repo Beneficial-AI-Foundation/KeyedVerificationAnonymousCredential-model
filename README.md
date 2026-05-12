@@ -1,4 +1,4 @@
-# KeyedVerificationAnonymousCredential-verify
+# KeyedVerificationAnonymousCredential-model
 
 A Lean 4 formalization of the keyed-verification anonymous credential (KVAC) framework of [Orrù, *Revisiting Keyed-Verification Anonymous Credentials* (IACR ePrint 2024/1552)](https://eprint.iacr.org/2024/1552), together with two concrete instantiations (μCMZ and μBBS).
 

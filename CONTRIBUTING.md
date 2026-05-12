@@ -1,4 +1,4 @@
-# Contributing to KeyedVerificationAnonymousCredential-verify
+# Contributing to KeyedVerificationAnonymousCredential-model
 
 We can all benefit in many ways from interacting with each other! Contributions are very welcome.
 
