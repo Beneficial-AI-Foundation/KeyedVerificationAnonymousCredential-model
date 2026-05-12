@@ -21,8 +21,9 @@ rev = "v4.28.0-rc1"
 # curve25519-dalek-lean-verify is intentionally NOT a dependency at this stage.
 # The 2024 paper formalisation does not require any Ristretto-specific
 # functionality; everything is stated over an abstract prime-order group.
-# See docs/PLAN.md (section "What Track A delivers (and when)") and
-# docs/TRACKS.md (Track A) for when this dependency is added.
+# It is added later in Track Ex (#17) alongside KVAC/Examples/ConcreteRun.lean
+# and KVAC/Instances/Ristretto.lean in a single PR. See docs/PLAN.md and
+# docs/TRACKS.md (Track Ex) for the rationale.
 
 [[lean_lib]]
 name = "KVAC"

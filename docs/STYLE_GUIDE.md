@@ -20,8 +20,8 @@ The copyright holder is the author or their current employer. Authors who have m
 
 ### File organisation
 
-- One layer of the libsignal stack per directory (`Poksho/`, `ZkCredential/`, `ZkGroup/`, `System/`, `Security/`).
-- File names are `UpperCamelCase.lean` and match the concept they define (`Encryption.lean`, `MAC.lean`, `Issuance.lean`).
+- The `KVAC/` directory mirrors the structure of [O24](https://eprint.iacr.org/2024/1552): `Core/` (abstract typeclass API), `Preliminaries/` (assumptions and ZK arguments), `ProofSystems/` (sigma protocols), `Framework/` (paper-level KVAC syntax and security definitions), `Schemes/MicroCMZ/` and `Schemes/MicroBBS/` (the two concrete schemes), `Instances/` (Ristretto255 and VCV-io bindings), and `Examples/` (runnable code). See [`PLAN.md`](PLAN.md) for the rationale.
+- File names are `UpperCamelCase.lean` and match the concept they define (`Group.lean`, `AlgebraicMAC.lean`, `Construction.lean`).
 - Multiple closely related theorems may live in the same file, but a file should have a single coherent topic.
 
 ### Avoiding flexible tactics
