@@ -12,8 +12,6 @@ lake build
 
 Requires the Lean 4 toolchain pinned in [`lean-toolchain`](lean-toolchain) (currently `v4.28.0-rc1`); install via [elan](https://github.com/leanprover/elan). The first build fetches [Mathlib](https://github.com/leanprover-community/mathlib4) and may take 10–20 minutes; subsequent builds use the cache.
 
-[`curve25519-dalek-lean-verify`](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) is **not** a Lake dependency at this stage — it is added later when the Examples/ track lands. See [`docs/PLAN.md`](docs/PLAN.md) for the rationale.
-
 ## Documentation
 
 | File | What it is |
