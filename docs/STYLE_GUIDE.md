@@ -49,5 +49,27 @@ Keep `set_option maxHeartbeats` increases to the bare minimum needed. Use multip
 - Imports follow immediately after the file header without empty lines.
 - Definitions and theorems follow the [Mathlib naming guidelines][mathlib-naming]: `lowerCamelCase` for definitions, `lowercase_underscored` for theorems whose name is a sentence (e.g. `verify_correct`), `lowerCamelCase` for theorems whose name is a proper noun (e.g. `MAC.completeness`).
 
+## Notation conventions
+
+### Additive groups
+
+The formalisation uses **additive notation** for all groups, matching the convention of [O24](https://eprint.iacr.org/2024/1552) §3.1. Concretely:
+
+| Paper                    | Lean                          |
+|--------------------------|-------------------------------|
+| `G ∈ G` (generator)      | `(generator : G)`             |
+| `xG` (scalar mult)       | `x • generator`               |
+| `aP + bP = (a+b)P`       | `a • P + b • P = (a+b) • P`   |
+| `0G = 0` (identity)      | `(0 : G)`                     |
+
+When porting equations from a multiplicative-style reference, apply this translation rule:
+
+- paper `·` (group op) → Lean `+`,
+- paper `^` (exponentiation) → Lean `•` (scalar action), with the operand order **flipped**: paper `g^x` ↔ Lean `x • g`.
+
+The multiplicative group `(ZMod p)*`, when it appears, stays multiplicative.
+
+**Why additive.** Mathlib's elliptic-curve types are `AddCommGroup`. The dalek Ristretto255 API is additive. Choosing additive at the abstract layer makes Track Ex's concrete instantiation a direct match with no notation flips.
+
 [mathlib-style]: https://leanprover-community.github.io/contribute/style.html
 [mathlib-naming]: https://leanprover-community.github.io/contribute/naming.html
