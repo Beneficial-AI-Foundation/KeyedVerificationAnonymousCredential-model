@@ -71,5 +71,46 @@ The multiplicative group `(ZMod p)*`, when it appears, stays multiplicative.
 
 **Why additive.** Mathlib's elliptic-curve types are `AddCommGroup`. The dalek Ristretto255 API is additive. Choosing additive at the abstract layer makes Track Ex's concrete instantiation a direct match with no notation flips.
 
+### Prime-order group convention
+
+Throughout the formalisation, the abstract setting of [O24](https://eprint.iacr.org/2024/1552) §3.1 — a prime-order abelian group `G` of order `p` with scalars in `ZMod p` (or a generic field `F` ≃ `ZMod p`) — is bundled into two `class abbrev`s in [`KVAC/Core/Group.lean`](../KVAC/Core/Group.lean):
+
+```lean
+class abbrev PrimeOrderGroup (F G : Type) [Field F] :=
+  AddCommGroup G, Fintype G, IsAddCyclic G, IsSimpleAddGroup G, Module F G
+
+class abbrev SampleableGroup (F G : Type)
+    [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] :=
+  PrimeOrderGroup F G, SampleableType G
+```
+
+Each file uses **one** of two canonical `variable` blocks. There are no opt-in variants — the class signature lists everything the call site needs, so a missing binder produces a clear elaboration error rather than silent under-specification.
+
+**Non-game files** (`Core/`, `Framework/Syntax`, `Framework/Correctness`, `Schemes/*/Construction`, …) — use `PrimeOrderGroup`:
+
+```lean
+variable {F G : Type} [Field F] [PrimeOrderGroup F G]
+```
+
+**Game-construction files** (`Framework/Anonymity`, `Framework/Extractability`, scheme `Anonymity` / `Extractability` / `OneMoreUnforgeability`, …) — use `SampleableGroup`, with the full F-side and `DecidableEq G` binders it requires:
+
+```lean
+variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
+variable {G : Type} [DecidableEq G] [SampleableGroup F G]
+```
+
+What the binders give you (some bundled, some required at the call site):
+
+- `[AddCommGroup G]` (bundled) — abelian additive group.
+- `[Fintype G]` (bundled) — finite, so `Nat.card G` is well-defined.
+- `[IsAddCyclic G]` (bundled) — cyclic. Derivable from `[AddCommGroup G] [Fintype G] [IsSimpleAddGroup G]` via Mathlib's "simple abelian finite ⇒ cyclic of prime order" instance; bundled for self-documentation.
+- `[IsSimpleAddGroup G]` (bundled) — for a finite abelian group, equivalent to `G ≃ ZMod p` for a prime `p`. This is what pins down "prime order".
+- `[Field F] [Module F G]` (binder + bundled) — scalars in the field `F`. `x • g` works out of the box for `x : F`, `g : G`, and the full Mathlib `Module` lemma library (`mul_smul`, `add_smul`, `one_smul`, `smul_add`, …) is available. Concrete instantiations pick `F := ZMod p` for the appropriate `p`.
+- (`SampleableGroup` only) `[Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableType G]` (binders + last one bundled) — VCV-io's sampling typeclasses for `F` and `G`, plus decidable equality on both. Lets you write `let x ←$ᵗ F; let g ←$ᵗ G; …` inside an `OracleComp` block, and pattern-match decidably on elements of either type.
+
+Why the F-side classes and `DecidableEq` aren't bundled as `class abbrev` parents: `DecidableEq` is not a structure-class and can't appear as a parent; the F-side classes can't be bundled because `class abbrev`'s parents must share a single carrier (and `SampleableGroup`'s parents have carrier `G`). Requiring them as instance binders gives Lean's elaborator a clear error when one is missing.
+
+**Use the `Add`-prefixed typeclasses.** Mathlib's `IsCyclic` and `IsSimpleGroup` are multiplicative-only — their class signatures require `[Pow G ℤ]` and `[Group G]` respectively, neither of which an `AddCommGroup G` provides. Using them in an additive context fails to elaborate (`failed to synthesize Pow G ℤ`). The additive counterparts `IsAddCyclic` (requires `[SMul ℤ G]`, provided by `AddCommGroup`) and `IsSimpleAddGroup` (requires `[AddGroup G]`) are the correct choice. Mathlib's `@[to_additive]` keeps the *theorems* in sync across the two notations, but typeclass names themselves are distinct.
+
 [mathlib-style]: https://leanprover-community.github.io/contribute/style.html
 [mathlib-naming]: https://leanprover-community.github.io/contribute/naming.html

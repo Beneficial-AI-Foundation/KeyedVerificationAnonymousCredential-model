@@ -45,7 +45,6 @@ When a track is split into sub-issues, list them as nested bullets under the tra
     - [ ] Track BBS-C — μBBS construction ([#7])
 - [ ] **Wave 3** — security tracks (μCMZ and μBBS)
     - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
-    - [ ] Track V — VCV-io oracle binding ([#9])
     - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
     - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
     - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
@@ -69,7 +68,6 @@ Per-track status and dependency graph in [`docs/TRACKS.md`](docs/TRACKS.md).
 [#6]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/6
 [#7]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/7
 [#8]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/8
-[#9]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/9
 [#10]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/10
 [#11]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/11
 [#12]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/12
