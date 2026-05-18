@@ -9,9 +9,10 @@ Released under MIT license as described in the file LICENSE.
 Abstract interfaces for the hash functions used by Orrù, *Revisiting
 Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552:
 $H_p : \{0,1\}^* \to \mathbb{Z}_p$ for Fiat–Shamir transcripts and
-$H_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$ for hash-to-curve. For Wave 0 these
-are treated as opaque; from Track V (`#9`) onwards they are backed by VCV-io
-oracle semantics so that random-oracle reductions can be expressed.
+$H_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$ for hash-to-curve. VCV-io is a
+Wave-0 Lake dependency, so these interfaces may either be stated abstractly or
+expressed directly in terms of VCV-io's `OracleSpec` / `OracleComp` types
+(decided when issue `#19` lands).
 
 See `docs/PLAN.md` for the design intent.
 -/
