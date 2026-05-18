@@ -51,13 +51,13 @@ This formalization is **paper-driven, not implementation-driven**. The directory
 - **`KVAC/Core/` and `KVAC/Framework/` stay implementation-agnostic.** They define abstract typeclasses (prime-order group, hash functions, ZK proof system, algebraic MAC) and the abstract KVAC syntax / correctness / anonymity / extractability definitions, without committing to a specific curve, hash function, oracle-semantics framework, or deployment.
 - **The abstract framework is paper-faithful.** `Framework/Syntax`, `Framework/Correctness`, `Framework/Anonymity`, and `Framework/Extractability` mirror Definitions 4.2–4.5 of O24 directly. Both μCMZ and μBBS prove their constructions satisfy these same paper-level definitions. This structurally prevents over-specialization to one scheme.
 
-A consequence concerning oracle semantics: BAIF uses the [VCV-io Lean library](https://github.com/Verified-zkEVM/VCV-io) for game-based computational proofs (Phase 5), but VCV-io makes specific modeling choices (oracle computations as a particular free-monad / polynomial-functor construction). To avoid baking those choices into the protocol surface, VCV-io enters only at the point where security games are *constructed* — typically inside `KVAC/Schemes/.../Anonymity.lean`, `Extractability.lean`, and `OneMoreUnforgeability.lean`. The abstract interfaces in `KVAC/Core/` and `KVAC/Framework/` are statable in plain Lean and do not depend on VCV-io.
+A consequence concerning oracle semantics: BAIF uses the [VCV-io Lean library](https://github.com/Verified-zkEVM/VCV-io) for game-based computational proofs and for the project-wide `SampleableType` convention on the algebraic surface. VCV-io is a Wave-0 Lake dependency, pinned to the same revision as the PQXDH formalisation for cross-project consistency. `KVAC/Core/Group.lean` already depends on it via `SampleableType F` and `SampleableType G`; higher tracks pick up VCV-io's `OracleComp` / `OracleSpec` machinery for security-game construction and VCV-io's `CryptoFoundations/HardnessAssumptions/` library for the DL / DDH / q-DL / q-DDHI / gap-DL statements.
 
-Concretely, `KVAC/Core/Hash.lean` defines the random-oracle interfaces abstractly. The VCV-io binding lives in a separate file, `KVAC/Instances/VCVioOracle.lean`, which is introduced by the first security track that needs a game-based reduction. Earlier tracks work against `Core/Hash.lean` only.
+The abstract surfaces in `KVAC/Core/` and `KVAC/Framework/` are still scheme-agnostic — they commit to *general* VCV-io / Mathlib typeclasses (e.g. `SampleableType`, `Module F G`), not to any particular curve, hash function, or deployment.
 
-All concrete bindings — the verified Ristretto255 instance, the VCV-io oracle binding, and any future concrete plug-ins — live in `KVAC/Instances/` and only there. Two import rules make the boundary enforceable:
+All concrete bindings — the verified Ristretto255 instance and any future concrete plug-ins — live in `KVAC/Instances/` and only there. Two import rules make the boundary enforceable:
 
-- `Examples/` and security tracks (when constructing a security game) may import from `Instances/`.
+- `Examples/` and security tracks may import from `Instances/`.
 - No other directory may. Theorems and definitions outside `Examples/` and `Instances/` are stated against the abstract typeclasses in `Core/` and `Framework/`, never against a concrete type.
 
 ## Stack alignment: paper section ↔ Lean directory
@@ -70,7 +70,7 @@ All concrete bindings — the verified Ristretto255 instance, the VCV-io oracle 
 | Sec. 6 (μBBS) | `KVAC/Schemes/MicroBBS/` | Construction + security per the 2024 paper |
 | Sec. 9 (Σ-protocols) | `KVAC/ProofSystems/` | Sigma protocols, Fiat–Shamir, straight-line extraction |
 | (none — supporting algebra) | `KVAC/Core/` | Group, hash, ZK proof, algebraic MAC typeclasses |
-| (none — concrete bindings) | `KVAC/Instances/` | Ristretto255, VCV-io |
+| (none — concrete bindings) | `KVAC/Instances/` | Ristretto255 |
 | (none — runnable code) | `KVAC/Examples/` | Concrete μCMZ run |
 
 Sec. 7 (designated-verifier SNARKs) and Sec. 8 (credential extensions) are not in v1 scope; see [Future works](#future-works).
@@ -85,7 +85,7 @@ KVAC/
 │   ├── ZKProof.lean                       [generic NIZK / proof-of-knowledge typeclass]
 │   └── AlgebraicMAC.lean                  [Sec. 3.2 — algebraic MAC syntax]
 ├── Preliminaries/                         [Sec. 3]
-│   ├── Assumptions.lean                   [DL, DDH, q-DL, q-DDHI, AGM, GGM]
+│   ├── Assumptions.lean                   [Sec. 3.1 — DL, DDH, q-DL, q-DDHI, gap-DL bindings to VCV-io]
 │   ├── ZKArguments.lean                   [Sec. 3.3 — knowledge soundness, simulation extractability]
 │   └── AnonymousTokens.lean               [Sec. 3.4 — anonymous-token syntax + OMUF game]
 ├── ProofSystems/                          [Sec. 9 + supporting proof technology]
@@ -111,13 +111,10 @@ KVAC/
 │       ├── Extractability.lean            [§6.5]
 │       └── OneMoreUnforgeability.lean     [§6.6]
 ├── Instances/                             [concrete bindings; the only place
-│   │                                       Ristretto255 / VCV-io appear]
-│   ├── Ristretto.lean                     [Track Ex — local binding to dalek-verified
-│   │                                       Ristretto255; bundled with Examples/ConcreteRun
-│   │                                       and the lakefile dalek dependency in one PR]
-│   └── VCVioOracle.lean                   [Phase 5 — VCV-io binding for the abstract
-│                                           Hash interfaces; introduced by the first
-│                                           security track to need a game-based reduction]
+│   │                                       Ristretto255 appears]
+│   └── Ristretto.lean                     [Track Ex — local binding to dalek-verified
+│                                           Ristretto255; bundled with Examples/ConcreteRun
+│                                           and the lakefile dalek dependency in one PR]
 └── Examples/
     └── ConcreteRun.lean                   [a μCMZ run over Ristretto255]
 ```
@@ -140,9 +137,10 @@ graph TD
   BBS["Schemes/MicroBBS/<br/>Construction, AlgebraicMAC,<br/>Anonymity, Extractability, OMUF"]:::scheme
 
   RTto["Instances/Ristretto"]:::inst
-  VCVO["Instances/VCVioOracle"]:::inst
 
   Examples["Examples/ConcreteRun"]:::ex
+
+  VCVio --> Core
 
   Core --> Pre
   Core --> PS
@@ -150,7 +148,6 @@ graph TD
   Core --> CMZ
   Core --> BBS
   Core --> RTto
-  Core --> VCVO
 
   Pre --> FW
   Pre --> CMZ
@@ -165,12 +162,8 @@ graph TD
   CMZ --> Examples
 
   Dalek --> RTto
-  VCVio --> VCVO
 
   RTto --> Examples
-
-  VCVO --> CMZ
-  VCVO --> BBS
 
   classDef ext fill:#e1e1e1,stroke:#666,color:#000
   classDef core fill:#f0e6f7,stroke:#6f42c1,color:#000
@@ -186,7 +179,7 @@ The `[Track X]` annotations in TRACKS.md indicate which independent work track o
 - **Wave 0** (Track 0) — foundational; start immediately. Gating step before Wave 1 can begin.
 - **Wave 1** (Tracks Pre, Σ, F1) — start once Track 0 lands.
 - **Wave 2** (Tracks F2, CMZ-C, BBS-C) — Framework anonymity/extractability, plus each scheme's construction.
-- **Wave 3** (Tracks CMZ-{M,A,E,OMUF}, BBS-{M,A,E,OMUF}, V) — the two schemes' security tracks plus the VCV-io binding.
+- **Wave 3** (Tracks CMZ-{M,A,E,OMUF}, BBS-{M,A,E,OMUF}) — the two schemes' security tracks.
 - **Wave 4** (Track Ex) — concrete run, Ristretto binding, and Lake dependency on `curve25519-dalek-lean-verify` all bundled into one PR.
 
 The full dependency graph between tracks, and the current claim status of each, are in [`TRACKS.md`](TRACKS.md).
@@ -197,10 +190,10 @@ This section describes each module's role and contents. Each subsection lists th
 
 ### `KVAC/Core/` — abstract algebra (Track 0)
 
-The shared API contract that every higher layer imports. These typeclasses are designed once (Track 0) and remain **stable** for the life of the project. Concrete *instances* — first axiomatised, later swapped for verified instances — change over time, but the API surface above does not. Per the "Specification vs. implementation" section, `KVAC/Core/` must not import VCV-io and must not depend on any deployment-specific structure.
+The shared API contract that every higher layer imports. These typeclasses are designed once (Track 0) and remain **stable** for the life of the project. Concrete *instances* — first axiomatised, later swapped for verified instances — change over time, but the API surface above does not. Per the "Specification vs. implementation" section, `KVAC/Core/` may import VCV-io (for the project-wide `SampleableType` convention) but must not depend on any deployment-specific structure.
 
-- **`Core/Group.lean`** — prime-order group typeclass (`PrimeOrderGroup G`) with its order, generator, and basic axioms. Concrete instances live in `Instances/`.
-- **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). Opaque initially; backed by VCV-io oracle semantics in security tracks.
+- **`Core/Group.lean`** — the project-wide algebraic convention, exposed as two `class abbrev`s: `PrimeOrderGroup F G` (abelian + finite + cyclic + simple + `Module F G`, sufficient for abstract syntax / correctness files) and `SampleableGroup F G` (extends `PrimeOrderGroup` with `SampleableType G` for VCV-io game construction). See `docs/STYLE_GUIDE.md`, section *Prime-order group convention*, for the binder block to copy into each file. Concrete instances live in `Instances/`.
+- **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). May be stated abstractly or directly against VCV-io's `OracleSpec` types now that VCV-io is a Wave-0 dependency.
 - **`Core/ZKProof.lean`** — generic NIZK / proof-of-knowledge typeclass following the syntax of Sec. 3.3 (setup, prover, verifier; properties: completeness, knowledge soundness, zero-knowledge, simulation-extractability).
 - **`Core/AlgebraicMAC.lean`** — algebraic MAC typeclass following Sec. 3.2 (Definition 3.1: setup, key-gen, MAC, verify; UF-CMVA security game).
 
@@ -208,7 +201,7 @@ The shared API contract that every higher layer imports. These typeclasses are d
 
 Cryptographic background that the schemes rely on.
 
-- **`Preliminaries/Assumptions.lean`** — DL, DDH, q-DL, q-DDHI, gap-DL assumptions, plus the AGM and GGM frameworks (Sec. 3.1). All security tracks share these statements.
+- **`Preliminaries/Assumptions.lean`** — DL, DDH, q-DL, q-DDHI, and gap-DL hardness assumptions (Sec. 3.1), bound to VCV-io's `CryptoFoundations/HardnessAssumptions/` library: DL and DDH already exist upstream, while q-DL, q-DDHI, and gap-DL are introduced under Track Pre (either project-locally or as upstream contributions to VCV-io). All security tracks share these statements. AGM and GGM are proof-theoretic adversary models, not assumptions about the group, and live in the security tracks where reductions are stated.
 - **`Preliminaries/ZKArguments.lean`** — abstract NIZK syntax with knowledge-soundness, zero-knowledge, and simulation-extractability properties (Sec. 3.3).
 - **`Preliminaries/AnonymousTokens.lean`** — anonymous-token syntax and the one-more unforgeability (OMUF) game (Sec. 3.4).
 
@@ -249,12 +242,11 @@ The second concrete instantiation, parallel in structure to MicroCMZ. Improvemen
 - **`Schemes/MicroBBS/Extractability.lean`** (§6.5) — μBBS is extractable in AGM. Requires the DDH oracle augmentation in the algebraic-MAC unforgeability game (one of the technical contributions of the paper).
 - **`Schemes/MicroBBS/OneMoreUnforgeability.lean`** (§6.6) — Theorem 6.12: μBBS$_{AT}$ is one-more unforgeable. Best attack is $O(\sqrt{q})$ via Cheon's attack; ~20 bits of security loss.
 
-### `KVAC/Instances/` — concrete bindings (Tracks Ex, V)
+### `KVAC/Instances/` — concrete bindings (Track Ex)
 
-The only place Ristretto255 and VCV-io appear. Two import rules make the boundary enforceable: only `Examples/` and security tracks (when constructing a security game) may import from `Instances/`; no other directory may.
+The only place Ristretto255 appears. Two import rules make the boundary enforceable: only `Examples/` and security tracks may import from `Instances/`; no other directory may.
 
-- **`Instances/Ristretto.lean`** (Track Ex) — local binding of the abstract `PrimeOrderGroup` typeclass to the verified Ristretto255 instance from `curve25519-dalek-lean-verify`. Produced as part of Track Ex; the Lake dependency on `curve25519-dalek-lean-verify` is added in the same PR. Until Track Ex lands, this file does not exist and the lakefile does not import dalek. **μBBS curve note:** Ristretto255 is a valid concrete instance only for μCMZ — μBBS requires a curve larger than Ristretto255 for 128-bit security, which is out of v1 scope.
-- **`Instances/VCVioOracle.lean`** (Track V) — VCV-io binding of the abstract Hash typeclass, introduced by the first security track that needs a game-based reduction (typically Track CMZ-A) and shared with all subsequent security tracks. Implements the random-oracle interfaces in `Core/Hash.lean` using VCV-io's `OracleSpec` infrastructure.
+- **`Instances/Ristretto.lean`** (Track Ex) — local binding of the abstract `PrimeOrderGroup` / `SampleableGroup` typeclasses to the verified Ristretto255 instance from `curve25519-dalek-lean-verify`. Produced as part of Track Ex; the Lake dependency on `curve25519-dalek-lean-verify` is added in the same PR. Until Track Ex lands, this file does not exist and the lakefile does not import dalek. **μBBS curve note:** Ristretto255 is a valid concrete instance only for μCMZ — μBBS requires a curve larger than Ristretto255 for 128-bit security, which is out of v1 scope.
 
 ### `KVAC/Examples/` — concrete protocol run (Track Ex)
 
@@ -284,7 +276,7 @@ The theorems and lemmas below are the formal statements we aim to either prove o
 | Thm. 6.12 | μBBS$_{AT}$ is one-more unforgeable | $\sqrt{q}$-DL + AGM | proved |
 | (analogue) | μBBS anonymity | knowledge-sound ZKP | proved |
 
-The supporting cryptographic assumptions (DL, DDH, q-DL, q-DDHI, AGM) live in `KVAC/Preliminaries/Assumptions.lean` so that all security tracks share identical statements.
+The supporting cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL) live in `KVAC/Preliminaries/Assumptions.lean` (delivered by Track Pre) and are bound to VCV-io's `CryptoFoundations/HardnessAssumptions/` library — DL and DDH directly from VCV-io; q-DL, q-DDHI, and gap-DL added project-locally or contributed upstream. This way every security track shares identical statements without forking a private opaque copy.
 
 ## Future works
 

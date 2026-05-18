@@ -9,14 +9,24 @@ relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
 maxSynthPendingDepth = 3
 
-# Mathlib pinned to v4.28.0-rc1 to match the toolchain. When the
-# Curve25519Dalek dependency is added later (alongside the Examples/ track),
-# this pin should match the revision Curve25519Dalek transitively uses, to
-# avoid version conflicts.
+# Mathlib pinned to v4.28.0 to match the toolchain and the revision required
+# by VCV-io and the PQXDH formalisation. When the Curve25519Dalek dependency
+# is added later (alongside the Examples/ track), this pin should match the
+# revision Curve25519Dalek transitively uses, to avoid version conflicts.
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.28.0-rc1"
+rev = "v4.28.0"
+
+# VCV-io provides the `SampleableType` typeclass used by `KVAC/Core/Group.lean`
+# and, in later tracks, the `OracleComp` / `OracleSpec` infrastructure for
+# game-based security definitions and the hardness-assumption library under
+# `VCVio/CryptoFoundations/HardnessAssumptions/`. Pinned to `ebea2fa` to match
+# the revision used by the PQXDH formalisation, for cross-project consistency.
+[[require]]
+name = "VCVio"
+git = "https://github.com/Verified-zkEVM/VCV-io.git"
+rev = "ebea2fa"
 
 # curve25519-dalek-lean-verify is intentionally NOT a dependency at this stage.
 # The 2024 paper formalisation does not require any Ristretto-specific

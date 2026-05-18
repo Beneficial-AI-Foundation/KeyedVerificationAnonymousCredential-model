@@ -10,6 +10,8 @@ Each track corresponds to one open issue (`track-0`, `track-A`, `track-pre`, …
 
 ```mermaid
 graph TD
+  VCVio["VCV-io<br/>(Wave-0 Lake dep)"]:::ext
+
   T0["Track 0<br/>Core/Group, Hash,<br/>ZKProof, AlgebraicMAC"]:::w0
 
   TPre["Track Pre<br/>Preliminaries/<br/>Assumptions, ZKArguments,<br/>AnonymousTokens"]:::w1
@@ -30,9 +32,9 @@ graph TD
   TBBS_E["Track BBS-E<br/>μBBS Extractability"]:::w3
   TBBS_OMUF["Track BBS-OMUF<br/>μBBS OneMoreUnforgeability"]:::w3
 
-  TV["Track V<br/>Instances/VCVioOracle"]:::w3
-
   TEx["Track Ex<br/>Examples/ConcreteRun<br/>+ Instances/Ristretto<br/>+ lakefile dalek dep"]:::w4
+
+  VCVio --> T0
 
   T0 --> TPre
   T0 --> TΣ
@@ -64,15 +66,9 @@ graph TD
   TF2 --> TBBS_A
   TF2 --> TBBS_E
 
-  TV --> TCMZ_A
-  TV --> TCMZ_E
-  TV --> TCMZ_OMUF
-  TV --> TBBS_A
-  TV --> TBBS_E
-  TV --> TBBS_OMUF
-
   TCMZ_C --> TEx
 
+  classDef ext fill:#e1e1e1,stroke:#666,color:#000
   classDef w0 fill:#f0e6f7,stroke:#6f42c1,color:#000
   classDef w1 fill:#e0f2fe,stroke:#0284c7,color:#000
   classDef w2 fill:#dcfce7,stroke:#16a34a,color:#000
@@ -96,7 +92,7 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
 - [ ] **Track Pre** — Preliminaries
   - Modules: `KVAC/Preliminaries/Assumptions.lean`, `KVAC/Preliminaries/ZKArguments.lean`, `KVAC/Preliminaries/AnonymousTokens.lean`
   - Depends on: Track 0
-  - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, AGM, GGM); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game.
+  - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
 - [ ] **Track Σ** — Proof systems
   - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
   - Depends on: Track 0
@@ -121,9 +117,9 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
   - The protocol description from §6.1 of O24. Independent of CMZ-C — the two scheme tracks proceed in parallel.
 
-## Wave 3 — security tracks (per scheme) + VCV-io binding
+## Wave 3 — security tracks (per scheme)
 
-The security tracks for each scheme are mostly independent of the other scheme. They depend on their own `Construction.lean`, on Track F2's framework definitions, and on Track V (the VCV-io binding) for game-based reductions.
+The security tracks for each scheme are mostly independent of the other scheme. They depend on their own `Construction.lean` and on Track F2's framework definitions; game-based reductions use VCV-io's `OracleComp` / `OracleSpec` machinery directly (VCV-io is a Wave-0 Lake dep, no separate binding track needed).
 
 - [ ] **Track CMZ-M** — μCMZ as algebraic MAC (§5.3)
   - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`
@@ -131,15 +127,15 @@ The security tracks for each scheme are mostly independent of the other scheme. 
   - Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n). Uses straight-line extraction from Track Σ.
 - [ ] **Track CMZ-A** — μCMZ anonymity (§5.4)
   - Modules: `KVAC/Schemes/MicroCMZ/Anonymity.lean`
-  - Depends on: Track CMZ-C, Track F2, Track V
+  - Depends on: Track CMZ-C, Track F2
   - Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZKP. Statistical anonymity result.
 - [ ] **Track CMZ-E** — μCMZ extractability (§5.5)
   - Modules: `KVAC/Schemes/MicroCMZ/Extractability.lean`
-  - Depends on: Track CMZ-C, Track F2, Track CMZ-M, Track V
+  - Depends on: Track CMZ-C, Track F2, Track CMZ-M
   - Theorem 5.2: μCMZ is extractable in AGM. Reduces to MAC unforgeability + ZKP simulation-extractability.
 - [ ] **Track CMZ-OMUF** — μCMZ one-more unforgeability (§5.6)
   - Modules: `KVAC/Schemes/MicroCMZ/OneMoreUnforgeability.lean`
-  - Depends on: Track CMZ-C, Track CMZ-M, Track V
+  - Depends on: Track CMZ-C, Track CMZ-M
   - Theorem 5.3: μCMZ$_{AT}$ (the anonymous-token variant, with $\pi_{iu}$ removed) is one-more unforgeable in AGM under 2-DL. Reduces non-tightly to DL.
 - [ ] **Track BBS-M** — μBBS as algebraic MAC (§6.3)
   - Modules: `KVAC/Schemes/MicroBBS/AlgebraicMAC.lean`
@@ -147,27 +143,23 @@ The security tracks for each scheme are mostly independent of the other scheme. 
   - Theorems 6.6, 6.8, 6.9: μBBS is an algebraic MAC in AGM under (q+2)-DL.
 - [ ] **Track BBS-A** — μBBS anonymity (§6.4)
   - Modules: `KVAC/Schemes/MicroBBS/Anonymity.lean`
-  - Depends on: Track BBS-C, Track F2, Track V
+  - Depends on: Track BBS-C, Track F2
   - The anonymity analogue of Theorem 5.8 for μBBS, with the technical caveat around messages satisfying $\sum_i m_i G_i = -G_0$ (Equation 7).
 - [ ] **Track BBS-E** — μBBS extractability (§6.5)
   - Modules: `KVAC/Schemes/MicroBBS/Extractability.lean`
-  - Depends on: Track BBS-C, Track F2, Track BBS-M, Track V
+  - Depends on: Track BBS-C, Track F2, Track BBS-M
   - μBBS is extractable in AGM. Requires the DDH oracle augmentation in the algebraic-MAC unforgeability game (this is one of the technical contributions of the paper).
 - [ ] **Track BBS-OMUF** — μBBS one-more unforgeability (§6.6)
   - Modules: `KVAC/Schemes/MicroBBS/OneMoreUnforgeability.lean`
-  - Depends on: Track BBS-C, Track BBS-M, Track V
+  - Depends on: Track BBS-C, Track BBS-M
   - Theorem 6.12: μBBS$_{AT}$ is one-more unforgeable. Best attack is $O(\sqrt{q})$ via Cheon's attack; ~20 bits of security loss.
-- [ ] **Track V** — VCV-io oracle binding
-  - Modules: `KVAC/Instances/VCVioOracle.lean`
-  - Depends on: Track 0
-  - VCV-io binding for the abstract Hash typeclasses, introduced by the first security track that needs game-based reductions and shared with all subsequent security tracks. Typically introduced alongside Track CMZ-A (the first to land in Wave 3 for most plausible work orderings).
 
 ## Wave 4 — final integration
 
 - [ ] **Track Ex** — concrete μCMZ run, Ristretto binding, and Lake dependency
   - Modules:
     - `KVAC/Examples/ConcreteRun.lean` (new) — concrete μCMZ protocol run with a `decide` (or `native_decide`) sanity check
-    - `KVAC/Instances/Ristretto.lean` (new) — local binding of `PrimeOrderGroup` to the dalek-verified Ristretto255 instance
+    - `KVAC/Instances/Ristretto.lean` (new) — local binding of `PrimeOrderGroup` / `SampleableGroup` to the dalek-verified Ristretto255 instance
     - `lakefile.toml` — adds the `curve25519-dalek-lean-verify` dependency (not previously present)
   - Depends on: Track CMZ-C
   - This single PR ties together everything needed for the first concrete protocol run. The 2024 paper does not require any Ristretto-specific functionality before this point (no Elligator-inverse, no reversible message encoding) — every Wave 1–3 track works against the abstract prime-order group, so adding the Lake dependency before Wave 4 would only slow down their builds. Track Ex bundles the Lake dependency, the binding file, and the example together. Smoke-tests the abstraction; serves as documentation by example. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Examples/`" and "Module breakdown / `KVAC/Instances/`") for the rationale. **μBBS examples are out of v1 scope** because μBBS requires a curve larger than Ristretto255 for 128-bit security.
