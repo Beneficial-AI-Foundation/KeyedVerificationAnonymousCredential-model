@@ -1,7 +1,7 @@
 name = "KVAC"
 version = "0.1.0"
 keywords = ["formal verification", "cryptography"]
-defaultTargets = ["KVAC"]
+defaultTargets = ["KVAC", "KVACTest"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -37,3 +37,12 @@ rev = "ebea2fa"
 
 [[lean_lib]]
 name = "KVAC"
+
+# `KVACTest` collects the test / example files under `KVACTest/`, mirroring
+# Mathlib's `MathlibTest/` convention. Kept as a separate library so the main
+# `KVAC` library's import graph stays free of test-only dependencies (e.g.
+# `Mathlib.Data.ZMod.Basic` for the toy examples). `lake build` builds both
+# by default; downstream consumers importing `KVAC` do not transitively
+# depend on `KVACTest`.
+[[lean_lib]]
+name = "KVACTest"
