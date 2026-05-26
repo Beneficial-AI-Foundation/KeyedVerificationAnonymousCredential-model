@@ -24,13 +24,11 @@ interpretations:
 - `trivial` uses `M := Id` — fully deterministic interpretation.
   Correctness is bundled as a separate theorem proved by `rfl`.
 - `linearToy` uses `M := ProbComp` — VCV-io's probabilistic-computation
-  monad, with randomness sampled via `$ᵗ`. **No correctness theorem is
-  proved**, because probabilistic correctness in `ProbComp` cannot be
-  stated as the syntactic equation `(do {…}) = pure true` (the free-monad
-  structure of `ProbComp` preserves `bind` nodes, so a syntactic
-  equality with `pure true` does not hold). The right statement uses
-  `evalDist` or `support` reasoning and requires VCV-io probability
-  machinery to prove — out of scope for this test file.
+  monad, with randomness sampled via `$ᵗ`. Its correctness theorem is
+  stated semantically over `support`, because probabilistic correctness in
+  `ProbComp` cannot be stated as the syntactic equation
+  `(do {…}) = pure true` (the free-monad structure of `ProbComp` preserves
+  `bind` nodes, so a syntactic equality with `pure true` does not hold).
 
 Correctness for each example is stated as a *separate theorem* below the
 scheme definition, per the design decision documented in
@@ -86,19 +84,18 @@ This example illustrates the API and the rough *shape* of an algebraic
 MAC; real schemes like μCMZ live in a prime-order group and use scalar
 multiplication precisely to avoid this attack.
 
-**Note on correctness.** A `linearToy_correctness` theorem is not provided
-because the right statement is non-trivial:
+**Note on correctness.** `linearToy_correctness` below uses a semantic
+support statement rather than syntactic equality:
 
 - The syntactic equation `(do {…}) = (pure true : ProbComp Bool)` is **not
   provable** — `ProbComp` is a free monad over a polynomial functor, and
   `bind ma (fun _ => pure b) ≠ pure b` as a `ProbComp` term, even though
   the two have the same distribution.
 - The right statement uses `evalDist (do {…}) = evalDist (pure true)` or
-  `∀ b ∈ (do {…}).support, b = true`, both of which require probability
-  machinery (VCV-io's `evalDist` / `support` / `Pr` lemmas) to prove.
-
-Such proofs belong in the security tracks (Track CMZ-M #8, CMZ-A #10,
-etc.), where probability reasoning is already central to the work. -/
+  `∀ b ∈ support (do {…}), b = true`. This example proves the support
+  form using VCV-io's `support` lemmas. Later security theorems,
+  advantages, indistinguishability, uniformity, and exact probability
+  claims should use `evalDist` or `Pr[...]` instead. -/
 
 def linearToy : AlgebraicMAC ProbComp Unit Unit (ZMod 7) (ZMod 7) (ZMod 7 × ZMod 7) where
   setup _ _ := pure ()
@@ -114,5 +111,20 @@ def linearToy : AlgebraicMAC ProbComp Unit Unit (ZMod 7) (ZMod 7) (ZMod 7 × ZMo
 example (sk r : ZMod 7) (m : Fin 2 → ZMod 7) :
     linearToy.verify 2 sk m (r, sk + (∑ i, m i) + r) = true := by
   simp [linearToy]
+
+/-- Probabilistic correctness for `linearToy`: every output in the support of
+the setup/keygen/MAC/verify experiment is accepting. The stronger syntactic
+equality with `pure true` is intentionally not stated for `ProbComp`. -/
+theorem linearToy_correctness :
+    ∀ (secParam n : Nat) (m : Fin n → ZMod 7),
+      ∀ b ∈ support
+        (do
+          let crs ← linearToy.setup secParam n
+          let (sk, _) ← linearToy.keygen crs
+          let σ ← linearToy.MAC n sk m
+          pure (linearToy.verify n sk m σ) : ProbComp Bool),
+        b = true := by
+  intro secParam n m b hb
+  simpa [linearToy] using hb
 
 end KVACTest.Core.AlgebraicMAC
