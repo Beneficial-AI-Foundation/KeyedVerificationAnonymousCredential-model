@@ -14,8 +14,11 @@ Requires the Lean 4 toolchain pinned in [`lean-toolchain`](lean-toolchain) (curr
 
 ## Documentation
 
+The Verso blueprint at https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/ is the live, rendered view of the formalization, with per-chapter prose tied to the Lean declarations as they land. The markdown documents below cover the formalization plan, work breakdown, and contribution workflow.
+
 | File | What it is |
 |---|---|
+| [`docs/README.md`](docs/README.md) | Build instructions for the Verso blueprint site and the "Adding a new chapter" recipe. |
 | [`docs/PLAN.md`](docs/PLAN.md) | The canonical formalization plan: paper background, module layout with dependency graph, module breakdown, security results targeted, and future works. |
 | [`docs/TRACKS.md`](docs/TRACKS.md) | Status board for parallel work tracks, with a Mermaid dependency graph and per-track checkboxes. |
 | [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | Code, comment, and theorem style conventions. |
