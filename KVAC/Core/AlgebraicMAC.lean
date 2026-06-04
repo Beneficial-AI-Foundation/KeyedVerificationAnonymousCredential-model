@@ -1,28 +1,70 @@
 /-
 Copyright 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
+Authors: Jin Xing Lim
 -/
+import KVAC.Core.AlgebraicMAC.Construction
+import KVAC.Core.AlgebraicMAC.Correctness
 
 /-!
-# Algebraic message authentication code (Track 0)
+# Algebraic message authentication codes (O24 Definition 3.1)
 
-Abstract typeclass for algebraic MACs over a prime-order group, following
-Definition 3.1 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*,
-IACR ePrint 2024/1552.
+Defines the paper-level bundled object `AlgebraicMAC` per Orrù,
+*Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint
+2024/1552 Definition 3.1: an `AlgebraicMACSyntax ProbComp` paired with
+a proof of correctness.
 
-An algebraic MAC `MAC = (S, K, M, V)` for `n` attributes over a message family
-`𝕄 = {𝕄_λ}_λ` consists of a setup algorithm, a key-generation algorithm, a
-MAC algorithm, and a deterministic verification algorithm. The MAC must
-satisfy correctness (every honestly generated MAC verifies) and unforgeability
-under chosen-message and verification attacks (UF-CMVA).
+Re-exports `Construction.lean` (the syntactic structure) and
+`Correctness.lean` (the correctness predicate) — i.e. what the bundle is
+built from. The UF-CMVA security predicate (`Security.lean`) is *not*
+re-exported because it is not part of the paper-level definition of an
+algebraic MAC; files that reason about UF-CMVA security import
+`KVAC.Core.AlgebraicMAC.Security` explicitly.
 
-See `docs/PLAN.md` for the design intent and `docs/STYLE_GUIDE.md` for the
-expected file layout.
+## Layering recap
+
+```
+                   AlgebraicMAC.lean (this file — bundle)
+                           │
+                ┌──────────┴──────────┐
+                ▼                     ▼
+        Construction.lean      Correctness.lean
+                                      │
+                                      └── (used by Correct predicate)
+
+                   Security.lean (security predicate, opt-in)
+                           │
+                           └── imports Construction only
+```
+
+- `Construction.lean` — `AlgebraicMACSyntax M` (polymorphic over the
+  randomness monad).
+- `Correctness.lean` — `Correct (mac : AlgebraicMACSyntax ProbComp)`
+  predicate, support-based.
+- `Security.lean` — UF-CMVA game + advantage on
+  `AlgebraicMACSyntax ProbComp`. Imported opt-in by files that need
+  security reasoning, not transitively by this umbrella.
+- This file — `AlgebraicMAC`, the bundled paper-level object.
+
+The paper-level bundle commits to `M := ProbComp` because correctness
+and security predicates are inherently distributional (free-monad
+syntactic equality fails for `ProbComp`, so `Correct` cannot be stated
+uniformly in `M`). The syntactic layer remains polymorphic to leave
+room for future symbolic interpretations.
 -/
 
 namespace KVAC.Core
 
--- TODO(Track 0): define the algebraic MAC typeclass and the UF-CMVA security
--- game here, mirroring Definition 3.1 and Figure 5 of O24.
+/--
+Paper-level algebraic MAC per O24 Definition 3.1: a syntactic algebraic
+MAC over `ProbComp` paired with a proof of correctness.
+-/
+structure AlgebraicMAC where
+  /-- The syntactic algorithms (Setup / KeyGen / MAC / Verify), with
+  randomness fixed to `ProbComp`. -/
+  alg : AlgebraicMACSyntax ProbComp
+  /-- Correctness of the syntactic algorithms — every honestly produced
+  tag verifies. -/
+  correct : Correct alg
 
 end KVAC.Core
