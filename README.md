@@ -31,10 +31,10 @@ Contributions are very welcome. Start by reading [`CONTRIBUTING.md`](CONTRIBUTIN
 When a track is split into sub-issues, list them as nested bullets under the track (as Track 0 is below).
 
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
-    - [ ] `Core/Group.lean` ([#18]) 🚧 WIP
+    - [x] `Core/Group.lean` ([#18])
     - [ ] `Core/Hash.lean` ([#19])
     - [ ] `Core/ZKProof.lean` ([#20])
-    - [ ] `Core/AlgebraicMAC.lean` ([#21])
+    - [x] `Core/AlgebraicMAC.lean` ([#21])
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
     - [ ] Track Pre — Preliminaries ([#2])
     - [ ] Track Σ — ProofSystems ([#3])

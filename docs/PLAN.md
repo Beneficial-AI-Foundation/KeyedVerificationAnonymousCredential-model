@@ -83,7 +83,11 @@ KVAC/
 │   ├── Group.lean                         [prime-order group typeclass]
 │   ├── Hash.lean                          [random-oracle / hash interfaces]
 │   ├── ZKProof.lean                       [generic NIZK / proof-of-knowledge typeclass]
-│   └── AlgebraicMAC.lean                  [Sec. 3.2 — algebraic MAC syntax]
+│   ├── AlgebraicMAC.lean                  [Sec. 3.2 — umbrella + bundled AlgebraicMAC]
+│   └── AlgebraicMAC/                      [submodules of AlgebraicMAC]
+│       ├── Construction.lean              [§3.2 Def 3.1 — AlgebraicMACSyntax M]
+│       ├── Correctness.lean               [§3.2 — Correct predicate, support-based]
+│       └── Security.lean                  [§3.2 Fig 5 — UF-CMVA game + advantage]
 ├── Preliminaries/                         [Sec. 3]
 │   ├── Assumptions.lean                   [Sec. 3.1 — DL, DDH, q-DL, q-DDHI, gap-DL bindings to VCV-io]
 │   ├── ZKArguments.lean                   [Sec. 3.3 — knowledge soundness, simulation extractability]
@@ -195,7 +199,7 @@ The shared API contract that every higher layer imports. These typeclasses are d
 - **`Core/Group.lean`** — the project-wide algebraic convention, exposed as two `class abbrev`s: `PrimeOrderGroup F G` (abelian + finite + cyclic + simple + `Module F G`, sufficient for abstract syntax / correctness files) and `SampleableGroup F G` (extends `PrimeOrderGroup` with `SampleableType G` for VCV-io game construction). See `docs/STYLE_GUIDE.md`, section *Prime-order group convention*, for the binder block to copy into each file. Concrete instances live in `Instances/`.
 - **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). May be stated abstractly or directly against VCV-io's `OracleSpec` types now that VCV-io is a Wave-0 dependency.
 - **`Core/ZKProof.lean`** — generic NIZK / proof-of-knowledge typeclass following the syntax of Sec. 3.3 (setup, prover, verifier; properties: completeness, knowledge soundness, zero-knowledge, simulation-extractability).
-- **`Core/AlgebraicMAC.lean`** — algebraic MAC typeclass following Sec. 3.2 (Definition 3.1: setup, key-gen, MAC, verify; UF-CMVA security game).
+- **`Core/AlgebraicMAC.lean`** + **`Core/AlgebraicMAC/`** submodules — algebraic MAC following Sec. 3.2 (O24 Definition 3.1). The submodule layout is `Construction.lean` (the monad-polymorphic `AlgebraicMACSyntax M` structure with intrinsic typing of the carrier families), `Correctness.lean` (the support-based `Correct` predicate on `AlgebraicMACSyntax ProbComp`), and `Security.lean` (the UF-CMVA game + advantage per Figure 5 of O24). The umbrella file `AlgebraicMAC.lean` defines the bundled paper-level object `AlgebraicMAC = AlgebraicMACSyntax ProbComp + Correct`, and re-exports `Construction` and `Correctness`; `Security` is opt-in.
 
 ### `KVAC/Preliminaries/` — Sec. 3 (Track Pre)
 
@@ -262,7 +266,7 @@ The theorems and lemmas below are the formal statements we aim to either prove o
 
 | Result | Statement | Assumption | v1 status |
 |---|---|---|---|
-| Sec. 3.2 | Algebraic MAC UF-CMVA game (definition) | — | proved syntax; security depends on construction |
+| Sec. 3.2 | Algebraic MAC syntax + correctness + UF-CMVA game (definitions) | — | proved (game + advantage defined; per-scheme advantage bounds delivered by Tracks CMZ-M, BBS-M) |
 | Sec. 3.3 | NIZK simulation-extractability (definition) | — | proved syntax |
 | Sec. 4.3 | Anonymity game (statistical / everlasting-forward) | — | proved definition |
 | Sec. 4.4 | Extractability game | — | proved definition |
