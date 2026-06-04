@@ -3,37 +3,39 @@ Copyright 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Jin Xing Lim
 -/
-import KVAC.Core.AlgebraicMAC.Syntax
+import KVAC.Core.AlgebraicMAC.Construction
 import VCVio.OracleComp.ProbComp
 
 /-!
-# Functional correctness of an algebraic MAC (O24 Definition 3.1)
+# Correctness of an algebraic MAC (O24 Definition 3.1)
 
-Functional correctness predicate `Correct` on an
-`AlgebraicMACSyntax ProbComp`: every honestly produced tag verifies.
+Correctness predicate `Correct` on an `AlgebraicMACSyntax ProbComp`:
+every honestly produced tag verifies.
 
-## Four equivalent (for "with probability 1") formulations
+## Three equivalent formulations
 
-For a probabilistic correctness claim like O24's, four formulations are
-in principle available:
+For a "with probability 1" correctness claim in `ProbComp`, three
+formulations are available:
 
-1. **Syntactic:** `(do { ... }) = (pure true : ProbComp Bool)`.
-   *Not provable* in `ProbComp`: `ProbComp` is a free monad over a
-   polynomial functor, so `bind ma (fun _ => pure b) ≠ pure b` as a
-   `ProbComp` term, even when the two have identical distribution.
-2. **Support-based:** `∀ b ∈ support (do { ... }), b = true`. Lightest
+1. **Support-based:** `∀ b ∈ support (do { ... }), b = true`. Lightest
    to prove (`simpa [scheme]` often suffices) and what we use here.
-3. **`Pr[…]`-based:** `Pr[= true | do { ... }] = 1`. Equivalent to (2)
+2. **`Pr[…]`-based:** `Pr[= true | do { ... }] = 1`. Equivalent to (1)
    for correctness; heavier to manipulate (PMF reasoning).
-4. **`evalDist`-based:** `evalDist (do { ... }) = evalDist (pure true)`.
+3. **`evalDist`-based:** `evalDist (do { ... }) = evalDist (pure true)`.
    Strongest formulation; only needed when the claim involves a
    non-trivial target distribution.
 
-For correctness, (2)/(3)/(4) are logically equivalent. We pick (2)
+For correctness, all three are logically equivalent. We pick (1)
 because its proofs reduce to `simp` on the scheme definition. Later
 definitions that involve *exact* probability claims (advantages,
-indistinguishability, distinguishing bounds) should reach for (3) or (4)
-instead.
+indistinguishability, distinguishing bounds) should reach for (2) or
+(3) instead.
+
+(Note: in a deterministic monad `M = Id`, correctness can also be
+stated as the syntactic equation `(do { ... }) = pure true`, proved by
+`rfl`. That form is not available in `ProbComp` because the free-monad
+structure preserves sample / bind nodes — see `Construction.lean` for
+the monad-polymorphism design notes.)
 
 ## Out of scope
 
@@ -47,10 +49,10 @@ namespace KVAC.Core
 open OracleComp
 
 /--
-Functional correctness for an algebraic MAC (O24 Definition 3.1):
-for every CRS in the support of `setup`, every key pair in the support
-of `keygen`, every attribute vector, and every tag in the support of
-`MAC`, the deterministic `verify` algorithm returns `true`.
+Correctness for an algebraic MAC (O24 Definition 3.1): for every CRS
+in the support of `setup`, every key pair in the support of `keygen`,
+every attribute vector, and every tag in the support of `MAC`, the
+deterministic `verify` algorithm returns `true`.
 
 Support-based form — see the module docstring for the four equivalent
 formulations and why we chose this one.

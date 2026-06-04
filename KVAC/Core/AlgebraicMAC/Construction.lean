@@ -17,10 +17,10 @@ The paper-level `AlgebraicMAC` object is layered:
   Setup / KeyGen / MAC / Verify with no semantic obligations. Polymorphic
   in the monad `M` encoding randomness (`Id`, `ProbComp`, future symbolic
   monads, …).
-- **`Correct`** (in `Correctness.lean`) — functional correctness predicate
-  on an `AlgebraicMACSyntax ProbComp`, stated as a support-based equation.
-- **UF-CMVA** game + advantage (in `UFCMVA.lean`) — security predicate on
-  an `AlgebraicMACSyntax ProbComp`, in line with O24 Figure 5.
+- **`Correct`** (in `Correctness.lean`) — correctness predicate on an
+  `AlgebraicMACSyntax ProbComp`, stated as a support-based equation.
+- **UF-CMVA** game + advantage (in `Security.lean`) — security predicate
+  on an `AlgebraicMACSyntax ProbComp`, in line with O24 Figure 5.
 - **`AlgebraicMAC`** (in `KVAC.Core.AlgebraicMAC`, the umbrella file) —
   the paper-level object: an `AlgebraicMACSyntax ProbComp` together with
   a proof of `Correct`.

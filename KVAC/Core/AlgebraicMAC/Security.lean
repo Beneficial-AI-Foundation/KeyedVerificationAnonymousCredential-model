@@ -3,7 +3,7 @@ Copyright 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Jin Xing Lim
 -/
-import KVAC.Core.AlgebraicMAC.Syntax
+import KVAC.Core.AlgebraicMAC.Construction
 import VCVio
 
 /-!
