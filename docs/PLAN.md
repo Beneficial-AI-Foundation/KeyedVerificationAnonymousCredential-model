@@ -5,6 +5,8 @@ This document is the canonical formalization plan for the project. It describes 
 The reference paper, cited throughout as **O24**, is Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, [IACR ePrint 2024/1552](https://eprint.iacr.org/2024/1552). Section numbers refer to this paper.
 
 > **Status:** This plan is a tentative working proposal, not a fixed contract. Phase boundaries, module layout, scope decisions, and security targets reflect the current understanding of the paper. They may evolve — sometimes substantially — as the team digs deeper into the proofs. Significant revisions are discussed on the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before they land here.
+>
+> **Current focus (now → ~2026-08-01):** A Signal-driven μCMZ priority delivery phase is in effect. The phase plan in [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md) **supersedes** this document for scheduling decisions while it is active. Sections of this document marked `[DEFERRED]` below are out of scope until the priority phase ends. Once the production swap lands, the full two-scheme plan here resumes.
 
 ## Background
 
@@ -197,7 +199,7 @@ This section describes each module's role and contents. Each subsection lists th
 The shared API contract that every higher layer imports. These typeclasses are designed once (Track 0) and remain **stable** for the life of the project. Concrete *instances* — first axiomatised, later swapped for verified instances — change over time, but the API surface above does not. Per the "Specification vs. implementation" section, `KVAC/Core/` may import VCV-io (for the project-wide `SampleableType` convention) but must not depend on any deployment-specific structure.
 
 - **`Core/Group.lean`** — the project-wide algebraic convention, exposed as two `class abbrev`s: `PrimeOrderGroup F G` (abelian + finite + cyclic + simple + `Module F G`, sufficient for abstract syntax / correctness files) and `SampleableGroup F G` (extends `PrimeOrderGroup` with `SampleableType G` for VCV-io game construction). See `docs/STYLE_GUIDE.md`, section *Prime-order group convention*, for the binder block to copy into each file. Concrete instances live in `Instances/`.
-- **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). May be stated abstractly or directly against VCV-io's `OracleSpec` types now that VCV-io is a Wave-0 dependency.
+- **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). May be stated abstractly or directly against VCV-io's `OracleSpec` types now that VCV-io is a Wave-0 dependency. **[DEFERRED]** — see [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md). The paper's `Hp` is absorbed into the abstract NIZK (`Core/NIZKP/Basic.lean`); `HG` is only used by Sec. 8 extensions.
 - **`Core/ZKProof.lean`** — generic NIZK / proof-of-knowledge typeclass following the syntax of Sec. 3.3 (setup, prover, verifier; properties: completeness, knowledge soundness, zero-knowledge, simulation-extractability).
 - **`Core/AlgebraicMAC.lean`** + **`Core/AlgebraicMAC/`** submodules — algebraic MAC following Sec. 3.2 (O24 Definition 3.1). The submodule layout is `Construction.lean` (the monad-polymorphic `AlgebraicMACSyntax M` structure with intrinsic typing of the carrier families), `Correctness.lean` (the support-based `Correct` predicate on `AlgebraicMACSyntax ProbComp`), and `Security.lean` (the UF-CMVA game + advantage per Figure 5 of O24). The umbrella file `AlgebraicMAC.lean` defines the bundled paper-level object `AlgebraicMAC = AlgebraicMACSyntax ProbComp + Correct`, and re-exports `Construction` and `Correctness`; `Security` is opt-in.
 
@@ -210,6 +212,8 @@ Cryptographic background that the schemes rely on.
 - **`Preliminaries/AnonymousTokens.lean`** — anonymous-token syntax and the one-more unforgeability (OMUF) game (Sec. 3.4).
 
 ### `KVAC/ProofSystems/` — Sec. 9 (Track Σ)
+
+> **[DEFERRED]** — see [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md). Track Σ leaves the critical path for the priority phase: O24's μCMZ theorems are conditional on the ZKP's properties, so we assume them via abstract NIZK fields on `Core/NIZKP/Basic.lean` rather than building Σ-protocol meta-theory. Resumes after the production swap.
 
 The proof-system technology underpinning every credential proof. The paper's security proofs (Sec. 5, Sec. 6) lean heavily on straight-line extraction; building proven meta-theory here pays off across every later layer.
 
@@ -234,9 +238,11 @@ The first concrete instantiation of the abstract framework. Improvements over CM
 - **`Schemes/MicroCMZ/AlgebraicMAC.lean`** (§5.3) — Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n).
 - **`Schemes/MicroCMZ/Anonymity.lean`** (§5.4) — Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZK proof system.
 - **`Schemes/MicroCMZ/Extractability.lean`** (§5.5) — Theorem 5.2: μCMZ is extractable in AGM.
-- **`Schemes/MicroCMZ/OneMoreUnforgeability.lean`** (§5.6) — Theorem 5.3: the anonymous-token variant μCMZ$_{AT}$ is one-more unforgeable in AGM under 2-DL.
+- **`Schemes/MicroCMZ/OneMoreUnforgeability.lean`** (§5.6) — Theorem 5.3: the anonymous-token variant μCMZ$_{AT}$ is one-more unforgeable in AGM under 2-DL. **[DEFERRED]** for the priority phase — see [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md). Not on Signal's critical path.
 
 ### `KVAC/Schemes/MicroBBS/` — Sec. 6 (Tracks BBS-C, BBS-M, BBS-A, BBS-E, BBS-OMUF)
+
+> **[DEFERRED]** — see [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md). All μBBS tracks are out of scope for the priority phase. Resumes after the production swap.
 
 The second concrete instantiation, parallel in structure to MicroCMZ. Improvements over BBDT17: one fewer group element per signature, alignment with the IETF BBS draft, security in AGM under (q+2)-DL.
 
@@ -248,11 +254,15 @@ The second concrete instantiation, parallel in structure to MicroCMZ. Improvemen
 
 ### `KVAC/Instances/` — concrete bindings (Track Ex)
 
+> **[DEFERRED]** — see [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md). Track Ex (Ristretto binding + concrete run + dalek Lake dependency) is out of scope for the priority phase. The August deliverable ships against the abstract `PrimeOrderGroup` typeclass.
+
 The only place Ristretto255 appears. Two import rules make the boundary enforceable: only `Examples/` and security tracks may import from `Instances/`; no other directory may.
 
 - **`Instances/Ristretto.lean`** (Track Ex) — local binding of the abstract `PrimeOrderGroup` / `SampleableGroup` typeclasses to the verified Ristretto255 instance from `curve25519-dalek-lean-verify`. Produced as part of Track Ex; the Lake dependency on `curve25519-dalek-lean-verify` is added in the same PR. Until Track Ex lands, this file does not exist and the lakefile does not import dalek. **μBBS curve note:** Ristretto255 is a valid concrete instance only for μCMZ — μBBS requires a curve larger than Ristretto255 for 128-bit security, which is out of v1 scope.
 
 ### `KVAC/Examples/` — concrete protocol run (Track Ex)
+
+> **[DEFERRED]** — see [`MICROCMZ_PRIORITY_PLAN.md`](MICROCMZ_PRIORITY_PLAN.md). Bundled with `Instances/` under Track Ex.
 
 - **`Examples/ConcreteRun.lean`** — a small evaluable Lean script exercising the μCMZ protocol end-to-end against `Instances/Ristretto`, with a `decide` (or `native_decide`) sanity check. Smoke-tests that the abstract typeclasses can be coherently instantiated; serves as documentation by example; catches abstraction mismatches between `Core/`, `Framework/`, and `Instances/`.
 
