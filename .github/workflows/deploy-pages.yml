@@ -43,15 +43,12 @@ jobs:
       - name: Download Mathlib cache
         run: lake -d docs exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
 
-      # Build only the Lean libraries (KVACDocs + the Main module).
-      # We deliberately do NOT build the `docs` executable: linking it
-      # would pull in VCV-io's post-quantum C/FFI sources, which require
-      # git submodules and additional compile flags we don't configure
-      # here. The rendered HTML is produced by `lean --run Main.lean`
-      # below, which only needs the .olean artifacts. See docs/README.md
-      # for the same caution applied locally.
-      - name: Build Verso docs (Lean libraries only)
-        run: lake -d docs build KVACDocs Main
+      # Build only the KVACDocs library. The `docs` executable is no longer
+      # defined; linking it would pull in VCV-io's post-quantum C/FFI sources,
+      # which need git submodules and extra compile flags. The HTML is produced
+      # by `lean --run Main.lean` below, which only needs the .olean artifacts.
+      - name: Build Verso docs (library only)
+        run: lake -d docs build KVACDocs
 
       - name: Generate documentation site
         working-directory: docs

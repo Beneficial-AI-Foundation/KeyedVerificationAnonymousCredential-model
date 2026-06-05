@@ -1,5 +1,5 @@
 name = "KVACDocs"
-defaultTargets = ["KVACDocs", "docs"]
+defaultTargets = ["KVACDocs"]
 
 # Verso blueprint pinned to v4.28.0 to match the parent KVAC project's
 # lean-toolchain. Newer revs (v4.30.0+) move
@@ -19,7 +19,3 @@ path = ".."
 
 [[lean_lib]]
 name = "KVACDocs"
-
-[[lean_exe]]
-name = "docs"
-root = "Main"

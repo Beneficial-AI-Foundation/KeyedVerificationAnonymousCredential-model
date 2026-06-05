@@ -12,11 +12,10 @@ Defaults:
   OUTPUT_ROOT = docs/_out/site
 
 Steps:
-  1. Build the Verso doc Lean libraries (`KVACDocs`, `Main`).
-     We deliberately do NOT build the `docs` executable; that links
-     VCV-io's post-quantum C/FFI sources and is unnecessary for rendering
-     (see docs/README.md).
-  2. Run `Main.lean` to render the static site into OUTPUT_ROOT.
+  1. Download the Mathlib olean cache. Without this, Mathlib builds from source.
+  2. Build the `KVACDocs` library. The `docs` executable is not defined, so
+     nothing links VCV-io's post-quantum C/FFI sources.
+  3. Run `Main.lean` to render the static site into OUTPUT_ROOT.
 EOF
 }
 
@@ -38,8 +37,11 @@ cd "$(dirname "$0")/.."
 out_root="${1:-docs/_out/site}"
 mkdir -p "$out_root"
 
-echo "[build-blueprint] building Verso doc libraries"
-lake -d docs build KVACDocs Main
+echo "[build-blueprint] downloading Mathlib cache"
+lake -d docs exe cache get
+
+echo "[build-blueprint] building KVACDocs library"
+lake -d docs build KVACDocs
 
 echo "[build-blueprint] rendering blueprint -> ${out_root}"
 lake -d docs env lean --run docs/Main.lean --output "$out_root"
