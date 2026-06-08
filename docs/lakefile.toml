@@ -1,0 +1,21 @@
+name = "KVACDocs"
+defaultTargets = ["KVACDocs"]
+
+# Verso blueprint pinned to v4.28.0 to match the parent KVAC project's
+# lean-toolchain. Newer revs (v4.30.0+) move
+# `manualMainWithSharedPreviewManifest` into a different namespace and add
+# extra imports — the parent toolchain pin is what fixes the revision here.
+[[require]]
+name = "versoBlueprint"
+git = "https://github.com/leanprover/verso-blueprint"
+rev = "v4.28.0"
+
+# The parent project (KVAC) provides the Lean declarations referenced by
+# `(lean := "KVAC.Core...")` blocks in the chapter files. Lake resolves this
+# via the parent lakefile's `[[lean_lib]] name = "KVAC"`.
+[[require]]
+name = "KVAC"
+path = ".."
+
+[[lean_lib]]
+name = "KVACDocs"
