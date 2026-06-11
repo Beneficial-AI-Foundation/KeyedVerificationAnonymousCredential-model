@@ -12,10 +12,10 @@ A non-interactive zero-knowledge proof (NIZKP) lets a prover convince a verifier
 statement with a single message, revealing nothing beyond its truth.
 
 The specification is agnostic with respect to the security model. The `NIZKPScheme`
-structure (`setup`, `prove`, `verify`, `relation`) and the properties `KnowledgeSound`,
-`SimulationExtractable`, and `ZeroKnowledge` are stated once over an abstract carrier
-`F : Type → Type`. A `SecurityModel F` instance supplies the model-dependent relations
-`indist` and `produces`, so the abstract notions specialize to each model with no reproof.
+structure (`setup`, `prove`, `verify`, `relation`) and the properties `Complete`,
+`KnowledgeSound`, `SimulationExtractable`, and `ZeroKnowledge` are stated once over an
+abstract carrier `F : Type → Type`. A `SecurityModel F` instance supplies the model-dependent
+relations `indist` and `produces`, so the abstract notions specialize to each model with no reproof.
 The concrete carrier is the free monad on a polynomial functor, `PFunctor.FreeM P`, against
 which the concrete schemes are built.
 
@@ -37,8 +37,6 @@ to the polynomial-functor free monad, is documented in the Blueprint.
     advantage over many queries.
   * `produces`, in `SimulationExtractable`, marks the proofs a simulator could output, not a
     running record of issued proofs.
-  * Completeness is left to the security model, since whether a proof verifies depends on the
-    model; there is no `Complete` at the abstract layer.
   * `F` is explicit here: `F Proof` is a term in the symbolic model and a distribution in the
     computational model.
 
@@ -92,6 +90,17 @@ class SecurityModel (F : Type → Type) [Pure F] where
   /-- A deterministic computation produces exactly its value. Rules out both `fun _ _ => True`
   and `fun _ _ => False` for `produces`. -/
   produces_pure : ∀ {α} (a b : α), produces (pure a) b ↔ a = b
+
+/-- Completeness: every honestly generated proof for a true statement verifies. For a valid
+witness, any proof in the support of `prove` is accepted, where "is accepted" is
+`produces (verify …) true`, both relations from the `SecurityModel`. It reads in any model:
+symbolically it constrains the single proof term, computationally every proof in `prove`'s
+support (O24 §3.3, "every correctly generated proof for an element of `R` verifies"). -/
+def Complete [SecurityModel F]
+    (nizkp : NIZKPScheme F Crs Stmt Witness Proof) : Prop :=
+  ∀ crs x w, nizkp.relation crs x w →
+    ∀ π, SecurityModel.produces (nizkp.prove crs x w) π →
+      SecurityModel.produces (nizkp.verify crs x π) true
 
 /-- Knowledge soundness: every accepting proof is real, that is, a possible honest output of
 `prove` for some valid witness. "Accepts" is `produces (verify …) true` and "real" is
