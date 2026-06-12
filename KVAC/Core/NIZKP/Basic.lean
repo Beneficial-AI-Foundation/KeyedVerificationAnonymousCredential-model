@@ -120,7 +120,7 @@ produce is real, that is, a possible honest output of `prove` for some valid wit
 is `produces (prove crs x w) π`, "fake" is `produces (sim crs x) π`, both from the
 `SecurityModel`. The witness is recovered through `prove`, not an extractor function, so the
 statement does not collapse to plain language soundness. -/
-def ExtractsAgainst [SecurityModel F]
+def Extractable [SecurityModel F]
     (nizkp : NIZKPScheme F Crs Stmt Witness Proof) (sim : Crs → Stmt → F Proof) : Prop :=
   ∀ crs x π, SecurityModel.produces (nizkp.verify crs x π) true →
     ¬ SecurityModel.produces (sim crs x) π →
@@ -130,7 +130,7 @@ def ExtractsAgainst [SecurityModel F]
 in zero-knowledge and extraction, matching the paper's single existential over the simulator. -/
 def SimulationExtractable [SecurityModel F]
     (nizkp : NIZKPScheme F Crs Stmt Witness Proof) : Prop :=
-  ∃ sim : Crs → Stmt → F Proof, ZeroKnowledge nizkp sim ∧ ExtractsAgainst nizkp sim
+  ∃ sim : Crs → Stmt → F Proof, ZeroKnowledge nizkp sim ∧ Extractable nizkp sim
 
 /-- Makes explicit that simulation-extractability gives zero-knowledge for the same simulator. -/
 theorem SimulationExtractable.toZeroKnowledge [SecurityModel F]
