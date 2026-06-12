@@ -15,7 +15,8 @@ The specification is agnostic with respect to the security model. The `NIZKPSche
 structure (`setup`, `prove`, `verify`, `relation`) and the properties `KnowledgeSound`,
 `SimulationExtractable`, and `ZeroKnowledge` are stated once over an abstract carrier
 `F : Type → Type`. A `SecurityModel F` instance supplies the model-dependent relations
-`indist` and `produces`, so the abstract notions specialize to each model with no reproof.
+`indist`, `produces`, and `extracts`, so the abstract notions specialize to each model with no
+reproof.
 The concrete carrier is the free monad on a polynomial functor, `PFunctor.FreeM P`, against
 which the concrete schemes are built.
 
@@ -30,9 +31,10 @@ to the polynomial-functor free monad, is documented in the Blueprint.
 
 - Where the spec differs. The paper works only in the computational model, so the abstract
   spec omits that machinery:
-  * `KnowledgeSound` and `SimulationExtractable` are relational: an accepting proof must be a
-    possible honest output of `prove` for a valid witness (honest-image soundness), not a
-    witness recovered by an efficient extractor from the prover's code and coins.
+  * `KnowledgeSound` and `SimulationExtractable` use the model's `extracts` relation: an
+    accepting proof must yield a witness that extracts from it. Whether "extracts" is an
+    efficient extractor over the prover's code and coins is the computational instance; abstractly
+    it is the model-supplied relation (symbolic derivation, or the computational extractor).
   * `indist`, in `ZeroKnowledge`, compares a single pair of outputs, not a negligible
     advantage over many queries.
   * `produces`, in `SimulationExtractable`, marks the proofs a simulator could output, not a
@@ -92,18 +94,31 @@ class SecurityModel (F : Type → Type) [Pure F] where
   /-- A deterministic computation produces exactly its value. Rules out both `fun _ _ => True`
   and `fun _ _ => False` for `produces`. -/
   produces_pure : ∀ {α} (a b : α), produces (pure a) b ↔ a = b
+  /-- `extracts c w` holds when the witness `w` can be extracted from the computation `c`. This
+  is the model-dependent "knowledge" relation: symbolically `w` is derivable from the proof
+  term, computationally `w` is recovered by the model's extractor. Unlike `indist`/`produces` it
+  carries no `pure`-`↔` law, since extraction relates two different types; only the two laws
+  below, which exclude the empty and total relations. -/
+  extracts : ∀ {α β : Type}, F α → β → Prop
+  /-- A value is extractable from its own deterministic computation. Non-vacuity: the extractor
+  exists, ruling out the empty relation `fun _ _ => False`. -/
+  extracts_pure_self : ∀ {α} (a : α), extracts (pure a) a
+  /-- Extraction is partial: some value is not extractable from some computation. Rules out the
+  total relation `fun _ _ => True`. The non-extractable computations are the fake proofs, which
+  the proof type holds alongside the real ones. -/
+  extracts_nontotal : ∃ (α : Type) (c : F α) (a : α), ¬ extracts c a
 
-/-- Knowledge soundness: every accepting proof is real, that is, a possible honest output of
-`prove` for some valid witness. "Accepts" is `produces (verify …) true` and "real" is
-`produces (prove crs x w) π`, both from the `SecurityModel`. The witness is recovered through
-`prove`, not an extractor function, so the statement does not collapse to plain language
-soundness (`∃ w, relation crs x w`); the `produces (prove …) π` conjunct rules out forgeries
-no honest prover could make. An efficient extractor over the prover's coins is the
-computational game layer, not this relational form. -/
+/-- Knowledge soundness: every accepting proof yields a witness that can be extracted from it. A
+proof is "real" when a witness extracts from it and "fake" otherwise; knowledge soundness says
+every accepting proof is real. "Accepts" is `produces (verify …) true` and extraction is
+`extracts`, both from the `SecurityModel`. The `extracts (pure π) w` conjunct is the knowledge
+content: the witness must come out of the proof, not merely exist, so this does not collapse to
+language soundness. What "extractable" means is the model's: symbolic derivation from the proof
+term, or the computational extractor. -/
 def KnowledgeSound [SecurityModel F]
     (nizkp : NIZKPScheme F Crs Stmt Witness Proof) : Prop :=
   ∀ crs x π, SecurityModel.produces (nizkp.verify crs x π) true →
-    ∃ w, nizkp.relation crs x w ∧ SecurityModel.produces (nizkp.prove crs x w) π
+    ∃ w, nizkp.relation crs x w ∧ SecurityModel.extracts (pure π : F Proof) w
 
 /-- Zero-knowledge against a given simulator `sim`: knowing only the statement, `sim`
 produces something `indist` from the real prover's output. `indist` comes from the
@@ -115,16 +130,15 @@ def ZeroKnowledge [SecurityModel F]
   ∀ crs x w, nizkp.relation crs x w →
     SecurityModel.indist (nizkp.prove crs x w) (sim crs x)
 
-/-- Extraction against a given simulator `sim`: every accepting proof that `sim` did not
-produce is real, that is, a possible honest output of `prove` for some valid witness. "Real"
-is `produces (prove crs x w) π`, "fake" is `produces (sim crs x) π`, both from the
-`SecurityModel`. The witness is recovered through `prove`, not an extractor function, so the
-statement does not collapse to plain language soundness. -/
+/-- Extraction against a given simulator `sim`: every accepting proof that `sim` did not produce
+is real, a witness extracts from it. The "fake" proofs are exactly the simulator's outputs
+(`produces (sim crs x) π`), and nothing extracts from them; every other accepting proof is real.
+Extraction is `extracts` from the `SecurityModel`. -/
 def Extractable [SecurityModel F]
     (nizkp : NIZKPScheme F Crs Stmt Witness Proof) (sim : Crs → Stmt → F Proof) : Prop :=
   ∀ crs x π, SecurityModel.produces (nizkp.verify crs x π) true →
     ¬ SecurityModel.produces (sim crs x) π →
-      ∃ w, nizkp.relation crs x w ∧ SecurityModel.produces (nizkp.prove crs x w) π
+      ∃ w, nizkp.relation crs x w ∧ SecurityModel.extracts (pure π : F Proof) w
 
 /-- Simulation-extractability (O24 §3.3, via Dao–Grubbs). The same simulator is used
 in zero-knowledge and extraction, matching the paper's single existential over the simulator. -/
