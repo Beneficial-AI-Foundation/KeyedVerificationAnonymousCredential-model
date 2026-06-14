@@ -375,4 +375,259 @@ noncomputable def riuGen (gen : G) (X : Fin n → G)
   gen_uniform_left := riuGenComp_uniform_left gen X
   gen_uniform_right := riuGenComp_uniform_right gen X hgen
 
+/-! ## R_is — issuance server proof (O24 Eq. 10) -/
+
+/-- The R_is relation (O24 Fig 9, issuance server proof): the statement
+`(X₀, C'', U', V')` is satisfied by the witness `(x₀, u)` iff
+`U' = u • gen ∧ X₀ = x₀ • H ∧ V' = x₀ • U' + u • C''`. -/
+def risRel (gen H : G) : (G × G × G × G) → (F × F) → Bool :=
+  fun s w => decide
+    (s.2.2.1 = w.2 • gen ∧ s.1 = w.1 • H ∧
+      s.2.2.2 = w.1 • s.2.2.1 + w.2 • s.2.1)
+
+/-- R_is as a Σ-protocol: a three-equation AND-composition Schnorr proof over
+the bases `gen`, `H`, and the statement-dependent bases `U'`, `C''`. The
+announcement is one group element per equation; the response is the masked
+witness `(z_x, z_u)`. -/
+def risSigma (gen H : G) :
+    SigmaProtocol (G × G × G × G) (F × F) (G × G × G) (F × F) F (F × F)
+      (risRel gen H) where
+  commit s _w := do
+    let ρx ← $ᵗ F
+    let ρu ← $ᵗ F
+    return ((ρu • gen, ρx • H, ρx • s.2.2.1 + ρu • s.2.1), (ρx, ρu))
+  respond _s w sc c := pure (sc.1 + c * w.1, sc.2 + c * w.2)
+  verify s R c z := decide
+    (z.2 • gen = R.1 + c • s.2.2.1 ∧
+      z.1 • H = R.2.1 + c • s.1 ∧
+      z.1 • s.2.2.1 + z.2 • s.2.1 = R.2.2 + c • s.2.2.2)
+  sim _s := do
+    let a ← $ᵗ G
+    let b ← $ᵗ G
+    let c ← $ᵗ G
+    pure (a, b, c)
+  extract c₁ z₁ c₂ z₂ :=
+    pure ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹, (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
+
+/-- Completeness of the R_is Σ-protocol. -/
+theorem risSigma_complete (gen H : G) :
+    PerfectlyComplete (risSigma (F := F) gen H) := by
+  intro s w h
+  obtain ⟨hU, hX, hV⟩ := of_decide_eq_true h
+  simp only [risSigma, bind_assoc, pure_bind]
+  have h1 : ∀ (ρu c : F), (ρu + c * w.2) • gen = ρu • gen + c • s.2.2.1 := by
+    intro ρu c; rw [add_smul, mul_smul, ← hU]
+  have h2 : ∀ (ρx c : F), (ρx + c * w.1) • H = ρx • H + c • s.1 := by
+    intro ρx c; rw [add_smul, mul_smul, ← hX]
+  have h3 : ∀ (ρx ρu c : F),
+      (ρx + c * w.1) • s.2.2.1 + (ρu + c * w.2) • s.2.1
+        = (ρx • s.2.2.1 + ρu • s.2.1) + c • s.2.2.2 := by
+    intro ρx ρu c
+    rw [hV]
+    simp only [add_smul, mul_smul, smul_add]
+    abel
+  exact probOutput_decide_bind₃ _ fun ρx ρu c =>
+    decide_eq_true ⟨h1 ρu c, h2 ρx c, h3 ρx ρu c⟩
+
+/-- Special soundness of the R_is Σ-protocol. -/
+theorem risSigma_speciallySound (gen H : G) :
+    SpeciallySound (risSigma (F := F) gen H) := by
+  intro s R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  dsimp [risSigma] at *
+  simp only [support_pure, Set.mem_singleton_iff] at h_w
+  subst h_w
+  simp only [decide_eq_true_eq] at h_v1 h_v2
+  obtain ⟨h1U, h1X, h1V⟩ := h_v1
+  obtain ⟨h2U, h2X, h2V⟩ := h_v2
+  simp only [risRel, decide_eq_true_eq]
+  have h_ne' : c₁ - c₂ ≠ 0 := sub_ne_zero.mpr h_ne
+  have hdiv : ∀ (a : F) (A B : G), (c₁ - c₂) • B = a • A →
+      B = (a * (c₁ - c₂)⁻¹) • A := by
+    intro a A B hab
+    calc B = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • B) := by
+          rw [← mul_smul, inv_mul_cancel₀ h_ne', one_smul]
+      _ = (c₁ - c₂)⁻¹ • (a • A) := by rw [hab]
+      _ = (a * (c₁ - c₂)⁻¹) • A := by rw [← mul_smul, mul_comm]
+  refine ⟨?_, ?_, ?_⟩
+  · -- U' = ((z₁.2 - z₂.2) * (c₁ - c₂)⁻¹) • gen
+    refine hdiv _ _ _ ?_
+    calc (c₁ - c₂) • s.2.2.1
+        = (z₁.2 • gen) - (z₂.2 • gen) := by rw [h1U, h2U, sub_smul]; abel
+      _ = (z₁.2 - z₂.2) • gen := by rw [sub_smul]
+  · -- X₀ = ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹) • H
+    refine hdiv _ _ _ ?_
+    calc (c₁ - c₂) • s.1
+        = (z₁.1 • H) - (z₂.1 • H) := by rw [h1X, h2X, sub_smul]; abel
+      _ = (z₁.1 - z₂.1) • H := by rw [sub_smul]
+  · -- V' = wx • U' + wu • C''
+    have h_sub : (c₁ - c₂) • s.2.2.2
+        = (z₁.1 - z₂.1) • s.2.2.1 + (z₁.2 - z₂.2) • s.2.1 := by
+      calc (c₁ - c₂) • s.2.2.2
+          = (z₁.1 • s.2.2.1 + z₁.2 • s.2.1)
+              - (z₂.1 • s.2.2.1 + z₂.2 • s.2.1) := by
+            rw [h1V, h2V, sub_smul]; abel
+        _ = (z₁.1 - z₂.1) • s.2.2.1 + (z₁.2 - z₂.2) • s.2.1 := by
+            simp only [sub_smul]; abel
+    calc s.2.2.2
+        = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • s.2.2.2) := by
+          rw [← mul_smul, inv_mul_cancel₀ h_ne', one_smul]
+      _ = (c₁ - c₂)⁻¹ • ((z₁.1 - z₂.1) • s.2.2.1 + (z₁.2 - z₂.2) • s.2.1) := by
+          rw [h_sub]
+      _ = ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹) • s.2.2.1
+            + ((z₁.2 - z₂.2) * (c₁ - c₂)⁻¹) • s.2.1 := by
+          simp only [smul_add, ← mul_smul]
+          simp only [mul_comm]
+
+/-- Transcript simulator for the R_is Σ-protocol: sample the challenge and the
+response uniformly and solve the three verification equations for the
+announcements. -/
+noncomputable def risSimTranscript (gen H : G) (s : G × G × G × G) :
+    ProbComp ((G × G × G) × F × (F × F)) := do
+  let c ← $ᵗ F
+  let zx ← $ᵗ F
+  let zu ← $ᵗ F
+  return ((zu • gen - c • s.2.2.1, zx • H - c • s.1,
+    zx • s.2.2.1 + zu • s.2.1 - c • s.2.2.2), c, (zx, zu))
+
+/-- Honest-verifier zero-knowledge of the R_is Σ-protocol.
+TODO(CMZ-C): distribution proof. -/
+theorem risSigma_hvzk (gen H : G) :
+    HVZK (risSigma (F := F) gen H) (risSimTranscript gen H) := by
+  sorry
+
+/-! ## R_p — presentation proof (O24 Eq. 11) -/
+
+/-- The R_p relation (O24 Fig 9, presentation proof, with `φ ≡ ⊤`): the
+statement `(U', C⃗, Z)` together with the public bases `X⃗`, `gen`, `H` is
+satisfied by the witness `(r', r⃗, m⃗)` iff
+`(∀ i, Cᵢ = mᵢ • U' + rᵢ • gen) ∧ Z = Σᵢ rᵢ • Xᵢ − r' • H`. -/
+def rpRel (gen H : G) (X : Fin n → G) :
+    (G × (Fin n → G) × G) → (F × (Fin n → F) × (Fin n → F)) → Bool :=
+  fun s w => decide
+    ((∀ i, s.2.1 i = w.2.2 i • s.1 + w.2.1 i • gen) ∧
+      s.2.2 = (∑ i, w.2.1 i • X i) - w.1 • H)
+
+/-- R_p as a Σ-protocol: `n` opening equations for the commitments `Cᵢ` (over
+the statement-dependent base `U'` and `gen`) AND one equation for `Z` (over
+`X⃗` and `H`). The announcement is one group element per equation; the response
+is the masked witness `(z_{r'}, z⃗_r, z⃗_m)`. -/
+def rpSigma (gen H : G) (X : Fin n → G) :
+    SigmaProtocol (G × (Fin n → G) × G) (F × (Fin n → F) × (Fin n → F))
+      ((Fin n → G) × G) (F × (Fin n → F) × (Fin n → F)) F
+      (F × (Fin n → F) × (Fin n → F)) (rpRel gen H X) where
+  commit s _w := do
+    let ρr' ← $ᵗ F
+    let ρr ← $ᵗ (Fin n → F)
+    let ρm ← $ᵗ (Fin n → F)
+    return ((fun i => ρm i • s.1 + ρr i • gen, (∑ i, ρr i • X i) - ρr' • H),
+      (ρr', ρr, ρm))
+  respond _s w sc c := pure
+    (sc.1 + c * w.1, fun i => sc.2.1 i + c * w.2.1 i,
+      fun i => sc.2.2 i + c * w.2.2 i)
+  verify s R c z := decide
+    ((∀ i, z.2.2 i • s.1 + z.2.1 i • gen = R.1 i + c • s.2.1 i) ∧
+      (∑ i, z.2.1 i • X i) - z.1 • H = R.2 + c • s.2.2)
+  sim _s := do
+    let a ← $ᵗ (Fin n → G)
+    let b ← $ᵗ G
+    pure (a, b)
+  extract c₁ z₁ c₂ z₂ := pure
+    ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹,
+      fun i => (z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹,
+      fun i => (z₁.2.2 i - z₂.2.2 i) * (c₁ - c₂)⁻¹)
+
+/-- Completeness of the R_p Σ-protocol. -/
+theorem rpSigma_complete (gen H : G) (X : Fin n → G) :
+    PerfectlyComplete (rpSigma (F := F) gen H X) := by
+  intro s w h
+  obtain ⟨hC, hZ⟩ := of_decide_eq_true h
+  simp only [rpSigma, bind_assoc, pure_bind]
+  have h1 : ∀ (ρm ρr : Fin n → F) (c : F) (i : Fin n),
+      (ρm i + c * w.2.2 i) • s.1 + (ρr i + c * w.2.1 i) • gen
+        = (ρm i • s.1 + ρr i • gen) + c • s.2.1 i := by
+    intro ρm ρr c i
+    rw [hC i]
+    simp only [add_smul, mul_smul, smul_add]
+    abel
+  have h2 : ∀ (ρr : Fin n → F) (ρr' c : F),
+      (∑ i, (ρr i + c * w.2.1 i) • X i) - (ρr' + c * w.1) • H
+        = ((∑ i, ρr i • X i) - ρr' • H) + c • s.2.2 := by
+    intro ρr ρr' c
+    rw [hZ]
+    simp only [add_smul, mul_smul, smul_sub, Finset.smul_sum,
+      Finset.sum_add_distrib]
+    abel
+  exact probOutput_decide_bind₄ _ fun ρr' ρr ρm c =>
+    decide_eq_true ⟨fun i => h1 ρm ρr c i, h2 ρr ρr' c⟩
+
+/-- Special soundness of the R_p Σ-protocol. -/
+theorem rpSigma_speciallySound (gen H : G) (X : Fin n → G) :
+    SpeciallySound (rpSigma (F := F) gen H X) := by
+  intro s R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  dsimp [rpSigma] at *
+  simp only [support_pure, Set.mem_singleton_iff] at h_w
+  subst h_w
+  simp only [decide_eq_true_eq] at h_v1 h_v2
+  obtain ⟨h1C, h1Z⟩ := h_v1
+  obtain ⟨h2C, h2Z⟩ := h_v2
+  simp only [rpRel, decide_eq_true_eq]
+  have h_ne' : c₁ - c₂ ≠ 0 := sub_ne_zero.mpr h_ne
+  have hcancel : ∀ B : G, (c₁ - c₂)⁻¹ • ((c₁ - c₂) • B) = B := by
+    intro B; rw [← mul_smul, inv_mul_cancel₀ h_ne', one_smul]
+  refine ⟨?_, ?_⟩
+  · -- per-commitment openings
+    intro i
+    have h_sub : (c₁ - c₂) • s.2.1 i
+        = (z₁.2.2 i - z₂.2.2 i) • s.1 + (z₁.2.1 i - z₂.2.1 i) • gen := by
+      calc (c₁ - c₂) • s.2.1 i
+          = (z₁.2.2 i • s.1 + z₁.2.1 i • gen)
+              - (z₂.2.2 i • s.1 + z₂.2.1 i • gen) := by
+            rw [h1C i, h2C i, sub_smul]; abel
+        _ = (z₁.2.2 i - z₂.2.2 i) • s.1 + (z₁.2.1 i - z₂.2.1 i) • gen := by
+            simp only [sub_smul]; abel
+    calc s.2.1 i
+        = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • s.2.1 i) := (hcancel _).symm
+      _ = (c₁ - c₂)⁻¹ • ((z₁.2.2 i - z₂.2.2 i) • s.1
+            + (z₁.2.1 i - z₂.2.1 i) • gen) := by rw [h_sub]
+      _ = ((z₁.2.2 i - z₂.2.2 i) * (c₁ - c₂)⁻¹) • s.1
+            + ((z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹) • gen := by
+          simp only [smul_add, ← mul_smul]
+          simp only [mul_comm]
+  · -- the Z equation
+    have h_sub : (c₁ - c₂) • s.2.2
+        = (∑ i, (z₁.2.1 i - z₂.2.1 i) • X i) - (z₁.1 - z₂.1) • H := by
+      calc (c₁ - c₂) • s.2.2
+          = ((∑ i, z₁.2.1 i • X i) - z₁.1 • H)
+              - ((∑ i, z₂.2.1 i • X i) - z₂.1 • H) := by
+            rw [h1Z, h2Z, sub_smul]; abel
+        _ = (∑ i, (z₁.2.1 i - z₂.2.1 i) • X i) - (z₁.1 - z₂.1) • H := by
+            simp only [sub_smul, Finset.sum_sub_distrib]; abel
+    calc s.2.2
+        = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • s.2.2) := (hcancel _).symm
+      _ = (c₁ - c₂)⁻¹ • ((∑ i, (z₁.2.1 i - z₂.2.1 i) • X i)
+            - (z₁.1 - z₂.1) • H) := by rw [h_sub]
+      _ = (∑ i, ((z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹) • X i)
+            - ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹) • H := by
+          simp only [smul_sub, Finset.smul_sum, ← mul_smul]
+          simp only [mul_comm]
+
+/-- Transcript simulator for the R_p Σ-protocol: sample the challenge and the
+response uniformly and solve the `n + 1` verification equations for the
+announcements. -/
+noncomputable def rpSimTranscript (gen H : G) (X : Fin n → G)
+    (s : G × (Fin n → G) × G) :
+    ProbComp (((Fin n → G) × G) × F × (F × (Fin n → F) × (Fin n → F))) := do
+  let c ← $ᵗ F
+  let zr' ← $ᵗ F
+  let zr ← $ᵗ (Fin n → F)
+  let zm ← $ᵗ (Fin n → F)
+  return ((fun i => zm i • s.1 + zr i • gen - c • s.2.1 i,
+    (∑ i, zr i • X i) - zr' • H - c • s.2.2), c, (zr', zr, zm))
+
+/-- Honest-verifier zero-knowledge of the R_p Σ-protocol.
+TODO(CMZ-C): distribution proof. -/
+theorem rpSigma_hvzk (gen H : G) (X : Fin n → G) :
+    HVZK (rpSigma (F := F) gen H X) (rpSimTranscript gen H X) := by
+  sorry
+
 end KVAC.Schemes.MicroCMZ
