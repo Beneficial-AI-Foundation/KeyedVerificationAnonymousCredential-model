@@ -91,60 +91,6 @@ VCVio's generic product instance diverges in this file's algebraic context
 (the `Inhabited` side-goal search does not terminate), so it is provided once,
 with the `Inhabited` arguments supplied explicitly. -/
 private local instance (priority := high) : Inhabited F := ⟨0⟩
-private local instance (priority := high) : Inhabited (Fin n → F) :=
-  ⟨fun _ => 0⟩
-
-private noncomputable local instance (priority := high) :
-    SampleableType ((Fin n → F) × F) :=
-  inferInstance
-
-/-! ## Uniform-mask reindexing helpers
-
-Shifting a uniform additive sample by a constant preserves the output
-distribution of the continuation. These wrap VCVio's
-`probOutput_bind_add_left_uniform` for the right-shifted, multi-sample shapes
-the HVZK proofs below produce. -/
-
-private lemma probOutput_bind_uniform_shift {α γ : Type} [SampleableType α]
-    [AddCommGroup α] (a : α) (g : α → ProbComp γ) (t : γ) :
-    Pr[= t | do let x ← $ᵗ α; g (x + a)] =
-      Pr[= t | do let x ← $ᵗ α; g x] := by
-  have h := probOutput_bind_add_left_uniform _ a g t
-  simpa [add_comm a] using h
-
-private lemma probOutput_bind_bind_uniform_shift {α β γ : Type}
-    [SampleableType α] [SampleableType β] [AddCommGroup α] [AddCommGroup β]
-    (a : α) (b : β) (g : α → β → ProbComp γ) (t : γ) :
-    Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g (x + a) (y + b)] =
-      Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g x y] := by
-  calc Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g (x + a) (y + b)]
-      = Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g x (y + b)] :=
-        probOutput_bind_uniform_shift a
-          (fun x => do let y ← $ᵗ β; g x (y + b)) t
-    _ = Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g x y] := by
-        rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
-        refine tsum_congr fun x => ?_
-        congr 1
-        exact probOutput_bind_uniform_shift b (g x) t
-
-private lemma probOutput_bind_bind_bind_uniform_shift {α β δ γ : Type}
-    [SampleableType α] [SampleableType β] [SampleableType δ]
-    [AddCommGroup α] [AddCommGroup β] [AddCommGroup δ]
-    (a : α) (b : β) (d : δ) (g : α → β → δ → ProbComp γ) (t : γ) :
-    Pr[= t | do
-      let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g (x + a) (y + b) (z + d)] =
-      Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g x y z] := by
-  calc Pr[= t | do
-        let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g (x + a) (y + b) (z + d)]
-      = Pr[= t | do
-          let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g x (y + b) (z + d)] :=
-        probOutput_bind_uniform_shift a
-          (fun x => do let y ← $ᵗ β; let z ← $ᵗ δ; g x (y + b) (z + d)) t
-    _ = Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g x y z] := by
-        rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
-        refine tsum_congr fun x => ?_
-        congr 1
-        exact probOutput_bind_bind_uniform_shift b d (g x) t
 
 /-! ## Perfect-completeness helpers
 
@@ -205,6 +151,14 @@ private lemma probOutput_decide_bind₄ {α β γ δ : Type}
       obtain ⟨c⟩ := ‹Nonempty γ›
       obtain ⟨d⟩ := ‹Nonempty δ›
       exact ⟨a, b, c, d, by rw [hb', hp]⟩
+
+/-- Congruence under a uniform bind: if the continuations agree pointwise on the
+output probability, the bound computations do too. -/
+private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
+    {k₁ k₂ : A → ProbComp γ} {t : γ} (h : ∀ a, Pr[=t | k₁ a] = Pr[=t | k₂ a]) :
+    Pr[=t | (($ᵗ A : ProbComp A) >>= k₁)] = Pr[=t | (($ᵗ A : ProbComp A) >>= k₂)] := by
+  rw [probOutput_bind_eq_tsum ($ᵗ A) k₁ t, probOutput_bind_eq_tsum ($ᵗ A) k₂ t]
+  exact tsum_congr fun a => by rw [h a]
 
 /-! ## R_iu — issuance user proof (O24 Eq. 9) -/
 
@@ -286,12 +240,46 @@ noncomputable def riuSimTranscript (gen : G) (X : Fin n → G) (Cp : G) :
   let zs ← $ᵗ F
   return ((∑ i, zm i • X i) + zs • gen - c • Cp, c, (zm, zs))
 
-/-- Honest-verifier zero-knowledge of the R_iu Σ-protocol: real transcripts
-are distributed exactly as `riuSimTranscript` (the announcement is a fresh
-Pedersen-style commitment either way). TODO(CMZ-C): distribution proof. -/
-theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
+private def svfun (gen : G) (X : Fin n → G) (Cp : G)
+    (a : Fin n → F) (b c : F) : G × F × (Fin n → F) × F :=
+  ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
+
+/-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
+transcripts are distributed exactly as `riuSimTranscript`. This is the proof
+that `Relations.lean`'s `riuSigma_hvzk` leaves as `sorry`. -/
+theorem riuSigma_hvzk' (gen : G) (X : Fin n → G) :
     HVZK (riuSigma (F := F) gen X) (riuSimTranscript gen X) := by
-  sorry
+  intro Cp w hrel
+  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hrel
+  simp only [riuSigma, riuSimTranscript, bind_assoc, pure_bind]
+  apply evalDist_ext; intro t
+  -- 1. Bring the challenge to the front (TWO swaps: a single `vcstep rw` would
+  --    swap the two masks `ρ, ρs` and peel the wrong sample), then peel it.
+  vcstep rw under 1
+  vcstep rw
+  vcstep rw congr' as ⟨c⟩
+  -- 2. For fixed `c`, rewrite the real value to the simulated value with each mask
+  --    shifted by the challenge-scaled witness, then strip the two shifts.
+  have hbody : ∀ (ρ : Fin n → F) (ρs : F),
+      ((∑ i, ρ i • X i) + ρs • gen, c, (fun i => ρ i + c * w.1 i), ρs + c * w.2)
+        = svfun gen X Cp ((fun j => c * w.1 j) + ρ) (c * w.2 + ρs) c := by
+    intro ρ ρs
+    have e1 : (∑ i, ρ i • X i) + ρs • gen
+        = (∑ i, ((fun j => c * w.1 j) + ρ) i • X i) + (c * w.2 + ρs) • gen - c • Cp := by
+      rw [h_eq]
+      simp only [Pi.add_apply, add_smul, mul_smul, smul_add, Finset.smul_sum,
+        Finset.sum_add_distrib]
+      abel
+    have e3 : (fun i => ρ i + c * w.1 i) = (fun j => c * w.1 j) + ρ := by
+      funext i; simp only [Pi.add_apply]; ring
+    simp only [svfun, e1, e3, add_comm ρs (c * w.2)]
+  simp only [hbody]
+  refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun j => c * w.1 j)
+    (f := fun ρ => ($ᵗ F : ProbComp F) >>= fun ρs => pure (svfun gen X Cp ρ (c * w.2 + ρs) c))
+    (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρ => ?_
+  exact probOutput_bind_add_left_uniform (α := F) (m := c * w.2)
+    (f := fun ρs => pure (svfun gen X Cp ρ ρs c)) (z := t)
 
 /-! ## R_iu as a generable relation -/
 
