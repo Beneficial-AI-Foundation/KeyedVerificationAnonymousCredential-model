@@ -44,7 +44,6 @@ restrict the witness space and is deferred (it needs a witness-side subtype).
 Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs and a
 transcript simulator.
 
-**The three `HVZK` proofs are `sorry`d (TODO(CMZ-C), blocked on VCVio).**
 The mathematical argument is routine (reindex the uniform masks by the
 challenge-scaled witness, exactly as in VCVio's `Examples/Schnorr.lean`), but
 every applicable form of VCVio's uniform-reindexing lemma
@@ -91,60 +90,7 @@ VCVio's generic product instance diverges in this file's algebraic context
 (the `Inhabited` side-goal search does not terminate), so it is provided once,
 with the `Inhabited` arguments supplied explicitly. -/
 private local instance (priority := high) : Inhabited F := ⟨0⟩
-private local instance (priority := high) : Inhabited (Fin n → F) :=
-  ⟨fun _ => 0⟩
 
-private noncomputable local instance (priority := high) :
-    SampleableType ((Fin n → F) × F) :=
-  inferInstance
-
-/-! ## Uniform-mask reindexing helpers
-
-Shifting a uniform additive sample by a constant preserves the output
-distribution of the continuation. These wrap VCVio's
-`probOutput_bind_add_left_uniform` for the right-shifted, multi-sample shapes
-the HVZK proofs below produce. -/
-
-private lemma probOutput_bind_uniform_shift {α γ : Type} [SampleableType α]
-    [AddCommGroup α] (a : α) (g : α → ProbComp γ) (t : γ) :
-    Pr[= t | do let x ← $ᵗ α; g (x + a)] =
-      Pr[= t | do let x ← $ᵗ α; g x] := by
-  have h := probOutput_bind_add_left_uniform _ a g t
-  simpa [add_comm a] using h
-
-private lemma probOutput_bind_bind_uniform_shift {α β γ : Type}
-    [SampleableType α] [SampleableType β] [AddCommGroup α] [AddCommGroup β]
-    (a : α) (b : β) (g : α → β → ProbComp γ) (t : γ) :
-    Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g (x + a) (y + b)] =
-      Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g x y] := by
-  calc Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g (x + a) (y + b)]
-      = Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g x (y + b)] :=
-        probOutput_bind_uniform_shift a
-          (fun x => do let y ← $ᵗ β; g x (y + b)) t
-    _ = Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; g x y] := by
-        rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
-        refine tsum_congr fun x => ?_
-        congr 1
-        exact probOutput_bind_uniform_shift b (g x) t
-
-private lemma probOutput_bind_bind_bind_uniform_shift {α β δ γ : Type}
-    [SampleableType α] [SampleableType β] [SampleableType δ]
-    [AddCommGroup α] [AddCommGroup β] [AddCommGroup δ]
-    (a : α) (b : β) (d : δ) (g : α → β → δ → ProbComp γ) (t : γ) :
-    Pr[= t | do
-      let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g (x + a) (y + b) (z + d)] =
-      Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g x y z] := by
-  calc Pr[= t | do
-        let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g (x + a) (y + b) (z + d)]
-      = Pr[= t | do
-          let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g x (y + b) (z + d)] :=
-        probOutput_bind_uniform_shift a
-          (fun x => do let y ← $ᵗ β; let z ← $ᵗ δ; g x (y + b) (z + d)) t
-    _ = Pr[= t | do let x ← $ᵗ α; let y ← $ᵗ β; let z ← $ᵗ δ; g x y z] := by
-        rw [probOutput_bind_eq_tsum, probOutput_bind_eq_tsum]
-        refine tsum_congr fun x => ?_
-        congr 1
-        exact probOutput_bind_bind_uniform_shift b d (g x) t
 
 /-! ## Perfect-completeness helpers
 
@@ -205,6 +151,14 @@ private lemma probOutput_decide_bind₄ {α β γ δ : Type}
       obtain ⟨c⟩ := ‹Nonempty γ›
       obtain ⟨d⟩ := ‹Nonempty δ›
       exact ⟨a, b, c, d, by rw [hb', hp]⟩
+
+/-- Congruence under a uniform bind: if the continuations agree pointwise on the
+output probability, the bound computations do too. -/
+private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
+    {k₁ k₂ : A → ProbComp γ} {t : γ} (h : ∀ a, Pr[=t | k₁ a] = Pr[=t | k₂ a]) :
+    Pr[=t | (($ᵗ A : ProbComp A) >>= k₁)] = Pr[=t | (($ᵗ A : ProbComp A) >>= k₂)] := by
+  rw [probOutput_bind_eq_tsum ($ᵗ A) k₁ t, probOutput_bind_eq_tsum ($ᵗ A) k₂ t]
+  exact tsum_congr fun a => by rw [h a]
 
 /-! ## R_iu — issuance user proof (O24 Eq. 9) -/
 
@@ -286,15 +240,50 @@ noncomputable def riuSimTranscript (gen : G) (X : Fin n → G) (Cp : G) :
   let zs ← $ᵗ F
   return ((∑ i, zm i • X i) + zs • gen - c • Cp, c, (zm, zs))
 
-/-- Honest-verifier zero-knowledge of the R_iu Σ-protocol: real transcripts
-are distributed exactly as `riuSimTranscript` (the announcement is a fresh
-Pedersen-style commitment either way). TODO(CMZ-C): distribution proof. -/
-theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
+/-- The simulated-transcript value of `riuSigma` on responses `(a, b)` and
+challenge `c`: the announcement is solved from the verification equation. -/
+private def svfun (gen : G) (X : Fin n → G) (Cp : G)
+    (a : Fin n → F) (b c : F) : G × F × (Fin n → F) × F :=
+  ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
+
+/-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
+transcripts are distributed exactly as `riuSimTranscript`. This is the proof
+that `Relations.lean`'s `riuSigma_hvzk` leaves as `sorry`. -/
+theorem riuSigma_hvzk' (gen : G) (X : Fin n → G) :
     HVZK (riuSigma (F := F) gen X) (riuSimTranscript gen X) := by
-  sorry
+  intro Cp w hrel
+  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hrel
+  simp only [riuSigma, riuSimTranscript, bind_assoc, pure_bind]
+  apply evalDist_ext; intro t
+  -- 1. Bring the challenge to the front (TWO swaps: a single `vcstep rw` would
+  --    swap the two masks `ρ, ρs` and peel the wrong sample), then peel it.
+  vcstep rw under 1
+  vcstep rw
+  vcstep rw congr' as ⟨c⟩
+  -- 2. For fixed `c`, rewrite the real value to the simulated value with each mask
+  --    shifted by the challenge-scaled witness, then strip the two shifts.
+  have hbody : ∀ (ρ : Fin n → F) (ρs : F),
+      ((∑ i, ρ i • X i) + ρs • gen, c, (fun i => ρ i + c * w.1 i), ρs + c * w.2)
+        = svfun gen X Cp ((fun j => c * w.1 j) + ρ) (c * w.2 + ρs) c := by
+    intro ρ ρs
+    have e1 : (∑ i, ρ i • X i) + ρs • gen
+        = (∑ i, ((fun j => c * w.1 j) + ρ) i • X i) + (c * w.2 + ρs) • gen - c • Cp := by
+      rw [h_eq]
+      simp only [Pi.add_apply, add_smul, mul_smul, smul_add, Finset.smul_sum,
+        Finset.sum_add_distrib]
+      abel
+    have e3 : (fun i => ρ i + c * w.1 i) = (fun j => c * w.1 j) + ρ := by
+      funext i; simp only [Pi.add_apply]; ring
+    simp only [svfun, e1, e3, add_comm ρs (c * w.2)]
+  simp only [hbody]
+  refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun j => c * w.1 j)
+    (f := fun ρ => ($ᵗ F : ProbComp F) >>= fun ρs => pure (svfun gen X Cp ρ (c * w.2 + ρs) c))
+    (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρ => ?_
+  exact probOutput_bind_add_left_uniform (α := F) (m := c * w.2)
+    (f := fun ρs => pure (svfun gen X Cp ρ ρs c)) (z := t)
 
 /-! ## R_iu as a generable relation -/
-
 /-- Unfolding of product uniform sampling: VCVio's `SampleableType (α × β)`
 instance samples the components independently. Stated as a computation-level
 equality so proofs can `rw` with it instead of forcing the kernel to check the
@@ -489,11 +478,46 @@ noncomputable def risSimTranscript (gen H : G) (s : G × G × G × G) :
   return ((zu • gen - c • s.2.2.1, zx • H - c • s.1,
     zx • s.2.2.1 + zu • s.2.1 - c • s.2.2.2), c, (zx, zu))
 
-/-- Honest-verifier zero-knowledge of the R_is Σ-protocol.
-TODO(CMZ-C): distribution proof. -/
-theorem risSigma_hvzk (gen H : G) :
+/-- The simulated-transcript value of `risSigma` on responses `(a, b) = (zx, zu)`
+and challenge `c`: the three announcements are solved from the verification
+equations. The statement is `s = (X₀, C'', U', V')`. -/
+private def svfunRis (gen H : G) (s : G × G × G × G) (a b c : F) :
+    (G × G × G) × F × (F × F) :=
+  ((b • gen - c • s.2.2.1, a • H - c • s.1, a • s.2.2.1 + b • s.2.1 - c • s.2.2.2), c, (a, b))
+
+/-- Honest-verifier zero-knowledge of the R_is Σ-protocol (O24 Eq. 10). Same
+shape as `riuSigma_hvzk'`: reorder the challenge to the front, rewrite the real
+announcement to the simulated one with each mask shifted by the challenge-scaled
+witness, then strip the two shifts. Both masks are scalars here, so both shifts
+are over `F`. -/
+theorem risSigma_hvzk' (gen H : G) :
     HVZK (risSigma (F := F) gen H) (risSimTranscript gen H) := by
-  sorry
+  intro s w hrel
+  obtain ⟨hU, hX, hV⟩ := of_decide_eq_true hrel
+  simp only [risSigma, risSimTranscript, bind_assoc, pure_bind]
+  apply evalDist_ext; intro t
+  vcstep rw under 1
+  vcstep rw
+  vcstep rw congr' as ⟨c⟩
+  have hbody : ∀ (ρx ρu : F),
+      ((ρu • gen, ρx • H, ρx • s.2.2.1 + ρu • s.2.1), c, (ρx + c * w.1, ρu + c * w.2))
+        = svfunRis gen H s (c * w.1 + ρx) (c * w.2 + ρu) c := by
+    intro ρx ρu
+    have e1 : ρu • gen = (c * w.2 + ρu) • gen - c • s.2.2.1 := by
+      rw [hU]; simp only [add_smul, mul_smul]; abel
+    have e2 : ρx • H = (c * w.1 + ρx) • H - c • s.1 := by
+      rw [hX]; simp only [add_smul, mul_smul]; abel
+    have e3 : ρx • s.2.2.1 + ρu • s.2.1
+        = (c * w.1 + ρx) • s.2.2.1 + (c * w.2 + ρu) • s.2.1 - c • s.2.2.2 := by
+      rw [hV]; simp only [add_smul, mul_smul, smul_add]; abel
+    simp only [svfunRis, e1, e2, e3, add_comm ρx (c * w.1), add_comm ρu (c * w.2)]
+  simp only [hbody]
+  refine (probOutput_bind_add_left_uniform (α := F) (m := c * w.1)
+    (f := fun ρx => ($ᵗ F : ProbComp F) >>= fun ρu =>
+      pure (svfunRis gen H s ρx (c * w.2 + ρu) c)) (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρx => ?_
+  exact probOutput_bind_add_left_uniform (α := F) (m := c * w.2)
+    (f := fun ρu => pure (svfunRis gen H s ρx ρu c)) (z := t)
 
 /-! ## R_p — presentation proof (O24 Eq. 11) -/
 
@@ -624,10 +648,63 @@ noncomputable def rpSimTranscript (gen H : G) (X : Fin n → G)
   return ((fun i => zm i • s.1 + zr i • gen - c • s.2.1 i,
     (∑ i, zr i • X i) - zr' • H - c • s.2.2), c, (zr', zr, zm))
 
-/-- Honest-verifier zero-knowledge of the R_p Σ-protocol.
-TODO(CMZ-C): distribution proof. -/
-theorem rpSigma_hvzk (gen H : G) (X : Fin n → G) :
+/-- The simulated-transcript value of `rpSigma` on responses `(a, b, d) = (z_{r'}, z⃗_r, z⃗_m)`
+and challenge `c`: the `n` opening announcements and the `Z`-announcement are solved
+from the verification equations. The statement is `s = (U', C⃗, Z)`. -/
+private def svfunRp (gen H : G) (X : Fin n → G) (s : G × (Fin n → G) × G)
+    (a : F) (b d : Fin n → F) (c : F) :
+    ((Fin n → G) × G) × F × (F × (Fin n → F) × (Fin n → F)) :=
+  ((fun i => d i • s.1 + b i • gen - c • s.2.1 i, (∑ i, b i • X i) - a • H - c • s.2.2),
+    c, (a, b, d))
+
+/-- Honest-verifier zero-knowledge of the R_p Σ-protocol (O24 Eq. 11). Same shape
+as before, scaled to three masks: a scalar `ρr'` and two vector masks `ρr, ρm`,
+with an `n`-opening + one-`Z` announcement. Reorder the challenge to the front
+(three swaps), rewrite to the simulated value with each mask shifted, then strip
+the three shifts (one over `F`, two over `Fin n → F`). -/
+theorem rpSigma_hvzk' (gen H : G) (X : Fin n → G) :
     HVZK (rpSigma (F := F) gen H X) (rpSimTranscript gen H X) := by
-  sorry
+  intro s w hrel
+  obtain ⟨hC, hZ⟩ := of_decide_eq_true hrel
+  simp only [rpSigma, rpSimTranscript, bind_assoc, pure_bind]
+  apply evalDist_ext; intro t
+  vcstep rw under 2
+  vcstep rw under 1
+  vcstep rw
+  vcstep rw congr' as ⟨c⟩
+  have hbody : ∀ (ρr' : F) (ρr ρm : Fin n → F),
+      ((fun i => ρm i • s.1 + ρr i • gen, (∑ i, ρr i • X i) - ρr' • H), c,
+       (ρr' + c * w.1, fun i => ρr i + c * w.2.1 i, fun i => ρm i + c * w.2.2 i))
+        = svfunRp gen H X s (c * w.1 + ρr') ((fun i => c * w.2.1 i) + ρr)
+            ((fun i => c * w.2.2 i) + ρm) c := by
+    intro ρr' ρr ρm
+    have eAnn1 : (fun i => ρm i • s.1 + ρr i • gen)
+        = (fun i => ((fun i => c * w.2.2 i) + ρm) i • s.1
+            + ((fun i => c * w.2.1 i) + ρr) i • gen - c • s.2.1 i) := by
+      funext i; rw [hC i]; simp only [Pi.add_apply, add_smul, mul_smul, smul_add]; abel
+    have eAnn2 : (∑ i, ρr i • X i) - ρr' • H
+        = (∑ i, ((fun i => c * w.2.1 i) + ρr) i • X i) - (c * w.1 + ρr') • H - c • s.2.2 := by
+      rw [hZ]
+      simp only [Pi.add_apply, add_smul, mul_smul, smul_sub, Finset.smul_sum,
+        Finset.sum_add_distrib]
+      abel
+    have eR2 : (fun i => ρr i + c * w.2.1 i) = (fun i => c * w.2.1 i) + ρr := by
+      funext i; simp only [Pi.add_apply]; ring
+    have eR3 : (fun i => ρm i + c * w.2.2 i) = (fun i => c * w.2.2 i) + ρm := by
+      funext i; simp only [Pi.add_apply]; ring
+    simp only [svfunRp, eAnn1, eAnn2, eR2, eR3, add_comm ρr' (c * w.1)]
+  simp only [hbody]
+  refine (probOutput_bind_add_left_uniform (α := F) (m := c * w.1)
+    (f := fun ρr' => ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) >>= fun ρr =>
+      ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) >>= fun ρm =>
+        pure (svfunRp gen H X s ρr' ((fun i => c * w.2.1 i) + ρr)
+          ((fun i => c * w.2.2 i) + ρm) c)) (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρr' => ?_
+  refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun i => c * w.2.1 i)
+    (f := fun ρr => ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) >>= fun ρm =>
+      pure (svfunRp gen H X s ρr' ρr ((fun i => c * w.2.2 i) + ρm) c)) (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρr => ?_
+  exact probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun i => c * w.2.2 i)
+    (f := fun ρm => pure (svfunRp gen H X s ρr' ρr ρm c)) (z := t)
 
 end KVAC.Schemes.MicroCMZ
