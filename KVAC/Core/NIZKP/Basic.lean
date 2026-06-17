@@ -12,12 +12,13 @@ A non-interactive zero-knowledge proof (NIZKP) lets a prover convince a verifier
 statement with a single message, revealing nothing beyond its truth.
 
 The specification is agnostic with respect to the security model. The `NIZKPScheme`
-structure (`setup`, `prove`, `verify`, `relation`) and the properties `KnowledgeSound`,
+structure (`setup`, `prove`, `verify`, `relation`) and the properties `Complete`, `KnowledgeSound`,
 `SimulationExtractable`, and `ZeroKnowledge` are stated once over an abstract carrier
 `F : Type → Type`. A `SecurityModel F` instance supplies the model-dependent relations
-`indist`, `produces`, and `extracts`, so the abstract notions specialize to each model with no
-reproof. The concrete carrier is the free monad on a polynomial functor, `PFunctor.FreeM P`,
-on which the concrete schemes are built.
+`indist` and `produces`, so the abstract notions specialize to each model with no reproof. The
+extractor and the simulator are not model elements. Each property exhibits them, so they are
+existentially quantified where they appear. The concrete carrier is the free monad on a polynomial
+functor, `PFunctor.FreeM P`, on which the concrete schemes are built.
 
 TODO. The refinement that motivates this carrier, from an arbitrary `F` through the freer encoding
 to the polynomial-functor free monad, will be documented in the Blueprint.
@@ -25,20 +26,23 @@ to the polynomial-functor free monad, will be documented in the Blueprint.
 ## Consistency of the specification with respect to the paper
 
 - What matches O24. The `NIZKPScheme` fields are the three algorithms (`setup`, `prove`, `verify`)
-  and the relation family of §3.3. The properties follow §3.3, with simulation-extractability
-  following the definition O24 cites (Dao–Grubbs, ePrint 2023/494). Each property ranges only over
-  honestly generated CRSes (`produces (setup secParam) crs`), and simulation-extractability uses one
-  simulator for both zero-knowledge and extraction, both as in the paper.
+  and the relation family of §3.3. `Complete` and the security properties follow §3.3, with
+  simulation-extractability following the definition O24 cites (Dao–Grubbs, ePrint 2023/494). Each
+  property ranges only over honestly generated CRSes (`produces (setup secParam) crs`), and
+  simulation-extractability exhibits one simulator and one extractor for both zero-knowledge and
+  extraction, as in the paper.
 
-- What is abstracted. O24 fixes the computational model. Here, `F` and the `SecurityModel` relations
+- What is abstracted. O24 fixes the computational model. Here `F` and the `SecurityModel` relations
   stay abstract, so the quantitative, asymptotic content (advantage, negligibility in λ) lives in
-  the computational refinement, not here.
-  * `F` is explicit. `F Proof` is a term in the symbolic model, a distribution in the computational
-    model.
+  the computational refinement, not here. The properties stated here are the perfect, non-asymptotic
+  notions.
+  * `F` is explicit. `F Proof` is a term in the symbolic model and a distribution in the
+    computational model.
   * `indist`, in `ZeroKnowledge`, relates a single pair of outputs, not a negligible advantage over
     an adaptive, multi-query game.
-  * `extracts`, in `KnowledgeSound` and `SimulationExtractable`, is the model-supplied extraction
-    relation, not the paper's efficient extractor over the prover's coins and code.
+  * The extractor, in `KnowledgeSound` and `SimulationExtractable`, is an exhibited function
+    `Crs → Stmt → Proof → F Witness` whose success reads through `produces`. It is not the paper's
+    efficient extractor over the prover's coins and code, which is a computational notion.
   * `produces`, the freshness guard in `SimulationExtractable`, marks the proofs a simulator could
     output, not a run-time log of issued proofs.
 
@@ -69,10 +73,10 @@ structure NIZKPScheme (F : Type → Type) (Crs Stmt Witness Proof : Type) where
   properties read it from the scheme as `relation crs`. -/
   relation : Crs → Stmt → Witness → Prop
 
-/-- A security model for the carrier `F` provides the model-dependent relations `indist`,
-`produces`, and `extracts` that the security properties read, with the laws every model satisfies.
-The laws are anchored on the deterministic computations `pure a`, so the class requires `[Pure F]`,
-and they keep each relation non-degenerate, so an instance cannot be vacuous. -/
+/-- A security model for the carrier `F` provides the model-dependent relations `indist` and
+`produces` that the security properties read, with the laws every model satisfies. The laws are
+anchored on the deterministic computations `pure a`, so the class requires `[Pure F]`, and they
+keep each relation non-degenerate, so an instance cannot be vacuous. -/
 class SecurityModel (F : Type → Type) [Pure F] where
   /-- Indistinguishability of two `F`-computations, used by `ZeroKnowledge`. -/
   indist : ∀ {α : Type}, F α → F α → Prop
@@ -88,27 +92,32 @@ class SecurityModel (F : Type → Type) [Pure F] where
   /-- A deterministic computation produces exactly its value. Rules out both `fun _ _ => True`
   and `fun _ _ => False` for `produces`. -/
   produces_pure : ∀ {α} (a b : α), produces (pure a) b ↔ a = b
-  /-- `extracts c w` holds when witness `w` can be extracted from the computation `c`. This
-  model-dependent knowledge relation is symbolic derivation from the proof term or the computational
-  extractor, kept non-degenerate by the two laws below. -/
-  extracts : ∀ {α β : Type}, F α → β → Prop
-  /-- A value is extractable from its own deterministic computation. Extraction is therefore
-  non-vacuous, which rules out the empty relation `fun _ _ => False`. -/
-  extracts_pure_self : ∀ {α} (a : α), extracts (pure a) a
-  /-- Extraction is partial. Some value is not extractable from some computation, which rules out
-  the total relation `fun _ _ => True`. The non-extractable computations are the fake proofs, which
-  the proof type holds alongside the real ones. -/
-  extracts_partial : ∃ (α : Type) (c : F α) (a : α), ¬ extracts c a
 
-/-- Knowledge soundness. For an honestly generated CRS, every accepting proof yields a witness that
-extracts from it. The CRS scope is `produces (setup secParam) crs`, acceptance is
-`produces (verify …) true`, and extraction is `extracts`, all from the `SecurityModel`. The witness
-must come from the proof, so this is stronger than language soundness. -/
-def KnowledgeSound [SecurityModel F]
+/-- Perfect completeness. For an honestly generated CRS and a witnessed instance, an honestly
+produced proof verifies. The CRS scope is `produces (setup secParam) crs` and acceptance is
+`produces (verify …) true`, both from the `SecurityModel`. -/
+def Complete [SecurityModel F]
     (nizkp : NIZKPScheme F Crs Stmt Witness Proof) : Prop :=
+  ∀ secParam crs x w π, SecurityModel.produces (nizkp.setup secParam) crs →
+    nizkp.relation crs x w →
+    SecurityModel.produces (nizkp.prove crs x w) π →
+      SecurityModel.produces (nizkp.verify crs x π) true
+
+/-- Knowledge soundness for a fixed extractor `ext`. For an honestly generated CRS, every accepting
+proof yields a witness that `ext` recovers from it, read through `produces`. The witness must come
+from the proof, so this is stronger than language soundness. -/
+def _KnowledgeSound [SecurityModel F]
+    (nizkp : NIZKPScheme F Crs Stmt Witness Proof)
+    (ext : Crs → Stmt → Proof → F Witness) : Prop :=
   ∀ secParam crs x π, SecurityModel.produces (nizkp.setup secParam) crs →
     SecurityModel.produces (nizkp.verify crs x π) true →
-      ∃ w, nizkp.relation crs x w ∧ SecurityModel.extracts (pure π : F Proof) w
+      ∃ w, nizkp.relation crs x w ∧ SecurityModel.produces (ext crs x π) w
+
+/-- Knowledge soundness. Some extractor recovers a witness from every accepting proof. The extractor
+is exhibited here, matching the practice of giving an extractor as part of the security proof. -/
+def KnowledgeSound [SecurityModel F]
+    (nizkp : NIZKPScheme F Crs Stmt Witness Proof) : Prop :=
+  ∃ ext, _KnowledgeSound nizkp ext
 
 /-- Zero-knowledge for a given simulator `sim`. For an honestly generated CRS, `sim` produces from
 the statement alone something `indist` from the real prover's output. `indist` comes from the
@@ -120,39 +129,42 @@ def ZeroKnowledge [SecurityModel F]
     nizkp.relation crs x w →
       SecurityModel.indist (nizkp.prove crs x w) (sim crs x)
 
-/-- Extraction for a given simulator `sim`. For an honestly generated CRS, every accepting proof
-that `sim` did not produce is real and a witness extracts from it. A proof is fake when
-`produces (sim crs x) π` holds, and nothing extracts from a fake. Internal building block of
+/-- Extraction for a fixed simulator `sim` and extractor `ext`. For an honestly generated CRS, every
+accepting proof that `sim` did not produce yields a witness that `ext` recovers, read through
+`produces`. A proof is fake when `produces (sim crs x) π` holds. Internal building block of
 `SimulationExtractable`. -/
-def Extractable [SecurityModel F]
-    (nizkp : NIZKPScheme F Crs Stmt Witness Proof) (sim : Crs → Stmt → F Proof) : Prop :=
+def _Extractable [SecurityModel F]
+    (nizkp : NIZKPScheme F Crs Stmt Witness Proof)
+    (sim : Crs → Stmt → F Proof)
+    (ext : Crs → Stmt → Proof → F Witness) : Prop :=
   ∀ secParam crs x π, SecurityModel.produces (nizkp.setup secParam) crs →
     SecurityModel.produces (nizkp.verify crs x π) true →
     ¬ SecurityModel.produces (sim crs x) π →
-      ∃ w, nizkp.relation crs x w ∧ SecurityModel.extracts (pure π : F Proof) w
+      ∃ w, nizkp.relation crs x w ∧ SecurityModel.produces (ext crs x π) w
 
-/-- Simulation-extractability (O24 §3.3, via Dao–Grubbs). One simulator gives both zero-knowledge
-and extraction, matching the paper's single existential over the simulator. -/
+/-- Simulation-extractability (O24 §3.3, via Dao–Grubbs). One simulator and one extractor give both
+zero-knowledge and extraction, matching the paper's single existential over the simulator. -/
 def SimulationExtractable [SecurityModel F]
     (nizkp : NIZKPScheme F Crs Stmt Witness Proof) : Prop :=
-  ∃ sim : Crs → Stmt → F Proof, ZeroKnowledge nizkp sim ∧ Extractable nizkp sim
+  ∃ sim ext, ZeroKnowledge nizkp sim ∧ _Extractable nizkp sim ext
 
 /-- Makes explicit that simulation-extractability gives zero-knowledge for the same simulator. -/
 theorem SimulationExtractable.toZeroKnowledge [SecurityModel F]
     {nizkp : NIZKPScheme F Crs Stmt Witness Proof} (h : SimulationExtractable nizkp) :
-    ∃ sim, ZeroKnowledge nizkp sim :=
-  ⟨h.choose, h.choose_spec.1⟩
+    ∃ sim, ZeroKnowledge nizkp sim := by
+  obtain ⟨sim, _ext, hzk, _⟩ := h
+  exact ⟨sim, hzk⟩
 
 end AbstractSpec
 
 /-! ## The free-monad carrier `PFunctor.FreeM P`
 
-Cryptographically, the carrier is the model of computation the algorithms run in.
-The concrete carrier in this section is the free monad on a polynomial functor `P`, a pair of
-operation names `P.A` and result types `P.B`. A `FreeM P` program names operations without
-quantifying over a fresh result type, so it stays in `Type 0` and composes under the sum `+`. The
-concrete schemes are built on this carrier. The refinement that leads here is in the
-Blueprint. -/
+The carrier is the model of computation the algorithms run in. Here it is the free monad on a
+polynomial functor `P`, whose operation names are `P.A` and result types are `P.B`. A `FreeM P`
+program names operations without a fresh result type, so it stays in `Type 0` and composes under
+the sum `+`. The concrete schemes are built on it.
+
+-/
 
 section FreeMonadSpec
 
