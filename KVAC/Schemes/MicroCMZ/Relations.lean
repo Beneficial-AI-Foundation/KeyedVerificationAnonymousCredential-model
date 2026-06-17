@@ -12,11 +12,12 @@ import VCVio
 The keyed-verification credential μCMZ of Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.1, proves three relations
 `R_cmz = R_iu ∪ R_is ∪ R_p` (issuance-user, issuance-server, presentation).
-This file builds them as VCVio `SigmaProtocol` instances, reusing the Schnorr
-template (`.lake/packages/VCVio/Examples/Schnorr.lean`) generalized to vectors
-of bases/scalars.
+They are built as VCVio `SigmaProtocol` instances, reusing the Schnorr template
+(`.lake/packages/VCVio/Examples/Schnorr.lean`) generalized to vectors of
+bases/scalars. **This file implements `R_iu`; `R_is` and `R_p` land in a
+follow-up PR.**
 
-The three relations are implemented as generalized-Schnorr Σ-protocols:
+All three are generalized-Schnorr Σ-protocols:
 
 - **R_iu** (Eq. 9): the user proves knowledge of `(m⃗, s)` with
   `C' = Σᵢ mᵢ • Xᵢ + s • G`.
@@ -41,22 +42,9 @@ has a witness), so they carry no `GenerableRelation`; none is needed — only
 The relations here use the trivial predicate `φ ≡ ⊤`; a non-trivial `φ` would
 restrict the witness space and is deferred (it needs a witness-side subtype).
 
-Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs and a
-transcript simulator.
-
-**The three `HVZK` proofs are `sorry`d (TODO(CMZ-C), blocked on VCVio).**
-The mathematical argument is routine (reindex the uniform masks by the
-challenge-scaled witness, exactly as in VCVio's `Examples/Schnorr.lean`), but
-every applicable form of VCVio's uniform-reindexing lemma
-(`probOutput_bind_add_left_uniform` and wrappers around it) diverges during
-*application* here: the unifier's definitional-equality check between the
-lemma's shifted continuation and the concrete transcript computation does not
-terminate (it is not heartbeat-bounded, so it manifests as a compiler hang
-rather than an error). The fix belongs upstream: a reindexing lemma stated in
-pointwise form for function-type samples (`Fin n → F`), with a controlled
-proof, or `@[irreducible]` fencing of the evaluation semantics. Until then do
-not attempt these proofs with the current lemma set — see the elaboration
-pitfalls below.
+Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs, a
+transcript simulator, and an `HVZK` proof; the `R_iu` instances below are
+complete, with `R_is`/`R_p` to follow in their PR.
 
 ## Elaboration pitfalls (read before editing)
 
@@ -245,9 +233,8 @@ private def svfun (gen : G) (X : Fin n → G) (Cp : G)
   ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
 
 /-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
-transcripts are distributed exactly as `riuSimTranscript`. This is the proof
-that `Relations.lean`'s `riuSigma_hvzk` leaves as `sorry`. -/
-theorem riuSigma_hvzk' (gen : G) (X : Fin n → G) :
+transcripts are distributed exactly as `riuSimTranscript`. -/
+theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
     HVZK (riuSigma (F := F) gen X) (riuSimTranscript gen X) := by
   intro Cp w hrel
   have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hrel
