@@ -12,11 +12,11 @@ import VCVio
 The keyed-verification credential μCMZ of Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.1, proves three relations
 `R_cmz = R_iu ∪ R_is ∪ R_p` (issuance-user, issuance-server, presentation).
-This file builds them as VCVio `SigmaProtocol` instances, reusing the Schnorr
-template (`.lake/packages/VCVio/Examples/Schnorr.lean`) generalized to vectors
-of bases/scalars.
+They are built as VCVio `SigmaProtocol` instances, reusing the Schnorr template
+(`.lake/packages/VCVio/Examples/Schnorr.lean`) generalized to vectors of
+bases/scalars.
 
-The three relations are implemented as generalized-Schnorr Σ-protocols:
+All three are generalized-Schnorr Σ-protocols:
 
 - **R_iu** (Eq. 9): the user proves knowledge of `(m⃗, s)` with
   `C' = Σᵢ mᵢ • Xᵢ + s • G`.
@@ -41,21 +41,8 @@ has a witness), so they carry no `GenerableRelation`; none is needed — only
 The relations here use the trivial predicate `φ ≡ ⊤`; a non-trivial `φ` would
 restrict the witness space and is deferred (it needs a witness-side subtype).
 
-Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs and a
-transcript simulator.
-
-The mathematical argument is routine (reindex the uniform masks by the
-challenge-scaled witness, exactly as in VCVio's `Examples/Schnorr.lean`), but
-every applicable form of VCVio's uniform-reindexing lemma
-(`probOutput_bind_add_left_uniform` and wrappers around it) diverges during
-*application* here: the unifier's definitional-equality check between the
-lemma's shifted continuation and the concrete transcript computation does not
-terminate (it is not heartbeat-bounded, so it manifests as a compiler hang
-rather than an error). The fix belongs upstream: a reindexing lemma stated in
-pointwise form for function-type samples (`Fin n → F`), with a controlled
-proof, or `@[irreducible]` fencing of the evaluation semantics. Until then do
-not attempt these proofs with the current lemma set — see the elaboration
-pitfalls below.
+Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs, a
+transcript simulator, and an `HVZK` proof.
 
 ## Elaboration pitfalls (read before editing)
 
@@ -247,9 +234,8 @@ private def svfun (gen : G) (X : Fin n → G) (Cp : G)
   ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
 
 /-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
-transcripts are distributed exactly as `riuSimTranscript`. This is the proof
-that `Relations.lean`'s `riuSigma_hvzk` leaves as `sorry`. -/
-theorem riuSigma_hvzk' (gen : G) (X : Fin n → G) :
+transcripts are distributed exactly as `riuSimTranscript`. -/
+theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
     HVZK (riuSigma (F := F) gen X) (riuSimTranscript gen X) := by
   intro Cp w hrel
   have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hrel
@@ -486,11 +472,11 @@ private def svfunRis (gen H : G) (s : G × G × G × G) (a b c : F) :
   ((b • gen - c • s.2.2.1, a • H - c • s.1, a • s.2.2.1 + b • s.2.1 - c • s.2.2.2), c, (a, b))
 
 /-- Honest-verifier zero-knowledge of the R_is Σ-protocol (O24 Eq. 10). Same
-shape as `riuSigma_hvzk'`: reorder the challenge to the front, rewrite the real
+shape as `riuSigma_hvzk`: reorder the challenge to the front, rewrite the real
 announcement to the simulated one with each mask shifted by the challenge-scaled
 witness, then strip the two shifts. Both masks are scalars here, so both shifts
 are over `F`. -/
-theorem risSigma_hvzk' (gen H : G) :
+theorem risSigma_hvzk (gen H : G) :
     HVZK (risSigma (F := F) gen H) (risSimTranscript gen H) := by
   intro s w hrel
   obtain ⟨hU, hX, hV⟩ := of_decide_eq_true hrel
@@ -662,7 +648,7 @@ as before, scaled to three masks: a scalar `ρr'` and two vector masks `ρr, ρm
 with an `n`-opening + one-`Z` announcement. Reorder the challenge to the front
 (three swaps), rewrite to the simulated value with each mask shifted, then strip
 the three shifts (one over `F`, two over `Fin n → F`). -/
-theorem rpSigma_hvzk' (gen H : G) (X : Fin n → G) :
+theorem rpSigma_hvzk (gen H : G) (X : Fin n → G) :
     HVZK (rpSigma (F := F) gen H X) (rpSimTranscript gen H X) := by
   intro s w hrel
   obtain ⟨hC, hZ⟩ := of_decide_eq_true hrel
