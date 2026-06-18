@@ -22,6 +22,9 @@ adds the two assumptions O24 needs that VCVio does not provide.
   oracle relative to the challenge, `Ddh(A, Z) = 1 ↔ Z = x·A`. Used in the
   n-to-1 attribute reduction of O24 Lemma 5.5 (Claim 5.6).
 
+O24 §3.1 also states a q-DDHl assumption, but it is not needed for μCMZ; we
+therefore defer formalizing q-DDHl to future work.
+
 ## Conventions
 
 Experiments are `ProbComp Bool` in the style of VCVio's `dlogExp`; advantages
