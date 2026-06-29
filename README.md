@@ -16,14 +16,15 @@ Requires the Lean 4 toolchain pinned in [`lean-toolchain`](lean-toolchain) (curr
 
 The Verso blueprint at https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/ is the live, rendered view of the formalization, with per-chapter prose tied to the Lean declarations as they land. The markdown documents below cover the formalization plan, work breakdown, and contribution workflow.
 
-| File | What it is |
-|---|---|
-| [`docs/README.md`](docs/README.md) | Build instructions for the Verso blueprint site and the "Adding a new chapter" recipe. |
-| [`docs/PLAN.md`](docs/PLAN.md) | The canonical formalization plan: paper background, module layout with dependency graph, module breakdown, security results targeted, and future works. |
-| [`docs/TRACKS.md`](docs/TRACKS.md) | Status board for parallel work tracks, with a Mermaid dependency graph and per-track checkboxes. |
-| [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | Code, comment, and theorem style conventions. |
-| [`docs/WORKFLOW_AND_PR_GUIDE.md`](docs/WORKFLOW_AND_PR_GUIDE.md) | Branching conventions, build expectations, PR title and footer format. |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to claim work, where to ask questions, and a guided entry point into the docs above. |
+| File                                                              | What it is                                                                                                                                              |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`docs/README.md`](docs/README.md)                               | Build instructions for the Verso blueprint site and the "Adding a new chapter" recipe.                                                                  |
+| [`docs/PLAN.md`](docs/PLAN.md)                                   | The canonical formalization plan: paper background, module layout with dependency graph, module breakdown, security results targeted, and future works. |
+| [`docs/TRACKS.md`](docs/TRACKS.md)                               | Status board for parallel work tracks, with a Mermaid dependency graph and per-track checkboxes.                                                        |
+| [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md)                     | Code, comment, and theorem style conventions.                                                                                                           |
+| [`docs/WORKFLOW_AND_PR_GUIDE.md`](docs/WORKFLOW_AND_PR_GUIDE.md) | Branching conventions, build expectations, PR title and footer format.                                                                                  |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                             | How to claim work, where to ask questions, and a guided entry point into the docs above.                                                                |
+| [`docs/formalization-progress/`](docs/formalization-progress/FORMALIZATION_PROGRESS.md) | Generated progress table mapping each paper element (Orrù 2024) to the Lean declaration that formalizes it, with completion status. |
 
 ## Contributing
 
@@ -34,29 +35,30 @@ Contributions are very welcome. Start by reading [`CONTRIBUTING.md`](CONTRIBUTIN
 When a track is split into sub-issues, list them as nested bullets under the track (as Track 0 is below).
 
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
-    - [x] `Core/Group.lean` ([#18])
-    - [ ] `Core/Hash.lean` ([#19])
-    - [ ] `Core/ZKProof.lean` ([#20])
-    - [x] `Core/AlgebraicMAC.lean` ([#21])
+  - [X] `Core/Group.lean` ([#18])
+  - [ ] `Core/Hash.lean` ([#19])
+  - [X] `Core/ZKProof.lean` ([#20])
+  - [X] `Core/NIZKP/Basic.lean` ([#20])
+  - [X] `Core/AlgebraicMAC.lean` ([#21])
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
-    - [ ] Track Pre — Preliminaries ([#2])
-    - [ ] Track Σ — ProofSystems ([#3])
-    - [ ] Track F1 — Framework syntax and correctness ([#4])
+  - [ ] Track Pre — Preliminaries ([#2])
+  - [ ] Track Σ — ProofSystems ([#3])
+  - [ ] Track F1 — Framework syntax and correctness ([#4])
 - [ ] **Wave 2** — framework anonymity/extractability, scheme constructions
-    - [ ] Track F2 — Framework anonymity and extractability ([#5])
-    - [ ] Track CMZ-C — μCMZ construction ([#6])
-    - [ ] Track BBS-C — μBBS construction ([#7])
+  - [ ] Track F2 — Framework anonymity and extractability ([#5])
+  - [ ] Track CMZ-C — μCMZ construction ([#6])
+  - [ ] Track BBS-C — μBBS construction ([#7])
 - [ ] **Wave 3** — security tracks (μCMZ and μBBS)
-    - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
-    - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
-    - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
-    - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
-    - [ ] Track BBS-M — μBBS as algebraic MAC ([#13])
-    - [ ] Track BBS-A — μBBS anonymity ([#14])
-    - [ ] Track BBS-E — μBBS extractability ([#15])
-    - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) ([#16])
+  - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
+  - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
+  - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
+  - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
+  - [ ] Track BBS-M — μBBS as algebraic MAC ([#13])
+  - [ ] Track BBS-A — μBBS anonymity ([#14])
+  - [ ] Track BBS-E — μBBS extractability ([#15])
+  - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) ([#16])
 - [ ] **Wave 4** — concrete μCMZ run with Ristretto255
-    - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency ([#17])
+  - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency ([#17])
 
 Per-track status and dependency graph in [`docs/TRACKS.md`](docs/TRACKS.md).
 
