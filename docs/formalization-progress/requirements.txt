@@ -1,0 +1,19 @@
+# Requirements for formalization_progress.py
+#
+# This tool deliberately uses only the Python standard library, so there are no
+# PyPI packages to install (the lines below this block are intentionally empty).
+# `pip install -r requirements.txt` is therefore a no-op, kept for discoverability.
+#
+# It does require the following, none of which are pip packages:
+#
+#   * Python >= 3.11   — for the built-in `tomllib` TOML parser.
+#   * pdftotext        — from poppler-utils; extracts text/pages from the source PDF.
+#   * git              — optional; when present, Lean sources matching .gitignore
+#                        or .git/info/exclude are skipped. Without git, all
+#                        *.lean under the configured lean_root (minus exclude_dirs)
+#                        are scanned.
+#
+# Install the system dependencies on Debian/Ubuntu:
+#   sudo apt-get install -y poppler-utils git
+#
+# (No Python package dependencies below.)

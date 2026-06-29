@@ -1,0 +1,947 @@
+#!/usr/bin/env python3
+"""Map a paper's elements to Lean declarations and emit a progress table.
+
+The script is parameterized by a **source of truth**: the paper whose
+definitions, lemmas, theorems and figures the Lean code formalises. The Lean
+sources cite that paper with a fixed tag (``O24`` for Orrù 2024) inside
+docstrings and module docs, e.g.:
+
+    Definition 3.1 | Theorem 5.1 | Lemma 5.4 | Figure 5 | §5.1 | §3 ...
+
+This script:
+
+1. Extracts the paper element universe from the source PDF via
+   ``pdftotext -layout`` (numbered environments, figure captions, TOC sections).
+2. Extracts Lean declarations (def/structure/abbrev/class/instance/lemma/
+   theorem/inductive) and the citation references attached to each, both at the
+   declaration level (preceding ``/-- -/`` docstring + signature) and the file
+   level (module ``/-! -/`` doc).
+3. Joins them on a canonical reference key and writes a Markdown progress table
+   plus a JSON intermediate.
+
+The source of truth is resolved from (lowest to highest precedence): the
+built-in :data:`DEFAULT_SOURCE`, an optional TOML config file (``--config``),
+then individual CLI flags. This keeps zero-argument runs and CI working while
+letting the same tool target a different paper.
+
+It is dependency-free (standard library only; ``tomllib`` ships with Python
+3.11+) so it can run in CI. The only external requirement is the ``pdftotext``
+binary (poppler-utils).
+
+Usage (run from the repository root):
+    P=docs/formalization-progress/formalization_progress.py
+
+    # Generate the source-of-truth TOML from a paper file and its URL:
+    python3 $P init --pdf docs/Orru_2024.pdf --url https://eprint.iacr.org/2024/1552
+
+    # Generate the progress table (`report` is the default subcommand):
+    python3 $P                  # built-in default source
+    python3 $P --config s.toml  # a configured source
+    python3 $P --check          # non-zero exit if stale
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import tomllib
+import urllib.error
+import urllib.request
+from dataclasses import dataclass, field, asdict, replace
+from pathlib import Path
+
+def _find_repo_root(start: Path) -> Path:
+    """Walk up from ``start`` to the repository root.
+
+    Prefer the ``.git`` marker (only the checkout root has it); the ``docs/``
+    Verso project carries its own ``lakefile.toml``, so that marker alone would
+    stop too early. Fall back to the nearest lakefile.toml, then to ``start``."""
+    for p in [start, *start.parents]:
+        if (p / ".git").exists():
+            return p
+    for p in [start, *start.parents]:
+        if (p / "lakefile.toml").exists():
+            return p
+    return start.parent
+
+
+REPO = _find_repo_root(Path(__file__).resolve().parent)
+PROGRESS_DIR = REPO / "docs" / "formalization-progress"
+# This script's own path, relative to the repo root, for use in messages.
+SCRIPT_REL = os.path.relpath(Path(__file__).resolve(), REPO)
+
+
+@dataclass
+class Source:
+    """A paper acting as the source of truth, and where to read/write."""
+    tag: str            # citation prefix used in the Lean docstrings, e.g. "O24"
+    pdf: Path           # the paper PDF
+    title: str          # full reference, shown in the generated header
+    lean_root: Path     # directory of Lean sources to scan
+    exclude_dirs: tuple[str, ...]  # subdirectory names to skip (e.g. Scratch)
+    out_md: Path        # generated Markdown table
+    out_json: Path      # generated JSON intermediate
+    summaries: Path     # curated one-line element summaries (TOML [summaries])
+
+
+# Built-in default: Orrù 2024, the paper this repository formalises.
+DEFAULT_SOURCE = Source(
+    tag="O24",
+    pdf=REPO / "docs" / "Orru_2024.pdf",
+    title="Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, "
+          "IACR ePrint 2024/1552",
+    lean_root=REPO / "KVAC",
+    exclude_dirs=("Scratch",),  # experimental, not part of the formalisation
+    out_md=PROGRESS_DIR / "FORMALIZATION_PROGRESS.md",
+    out_json=PROGRESS_DIR / "formalization_progress.json",
+    summaries=PROGRESS_DIR / "element_summaries.toml",
+)
+
+# --- paper extraction ---------------------------------------------------------
+
+ENV_KINDS = ("Theorem", "Lemma", "Definition", "Claim", "Corollary",
+             "Proposition", "Construction")
+
+# A genuine numbered environment heading: keyword, number, optional
+# "(Parenthetical name)", a period, then a substantial statement on the same
+# line. The trailing-statement requirement rejects cross-references such as
+# "Theorem 6.12)." or "Theorem 5.6 below,".
+ENV_RE = re.compile(
+    r"^\s*(?P<kind>" + "|".join(ENV_KINDS) + r")\s+"
+    r"(?P<num>\d+(?:\.\d+)*)"
+    r"(?:\s*\((?P<name>[^)]*)\))?"
+    r"\.\s+(?P<stmt>\S.{15,})"
+)
+# Section titles come from the table of contents (used only to recognise the
+# matching heading lines in the body, so each element can be assigned to its
+# enclosing section). TOC subsection: "  3.1 Title . . . . 24" (the dotted
+# leader uses spaced dots); TOC section: "3 Title    24".
+TOC_SUB_RE = re.compile(
+    r"^\s*(?P<num>\d+\.\d+)\s+(?P<title>.+?)\s*(?:\.\s*){3,}\s*\d+\s*$")
+TOC_SEC_RE = re.compile(r"^\s*(?P<num>\d+)\s+(?P<title>[A-Z].+?)\s+\d+\s*$")
+# A numbered heading as it appears in the body (no dotted leader, no page no.).
+HEAD_RE = re.compile(r"^\s*(?P<num>\d+(?:\.\d+)*)\s+(?P<title>\S.*?)\s*$")
+# A figure caption: "Figure 5: ...".
+FIG_RE = re.compile(r"^\s*Figure\s+(?P<num>\d+):\s*(?P<caption>.+)")
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"\s+", " ", s.strip())
+
+
+@dataclass
+class PaperElement:
+    key: str            # canonical join key, e.g. "Definition 3.1", "Figure 5", "§3.1"
+    kind: str           # Definition | Theorem | Lemma | ... | Figure | Section
+    number: str
+    label: str          # parenthetical name, e.g. "Correctness" (may be empty)
+    statement: str      # snippet of the statement / caption / section title
+    section: str        # enclosing section number, e.g. "5.2"
+    section_title: str  # enclosing section title, e.g. "Theorems"
+    page: int           # 1-based PDF page the element appears on
+    seq: int = 0        # document order, used for sorting
+
+
+def extract_paper(pdf: Path) -> list[PaperElement]:
+    if not pdf.exists():
+        raise SystemExit(f"error: source PDF not found: {pdf}")
+    try:
+        proc = subprocess.run(
+            ["pdftotext", "-layout", str(pdf), "-"],
+            check=True, capture_output=True, text=True,
+        )
+    except FileNotFoundError:
+        raise SystemExit("error: 'pdftotext' not found; install poppler-utils.")
+    except subprocess.CalledProcessError as e:
+        raise SystemExit(f"error: pdftotext failed on {pdf}:\n{e.stderr.strip()}")
+    text = proc.stdout
+
+    # Section-title map from the TOC, used to recognise body headings.
+    toc: dict[str, str] = {}
+    for ln in text.splitlines():
+        m = TOC_SUB_RE.match(ln) or TOC_SEC_RE.match(ln)
+        if m:
+            toc.setdefault(m["num"], _norm(m["title"]))
+
+    elements: dict[str, PaperElement] = {}
+    section, section_title = "", ""
+    seq = 0
+
+    def add(key, kind, number, label, statement, page):
+        nonlocal seq
+        # First occurrence wins (later mentions are cross-references).
+        if key not in elements:
+            elements[key] = PaperElement(key, kind, number, label, statement,
+                                         section, section_title, page, seq)
+            seq += 1
+
+    # Pages are separated by form feeds in pdftotext output; index is 1-based.
+    for page_no, page in enumerate(text.split("\f"), start=1):
+        for ln in page.splitlines():
+            h = HEAD_RE.match(ln)
+            if h and toc.get(h["num"]) == _norm(h["title"]):
+                section, section_title = h["num"], toc[h["num"]]
+                add(f"§{section}", "Section", section, "", section_title, page_no)
+                continue
+            f = FIG_RE.match(ln)
+            if f:
+                add(f'Figure {f["num"]}', "Figure", f["num"], "",
+                    _norm(f["caption"]), page_no)
+                continue
+            m = ENV_RE.match(ln)
+            if m:
+                add(f'{m["kind"]} {m["num"]}', m["kind"], m["num"],
+                    (m["name"] or "").strip(), m["stmt"].strip(), page_no)
+
+    return sorted(elements.values(), key=lambda e: e.seq)
+
+
+# --- Lean extraction ----------------------------------------------------------
+
+DECL_RE = re.compile(
+    r"^(?P<mods>(?:noncomputable\s+|private\s+|protected\s+|partial\s+|"
+    r"@\[[^\]]*\]\s*)*)"
+    r"(?P<kind>def|structure|abbrev|class|instance|lemma|theorem|inductive)\s+"
+    r"(?P<name>[A-Za-z_][A-Za-z0-9_'.]*)?"
+)
+# Reference kinds recognised inside Lean text: the numbered environments plus
+# figures and bare section signs. Kept in sync with the paper-side ENV_KINDS.
+REF_KINDS = ENV_KINDS + ("Figure",)
+
+
+def make_ref_re(tag: str) -> re.Pattern[str]:
+    """Reference matcher: optional ``<tag> `` prefix then a canonical token."""
+    return re.compile(
+        rf"(?:{re.escape(tag)}\s+)?"
+        r"(?P<ref>(?:" + "|".join(REF_KINDS) + r")\s+\d+(?:\.\d+)*"
+        r"|§\s?\d+(?:\.\d+)*)"
+    )
+
+
+def normalize_ref(raw: str) -> str:
+    raw = raw.replace("§ ", "§").strip()
+    return raw
+
+
+SORRY_RE = re.compile(r"\b(sorry|sorryAx|admit)\b")
+
+
+@dataclass
+class LeanDecl:
+    name: str
+    kind: str
+    file: str
+    line: int
+    refs: list[str] = field(default_factory=list)
+    has_sorry: bool = False  # the declaration body is incomplete
+
+
+@dataclass
+class LeanFile:
+    file: str
+    module_refs: list[str] = field(default_factory=list)
+    decls: list[LeanDecl] = field(default_factory=list)
+
+
+def find_refs(text: str, ref_re: re.Pattern[str]) -> list[str]:
+    out, seen = [], set()
+    for m in ref_re.finditer(text):
+        r = normalize_ref(m["ref"])
+        if r not in seen:
+            seen.add(r)
+            out.append(r)
+    return out
+
+
+def git_ignored(paths: list[Path]) -> set[Path]:
+    """The subset of ``paths`` git ignores via .gitignore, .git/info/exclude,
+    and the global excludes file. Empty if git is unavailable or errors."""
+    if not paths:
+        return set()
+    try:
+        res = subprocess.run(
+            ["git", "-C", str(REPO), "check-ignore", "--stdin"],
+            input="\n".join(str(p) for p in paths),
+            capture_output=True, text=True)
+    except (FileNotFoundError, OSError):
+        return set()
+    if res.returncode not in (0, 1):  # 0 = some ignored, 1 = none, else error
+        return set()
+    return {Path(line) for line in res.stdout.splitlines()}
+
+
+def lean_files(root: Path, exclude_dirs: tuple[str, ...]) -> list[Path]:
+    skip = set(exclude_dirs)
+    candidates = sorted(
+        p for p in root.rglob("*.lean")
+        if not (skip & set(p.relative_to(root).parts))
+    )
+    # Honour git's ignore rules (.gitignore, .git/info/exclude); this is what
+    # excludes Scratch/, .lake/, and any other ignored Lean sources.
+    ignored = git_ignored(candidates)
+    return [p for p in candidates if p not in ignored]
+
+
+def extract_lean(root: Path, exclude_dirs: tuple[str, ...],
+                 ref_re: re.Pattern[str]) -> list[LeanFile]:
+    results = []
+    for path in lean_files(root, exclude_dirs):
+        rel = str(path.relative_to(REPO)) if path.is_relative_to(REPO) \
+            else str(path)
+        lines = path.read_text(encoding="utf-8").splitlines()
+        lf = LeanFile(file=rel)
+
+        # Module doc: first /-! ... -/ block.
+        in_mod, mod_buf = False, []
+        for ln in lines:
+            if "/-!" in ln:
+                in_mod = True
+            if in_mod:
+                mod_buf.append(ln)
+            if in_mod and "-/" in ln:
+                break
+        lf.module_refs = find_refs("\n".join(mod_buf), ref_re)
+
+        # Walk declarations, attaching the immediately preceding /-- -/ docstring.
+        doc_buf, in_doc = [], False
+        i = 0
+        while i < len(lines):
+            ln = lines[i]
+            stripped = ln.rstrip()
+            if not in_doc and ln.lstrip().startswith("/--"):
+                in_doc = True
+                doc_buf = [ln]
+                if "-/" in ln[ln.index("/--") + 3:]:
+                    in_doc = False
+                i += 1
+                continue
+            if in_doc:
+                doc_buf.append(ln)
+                if "-/" in ln:
+                    in_doc = False
+                i += 1
+                continue
+
+            m = DECL_RE.match(ln)
+            # Only top-level declarations (column 0); field docstrings inside
+            # structures are indented and never match here.
+            if m and m["name"] and not ln.startswith(" "):
+                doc_text = "\n".join(doc_buf)
+                refs = find_refs(doc_text + "\n" + stripped, ref_re)
+                lf.decls.append(LeanDecl(
+                    name=m["name"], kind=m["kind"].strip(),
+                    file=rel, line=i + 1, refs=refs,
+                ))
+                doc_buf = []
+            elif stripped and not ln.lstrip().startswith("--"):
+                # A non-doc, non-blank line breaks the docstring association.
+                doc_buf = []
+            i += 1
+
+        # Flag declarations whose body (up to the next top-level declaration)
+        # contains `sorry`/`admit`, i.e. is not fully proved.
+        starts = [d.line for d in lf.decls]
+        for k, d in enumerate(lf.decls):
+            end = starts[k + 1] - 1 if k + 1 < len(starts) else len(lines)
+            body = "\n".join(lines[d.line - 1:end])
+            d.has_sorry = bool(SORRY_RE.search(body))
+
+        results.append(lf)
+    return results
+
+
+# --- join + render ------------------------------------------------------------
+
+def build(paper: list[PaperElement], lean: list[LeanFile]):
+    # key -> {"decls": [LeanDecl], "modules": [file]}
+    by_key: dict[str, dict] = {}
+    for lf in lean:
+        for d in lf.decls:
+            for r in d.refs:
+                by_key.setdefault(r, {"decls": [], "modules": []})["decls"].append(d)
+        for r in lf.module_refs:
+            by_key.setdefault(r, {"decls": [], "modules": []})["modules"].append(lf.file)
+    return by_key
+
+
+def load_summaries(path: Path) -> dict[str, str]:
+    """Curated one-line summaries keyed by element (``[summaries]`` table)."""
+    if not path.exists():
+        return {}
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    table = data.get("summaries", data)
+    return {k: str(v).strip() for k, v in table.items()}
+
+
+# A Lean declaration is the right *kind* of object for a paper element when a
+# definitional construct backs a definition/construction/game, and a proof backs
+# a theorem-like statement. This is the "signature match" check.
+LEAN_DEFN_KINDS = {"def", "structure", "abbrev", "class", "inductive", "instance"}
+LEAN_PROP_KINDS = {"theorem", "lemma"}
+PAPER_PROP_KINDS = {"Theorem", "Lemma", "Claim", "Corollary", "Proposition"}
+
+
+def signature_matches(paper_kind: str, lean_kind: str) -> bool:
+    if paper_kind in PAPER_PROP_KINDS:
+        return lean_kind in LEAN_PROP_KINDS
+    return lean_kind in LEAN_DEFN_KINDS  # Definition / Construction / Figure / Section
+
+
+# Status marks, a consistent set of circles.
+ST_DONE = "🟢"      # sorry-free declaration of matching kind
+ST_SORRY = "🌐"     # matching declaration but contains `sorry`
+ST_MISMATCH = "🌀"  # cited declaration of non-matching kind
+ST_MODULE = "🟡"    # module-level coverage only
+ST_NONE = "⚪"      # nothing yet
+
+
+def element_status(e: PaperElement, by_key: dict) -> tuple[str, list]:
+    """Return ``(status, matching_decls)`` for a paper element.
+
+    🟢 a sorry-free Lean declaration matches the paper object's kind;
+    🌐 a kind-matching declaration exists but every one contains `sorry`;
+    🌀 a declaration is cited but none matches the paper object's kind;
+    🟡 only module-level coverage; ⚪ nothing yet.
+    """
+    hit = by_key.get(e.key) or {"decls": [], "modules": []}
+    decls, modules = hit["decls"], hit["modules"]
+    matching = [d for d in decls if signature_matches(e.kind, d.kind)]
+    matching_ok = [d for d in matching if not d.has_sorry]
+    if matching_ok:
+        return ST_DONE, matching_ok
+    if matching:
+        return ST_SORRY, matching
+    if decls:
+        return ST_MISMATCH, decls
+    if modules:
+        return ST_MODULE, []
+    return ST_NONE, []
+
+
+def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
+                    lean: list[LeanFile], summaries: dict[str, str]) -> str:
+    status = {e.key: element_status(e, by_key) for e in paper}
+    formalized = sum(1 for e in paper if status[e.key][0] == ST_DONE)
+    covered = sum(1 for e in paper if e.key in by_key)
+    total = len(paper)
+    n_decls = sum(len(lf.decls) for lf in lean)
+    n_files = len(lean)
+    n_sorry = sum(1 for lf in lean for d in lf.decls if d.has_sorry)
+    excluded = ", ".join(f"`{d}/`" for d in source.exclude_dirs) or "none"
+
+    out = []
+    out.append("# Formalization progress ↔ Lean\n")
+    out.append(
+        f"Generated by `{SCRIPT_REL}`. Do not edit by hand.\n"
+    )
+    out.append(
+        f"Source of truth: {source.title} (cited as **{source.tag}** in the "
+        "Lean sources).\n"
+    )
+    out.append("## Summary\n")
+    out.append(f"- Paper elements catalogued: **{total}**")
+    out.append(f"- Paper elements **formalized** (sorry-free Lean declaration "
+               f"of matching kind): **{formalized}** "
+               f"({100 * formalized // total if total else 0}%)")
+    out.append(f"- Paper elements with some Lean association: **{covered}**")
+    out.append(f"- Lean declarations scanned: **{n_decls}** across "
+               f"**{n_files}** files (excluding {excluded} and git-ignored "
+               f"paths); **{n_sorry}** contain `sorry`\n")
+
+    # Breakdown by paper element kind: catalogued vs formalized (✅).
+    paper_kinds: dict[str, list[int]] = {}
+    for e in paper:
+        cell = paper_kinds.setdefault(e.kind, [0, 0])
+        cell[0] += 1
+        if status[e.key][0] == ST_DONE:
+            cell[1] += 1
+    out.append("### By paper element\n")
+    out.append("| Element kind | In paper | Formalized | Coverage |")
+    out.append("|---|--:|--:|--:|")
+    for kind in sorted(paper_kinds):
+        n, c = paper_kinds[kind]
+        out.append(f"| {kind} | {n} | {c} | {100 * c // n if n else 0}% |")
+    out.append(f"| **Total** | **{total}** | **{formalized}** | "
+               f"**{100 * formalized // total if total else 0}%** |\n")
+
+    # Breakdown by Lean declaration kind: total vs those citing the paper.
+    lean_kinds: dict[str, list[int]] = {}
+    for lf in lean:
+        for d in lf.decls:
+            cell = lean_kinds.setdefault(d.kind, [0, 0])
+            cell[0] += 1
+            if d.refs:
+                cell[1] += 1
+    cited = sum(v[1] for v in lean_kinds.values())
+    out.append("### By Lean declaration\n")
+    out.append("| Declaration kind | Count | Cite the paper |")
+    out.append("|---|--:|--:|")
+    for kind in sorted(lean_kinds):
+        n, c = lean_kinds[kind]
+        out.append(f"| {kind} | {n} | {c} |")
+    out.append(f"| **Total** | **{n_decls}** | **{cited}** |\n")
+
+    out.append(
+        f"Status legend: {ST_DONE} sorry-free Lean declaration of matching kind · "
+        f"{ST_SORRY} matching declaration but contains `sorry` · "
+        f"{ST_MISMATCH} cited declaration of non-matching kind · "
+        f"{ST_MODULE} module-level coverage only · {ST_NONE} not yet formalized\n")
+
+    # All links are written relative to the Markdown file's own directory, so
+    # they resolve correctly wherever the report is placed in the tree.
+    base = source.out_md.parent
+    pdf_rel = os.path.relpath(source.pdf, base)
+
+    def link(repo_rel_path: str) -> str:
+        return os.path.relpath(REPO / repo_rel_path, base)
+
+    missing = sum(1 for e in paper if e.key not in summaries)
+    out.append("## Paper element → Lean declarations\n")
+    out.append("Each element name links to its page in the source PDF. "
+               "Summaries are curated in "
+               f"`{os.path.relpath(source.summaries, REPO)}`"
+               + (f" ({missing} still pending)." if missing else ".") + "\n")
+    out.append("| Paper element | Section | Page | Summary | "
+               "Lean declarations | Status |")
+    out.append("|---|---|---|---|---|---|")
+
+    for e in paper:
+        mark, _ = status[e.key]
+        hit = by_key.get(e.key)
+
+        lean_cells = []
+        seen = set()
+        if hit:
+            for d in hit["decls"]:
+                tag = (d.name, d.file, d.line)
+                if tag in seen:
+                    continue
+                seen.add(tag)
+                flags = []
+                if not signature_matches(e.kind, d.kind):
+                    flags.append("kind mismatch")
+                if d.has_sorry:
+                    flags.append("`sorry`")
+                suffix = f" — {', '.join(flags)}" if flags else ""
+                lean_cells.append(
+                    f"`{d.name}` ({d.kind}) "
+                    f"[{Path(d.file).name}:{d.line}]({link(d.file)}#L{d.line})"
+                    f"{suffix}"
+                )
+            for f in dict.fromkeys(hit["modules"]):
+                # Only show module-only coverage when there is no decl-level hit.
+                if not hit["decls"]:
+                    lean_cells.append(f"_module_ [{Path(f).name}]({link(f)})")
+
+        name = f"[{e.key}]({pdf_rel}#page={e.page})"
+        # A section row's own number would just repeat the element name.
+        section = ("—" if e.kind == "Section" else
+                   f"§{e.section} {e.section_title}".strip() if e.section else "—")
+        summary = summaries.get(e.key, "_(summary pending)_")
+        if e.label and not summary.startswith("_("):
+            summary = f"**{e.label}.** {summary}"
+        summary = summary.replace("|", "\\|")
+
+        out.append(
+            f"| {name} | {section} | {e.page} | {summary} | "
+            f"{'<br>'.join(lean_cells) if lean_cells else '—'} | {mark} |"
+        )
+
+    out.append("")
+    return "\n".join(out)
+
+
+# --- source resolution + main -------------------------------------------------
+
+# Maps TOML/CLI keys to Source fields and how to coerce them. Paths are resolved
+# relative to the repository root when given relative.
+_PATH_FIELDS = {"pdf", "lean_root", "out_md", "out_json", "summaries"}
+
+
+def _resolve_path(value) -> Path:
+    p = Path(value)
+    return p if p.is_absolute() else REPO / p
+
+
+def source_from_config(path: Path) -> dict:
+    """Read a ``[source]`` table from a TOML file into a field-overrides dict."""
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    table = data.get("source", data)
+    overrides = {}
+    for key in ("tag", "pdf", "title", "lean_root", "exclude_dirs",
+                "out_md", "out_json", "summaries"):
+        if key not in table:
+            continue
+        if key in _PATH_FIELDS:
+            overrides[key] = _resolve_path(table[key])
+        elif key == "exclude_dirs":
+            overrides[key] = tuple(table[key])
+        else:
+            overrides[key] = table[key]
+    return overrides
+
+
+def resolve_source(args) -> Source:
+    """Built-in default < TOML config (--config) < explicit CLI flags."""
+    overrides: dict = {}
+    if args.config:
+        overrides.update(source_from_config(args.config))
+    for key in ("tag", "title"):
+        if getattr(args, key) is not None:
+            overrides[key] = getattr(args, key)
+    for key in ("pdf", "lean_root", "out_md", "out_json"):
+        if getattr(args, key) is not None:
+            overrides[key] = _resolve_path(getattr(args, key))
+    if args.exclude_dirs is not None:
+        overrides["exclude_dirs"] = tuple(args.exclude_dirs)
+    return replace(DEFAULT_SOURCE, **overrides)
+
+
+# --- metadata extraction (init) -----------------------------------------------
+
+CITATION_KINDS = r"Definition|Theorem|Lemma|Claim|Corollary|Proposition|" \
+                 r"Construction|Figure"
+
+
+def detect_tag(lean_root: Path, exclude_dirs: tuple[str, ...]) -> str | None:
+    """Most frequent citation prefix already used in the Lean sources.
+
+    Matches tokens such as ``O24`` / ``CMZ14`` immediately preceding a
+    ``Definition``/``Theorem``/``§`` reference. Returns ``None`` if the code
+    carries no citations yet (a fresh formalisation)."""
+    tag_re = re.compile(rf"\b([A-Z][A-Za-z]*\d{{2}})\s+(?:{CITATION_KINDS}|§)")
+    counts: dict[str, int] = {}
+    for path in lean_files(lean_root, exclude_dirs):
+        for m in tag_re.finditer(path.read_text(encoding="utf-8")):
+            counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+    return max(counts, key=lambda k: counts[k]) if counts else None
+
+
+def parse_url(url: str) -> tuple[str | None, str]:
+    """Return ``(year, reference-suffix)`` parsed from a known repository URL."""
+    m = re.search(r"eprint\.iacr\.org/(\d{4})/(\d+)", url)
+    if m:
+        return m.group(1), f"IACR ePrint {m.group(1)}/{m.group(2)}"
+    m = re.search(r"arxiv\.org/(?:abs|pdf)/(\d{2})(\d{2})\.(\d+)", url)
+    if m:
+        return f"20{m.group(1)}", f"arXiv:{m.group(1)}{m.group(2)}.{m.group(3)}"
+    m = re.search(r"doi\.org/(\S+)", url)
+    if m:
+        return None, f"doi:{m.group(1)}"
+    return None, url
+
+
+def pdf_metadata(pdf: Path) -> tuple[str, list[str]]:
+    """Extract ``(title, authors)`` from the PDF (offline)."""
+    info = subprocess.run(["pdfinfo", str(pdf)], capture_output=True,
+                          text=True).stdout
+    m = re.search(r"^Title:\s*(.+)$", info, re.M)
+    title = m.group(1).strip() if m and m.group(1).strip() else ""
+
+    page1 = subprocess.run(
+        ["pdftotext", "-f", "1", "-l", "1", "-layout", str(pdf), "-"],
+        capture_output=True, text=True).stdout
+    lines = [ln.strip() for ln in page1.splitlines() if ln.strip()]
+    if not title and lines:
+        title = lines[0]
+
+    authors: list[str] = []
+    for ln in lines:
+        if ln == title:
+            continue
+        if ln.lower().startswith("abstract"):
+            break
+        if "@" in ln or ln.isupper():  # skip emails and all-caps affiliations
+            continue
+        # An author line: split multiple authors on commas / "and".
+        for a in re.split(r"\s*(?:,|\band\b)\s*", ln):
+            a = a.strip()
+            if a and re.search(r"[A-Za-z]", a):
+                authors.append(a)
+        if authors:
+            break
+    return title, authors
+
+
+def fetch_url_metadata(url: str) -> tuple[str, list[str], str | None] | None:
+    """Best-effort online enrichment via Highwire ``citation_*`` meta tags.
+
+    Returns ``(title, authors, year)`` or ``None`` on any network/parse failure,
+    so callers fall back to offline PDF extraction."""
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        html = urllib.request.urlopen(req, timeout=20).read().decode(
+            "utf-8", "replace")
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+
+    def meta(name: str) -> list[str]:
+        return re.findall(
+            rf'<meta[^>]+name="{name}"[^>]+content="([^"]*)"', html)
+
+    titles = meta("citation_title")
+    if not titles:
+        return None
+    authors = meta("citation_author")
+    years = meta("citation_publication_date") or meta("citation_year")
+    year = years[0][:4] if years else None
+    return titles[0].strip(), [a.strip() for a in authors], year
+
+
+def pdf_url_for(url: str) -> str | None:
+    """The direct PDF URL for a known repository landing page, if derivable."""
+    m = re.search(r"eprint\.iacr\.org/(\d{4})/(\d+)", url)
+    if m:
+        return f"https://eprint.iacr.org/{m.group(1)}/{m.group(2)}.pdf"
+    m = re.search(r"arxiv\.org/(?:abs|pdf)/(\S+?)(?:\.pdf)?$", url)
+    if m:
+        return f"https://arxiv.org/pdf/{m.group(1)}.pdf"
+    return url if url.lower().endswith(".pdf") else None
+
+
+def download_pdf(url: str, dest: Path) -> bool:
+    """Best-effort download of ``url`` to ``dest``. Returns success."""
+    src_url = pdf_url_for(url)
+    if not src_url:
+        return False
+    try:
+        req = urllib.request.Request(src_url,
+                                     headers={"User-Agent": "Mozilla/5.0"})
+        data = urllib.request.urlopen(req, timeout=30).read()
+    except (urllib.error.URLError, OSError, ValueError):
+        return False
+    if not data.startswith(b"%PDF"):
+        return False
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    return True
+
+
+def derive_tag(authors: list[str], year: str | None) -> str:
+    """Fallback tag: author-surname initials + 2-digit year (e.g. ``O24``)."""
+    initials = "".join(a.split()[-1][0].upper() for a in authors if a.split())
+    yy = year[-2:] if year else "??"
+    return f"{initials or 'X'}{yy}"
+
+
+def build_reference(title: str, authors: list[str], suffix: str) -> str:
+    who = ", ".join(authors)
+    parts = [p for p in (who, f"*{title}*" if title else "", suffix) if p]
+    return ", ".join(parts)
+
+
+def emit_toml(tag: str, pdf: Path, title: str, lean_root: Path,
+              exclude_dirs: tuple[str, ...], out_md: Path,
+              out_json: Path, summaries: Path) -> str:
+    def rel(p: Path) -> str:
+        return str(p.relative_to(REPO)) if p.is_relative_to(REPO) else str(p)
+    excl = ", ".join(f'"{d}"' for d in exclude_dirs)
+    esc = title.replace('"', '\\"')
+    return (
+        f"# Source of truth for {SCRIPT_REL}.\n"
+        "# Generated by `formalization_progress.py init`; review and edit by hand\n"
+        "# if needed (in particular the `tag`, which must match the citation\n"
+        "# prefix actually used in the Lean docstrings).\n\n"
+        "[source]\n"
+        f'tag = "{tag}"\n'
+        f'pdf = "{rel(pdf)}"\n'
+        f'title = "{esc}"\n'
+        f'lean_root = "{rel(lean_root)}"\n'
+        f"exclude_dirs = [{excl}]\n"
+        f'out_md = "{rel(out_md)}"\n'
+        f'out_json = "{rel(out_json)}"\n'
+        f'summaries = "{rel(summaries)}"  # curated one-line element summaries\n'
+    )
+
+
+def cmd_init(args) -> int:
+    if not args.pdf and not args.url:
+        raise SystemExit("error: provide at least one of --pdf / --url.")
+
+    lean_root = _resolve_path(args.lean_root) if args.lean_root \
+        else DEFAULT_SOURCE.lean_root
+    exclude_dirs = tuple(args.exclude_dirs) if args.exclude_dirs \
+        else DEFAULT_SOURCE.exclude_dirs
+    out_md = _resolve_path(args.out_md) if args.out_md else DEFAULT_SOURCE.out_md
+    out_json = _resolve_path(args.out_json) if args.out_json \
+        else DEFAULT_SOURCE.out_json
+    out_cfg = _resolve_path(args.out) if args.out \
+        else PROGRESS_DIR / "formalization_source.toml"
+
+    year, suffix = parse_url(args.url) if args.url else (None, "")
+    title, authors = "", []
+    notes: list[str] = []
+
+    # Online metadata (best effort; the URL may be unreachable).
+    online = fetch_url_metadata(args.url) if args.url else None
+    if online:
+        title, authors, o_year = online
+        year = o_year or year
+        notes.append("metadata read from URL")
+    elif args.url:
+        notes.append("URL not reachable")
+
+    # Resolve the PDF: use --pdf if given, else try to download it from the URL.
+    pdf = _resolve_path(args.pdf) if args.pdf else None
+    if pdf and not pdf.exists():
+        raise SystemExit(f"error: source PDF not found: {pdf}")
+    if pdf is None and args.url:
+        dest = REPO / "docs" / f"{(authors[0].split()[-1] if authors else 'paper')}" \
+                              f"_{year or 'unknown'}.pdf"
+        if download_pdf(args.url, dest):
+            pdf = dest
+            notes.append(f"downloaded PDF to {dest.relative_to(REPO)}")
+        else:
+            notes.append("could not download PDF")
+
+    # Offline extraction fills any field the URL did not provide.
+    if pdf and pdf.exists():
+        p_title, p_authors = pdf_metadata(pdf)
+        title = title or p_title
+        authors = authors or p_authors
+
+    if not title:
+        # Nothing readable (e.g. URL-only with no network). Fall back to the
+        # URL-derived reference so there is a TOML to edit by hand.
+        notes.append("title unknown; edit `title` in the TOML")
+    reference = build_reference(title, authors, suffix) or "TODO: paper title"
+
+    # The tag must match what the Lean code writes; prefer the detected one.
+    detected = detect_tag(lean_root, exclude_dirs)
+    tag = args.tag or detected or derive_tag(authors, year)
+    via = ("supplied" if args.tag else
+           "detected from Lean sources" if detected else
+           "derived from authors+year")
+
+    # If no usable PDF, record where it should live so `report` can find it.
+    pdf_field = pdf if pdf else (
+        REPO / "docs" / f"{(authors[0].split()[-1] if authors else 'paper')}"
+                        f"_{year or 'unknown'}.pdf")
+    if not (pdf and pdf.exists()):
+        notes.append(f"set pdf = {pdf_field.relative_to(REPO)} and place the "
+                     "file there before running `report`")
+
+    summaries = DEFAULT_SOURCE.summaries
+    toml_text = emit_toml(tag, pdf_field, reference, lean_root, exclude_dirs,
+                          out_md, out_json, summaries)
+    out_cfg.write_text(toml_text)
+    print(f"Wrote {out_cfg}")
+    print(f"  title : {reference}")
+    print(f"  tag   : {tag} ({via})")
+    print(f"  pdf   : {pdf_field}")
+    for n in notes:
+        print(f"  note  : {n}")
+    print("Review the file, then run: "
+          f"python3 {SCRIPT_REL} --config "
+          f"{out_cfg.relative_to(REPO) if out_cfg.is_relative_to(REPO) else out_cfg}")
+    return 0
+
+
+# --- report (default) ---------------------------------------------------------
+
+def cmd_report(args) -> int:
+    src = resolve_source(args)
+    ref_re = make_ref_re(src.tag)
+
+    paper = extract_paper(src.pdf)
+    lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
+    summaries = load_summaries(src.summaries)
+    # Numbered environments are always tracked; figures and sections appear only
+    # when curated (given a summary), i.e. judged a formalizable contribution.
+    paper = [e for e in paper
+             if e.kind not in ("Figure", "Section") or e.key in summaries]
+    by_key = build(paper, lean)
+    md = render_markdown(src, paper, by_key, lean, summaries)
+
+    paper_json = []
+    for e in paper:
+        d = asdict(e)
+        d["summary"] = summaries.get(e.key, "")  # curated; "" if pending
+        paper_json.append(d)
+    intermediate = {
+        "source": {"tag": src.tag, "title": src.title,
+                   "pdf": str(src.pdf.relative_to(REPO))
+                   if src.pdf.is_relative_to(REPO) else str(src.pdf)},
+        "paper": paper_json,
+        "lean": [asdict(lf) for lf in lean],
+    }
+    js = json.dumps(intermediate, indent=2, ensure_ascii=False)
+
+    if args.check:
+        stale = []
+        if not src.out_md.exists() or src.out_md.read_text() != md:
+            stale.append(str(src.out_md))
+        if not src.out_json.exists() or src.out_json.read_text() != js:
+            stale.append(str(src.out_json))
+        if stale:
+            print(f"Out of date (re-run {SCRIPT_REL}):", file=sys.stderr)
+            for s in stale:
+                print(f"  {s}", file=sys.stderr)
+            return 1
+        print("Up to date.")
+        return 0
+
+    src.out_md.write_text(md)
+    src.out_json.write_text(js)
+    covered = sum(1 for e in paper if e.key in by_key)
+    print(f"Wrote {src.out_md} and {src.out_json}: "
+          f"{covered}/{len(paper)} paper elements associated.")
+    return 0
+
+
+# --- CLI ----------------------------------------------------------------------
+
+def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # `report` is the default subcommand, so existing invocations such as
+    # `formalization_progress.py --config x.toml --check` keep working.
+    if not argv or argv[0] not in ("report", "init"):
+        argv = ["report"] + argv
+
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    rep = sub.add_parser("report", help="generate the progress table (default)")
+    rep.add_argument("--check", action="store_true",
+                     help="exit non-zero if the generated files are out of date")
+    rep.add_argument("--config", type=Path,
+                     help="TOML file with a [source] table describing the paper")
+    # Per-field overrides (take precedence over --config and the default).
+    rep.add_argument("--tag", help="citation prefix used in Lean docstrings")
+    rep.add_argument("--pdf", type=Path, help="source paper PDF")
+    rep.add_argument("--title", help="full reference shown in the header")
+    rep.add_argument("--lean-root", dest="lean_root", type=Path,
+                     help="directory of Lean sources to scan")
+    rep.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
+                     help="subdirectory name to skip (repeatable)")
+    rep.add_argument("--out-md", dest="out_md", type=Path)
+    rep.add_argument("--out-json", dest="out_json", type=Path)
+    rep.set_defaults(func=cmd_report)
+
+    ini = sub.add_parser(
+        "init", help="generate the source-of-truth TOML from a PDF and/or a URL")
+    # At least one of --pdf / --url is required (checked in cmd_init); they are
+    # complementary, not exclusive.
+    ini.add_argument("--pdf", type=Path, help="source paper PDF")
+    ini.add_argument("--url", help="canonical paper URL (IACR ePrint, arXiv, DOI)")
+    ini.add_argument("--tag", help="override the auto-detected citation prefix")
+    ini.add_argument("--lean-root", dest="lean_root", type=Path,
+                     help="Lean sources to scan for the existing citation tag")
+    ini.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
+                     help="subdirectory name to skip (repeatable)")
+    ini.add_argument("--out-md", dest="out_md", type=Path)
+    ini.add_argument("--out-json", dest="out_json", type=Path)
+    ini.add_argument("--out", type=Path,
+                     help="config path to write (default docs/formalization_source.toml)")
+    ini.set_defaults(func=cmd_init)
+
+    args = ap.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
