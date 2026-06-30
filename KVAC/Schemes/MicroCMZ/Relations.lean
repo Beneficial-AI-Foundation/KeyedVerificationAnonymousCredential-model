@@ -4,7 +4,9 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Core.Group
-import VCVio
+import VCVio.CryptoFoundations.SigmaProtocol
+import VCVio.CryptoFoundations.HardnessAssumptions.HardRelation
+import VCVio.ProgramLogic.Tactics
 
 /-!
 # μCMZ credential proof relations — Σ-protocols (O24 §5.1, Figure 9)
@@ -39,7 +41,7 @@ every `C'` has a witness — so it admits an honest `GenerableRelation`, whose
 has a witness), so they carry no `GenerableRelation`; none is needed — only
 `R_iu` plays the Fiat–Shamir keygen role.
 
-The relations here use the trivial predicate `φ ≡ ⊤`; a non-trivial `φ` would
+TODO: The relations here use the trivial predicate `φ ≡ ⊤`; a non-trivial `φ` would
 restrict the witness space and is deferred (it needs a witness-side subtype).
 
 Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs, a
@@ -74,21 +76,25 @@ variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
 variable {G : Type} [DecidableEq G] [SampleableGroup F G]
 variable {n : ℕ}
 
-/-- `SampleableType` for the witness type of `R_iu`. Synthesizing this through
-VCVio's generic product instance diverges in this file's algebraic context
-(the `Inhabited` side-goal search does not terminate), so it is provided once,
-with the `Inhabited` arguments supplied explicitly. -/
+/-- Pins `Inhabited F` so that instance search for the witness type's
+`SampleableType ((Fin n → F) × F)` doesn't diverge through the `Module` /
+`Subsingleton` instance graph when discharging its `Inhabited` side-goals
+(see pitfall 2 above). File-local and high-priority so it never leaks. -/
 private local instance (priority := high) : Inhabited F := ⟨0⟩
 
-/-! ## Perfect-completeness helpers
+/-! ## Σ-protocol probability helpers
 
-The `PerfectlyComplete` goals below are probability-one statements about
-computations that sample a few uniforms and `return` a `decide`. Rather than
-unfolding the probability semantics with `simp` (which does not terminate on
-the function-type samples used here), these helpers reduce the goal to the
-underlying universally-true Boolean via `probOutput_eq_one_iff`
-(no failure + support is exactly `{true}`). -/
+Small probability lemmas shared by the proofs below, written to avoid the
+diverging `simp`/`rfl` on `Pr[…]` goals (see pitfall 1 above).
 
+- **Completeness** (`probOutput_decide_bind₃/₄`): a computation that samples a
+  few uniforms and returns a `decide` outputs `true` with probability 1 exactly
+  when the decided predicate is universally true. Reduces a `PerfectlyComplete`
+  goal to the underlying Boolean via `probOutput_eq_one_iff` (no failure +
+  support is exactly `{true}`).
+- **HVZK** (`probOutput_bind_uniform_congr`): two continuations that agree
+  pointwise on output probability remain equal after a uniform bind — used to
+  swap the real continuation for the simulated one in the HVZK proof. -/
 private lemma probOutput_decide_bind₃ {α β γ : Type}
     [SampleableType α] [SampleableType β] [SampleableType γ]
     [Nonempty α] [Nonempty β] [Nonempty γ]
@@ -169,7 +175,9 @@ def riuSigma (gen : G) (X : Fin n → G) :
     return ((∑ i, ρ i • X i) + ρs • gen, (ρ, ρs))
   respond _Cp w sc c := pure (fun i => sc.1 i + c * w.1 i, sc.2 + c * w.2)
   verify _Cp R c z := decide ((∑ i, z.1 i • X i) + z.2 • gen = R + c • _Cp)
-  sim _Cp := $ᵗ G
+  sim _Cp := do
+    let ρ ← $ᵗ (Fin n → F); let ρs ← $ᵗ F
+    return (∑ i, ρ i • X i) + ρs • gen
   extract c₁ z₁ c₂ z₂ :=
     pure (fun i => (z₁.1 i - z₂.1 i) * (c₁ - c₂)⁻¹, (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
 
@@ -218,6 +226,14 @@ theorem riuSigma_speciallySound (gen : G) (X : Fin n → G) :
         simp only [smul_add, Finset.smul_sum, ← mul_smul]
         simp only [mul_comm]
 
+/-- The simulated transcript tuple as a pure function of response `(a,b)` and
+challenge `c`: announcement back-solved as `Σ aᵢ·Xᵢ + b·gen − c·C'`, paired with
+`c` and `(a,b)`. `riuSimTranscript` is this with `(c,a,b)` sampled uniformly; the
+HVZK proof rewrites the *real* transcript into this same form to compare. -/
+private def simTranscriptValue (gen : G) (X : Fin n → G) (Cp : G)
+    (a : Fin n → F) (b c : F) : G × F × (Fin n → F) × F :=
+  ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
+
 /-- Transcript simulator for the R_iu Σ-protocol: sample the challenge and the
 response uniformly and solve the verification equation for the announcement,
 `R := (∑ᵢ zᵢ • Xᵢ) + zₛ • gen − c • C'`. -/
@@ -226,11 +242,7 @@ noncomputable def riuSimTranscript (gen : G) (X : Fin n → G) (Cp : G) :
   let c ← $ᵗ F
   let zm ← $ᵗ (Fin n → F)
   let zs ← $ᵗ F
-  return ((∑ i, zm i • X i) + zs • gen - c • Cp, c, (zm, zs))
-
-private def svfun (gen : G) (X : Fin n → G) (Cp : G)
-    (a : Fin n → F) (b c : F) : G × F × (Fin n → F) × F :=
-  ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
+  return (simTranscriptValue gen X Cp zm zs c)
 
 /-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
 transcripts are distributed exactly as `riuSimTranscript`. -/
@@ -249,7 +261,7 @@ theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
   --    shifted by the challenge-scaled witness, then strip the two shifts.
   have hbody : ∀ (ρ : Fin n → F) (ρs : F),
       ((∑ i, ρ i • X i) + ρs • gen, c, (fun i => ρ i + c * w.1 i), ρs + c * w.2)
-        = svfun gen X Cp ((fun j => c * w.1 j) + ρ) (c * w.2 + ρs) c := by
+        = simTranscriptValue gen X Cp ((fun j => c * w.1 j) + ρ) (c * w.2 + ρs) c := by
     intro ρ ρs
     have e1 : (∑ i, ρ i • X i) + ρs • gen
         = (∑ i, ((fun j => c * w.1 j) + ρ) i • X i) + (c * w.2 + ρs) • gen - c • Cp := by
@@ -259,14 +271,15 @@ theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
       abel
     have e3 : (fun i => ρ i + c * w.1 i) = (fun j => c * w.1 j) + ρ := by
       funext i; simp only [Pi.add_apply]; ring
-    simp only [svfun, e1, e3, add_comm ρs (c * w.2)]
+    simp only [simTranscriptValue, e1, e3, add_comm ρs (c * w.2)]
   simp only [hbody]
   refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun j => c * w.1 j)
-    (f := fun ρ => ($ᵗ F : ProbComp F) >>= fun ρs => pure (svfun gen X Cp ρ (c * w.2 + ρs) c))
+    (f := fun ρ => ($ᵗ F : ProbComp F) >>= fun ρs => 
+      pure (simTranscriptValue gen X Cp ρ (c * w.2 + ρs) c))
     (z := t)).trans ?_
   refine probOutput_bind_uniform_congr fun ρ => ?_
   exact probOutput_bind_add_left_uniform (α := F) (m := c * w.2)
-    (f := fun ρs => pure (svfun gen X Cp ρ ρs c)) (z := t)
+    (f := fun ρs => pure (simTranscriptValue gen X Cp ρ ρs c)) (z := t)
 
 /-! ## R_iu as a generable relation -/
 
