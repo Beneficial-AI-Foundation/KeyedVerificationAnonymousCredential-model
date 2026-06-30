@@ -16,7 +16,7 @@ The base MAC underlying the μCMZ keyed-verification credential of Orrù,
 §5.1 (Figure 9). We instantiate the abstract `AlgebraicMACSyntax ProbComp`
 (`KVAC.Core.AlgebraicMAC`) with the four algorithms `(S, K, M, V)`, prove the
 support-based `Correct` predicate, and bundle them into the paper-level
-`AlgebraicMAC` object `microCMZBaseMAC` (the base MAC, not the full
+`AlgebraicMAC` object `μCMZBaseMAC` (the base MAC, not the full
 credential).
 
 Everything is stated over the abstract `SampleableGroup F G` from
@@ -143,7 +143,11 @@ sampled `U` without ever destructuring the subtype. -/
   · intro h; exact ⟨u, h, rfl⟩
 
 end UniformNonZero
-section microCMZBaseMAC
+section μCMZBaseMAC
+
+abbrev Key (F : Type) (n : ℕ) : Type := F × F × (Fin n → F)
+abbrev Params (G : Type) (n : ℕ) : Type := G × G × (Fin n → G)
+abbrev Code (G : Type) : Type := G × G
 
 /- The canonical variable block for this scheme. `F` is explicit (it does not
 appear in the result type `AlgebraicMACSyntax ProbComp`, so it must be passed at
@@ -151,6 +155,36 @@ each call site); `G` is implicit (inferred from the `gen : G` argument). Follows
 `docs/STYLE_GUIDE.md`, *Prime-order group convention*. -/
 variable (F : Type) [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
 variable {G : Type} [DecidableEq G] [SampleableGroup F G]
+
+/-- The MAC scalar `x₀ + xᵣ + Σᵢ xᵢ mᵢ`, shared by `mac` and `verify`. -/
+def macScalar {n : ℕ} (sk : Key F n) (m : Fin n → F) : F :=
+  let (x₀, xᵣ, x) := sk
+  x₀ + xᵣ + ∑ i, x i * m i
+
+/-- `S(1^λ, n)`: sample `H ←$ G`; the CRS is `H`. -/
+noncomputable def setup {G : Type} [SampleableType G] (_secParam _n : ℕ) : ProbComp G := $ᵗ G
+
+/-- `K(crs)`: the parameter `H` is the CRS that `setup` produced. -/
+noncomputable def keygen {n : ℕ} (H : G) (gen : G) : ProbComp (Key F n × Params G n) := do
+  let x₀ ← $ᵗ F
+  let xᵣ ← $ᵗ F
+  let x  ← $ᵗ (Fin n → F)
+  let X₀ := x₀ • H
+  let Xᵣ := xᵣ • gen
+  let X  := fun i => x i • gen 
+  pure ((x₀, xᵣ, x), (X₀, Xᵣ, X))
+
+
+/-- `M(sk, m⃗)`: sample `U ←$ G×` via `uniformNonzero` (the `≠ 0` witness
+projected away, per the module docstring); return `(U, macScalar·U)`. -/
+noncomputable def mac {n : ℕ} (sk : Key F n) (m : Fin n → F) : ProbComp (Code G) := do
+  let U ← uniformNonzero G
+  pure (U, macScalar F sk m • U)
+
+/-- `V(sk, m⃗, (U, V))`: `U ≠ 0 ∧ V = macScalar·U`. -/
+def verify {n : ℕ} (sk : Key F n) (m : Fin n → F) (t : Code G) : Bool :=
+  let (U, V) := t
+  decide (U ≠ 0) && decide (V = macScalar F sk m • U)
 
 /-- μCMZ base-MAC as a syntactic algebraic MAC (O24 §5.1, Figure 9 "Base MAC"),
 over the abstract `SampleableGroup F G`. The generator `gen : G` (O24's
@@ -176,25 +210,19 @@ Carrier types:
 - `Pp _    := G × G × (Fin n → G)`  — `(X₀, Xᵣ, X⃗)`;
 - `Tag _   := G × G`        — `(U, V)`.
 -/
-noncomputable def microCMZBaseMACSyntax (gen : G) :
+noncomputable def μCMZBaseMACSyntax (gen : G) :
     AlgebraicMACSyntax ProbComp where
   Crs := fun _ _ => G
   Msg := fun _ => F
-  Sk := fun {_secParam n} _ => F × F × (Fin n → F)
-  Pp := fun {_secParam n} _ => G × G × (Fin n → G)
-  Tag := fun _ => G × G
+  Sk := fun {_secParam n} _ => Key F n
+  Pp := fun {_secParam n} _ => Params G n
+  Tag := fun _ => Code G
   DecidableEqMsg := fun _ => inferInstance
-  setup := fun _secParam _n => ($ᵗ G)
-  keygen := fun {_secParam n} crs => do
-    let x0 ← $ᵗ F
-    let xr ← $ᵗ F
-    let x ← $ᵗ (Fin n → F)
-    pure ((x0, xr, x), (x0 • crs, xr • gen, fun i => x i • gen))
-  MAC := fun {_secParam _n} _crs sk m => do
-    let U ← uniformNonzero G
-    pure (U, (sk.1 + sk.2.1 + ∑ i, sk.2.2 i * m i) • U)
-  verify := fun {_secParam _n} _crs sk m t =>
-    decide (t.1 ≠ 0) && decide (t.2 = (sk.1 + sk.2.1 + ∑ i, sk.2.2 i * m i) • t.1)
+  setup := setup
+  keygen := fun {_secParam _} crs => keygen F crs gen
+  MAC := fun {_secParam _} _ sk m => mac F sk m
+  verify := fun {_secParam _} _ sk m t => verify F sk m t
+
 
 /--
 μCMZ satisfies perfect (support-based) correctness: every honestly produced tag
@@ -202,23 +230,23 @@ verifies. The MAC samples a nonzero `U`, so the `U ≠ 0` check passes; the
 verification equation `V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U` holds by construction (`rfl`),
 since `MAC` builds `V` with exactly that scalar.
 -/
-theorem microCMZBaseMAC_correct (gen : G) : Correct (microCMZBaseMACSyntax F gen) := by
+theorem μCMZBaseMAC_correct (gen : G) : Correct (μCMZBaseMACSyntax F gen) := by
   intro _secParam n crs _hcrs keys _hkeys m sig hsig
   obtain ⟨sk, _pp⟩ := keys
-  simp only [microCMZBaseMACSyntax, support_bind, mem_support_uniformNonzero, support_pure,
+  simp only [μCMZBaseMACSyntax, mac, support_bind, mem_support_uniformNonzero, support_pure,
     Set.mem_iUnion, Set.mem_singleton_iff] at hsig
   obtain ⟨U, hU, rfl⟩ := hsig
-  simp only [microCMZBaseMACSyntax, Bool.and_eq_true, decide_eq_true_eq, ne_eq]
+  simp only [μCMZBaseMACSyntax, verify, Bool.and_eq_true, decide_eq_true_eq, ne_eq]
   exact ⟨hU, trivial⟩
 
 /--
 The paper-level μCMZ base-MAC (O24 Definition 3.1): the syntactic scheme
 paired with its correctness proof, over the generator `gen : G` (O24's `G₀ ∈ Γ`).
-Noncomputable (via `microCMZBaseMACSyntax`).
+Noncomputable (via `μCMZBaseMACSyntax`).
 -/
-noncomputable def microCMZBaseMAC (gen : G) : AlgebraicMAC :=
-  ⟨microCMZBaseMACSyntax F gen, microCMZBaseMAC_correct F gen⟩
+noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
+  ⟨μCMZBaseMACSyntax F gen, μCMZBaseMAC_correct F gen⟩
 
-end microCMZBaseMAC
+end μCMZBaseMAC
 
 end KVAC.Schemes.MicroCMZ
