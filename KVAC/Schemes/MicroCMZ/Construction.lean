@@ -5,7 +5,8 @@ Authors: Semar Augusto
 -/
 import KVAC.Core.AlgebraicMAC
 import KVAC.Core.Group
-import VCVio
+import VCVio.OracleComp.ProbComp
+import VCVio.OracleComp.Constructions.SampleableType
 
 /-!
 # μCMZ as an algebraic MAC — construction (O24 §5.1, Figure 9 "Base MAC")
@@ -34,27 +35,21 @@ variable block (see `docs/STYLE_GUIDE.md`, *Prime-order group convention*).
   `pp = (X₀ = x₀·H, Xᵣ = xᵣ·G₀, Xᵢ = xᵢ·G₀)`, with `G₀` the parameter `gen`.
   Note `X₀` uses the CRS element `H`, while `Xᵣ`/`X⃗` use `gen` — matching
   Figure 9's distinct roles for `H` and `G₀`.
-- `M(sk, m⃗)`: sample `U` (see below); `V := (x₀ + xᵣ + Σᵢ mᵢxᵢ)·U`; return
+- `M(sk, m⃗)`: sample `U` (see below); `V := (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U`; return
   `σ = (U, V)`.
 - `V(sk, m⃗, (U,V))`: return `U ≠ 0 ∧ V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U`.
 
 ## Nonzero `U` and perfect correctness
 
-The paper writes `U ←$ G` (over the whole group) and rejects `U = 0` in `verify`,
-yielding merely statistical (`1 − 1/p`) correctness: an honestly produced
-`(0, 0)` tag fails verification. The repo's `Correct` predicate (in
-`KVAC.Core.AlgebraicMAC.Correctness`) is *perfect* (support-based): every tag in
-the support of `M` must verify, and it cannot express that `1/p` failure mass —
-so a literal `U ←$ G` would falsify it. We therefore sample `U` uniformly from
-`G ∖ {0}` (in a prime-order group these are exactly the generators, the standard
-MAC_GGM reading), which restores perfect correctness at the cost of deviating
-from the paper's literal `U ←$ G`.
-
-This `G∖{0}` sampling is at statistical distance `1/p` from `U ←$ G`; it is
-asymptotically negligible and the UF-CMVA security reduction (O24 Theorem 5.1,
-listed under *Out of scope*) will inherit that `1/p` term, which the paper's
-`U ←$ G` statement does not carry. The deviation is recorded here so the
-security track does not silently drop it.
+The paper's defining MAC equation (Eq. (1) in §5) samples `U ←$ G×` from the
+*punctured* group `G× = G ∖ {0}` (in a prime-order group these are exactly the
+generators, the standard MAC_GGM reading); only the figures write the looser
+`U ←$ G`. We follow Eq. (1). The `verify` algorithm rejects `U = 0` (Figure 9),
+so under the figure's `U ←$ G` the honestly produced `(0, 0)` tag would fail
+verification — a `1/p` failure mass the figure does not record. Sampling `G×`
+per Eq. (1) removes that mass, and the repo's perfect (support-based) `Correct`
+predicate (in `KVAC.Core.AlgebraicMAC.Correctness`) is then satisfied as a
+direct consequence: every tag in the support of `M` verifies.
 
 The nonzero sampling is realized by `uniformNonzero G : ProbComp G` — it samples
 the subtype `{g : G // g ≠ 0}` internally but *projects the `≠ 0` witness away*,
@@ -89,7 +84,7 @@ variant with group-element attributes `Mᵢ`, a standalone `W = w·G_w` term, a
 per-credential system scalar `t`, and the public key packed as `C_W` / `I`, over
 Ristretto255 — i.e. `V = W + (x₀ + x₁·t)·U + Σᵢ yᵢ·Mᵢ`. Per the project's
 paper-driven layering that deployment is an *instance*, never the framework; this
-file follows O24 Figure 9 (`V = (x₀ + xᵣ + Σᵢ mᵢxᵢ)·U`) with scalar attributes
+file follows O24 Figure 9 (`V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U`) with scalar attributes
 over an abstract group. The pointer is for orientation only.
 
 ## Out of scope
@@ -197,17 +192,15 @@ noncomputable def microCMZBaseMACSyntax (gen : G) :
     pure ((x0, xr, x), (x0 • crs, xr • gen, fun i => x i • gen))
   MAC := fun {_secParam _n} _crs sk m => do
     let U ← uniformNonzero G
-    pure (U, (sk.1 + sk.2.1 + ∑ i, m i * sk.2.2 i) • U)
+    pure (U, (sk.1 + sk.2.1 + ∑ i, sk.2.2 i * m i) • U)
   verify := fun {_secParam _n} _crs sk m t =>
-    decide (t.1 ≠ 0) && decide (t.2 = (sk.1 + sk.2.1 + ∑ i, m i * sk.2.2 i) • t.1)
+    decide (t.1 ≠ 0) && decide (t.2 = (sk.1 + sk.2.1 + ∑ i, sk.2.2 i * m i) • t.1)
 
 /--
 μCMZ satisfies perfect (support-based) correctness: every honestly produced tag
 verifies. The MAC samples a nonzero `U`, so the `U ≠ 0` check passes; the
-verification equation `V = (x₀ + xᵣ + Σᵢ mᵢxᵢ)·U` holds by construction (`rfl`),
-since `MAC` builds `V` with exactly that scalar. (The paper writes `verify`'s
-scalar as `Σᵢ xᵢmᵢ`; we use the commutatively-equal `Σᵢ mᵢxᵢ` so the two sides
-are syntactically identical.)
+verification equation `V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U` holds by construction (`rfl`),
+since `MAC` builds `V` with exactly that scalar.
 -/
 theorem microCMZBaseMAC_correct (gen : G) : Correct (microCMZBaseMACSyntax F gen) := by
   intro _secParam n crs _hcrs keys _hkeys m sig hsig
