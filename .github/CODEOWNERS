@@ -1,0 +1,8 @@
+# CODEOWNERS — auto-requests reviewers on pull requests.
+# Reference: https://docs.github.com/articles/about-code-owners
+#
+# The team must have write access to this repo, otherwise GitHub
+# silently ignores it here and requests no review.
+
+# Every file in the repo -> request review from the KVAC reviewers team.
+*   @Beneficial-AI-Foundation/protocols-kvac
