@@ -30,16 +30,23 @@ All three are generalized-Schnorr Σ-protocols:
   (The `U' ≠ 0` check of Figure 9 is performed by the presentation verifier
   outside the proof, so it is not part of the relation.)
 
-## Design: public bases are parameters
+## Design: crs bases are parameters, keygen bases are in the statement
 
-The public bases (`X⃗`, the generator `G`, and `H`) are *parameters* of the
-relations (like Schnorr's `g`), not part of the statement. For `R_iu` the
-statement is just the commitment `C' : G`; this is what makes `R_iu` total —
-every `C'` has a witness — so it admits an honest `GenerableRelation`, whose
-`gen_uniform_right` reduces to the single Pedersen-style bijection argument.
-`R_is` and `R_p` are *not* total over their statement types (not every tuple
-has a witness), so they carry no `GenerableRelation`; none is needed — only
-`R_iu` plays the Fiat–Shamir keygen role.
+Following O24 Eq. 9, the per-issuer bases `X⃗` are part of the *statement*
+(`R_iu`'s statement is the pair `(C', X⃗) : G × (Fin n → G)`), matching the
+paper's instance `(C', X⃗, φ)`. Only the crs-derived generator `G` (and later
+`H`) stays a *parameter* — legitimate because the paper indexes each relation
+by the range of the crs, and `X⃗` is a keygen output (`Xᵢ = xᵢ • G`, part of
+`pp`), not crs. This keeps `R_iu` structurally consistent with `R_is`/`R_p`,
+whose public elements *must* live in the statement (e.g. `R_is` proves
+`X₀ = x₀ • H`), so that `R_cmz = R_iu ∪ R_is ∪ R_p` can be formed cleanly.
+
+`R_iu` is still total — for any `(C', X⃗)` a witness exists (take `m⃗ = 0` and
+`s = (· • gen)⁻¹ C'`), since `· • gen` is a bijection — so it admits an honest
+`GenerableRelation` whose `gen_uniform_right` reduces to the Pedersen-style
+bijection argument. `R_is` and `R_p` are *not* total over their statement types,
+so they carry no `GenerableRelation`; none is needed — only `R_iu` plays the
+Fiat–Shamir keygen role.
 
 TODO: The relations here use the trivial predicate `φ ≡ ⊤`; a non-trivial `φ` would
 restrict the witness space and is deferred (it needs a witness-side subtype).
@@ -81,6 +88,14 @@ variable {n : ℕ}
 `Subsingleton` instance graph when discharging its `Inhabited` side-goals
 (see pitfall 2 above). File-local and high-priority so it never leaks. -/
 private local instance (priority := high) : Inhabited F := ⟨0⟩
+
+/-- Pins `Inhabited G` directly from `Zero G` (a projection of `AddCommGroup G`,
+found without exploring the `OrderDual` graph). Needed so that the product
+`SampleableType (G × (Fin n → G))` for the statement type discharges its
+`Inhabited G` side-goal without diverging (see pitfall 2 above). Keyed on
+`[Zero G]` — which mentions only `G` — so the synthesization order is
+well-defined. File-local and high-priority so it never leaks. -/
+private local instance (priority := high) [Zero G] : Inhabited G := ⟨0⟩
 
 /-! ## Σ-protocol probability helpers
 
@@ -156,36 +171,37 @@ private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
 
 /-! ## R_iu — issuance user proof (O24 Eq. 9) -/
 
-/-- The R_iu relation (O24 Fig 9, issuance user proof, with `φ ≡ ⊤`):
-the statement `C'` together with the public bases `X⃗`, `G` is satisfied by the
+/-- The R_iu relation (O24 Fig 9/Eq. 9, issuance user proof, with `φ ≡ ⊤`):
+the statement is the pair `(C', X⃗) : G × (Fin n → G)` of the commitment and the
+public bases; together with the crs generator `gen` it is satisfied by the
 witness `(m⃗, s)` iff `C' = Σᵢ mᵢ • Xᵢ + s • gen`. -/
-def riuRel (gen : G) (X : Fin n → G) : G → ((Fin n → F) × F) → Bool :=
-  fun Cp w => decide (Cp = (∑ i, w.1 i • X i) + w.2 • gen)
+def riuRel (gen : G) : (G × (Fin n → G)) → ((Fin n → F) × F) → Bool :=
+  fun stmt w => decide (stmt.1 = (∑ i, w.1 i • stmt.2 i) + w.2 • gen)
 
 /-- R_iu as a Σ-protocol (a generalized Schnorr proof of knowledge of a
-representation of `C'` in the bases `X⃗, G`). The public commitment is the
-announcement `R`; the challenge is a full-field scalar; the response is the
-masked witness `(z⃗ₘ, zₛ)`. -/
-def riuSigma (gen : G) (X : Fin n → G) :
-    SigmaProtocol G ((Fin n → F) × F) G ((Fin n → F) × F) F ((Fin n → F) × F)
-      (riuRel gen X) where
-  commit _Cp _w := do
+representation of `C'` in the bases `X⃗, G`). The statement is `(C', X⃗)`; the
+public commitment is the announcement `R`; the challenge is a full-field scalar;
+the response is the masked witness `(z⃗ₘ, zₛ)`. -/
+def riuSigma (gen : G) :
+    SigmaProtocol (G × (Fin n → G)) ((Fin n → F) × F) G ((Fin n → F) × F) F
+      ((Fin n → F) × F) (riuRel gen) where
+  commit s _w := do
     let ρ ← $ᵗ (Fin n → F)
     let ρs ← $ᵗ F
-    return ((∑ i, ρ i • X i) + ρs • gen, (ρ, ρs))
-  respond _Cp w sc c := pure (fun i => sc.1 i + c * w.1 i, sc.2 + c * w.2)
-  verify _Cp R c z := decide ((∑ i, z.1 i • X i) + z.2 • gen = R + c • _Cp)
-  sim _Cp := do
+    return ((∑ i, ρ i • s.2 i) + ρs • gen, (ρ, ρs))
+  respond _s w sc c := pure (fun i => sc.1 i + c * w.1 i, sc.2 + c * w.2)
+  verify s R c z := decide ((∑ i, z.1 i • s.2 i) + z.2 • gen = R + c • s.1)
+  sim s := do
     let ρ ← $ᵗ (Fin n → F); let ρs ← $ᵗ F
-    return (∑ i, ρ i • X i) + ρs • gen
+    return (∑ i, ρ i • s.2 i) + ρs • gen
   extract c₁ z₁ c₂ z₂ :=
     pure (fun i => (z₁.1 i - z₂.1 i) * (c₁ - c₂)⁻¹, (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
 
 /-- Completeness of the R_iu Σ-protocol: an honest prover with a valid witness
 always convinces the verifier. Pure `Module` algebra (`add_smul`, `mul_smul`). -/
-theorem riuSigma_complete (gen : G) (X : Fin n → G) :
-    PerfectlyComplete (riuSigma (F := F) gen X) := by
-  intro Cp w h
+theorem riuSigma_complete (gen : G) :
+    PerfectlyComplete (riuSigma (F := F) (n := n) gen) := by
+  rintro ⟨Cp, X⟩ w h
   have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true h
   simp only [riuSigma, bind_assoc, pure_bind]
   have hverify : ∀ (ρ : Fin n → F) (ρs c : F),
@@ -200,9 +216,9 @@ theorem riuSigma_complete (gen : G) (X : Fin n → G) :
 /-- Special soundness of the R_iu Σ-protocol: two accepting transcripts with
 the same announcement and distinct challenges yield a valid witness via the
 `extract` field. -/
-theorem riuSigma_speciallySound (gen : G) (X : Fin n → G) :
-    SpeciallySound (riuSigma (F := F) gen X) := by
-  intro Cp R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+theorem riuSigma_speciallySound (gen : G) :
+    SpeciallySound (riuSigma (F := F) (n := n) gen) := by
+  rintro ⟨Cp, X⟩ R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
   dsimp [riuSigma] at *
   simp only [support_pure, Set.mem_singleton_iff] at h_w
   subst h_w
@@ -237,18 +253,18 @@ private def simTranscriptValue (gen : G) (X : Fin n → G) (Cp : G)
 /-- Transcript simulator for the R_iu Σ-protocol: sample the challenge and the
 response uniformly and solve the verification equation for the announcement,
 `R := (∑ᵢ zᵢ • Xᵢ) + zₛ • gen − c • C'`. -/
-noncomputable def riuSimTranscript (gen : G) (X : Fin n → G) (Cp : G) :
+noncomputable def riuSimTranscript (gen : G) (stmt : G × (Fin n → G)) :
     ProbComp (G × F × ((Fin n → F) × F)) := do
   let c ← $ᵗ F
   let zm ← $ᵗ (Fin n → F)
   let zs ← $ᵗ F
-  return (simTranscriptValue gen X Cp zm zs c)
+  return (simTranscriptValue gen stmt.2 stmt.1 zm zs c)
 
 /-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
 transcripts are distributed exactly as `riuSimTranscript`. -/
-theorem riuSigma_hvzk (gen : G) (X : Fin n → G) :
-    HVZK (riuSigma (F := F) gen X) (riuSimTranscript gen X) := by
-  intro Cp w hrel
+theorem riuSigma_hvzk (gen : G) :
+    HVZK (riuSigma (F := F) (n := n) gen) (riuSimTranscript gen) := by
+  rintro ⟨Cp, X⟩ w hrel
   have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hrel
   simp only [riuSigma, riuSimTranscript, bind_assoc, pure_bind]
   apply evalDist_ext; intro t
@@ -295,72 +311,121 @@ private lemma uniformSample_prod_eq {α β : Type} [Fintype α] [Fintype β]
   change ((·, ·) <$> ($ᵗ α) <*> ($ᵗ β) : ProbComp (α × β)) = _
   simp [seq_eq_bind_map, map_eq_bind_pure_comp, bind_assoc]
 
-/-- The honest statement–witness generator for `R_iu`: sample `(m⃗, s)`
-uniformly and set `C' = Σᵢ mᵢ • Xᵢ + s • gen`. Lifted out of the
-`GenerableRelation` structure so the lemmas below are about a plain constant. -/
-private noncomputable def riuGenComp (gen : G) (X : Fin n → G) :
-    ProbComp (G × ((Fin n → F) × F)) := do
+/-- The honest statement–witness generator for `R_iu`: sample the bases `X⃗`
+and the witness `(m⃗, s)` uniformly and set the statement `(C', X⃗)` with
+`C' = Σᵢ mᵢ • Xᵢ + s • gen`. Lifted out of the `GenerableRelation` structure so
+the lemmas below are about a plain constant. -/
+private noncomputable def riuGenComp (gen : G) :
+    ProbComp ((G × (Fin n → G)) × ((Fin n → F) × F)) := do
+  let X ← $ᵗ (Fin n → G)
   let m ← $ᵗ (Fin n → F)
   let s ← $ᵗ F
-  return ((∑ i, m i • X i) + s • gen, (m, s))
+  return (((∑ i, m i • X i) + s • gen, X), (m, s))
 
-private lemma riuGenComp_sound (gen : G) (X : Fin n → G) (y : G)
-    (w : (Fin n → F) × F) (h : (y, w) ∈ support (riuGenComp (F := F) gen X)) :
-    riuRel gen X y w = true := by
+private lemma riuGenComp_sound (gen : G) (y : G × (Fin n → G))
+    (w : (Fin n → F) × F) (h : (y, w) ∈ support (riuGenComp (F := F) gen)) :
+    riuRel gen y w = true := by
   simp only [riuGenComp, support_bind, support_uniformSample, support_pure,
     Set.mem_iUnion, Set.mem_singleton_iff, Set.mem_univ,
     exists_true_left] at h
-  obtain ⟨m, s, h⟩ := h
+  obtain ⟨X, m, s, h⟩ := h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
   simp only [riuRel, decide_eq_true_eq]
 
-private lemma riuGenComp_uniform_left (gen : G) (X : Fin n → G)
-    (w : (Fin n → F) × F) :
-    Pr[= w | Prod.snd <$> riuGenComp (F := F) gen X] =
+private lemma riuGenComp_uniform_left (gen : G) (w : (Fin n → F) × F) :
+    Pr[= w | Prod.snd <$> riuGenComp (F := F) gen] =
       Pr[= w | ($ᵗ ((Fin n → F) × F) : ProbComp _)] := by
   rw [uniformSample_prod_eq]
-  refine congrArg (fun mx => Pr[= w | mx]) ?_
-  simp only [riuGenComp, map_bind, map_pure]
-
-private lemma riuGenComp_uniform_right (gen : G) (X : Fin n → G)
-    (hgen : Function.Bijective (· • gen : F → G)) (x : G) :
-    Pr[= x | Prod.fst <$> riuGenComp (F := F) gen X] =
-      Pr[= x | ($ᵗ G : ProbComp G)] := by
-  have hcomp : Prod.fst <$> riuGenComp (F := F) gen X
-      = (do
-        let m ← $ᵗ (Fin n → F)
-        let s ← $ᵗ F
-        pure ((∑ i, m i • X i) + s • gen) : ProbComp G) := by
+  -- `snd <$> gen` drops the announcement; the leading base sample `X⃗` is unused,
+  -- so it discards to the plain `(m⃗, s)` product.
+  have hcomp : (Prod.snd <$> riuGenComp (F := F) gen)
+      = (do let _X ← $ᵗ (Fin n → G)
+            let m ← $ᵗ (Fin n → F); let s ← $ᵗ F; pure (m, s)) := by
     simp only [riuGenComp, map_bind, map_pure]
-  rw [hcomp]
+  rw [hcomp, probOutput_bind_of_const _ (fun _ _ => rfl), probFailure_uniformSample,
+    tsub_zero, one_mul]
+
+/-- For each fixed base vector `X⃗`, the commitment `C' = Σᵢ mᵢ • Xᵢ + s • gen`
+is uniform over `G` (the `s • gen` term is a uniform shift, `· • gen` being a
+bijection). This is the per-fibre uniformity used by `gen_uniform_right`. -/
+private lemma riuGenComp_uniform_right_fibre (gen : G) (X : Fin n → G)
+    (hgen : Function.Bijective (· • gen : F → G)) (c : G) :
+    Pr[= c | (do let m ← $ᵗ (Fin n → F); let s ← $ᵗ F; pure ((∑ i, m i • X i) + s • gen))]
+      = Pr[= c | ($ᵗ G : ProbComp G)] := by
   have hconst : ∀ m : Fin n → F,
       m ∈ support ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) →
-      Pr[= x | (do let s ← $ᵗ F; pure ((∑ i, m i • X i) + s • gen) : ProbComp G)]
-        = Pr[= x | ($ᵗ G : ProbComp G)] := by
+      Pr[= c | (do let s ← $ᵗ F; pure ((∑ i, m i • X i) + s • gen) : ProbComp G)]
+        = Pr[= c | ($ᵗ G : ProbComp G)] := by
     intro m _
     have key := probOutput_bind_bijective_uniform_cross (α := F)
-      (fun s : F => s • gen) hgen (fun y : G => pure ((∑ i, m i • X i) + y)) x
-    have hadd := probOutput_add_left_uniform (α := G) (∑ i, m i • X i) x
+      (fun s : F => s • gen) hgen (fun y : G => pure ((∑ i, m i • X i) + y)) c
+    have hadd := probOutput_add_left_uniform (α := G) (∑ i, m i • X i) c
     rw [map_eq_bind_pure_comp] at hadd
     simp only [Function.comp_def] at hadd
     exact key.trans hadd
   rw [probOutput_bind_of_const _ hconst, probFailure_uniformSample, tsub_zero,
     one_mul]
 
-/-- R_iu is a generable relation: sample `(m⃗, s)` uniformly and set
-`C' = Σᵢ mᵢ • Xᵢ + s • gen`. Requires `· • gen` to be a bijection `F → G` (true
-when `gen` generates a prime-order group with `|F| = |G|`); carried as a
-hypothesis here, exactly as VCVio's Pedersen development does.
+private lemma riuGenComp_uniform_right (gen : G)
+    (hgen : Function.Bijective (· • gen : F → G)) (x : G × (Fin n → G)) :
+    Pr[= x | Prod.fst <$> riuGenComp (F := F) gen] =
+      Pr[= x | ($ᵗ (G × (Fin n → G)) : ProbComp _)] := by
+  obtain ⟨c, xv⟩ := x
+  -- `fst <$> gen` samples the bases `X⃗`, then announces `(C', X⃗)` with `C'`
+  -- uniform in the fibre over `X⃗` (`riuGenComp_uniform_right_fibre`); the joint
+  -- distribution is therefore uniform over `G × (Fin n → G)`.
+  have hcomp : (Prod.fst <$> riuGenComp (F := F) gen)
+      = (do let X ← $ᵗ (Fin n → G); let m ← $ᵗ (Fin n → F); let s ← $ᵗ F;
+            pure ((∑ i, m i • X i) + s • gen, X)) := by
+    simp only [riuGenComp, map_bind, map_pure]
+  rw [hcomp, probOutput_bind_eq_tsum]
+  -- Per fibre `X`, the second output coordinate pins `X = xv`; the first is uniform
+  -- over `G` by `riuGenComp_uniform_right_fibre`.
+  have hterm : ∀ X : Fin n → G,
+      Pr[= (c, xv) |
+          (do let m ← $ᵗ (Fin n → F)
+              let s ← $ᵗ F
+              pure ((∑ i, m i • X i) + s • gen, X) : ProbComp (G × (Fin n → G)))]
+        = if xv = X then Pr[= c | ($ᵗ G : ProbComp G)] else 0 := by
+    intro X
+    have hmap :
+        (do let m ← $ᵗ (Fin n → F)
+            let s ← $ᵗ F
+            pure ((∑ i, m i • X i) + s • gen, X) : ProbComp (G × (Fin n → G)))
+        = (·, X) <$>
+            (do let m ← $ᵗ (Fin n → F)
+                let s ← $ᵗ F
+                pure ((∑ i, m i • X i) + s • gen) : ProbComp G) := by
+      simp only [map_bind, map_pure]
+    rw [hmap, probOutput_prod_mk_fst_map]
+    dsimp only
+    rw [riuGenComp_uniform_right_fibre gen X hgen c]
+  -- The RHS product sample factors into the two component probabilities.
+  have hrhs : Pr[= (c, xv) | ($ᵗ (G × (Fin n → G)) : ProbComp (G × (Fin n → G)))]
+      = Pr[= c | ($ᵗ G : ProbComp G)]
+        * Pr[= xv | ($ᵗ (Fin n → G) : ProbComp (Fin n → G))] := by
+    change Pr[= (c, xv) | ((·, ·) <$> ($ᵗ G) <*> ($ᵗ (Fin n → G)) :
+        ProbComp (G × (Fin n → G)))] = _
+    exact probOutput_seq_map_prod_mk_eq_mul ($ᵗ G) ($ᵗ (Fin n → G)) c xv
+  simp only [hterm]
+  rw [tsum_eq_single xv (fun X hX => by rw [if_neg (Ne.symm hX), mul_zero]),
+      if_pos rfl, hrhs, mul_comm]
+
+/-- R_iu is a generable relation: sample the bases `X⃗` and witness `(m⃗, s)`
+uniformly and set the statement `(C', X⃗)` with `C' = Σᵢ mᵢ • Xᵢ + s • gen`.
+Requires `· • gen` to be a bijection `F → G` (true when `gen` generates a
+prime-order group with `|F| = |G|`); carried as a hypothesis here, exactly as
+VCVio's Pedersen development does.
 
 The fields are standalone private lemmas (about the lifted-out generator
 `riuGenComp`) assembled by plain term application — running tactics inside
 this dependent structure's fields does not terminate. -/
-noncomputable def riuGen (gen : G) (X : Fin n → G)
+noncomputable def riuGen (gen : G)
     (hgen : Function.Bijective (· • gen : F → G)) :
-    GenerableRelation G ((Fin n → F) × F) (riuRel gen X) where
-  gen := riuGenComp gen X
-  gen_sound := riuGenComp_sound gen X
-  gen_uniform_left := riuGenComp_uniform_left gen X
-  gen_uniform_right := riuGenComp_uniform_right gen X hgen
+    GenerableRelation (G × (Fin n → G)) ((Fin n → F) × F) (riuRel gen) where
+  gen := riuGenComp gen
+  gen_sound := riuGenComp_sound gen
+  gen_uniform_left := riuGenComp_uniform_left gen
+  gen_uniform_right := riuGenComp_uniform_right gen hgen
 
 end KVAC.Schemes.MicroCMZ
