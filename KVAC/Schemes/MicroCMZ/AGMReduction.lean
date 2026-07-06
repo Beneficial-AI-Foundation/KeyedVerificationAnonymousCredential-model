@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
+import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
