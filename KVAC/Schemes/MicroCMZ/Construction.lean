@@ -149,11 +149,15 @@ abbrev Key (F : Type) (n : ℕ) : Type := F × F × (Fin n → F)
 abbrev Params (G : Type) (n : ℕ) : Type := G × G × (Fin n → G)
 abbrev Code (G : Type) : Type := G × G
 
-/- The canonical variable block for this scheme. `F` is explicit (it does not
-appear in the result type `AlgebraicMACSyntax ProbComp`, so it must be passed at
-each call site); `G` is implicit (inferred from the `gen : G` argument). Follows
-`docs/STYLE_GUIDE.md`, *Prime-order group convention*. -/
-variable (F : Type) [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
+/- The canonical game-construction variable block (`docs/STYLE_GUIDE.md`,
+*Prime-order group convention*). `F` is implicit here: for the helpers below it is
+inferred from `sk : Key F n` (or, for `keygen`, from the expected result type), so
+threading it explicitly would only add noise at every internal call. It is
+reannotated to *explicit* just before the bundle-level defs (`μCMZBaseMACSyntax`,
+`μCMZBaseMAC_correct`, `μCMZBaseMAC`), where `F` does *not* appear in the result
+type `AlgebraicMACSyntax ProbComp` and so must be supplied at each call site. `G`
+is implicit throughout (inferred from the `gen : G` argument). -/
+variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
 variable {G : Type} [DecidableEq G] [SampleableGroup F G]
 
 /-- The MAC scalar `x₀ + xᵣ + Σᵢ xᵢ mᵢ`, shared by `mac` and `verify`. -/
@@ -179,12 +183,18 @@ noncomputable def keygen {n : ℕ} (H : G) (gen : G) : ProbComp (Key F n × Para
 projected away, per the module docstring); return `(U, macScalar·U)`. -/
 noncomputable def mac {n : ℕ} (sk : Key F n) (m : Fin n → F) : ProbComp (Code G) := do
   let U ← uniformNonzero G
-  pure (U, macScalar F sk m • U)
+  pure (U, macScalar sk m • U)
 
 /-- `V(sk, m⃗, (U, V))`: `U ≠ 0 ∧ V = macScalar·U`. -/
 def verify {n : ℕ} (sk : Key F n) (m : Fin n → F) (t : Code G) : Bool :=
   let (U, V) := t
-  decide (U ≠ 0) && decide (V = macScalar F sk m • U)
+  decide (U ≠ 0) && decide (V = macScalar sk m • U)
+
+-- Reannotate `F` as explicit for the bundle-level defs below: it does not appear
+-- in their result types, so it must be supplied at each call site (see the
+-- variable-block comment above). The helpers keep the implicit `{F}` inferred
+-- from `sk`.
+variable (F)
 
 /-- μCMZ base-MAC as a syntactic algebraic MAC (O24 §5.1, Figure 9 "Base MAC"),
 over the abstract `SampleableGroup F G`. The generator `gen : G` (O24's
@@ -219,9 +229,9 @@ noncomputable def μCMZBaseMACSyntax (gen : G) :
   Tag := fun _ => Code G
   DecidableEqMsg := fun _ => inferInstance
   setup := setup
-  keygen := fun {_secParam _} crs => keygen F crs gen
-  MAC := fun {_secParam _} _ sk m => mac F sk m
-  verify := fun {_secParam _} _ sk m t => verify F sk m t
+  keygen := fun {_secParam _} crs => keygen crs gen
+  MAC := fun {_secParam _} _ sk m => mac sk m
+  verify := fun {_secParam _} _ sk m t => verify sk m t
 
 
 /--
