@@ -34,7 +34,7 @@ All three are generalized-Schnorr Σ-protocols:
 
 Following O24 Eq. 9, the per-issuer bases `X⃗` *and* the issuance predicate `φ`
 are part of the *statement* (`R_iu`'s statement is the triple
-`(C', X⃗, φ) : G × (Fin n → G) × ((Fin n → F) → Bool)`, matching the paper's
+`(C', X⃗, φ) : RiuStmt G F n`, matching the paper's
 instance `(C', X⃗, φ)` exactly). Only the crs-derived generator `G` (and later
 `H`) stays a *parameter* — legitimate because the paper indexes each relation
 by the range of the crs, and `X⃗` is a keygen output (`Xᵢ = xᵢ • G`, part of
@@ -178,10 +178,24 @@ private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
 
 /-! ## R_iu — issuance user proof (O24 Eq. 9) -/
 
+/-- The public bases `X⃗` sub-item of the `R_iu` statement: `Fin n → G`. -/
+abbrev RiuBases (G : Type) (n : ℕ) : Type := Fin n → G
+
+/-- The issuance-predicate `φ` sub-item of the `R_iu` statement:
+`(Fin n → F) → Bool`. -/
+abbrev RiuPolicy (F : Type) (n : ℕ) : Type := (Fin n → F) → Bool
+
+/-- The `R_iu` statement `(C', X⃗, φ)` (O24 Fig 9/Eq. 9) — the commitment, the
+public bases, and the issuance predicate — composed from its sub-items.
+Right-associated, so `stmt.1 = C' : G`, `stmt.2.1 = X⃗ : RiuBases G n`,
+`stmt.2.2 = φ : RiuPolicy F n`. -/
+abbrev RiuStmt (G : Type) (F : Type) (n : ℕ) : Type :=
+  G × RiuBases G n × RiuPolicy F n
+
 /-- The no-policy issuance predicate `φ ≡ ⊤` (O24 anonymous-token / base
 credential case). The base credential instantiates `R_iu`'s issuance predicate
 with this. -/
-def trivialPolicy : (Fin n → F) → Bool := fun _ => true
+def trivialPolicy : RiuPolicy F n := fun _ => true
 
 /-- The R_iu relation (O24 Fig 9/Eq. 9, issuance user proof) with an explicit
 issuance predicate `φ`: the statement is the triple `(C', X⃗, φ)` — the
@@ -189,8 +203,7 @@ commitment, the public bases, and the issuance predicate; together with the crs
 generator `gen` it is satisfied by the witness `(m⃗, s)` iff
 `C' = Σᵢ mᵢ • Xᵢ + s • gen ∧ φ m⃗`. `φ` is a required statement component
 (no default); use `trivialPolicy` for the no-policy case. -/
-def riuRel (gen : G) :
-    (G × (Fin n → G) × ((Fin n → F) → Bool)) → ((Fin n → F) × F) → Bool :=
+def riuRel (gen : G) : RiuStmt G F n → ((Fin n → F) × F) → Bool :=
   fun stmt w => decide (stmt.1 = (∑ i, w.1 i • stmt.2.1 i) + w.2 • gen) && stmt.2.2 w.1
 
 /-- R_iu as a Σ-protocol (a generalized Schnorr proof of knowledge of a
@@ -200,7 +213,7 @@ the response is the masked witness `(z⃗ₘ, zₛ)`. `verify` enforces only the
 equation; enforcement of `φ` on extracted witnesses is the `Enforces` hypothesis
 (see `riuSigma_speciallySoundAt`). -/
 def riuSigma (gen : G) :
-    SigmaProtocol (G × (Fin n → G) × ((Fin n → F) → Bool)) ((Fin n → F) × F) G
+    SigmaProtocol (RiuStmt G F n) ((Fin n → F) × F) G
       ((Fin n → F) × F) F ((Fin n → F) × F) (riuRel gen) where
   commit s _w := do
     let ρ ← $ᵗ (Fin n → F)
@@ -254,7 +267,7 @@ def Enforces {S W PC SC Ω P : Type} {p : S → W → Bool}
 
 /-- The trivial policy `φ ≡ ⊤` is enforced by any `verify`: `trivialPolicy m⃗`
 holds by definition for every `m⃗`. -/
-theorem enforces_trivialPolicy (gen : G) (Cp : G) (X : Fin n → G) :
+theorem enforces_trivialPolicy (gen : G) (Cp : G) (X : RiuBases G n) :
     Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, trivialPolicy)
       (fun w => trivialPolicy w.1) := by
   rintro _ _ _ _ _ _ _ _ w _
@@ -265,8 +278,8 @@ theorem enforces_trivialPolicy (gen : G) (Cp : G) (X : Fin n → G) :
 yield a valid witness (satisfying both the linear equation and `φ`) via the
 `extract` field. For `φ = trivialPolicy` discharge `hφ` with
 `enforces_trivialPolicy`. -/
-theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : Fin n → G)
-    (φ : (Fin n → F) → Bool)
+theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : RiuBases G n)
+    (φ : RiuPolicy F n)
     (hφ : Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, φ) (fun w => φ w.1)) :
     SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, φ) := by
   intro R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
@@ -298,7 +311,7 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : Fin n → G)
 /-- Convenience corollary: the R_iu Σ-protocol is specially sound at the trivial
 policy for every statement, discharging `Enforces` via `enforces_trivialPolicy`.
 -/
-theorem riuSigma_speciallySoundAt_trivial (gen : G) (Cp : G) (X : Fin n → G) :
+theorem riuSigma_speciallySoundAt_trivial (gen : G) (Cp : G) (X : RiuBases G n) :
     SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, trivialPolicy) :=
   riuSigma_speciallySoundAt gen Cp X trivialPolicy (enforces_trivialPolicy gen Cp X)
 
@@ -306,15 +319,14 @@ theorem riuSigma_speciallySoundAt_trivial (gen : G) (Cp : G) (X : Fin n → G) :
 challenge `c`: announcement back-solved as `Σ aᵢ·Xᵢ + b·gen − c·C'`, paired with
 `c` and `(a,b)`. `riuSimTranscript` is this with `(c,a,b)` sampled uniformly; the
 HVZK proof rewrites the *real* transcript into this same form to compare. -/
-private def simTranscriptValue (gen : G) (X : Fin n → G) (Cp : G)
+private def simTranscriptValue (gen : G) (X : RiuBases G n) (Cp : G)
     (a : Fin n → F) (b c : F) : G × F × (Fin n → F) × F :=
   ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
 
 /-- Transcript simulator for the R_iu Σ-protocol: sample the challenge and the
 response uniformly and solve the verification equation for the announcement,
 `R := (∑ᵢ zᵢ • Xᵢ) + zₛ • gen − c • C'`. -/
-noncomputable def riuSimTranscript (gen : G)
-    (stmt : G × (Fin n → G) × ((Fin n → F) → Bool)) :
+noncomputable def riuSimTranscript (gen : G) (stmt : RiuStmt G F n) :
     ProbComp (G × F × ((Fin n → F) × F)) := do
   let c ← $ᵗ F
   let zm ← $ᵗ (Fin n → F)
@@ -367,7 +379,7 @@ instance used by the base credential. The statement is the pair `(C', X⃗)`; th
 issuance predicate is pinned to `trivialPolicy`, so the generable instance does
 not quantify over `φ` (which is deployment configuration, not a sampled
 hardness component — see the module doc). -/
-def riuRelTriv (gen : G) : (G × (Fin n → G)) → ((Fin n → F) × F) → Bool :=
+def riuRelTriv (gen : G) : (G × RiuBases G n) → ((Fin n → F) × F) → Bool :=
   fun stmt w => riuRel gen (stmt.1, stmt.2, trivialPolicy) w
 
 /-- Unfolding of product uniform sampling: VCVio's `SampleableType (α × β)`
@@ -387,13 +399,13 @@ and the witness `(m⃗, s)` uniformly and set the statement `(C', X⃗)` with
 `C' = Σᵢ mᵢ • Xᵢ + s • gen`. Lifted out of the `GenerableRelation` structure so
 the lemmas below are about a plain constant. -/
 private noncomputable def riuGenComp (gen : G) :
-    ProbComp ((G × (Fin n → G)) × ((Fin n → F) × F)) := do
+    ProbComp ((G × RiuBases G n) × ((Fin n → F) × F)) := do
   let X ← $ᵗ (Fin n → G)
   let m ← $ᵗ (Fin n → F)
   let s ← $ᵗ F
   return (((∑ i, m i • X i) + s • gen, X), (m, s))
 
-private lemma riuGenComp_sound (gen : G) (y : G × (Fin n → G))
+private lemma riuGenComp_sound (gen : G) (y : G × RiuBases G n)
     (w : (Fin n → F) × F) (h : (y, w) ∈ support (riuGenComp (F := F) gen)) :
     riuRelTriv gen y w = true := by
   simp only [riuGenComp, support_bind, support_uniformSample, support_pure,
@@ -419,7 +431,7 @@ private lemma riuGenComp_uniform_left (gen : G) (w : (Fin n → F) × F) :
 /-- For each fixed base vector `X⃗`, the commitment `C' = Σᵢ mᵢ • Xᵢ + s • gen`
 is uniform over `G` (the `s • gen` term is a uniform shift, `· • gen` being a
 bijection). This is the per-fibre uniformity used by `gen_uniform_right`. -/
-private lemma riuGenComp_uniform_right_fibre (gen : G) (X : Fin n → G)
+private lemma riuGenComp_uniform_right_fibre (gen : G) (X : RiuBases G n)
     (hgen : Function.Bijective (· • gen : F → G)) (c : G) :
     Pr[= c | (do let m ← $ᵗ (Fin n → F); let s ← $ᵗ F; pure ((∑ i, m i • X i) + s • gen))]
       = Pr[= c | ($ᵗ G : ProbComp G)] := by
@@ -438,7 +450,7 @@ private lemma riuGenComp_uniform_right_fibre (gen : G) (X : Fin n → G)
     one_mul]
 
 private lemma riuGenComp_uniform_right (gen : G)
-    (hgen : Function.Bijective (· • gen : F → G)) (x : G × (Fin n → G)) :
+    (hgen : Function.Bijective (· • gen : F → G)) (x : G × RiuBases G n) :
     Pr[= x | Prod.fst <$> riuGenComp (F := F) gen] =
       Pr[= x | ($ᵗ (G × (Fin n → G)) : ProbComp _)] := by
   obtain ⟨c, xv⟩ := x
@@ -493,7 +505,7 @@ The fields are standalone private lemmas (about the lifted-out generator
 this dependent structure's fields does not terminate. -/
 noncomputable def riuGen (gen : G)
     (hgen : Function.Bijective (· • gen : F → G)) :
-    GenerableRelation (G × (Fin n → G)) ((Fin n → F) × F) (riuRelTriv gen) where
+    GenerableRelation (G × RiuBases G n) ((Fin n → F) × F) (riuRelTriv gen) where
   gen := riuGenComp gen
   gen_sound := riuGenComp_sound gen
   gen_uniform_left := riuGenComp_uniform_left gen
