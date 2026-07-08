@@ -32,9 +32,10 @@ All three are generalized-Schnorr Σ-protocols:
 
 ## Design: crs bases are parameters, keygen bases are in the statement
 
-Following O24 Eq. 9, the per-issuer bases `X⃗` are part of the *statement*
-(`R_iu`'s statement is the pair `(C', X⃗) : G × (Fin n → G)`), matching the
-paper's instance `(C', X⃗, φ)`. Only the crs-derived generator `G` (and later
+Following O24 Eq. 9, the per-issuer bases `X⃗` *and* the issuance predicate `φ`
+are part of the *statement* (`R_iu`'s statement is the triple
+`(C', X⃗, φ) : G × (Fin n → G) × ((Fin n → F) → Bool)`, matching the paper's
+instance `(C', X⃗, φ)` exactly). Only the crs-derived generator `G` (and later
 `H`) stays a *parameter* — legitimate because the paper indexes each relation
 by the range of the crs, and `X⃗` is a keygen output (`Xᵢ = xᵢ • G`, part of
 `pp`), not crs. This keeps `R_iu` structurally consistent with `R_is`/`R_p`,
@@ -46,12 +47,18 @@ whose public elements *must* live in the statement (e.g. `R_is` proves
 `GenerableRelation` whose `gen_uniform_right` reduces to the Pedersen-style
 bijection argument. `R_is` and `R_p` are *not* total over their statement types,
 so they carry no `GenerableRelation`; none is needed — only `R_iu` plays the
-Fiat–Shamir keygen role.
+Fiat–Shamir keygen role. The generable/hard instance pins the issuance predicate
+to `trivialPolicy` (`riuRelTriv`): `φ` is deployment configuration, not a
+sampled hardness component, and the linear `verify`/`extract` cannot enforce an
+arbitrary `φ` on extracted witnesses.
 
-TODO: The relations here use the trivial predicate `φ ≡ ⊤`; a non-trivial `φ` would
-restrict the witness space and is deferred (it needs a witness-side subtype).
+Special soundness for an arbitrary `φ` is conditional on `Enforces gen stmt`
+(every witness the extractor can produce from two accepting transcripts satisfies
+`φ`); for `φ = trivialPolicy` this is discharged by `enforces_trivialPolicy`.
+`PerfectlyComplete` and `HVZK` hold for any `φ` (they depend only on the linear
+`commit`/`respond`/`verify`/`sim`, never on `φ`).
 
-Each protocol comes with `PerfectlyComplete` and `SpeciallySound` proofs, a
+Each protocol comes with `PerfectlyComplete` and `SpeciallySoundAt` proofs, a
 transcript simulator, and an `HVZK` proof; the `R_iu` instances below are
 complete, with `R_is`/`R_p` to follow in their PR.
 
@@ -171,38 +178,52 @@ private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
 
 /-! ## R_iu — issuance user proof (O24 Eq. 9) -/
 
-/-- The R_iu relation (O24 Fig 9/Eq. 9, issuance user proof, with `φ ≡ ⊤`):
-the statement is the pair `(C', X⃗) : G × (Fin n → G)` of the commitment and the
-public bases; together with the crs generator `gen` it is satisfied by the
-witness `(m⃗, s)` iff `C' = Σᵢ mᵢ • Xᵢ + s • gen`. -/
-def riuRel (gen : G) : (G × (Fin n → G)) → ((Fin n → F) × F) → Bool :=
-  fun stmt w => decide (stmt.1 = (∑ i, w.1 i • stmt.2 i) + w.2 • gen)
+/-- The no-policy issuance predicate `φ ≡ ⊤` (O24 anonymous-token / base
+credential case). The base credential instantiates `R_iu`'s issuance predicate
+with this. -/
+def trivialPolicy : (Fin n → F) → Bool := fun _ => true
+
+/-- The R_iu relation (O24 Fig 9/Eq. 9, issuance user proof) with an explicit
+issuance predicate `φ`: the statement is the triple `(C', X⃗, φ)` — the
+commitment, the public bases, and the issuance predicate; together with the crs
+generator `gen` it is satisfied by the witness `(m⃗, s)` iff
+`C' = Σᵢ mᵢ • Xᵢ + s • gen ∧ φ m⃗`. `φ` is a required statement component
+(no default); use `trivialPolicy` for the no-policy case. -/
+def riuRel (gen : G) :
+    (G × (Fin n → G) × ((Fin n → F) → Bool)) → ((Fin n → F) × F) → Bool :=
+  fun stmt w => decide (stmt.1 = (∑ i, w.1 i • stmt.2.1 i) + w.2 • gen) && stmt.2.2 w.1
 
 /-- R_iu as a Σ-protocol (a generalized Schnorr proof of knowledge of a
-representation of `C'` in the bases `X⃗, G`). The statement is `(C', X⃗)`; the
+representation of `C'` in the bases `X⃗, G`). The statement is `(C', X⃗, φ)`; the
 public commitment is the announcement `R`; the challenge is a full-field scalar;
-the response is the masked witness `(z⃗ₘ, zₛ)`. -/
+the response is the masked witness `(z⃗ₘ, zₛ)`. `verify` enforces only the linear
+equation; enforcement of `φ` on extracted witnesses is the `Enforces` hypothesis
+(see `riuSigma_speciallySoundAt`). -/
 def riuSigma (gen : G) :
-    SigmaProtocol (G × (Fin n → G)) ((Fin n → F) × F) G ((Fin n → F) × F) F
-      ((Fin n → F) × F) (riuRel gen) where
+    SigmaProtocol (G × (Fin n → G) × ((Fin n → F) → Bool)) ((Fin n → F) × F) G
+      ((Fin n → F) × F) F ((Fin n → F) × F) (riuRel gen) where
   commit s _w := do
     let ρ ← $ᵗ (Fin n → F)
     let ρs ← $ᵗ F
-    return ((∑ i, ρ i • s.2 i) + ρs • gen, (ρ, ρs))
+    return ((∑ i, ρ i • s.2.1 i) + ρs • gen, (ρ, ρs))
   respond _s w sc c := pure (fun i => sc.1 i + c * w.1 i, sc.2 + c * w.2)
-  verify s R c z := decide ((∑ i, z.1 i • s.2 i) + z.2 • gen = R + c • s.1)
+  verify s R c z := decide ((∑ i, z.1 i • s.2.1 i) + z.2 • gen = R + c • s.1)
   sim s := do
     let ρ ← $ᵗ (Fin n → F); let ρs ← $ᵗ F
-    return (∑ i, ρ i • s.2 i) + ρs • gen
+    return (∑ i, ρ i • s.2.1 i) + ρs • gen
   extract c₁ z₁ c₂ z₂ :=
     pure (fun i => (z₁.1 i - z₂.1 i) * (c₁ - c₂)⁻¹, (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
 
 /-- Completeness of the R_iu Σ-protocol: an honest prover with a valid witness
-always convinces the verifier. Pure `Module` algebra (`add_smul`, `mul_smul`). -/
+always convinces the verifier. Pure `Module` algebra (`add_smul`, `mul_smul`).
+Holds for any issuance predicate `φ`: `verify` checks only the linear equation,
+so the `φ` arm of the witness hypothesis is unused. -/
 theorem riuSigma_complete (gen : G) :
     PerfectlyComplete (riuSigma (F := F) (n := n) gen) := by
-  rintro ⟨Cp, X⟩ w h
-  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true h
+  rintro ⟨Cp, X, φ⟩ w h
+  simp only [riuRel] at h
+  obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp h
+  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hlin
   simp only [riuSigma, bind_assoc, pure_bind]
   have hverify : ∀ (ρ : Fin n → F) (ρs c : F),
       (∑ i, (ρ i + c * w.1 i) • X i) + (ρs + c * w.2) • gen
@@ -213,17 +234,49 @@ theorem riuSigma_complete (gen : G) :
     abel
   exact probOutput_decide_bind₃ _ fun ρ ρs c => decide_eq_true (hverify ρ ρs c)
 
-/-- Special soundness of the R_iu Σ-protocol: two accepting transcripts with
-the same announcement and distinct challenges yield a valid witness via the
-`extract` field. -/
-theorem riuSigma_speciallySound (gen : G) :
-    SpeciallySound (riuSigma (F := F) (n := n) gen) := by
-  rintro ⟨Cp, X⟩ R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
-  dsimp [riuSigma] at *
+/-- `verify` enforces the witness-level predicate `φ`: every witness the
+extractor can produce from two accepting transcripts (same announcement, distinct
+challenges) satisfies `φ`. For `R_iu` this is instantiated with
+`fun w => stmt.2.2 w.1` (the statement's attribute-level policy `φ` applied to
+the witness's attribute component `w.1`). With the linear-only `verify` this is
+provable only for `φ = trivialPolicy` (`enforces_trivialPolicy`); a `verify` that
+checks `φ` in zero-knowledge would discharge it for a proper `φ`.
+
+Stated generically over the protocol `σ` (rather than `riuSigma` directly) so the
+definition does not depend on the section's group instances — those are brought
+into scope at the call sites, whose types mention `riuSigma`. -/
+def Enforces {S W PC SC Ω P : Type} {p : S → W → Bool}
+    (σ : SigmaProtocol S W PC SC Ω P p) (stmt : S) (φ : W → Bool) : Prop :=
+  ∀ (R : PC) (c₁ c₂ : Ω) (z₁ z₂ : P), c₁ ≠ c₂ →
+    σ.verify stmt R c₁ z₁ = true →
+    σ.verify stmt R c₂ z₂ = true →
+    ∀ w ∈ support (σ.extract c₁ z₁ c₂ z₂), φ w = true
+
+/-- The trivial policy `φ ≡ ⊤` is enforced by any `verify`: `trivialPolicy m⃗`
+holds by definition for every `m⃗`. -/
+theorem enforces_trivialPolicy (gen : G) (Cp : G) (X : Fin n → G) :
+    Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, trivialPolicy)
+      (fun w => trivialPolicy w.1) := by
+  rintro _ _ _ _ _ _ _ _ w _
+  rfl
+
+/-- Special soundness of the R_iu Σ-protocol, conditional on `verify` enforcing
+`φ`: two accepting transcripts with the same announcement and distinct challenges
+yield a valid witness (satisfying both the linear equation and `φ`) via the
+`extract` field. For `φ = trivialPolicy` discharge `hφ` with
+`enforces_trivialPolicy`. -/
+theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : Fin n → G)
+    (φ : (Fin n → F) → Bool)
+    (hφ : Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, φ) (fun w => φ w.1)) :
+    SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, φ) := by
+  intro R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  have hφw : φ w.1 = true := hφ R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  dsimp [riuSigma] at h_v1 h_v2 h_w
   simp only [support_pure, Set.mem_singleton_iff] at h_w
   subst h_w
   simp only [decide_eq_true_eq] at h_v1 h_v2
-  simp only [riuRel, decide_eq_true_eq]
+  simp only [riuRel, Bool.and_eq_true, decide_eq_true_eq]
+  refine ⟨?_, hφw⟩
   have h_ne' : c₁ - c₂ ≠ 0 := sub_ne_zero.mpr h_ne
   have h_sub : (∑ i, (z₁.1 i - z₂.1 i) • X i) + (z₁.2 - z₂.2) • gen
       = (c₁ - c₂) • Cp := by
@@ -242,6 +295,13 @@ theorem riuSigma_speciallySound (gen : G) :
         simp only [smul_add, Finset.smul_sum, ← mul_smul]
         simp only [mul_comm]
 
+/-- Convenience corollary: the R_iu Σ-protocol is specially sound at the trivial
+policy for every statement, discharging `Enforces` via `enforces_trivialPolicy`.
+-/
+theorem riuSigma_speciallySoundAt_trivial (gen : G) (Cp : G) (X : Fin n → G) :
+    SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, trivialPolicy) :=
+  riuSigma_speciallySoundAt gen Cp X trivialPolicy (enforces_trivialPolicy gen Cp X)
+
 /-- The simulated transcript tuple as a pure function of response `(a,b)` and
 challenge `c`: announcement back-solved as `Σ aᵢ·Xᵢ + b·gen − c·C'`, paired with
 `c` and `(a,b)`. `riuSimTranscript` is this with `(c,a,b)` sampled uniformly; the
@@ -253,19 +313,22 @@ private def simTranscriptValue (gen : G) (X : Fin n → G) (Cp : G)
 /-- Transcript simulator for the R_iu Σ-protocol: sample the challenge and the
 response uniformly and solve the verification equation for the announcement,
 `R := (∑ᵢ zᵢ • Xᵢ) + zₛ • gen − c • C'`. -/
-noncomputable def riuSimTranscript (gen : G) (stmt : G × (Fin n → G)) :
+noncomputable def riuSimTranscript (gen : G)
+    (stmt : G × (Fin n → G) × ((Fin n → F) → Bool)) :
     ProbComp (G × F × ((Fin n → F) × F)) := do
   let c ← $ᵗ F
   let zm ← $ᵗ (Fin n → F)
   let zs ← $ᵗ F
-  return (simTranscriptValue gen stmt.2 stmt.1 zm zs c)
+  return (simTranscriptValue gen stmt.2.1 stmt.1 zm zs c)
 
 /-- Honest-verifier zero-knowledge of the R_iu Σ-protocol (O24 Eq. 9): real
 transcripts are distributed exactly as `riuSimTranscript`. -/
 theorem riuSigma_hvzk (gen : G) :
     HVZK (riuSigma (F := F) (n := n) gen) (riuSimTranscript gen) := by
-  rintro ⟨Cp, X⟩ w hrel
-  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hrel
+  rintro ⟨Cp, X, φ⟩ w hrel
+  simp only [riuRel] at hrel
+  obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp hrel
+  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hlin
   simp only [riuSigma, riuSimTranscript, bind_assoc, pure_bind]
   apply evalDist_ext; intro t
   -- 1. Bring the challenge to the front (TWO swaps: a single `vcstep rw` would
@@ -299,6 +362,14 @@ theorem riuSigma_hvzk (gen : G) :
 
 /-! ## R_iu as a generable relation -/
 
+/-- R_iu specialised to the trivial issuance predicate — the generable/hard
+instance used by the base credential. The statement is the pair `(C', X⃗)`; the
+issuance predicate is pinned to `trivialPolicy`, so the generable instance does
+not quantify over `φ` (which is deployment configuration, not a sampled
+hardness component — see the module doc). -/
+def riuRelTriv (gen : G) : (G × (Fin n → G)) → ((Fin n → F) × F) → Bool :=
+  fun stmt w => riuRel gen (stmt.1, stmt.2, trivialPolicy) w
+
 /-- Unfolding of product uniform sampling: VCVio's `SampleableType (α × β)`
 instance samples the components independently. Stated as a computation-level
 equality so proofs can `rw` with it instead of forcing the kernel to check the
@@ -324,13 +395,13 @@ private noncomputable def riuGenComp (gen : G) :
 
 private lemma riuGenComp_sound (gen : G) (y : G × (Fin n → G))
     (w : (Fin n → F) × F) (h : (y, w) ∈ support (riuGenComp (F := F) gen)) :
-    riuRel gen y w = true := by
+    riuRelTriv gen y w = true := by
   simp only [riuGenComp, support_bind, support_uniformSample, support_pure,
     Set.mem_iUnion, Set.mem_singleton_iff, Set.mem_univ,
     exists_true_left] at h
   obtain ⟨X, m, s, h⟩ := h
   obtain ⟨rfl, rfl⟩ := Prod.ext_iff.mp h
-  simp only [riuRel, decide_eq_true_eq]
+  simp only [riuRelTriv, riuRel, trivialPolicy, Bool.and_true, decide_eq_true_eq]
 
 private lemma riuGenComp_uniform_left (gen : G) (w : (Fin n → F) × F) :
     Pr[= w | Prod.snd <$> riuGenComp (F := F) gen] =
@@ -422,7 +493,7 @@ The fields are standalone private lemmas (about the lifted-out generator
 this dependent structure's fields does not terminate. -/
 noncomputable def riuGen (gen : G)
     (hgen : Function.Bijective (· • gen : F → G)) :
-    GenerableRelation (G × (Fin n → G)) ((Fin n → F) × F) (riuRel gen) where
+    GenerableRelation (G × (Fin n → G)) ((Fin n → F) × F) (riuRelTriv gen) where
   gen := riuGenComp gen
   gen_sound := riuGenComp_sound gen
   gen_uniform_left := riuGenComp_uniform_left gen
