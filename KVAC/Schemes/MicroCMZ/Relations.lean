@@ -5,7 +5,6 @@ Authors: Semar Augusto
 -/
 import KVAC.Core.Group
 import VCVio.CryptoFoundations.SigmaProtocol
-import VCVio.CryptoFoundations.HardnessAssumptions.HardRelation
 import VCVio.ProgramLogic.Tactics
 
 /-!
