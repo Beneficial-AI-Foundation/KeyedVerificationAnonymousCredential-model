@@ -47,20 +47,22 @@ Because the paper side is confirmed only against this heuristic, an equation's �
 
 ### What the progress tracker does and does not guarantee
 
-The formalization-progress table (`docs/formalization-progress/`) is a coverage index, not a proof of fidelity. Treat it accordingly.
+The formalization-progress table (`docs/formalization-progress/`) is an approximate coverage index, not a proof of fidelity or an exact measurement. It is built from heuristics, so treat every mark and count as a claim to review, not a fact.
 
-Mechanically verified (deterministic, re-runnable):
+Approximated mechanically (re-runnable, but heuristic — it can miss or misclassify):
 
-- a declaration of the matching kind exists, cites the element via `O24 <Element>`, and is `sorry`/`admit`-free;
-- the cited element exists in the paper (`--check` fails on dangling citations and unknown summary keys).
+- paper elements are recovered by extracting text from the PDF (`pdftotext`), which can drop or garble items;
+- Lean declarations, their kinds, and their `O24 <Element>` citations are recovered by scanning source text with regexes, not by the Lean elaborator, so an unusual declaration or citation may be missed or mislabelled;
+- equation pages come from a best-effort locator (see above);
+- a mark then reflects what the scan *found*: 🟢 where a sorry-free declaration of matching kind appears to cite the element, and `--check` flags citations or summary keys it cannot resolve.
 
-Not verified:
+Not attempted at all:
 
 - **semantic fidelity** — 🟢 means a sorry-free declaration *claims* to formalize the element, not that its statement matches the paper;
 - soundness beyond `sorry` (`axiom`, `native_decide`, `@[implemented_by]` are not flagged);
-- the curated summaries, and the honesty of each citation.
+- judging the curated summaries or the honesty of each citation.
 
-To check a claim, do not trust the mark: run `lake build` (the Lean kernel is the authority for "compiles, no sorry"), read the linked Lean statement against the linked paper element, and grep for `sorry`/`admit`/`axiom`/`native_decide`. 🟢 is a floor on *attempted* coverage; verified fidelity is a separate, human review.
+So do not trust a mark: run `lake build` (the Lean kernel is the only authority for "compiles, no sorry"), read the linked Lean statement against the linked paper element, and grep for `sorry`/`admit`/`axiom`/`native_decide`. The numbers are a rough floor on *attempted* coverage; verified fidelity is a separate, human review.
 
 ### Avoiding flexible tactics
 
