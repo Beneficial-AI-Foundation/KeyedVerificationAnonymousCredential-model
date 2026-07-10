@@ -1,0 +1,27 @@
+name: Formalization progress
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pdftotext (poppler-utils)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Fails if docs/FORMALIZATION_PROGRESS.md or the JSON intermediate are out
+      # of date with the Lean sources or the paper. Regenerate locally with
+      # `python3 scripts/formalization_progress.py` and commit the result.
+      - name: Check formalization-progress table is up to date
+        run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml --check
