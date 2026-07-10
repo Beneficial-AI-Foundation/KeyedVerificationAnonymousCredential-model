@@ -26,14 +26,24 @@ The copyright holder is the author or their current employer. Authors who have m
 
 ### Citing the paper
 
-When a declaration (or a module `/-! … -/` doc) formalizes a paper element, cite it as **`O24 <Element>`** in the docstring, where `<Element>` is the canonical name: `Definition 3.1`, `Theorem 5.1`, `Lemma 5.5`, `Claim 5.6`, `Corollary 6.13`, `Figure 5`, or a section like `§3.3`. The `O24` tag is required and must sit immediately before the element; a list under one tag is fine (`O24 §5.1, Figure 9`).
+When a declaration (or a module `/-! … -/` doc) formalizes a paper element, cite it as **`O24 <Element>`** in the docstring, where `<Element>` is the canonical name: `Definition 3.1`, `Theorem 5.1`, `Lemma 5.5`, `Claim 5.6`, `Corollary 6.13`, `Figure 5`, `Equation 9`, or a section like `§3.3`. The `O24` tag is required and must sit immediately before the element; a list under one tag is fine (`O24 §5.1, Figure 9` or `O24 Fig 9 / Eq. 9`).
 
 The formalization-progress tracker (`docs/formalization-progress/`) keys on exactly this form. Consequences:
 
 - A mention **without** the `O24` tag is treated as prose, not a formalization claim. Use a bare `Lemma 5.5` (no tag) when a file only *uses* a result rather than formalizing it.
 - Cite other papers with their own tag (`CMZ14 Figure 5`); these are never attributed to O24.
-- Equations are not tracked elements; write `O24 Eq. 9` freely, but coverage is recorded against the enclosing `Figure`/`Definition`, so also cite that (e.g. `O24 Figure 9`) if the declaration formalizes it.
-- Use the full word `Figure` (not `Fig`).
+- `Fig N` and `Eq. N` are accepted and normalized to `Figure N` / `Equation N`; the full words are preferred.
+
+### How equations are tracked
+
+Numbered environments (Theorem, Lemma, …), Figures, and Sections are extracted from the PDF directly. Equations are not — a numbered equation is just a right-aligned `(N)` next to unreadable display math, with no reliable anchor or auto-summary. So equations are tracked **on demand**:
+
+- An `O24 Eq. N` citation in a docstring makes equation `N` a tracked element; nothing else does. Uncited equations never enter the table (this avoids the noise and gaps of scanning every `(N)`).
+- Each cited equation is placed in the PDF by a locator heuristic: the first right-aligned `(N)` marker at the end of a display line gives its page. The heuristic is only ever consulted for the specific equations a docstring cites, so its global noise does not matter.
+- If the locator cannot place a cited equation, `--check` reports it (never a silent drop). Pin the page in an `[equation_pages]` table in `element_summaries.toml` to override, e.g. `"Equation 12" = 36`.
+- A curated summary in `[summaries]` is shown once the equation is cited. Do **not** add a summary for an equation no declaration cites yet — `--check` flags it as a key naming no tracked element.
+
+Because the paper side is confirmed only against this heuristic, an equation's 🟢 carries the same caveat as any other (see below): it means a sorry-free declaration of matching kind cites `Eq. N`, not that the declaration faithfully states that equation.
 
 ### What the progress tracker does and does not guarantee
 

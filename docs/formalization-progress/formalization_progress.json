@@ -195,7 +195,7 @@
       "section_title": "",
       "page": 33,
       "seq": 110,
-      "summary": "R_iu, the μCMZ issuance user-proof relation: knowledge of (m⃗, s) with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ(m⃗) satisfied."
+      "summary": "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
     },
     {
       "key": "Figure 9",

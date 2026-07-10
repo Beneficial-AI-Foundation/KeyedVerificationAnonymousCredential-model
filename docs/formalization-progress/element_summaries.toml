@@ -84,4 +84,4 @@
 # Equations are cite-driven: an entry here is shown only when a Lean docstring
 # cites it (`O24 Eq. N`). Do not add a summary for an equation no declaration
 # cites yet — `--check` flags it as a key naming no tracked element.
-"Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of (m⃗, s) with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ(m⃗) satisfied."
+"Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
