@@ -35,6 +35,23 @@ The formalization-progress tracker (`docs/formalization-progress/`) keys on exac
 - Equations are not tracked elements; write `O24 Eq. 9` freely, but coverage is recorded against the enclosing `Figure`/`Definition`, so also cite that (e.g. `O24 Figure 9`) if the declaration formalizes it.
 - Use the full word `Figure` (not `Fig`).
 
+### What the progress tracker does and does not guarantee
+
+The formalization-progress table (`docs/formalization-progress/`) is a coverage index, not a proof of fidelity. Treat it accordingly.
+
+Mechanically verified (deterministic, re-runnable):
+
+- a declaration of the matching kind exists, cites the element via `O24 <Element>`, and is `sorry`/`admit`-free;
+- the cited element exists in the paper (`--check` fails on dangling citations and unknown summary keys).
+
+Not verified:
+
+- **semantic fidelity** — 🟢 means a sorry-free declaration *claims* to formalize the element, not that its statement matches the paper;
+- soundness beyond `sorry` (`axiom`, `native_decide`, `@[implemented_by]` are not flagged);
+- the curated summaries, and the honesty of each citation.
+
+To check a claim, do not trust the mark: run `lake build` (the Lean kernel is the authority for "compiles, no sorry"), read the linked Lean statement against the linked paper element, and grep for `sorry`/`admit`/`axiom`/`native_decide`. 🟢 is a floor on *attempted* coverage; verified fidelity is a separate, human review.
+
 ### Avoiding flexible tactics
 
 Flexible (non-terminal) tactics make proofs fragile and harder to maintain. Avoid them as much as possible:
