@@ -42,6 +42,7 @@ Usage (run from the repository root):
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import os
 import re
@@ -145,7 +146,10 @@ class PaperElement:
     seq: int = 0        # document order, used for sorting
 
 
-def extract_paper(pdf: Path) -> list[PaperElement]:
+@functools.lru_cache(maxsize=None)
+def pdf_to_text(pdf: Path) -> str:
+    """Layout-preserving text of the PDF (form-feed separated pages), cached so
+    the paper and the equation locator share a single ``pdftotext`` run."""
     if not pdf.exists():
         raise SystemExit(f"error: source PDF not found: {pdf}")
     try:
@@ -157,7 +161,11 @@ def extract_paper(pdf: Path) -> list[PaperElement]:
         raise SystemExit("error: 'pdftotext' not found; install poppler-utils.")
     except subprocess.CalledProcessError as e:
         raise SystemExit(f"error: pdftotext failed on {pdf}:\n{e.stderr.strip()}")
-    text = proc.stdout
+    return proc.stdout
+
+
+def extract_paper(pdf: Path) -> list[PaperElement]:
+    text = pdf_to_text(pdf)
 
     # Section-title map from the TOC, used to recognise body headings.
     toc: dict[str, str] = {}
@@ -216,12 +224,18 @@ DECL_RE = re.compile(
 REF_KINDS = ENV_KINDS + ("Figure",)
 
 
-# A single canonical element token: `Theorem 5.1`, `Definition 3.1`, `§3.3`, …
+# A single canonical element token: `Theorem 5.1`, `Definition 3.1`, `§3.3`,
+# `Equation 9`/`Eq. 9`, `Fig 9`, … The `Eq`/`Fig` abbreviations are normalized to
+# `Equation N` / `Figure N` in `normalize_ref`.
 _ELEMENT = (r"(?:(?:" + "|".join(REF_KINDS) + r")\s+\d+(?:\.\d+)*"
+            r"|(?:Equation|Eq|Fig)\.?\s+\d+"
             r"|§\s?\d+(?:\.\d+)*)")
 _ELEMENT_RE = re.compile(_ELEMENT)
-# Separators inside a tag-governed list, e.g. `O24 §5.1, Figure 9`.
+# Separators inside a tag-governed list, e.g. `O24 §5.1, Figure 9` or
+# `O24 Fig 9 / Eq. 9`.
 _SEP = r"(?:\s*(?:,|/|and|&)\s*)"
+_EQ_ABBREV_RE = re.compile(r"(?:Equation|Eq)\.?\s+(\d+)$")
+_FIG_ABBREV_RE = re.compile(r"Fig\.?\s+(\d+)$")
 
 
 def make_ref_re(tag: str) -> re.Pattern[str]:
@@ -236,6 +250,12 @@ def make_ref_re(tag: str) -> re.Pattern[str]:
 
 def normalize_ref(raw: str) -> str:
     raw = raw.replace("§ ", "§").strip()
+    m = _EQ_ABBREV_RE.fullmatch(raw)
+    if m:
+        return f"Equation {m.group(1)}"
+    m = _FIG_ABBREV_RE.fullmatch(raw)
+    if m:
+        return f"Figure {m.group(1)}"
     return raw
 
 
@@ -390,6 +410,69 @@ def load_summaries(path: Path) -> dict[str, str]:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     table = data.get("summaries", data)
     return {k: str(v).strip() for k, v in table.items()}
+
+
+# --- equations (cite-driven) --------------------------------------------------
+
+# A right-aligned equation number `(N)` at the end of a display-math line.
+_EQ_LINE_RE = re.compile(r"\S.*?\s{2,}\((\d+)\)\s*$")
+
+
+def locate_equations(pdf: Path) -> dict[int, int]:
+    """Best-effort ``equation number -> 1-based page`` map, from the right-aligned
+    ``(N)`` marker at the end of a display line (first occurrence wins).
+
+    This is a heuristic: it also matches some non-equation parenthesized numbers
+    and misses others, so it is used only *on demand* — to place the specific
+    equations a Lean docstring cites. A cited equation it cannot place is reported
+    by ``--check`` (never silently dropped); give its page in an
+    ``[equation_pages]`` table of the summaries file to override."""
+    found: dict[int, int] = {}
+    for pno, page in enumerate(pdf_to_text(pdf).split("\f"), start=1):
+        for ln in page.splitlines():
+            m = _EQ_LINE_RE.search(ln)
+            if m:
+                found.setdefault(int(m.group(1)), pno)
+    return found
+
+
+def load_page_overrides(path: Path) -> dict[str, int]:
+    """Curated ``key -> page`` overrides from an optional ``[equation_pages]``
+    table, for equations the locator heuristic cannot place."""
+    if not path.exists():
+        return {}
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return {k: int(v) for k, v in data.get("equation_pages", {}).items()}
+
+
+def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
+    """The ``Equation N`` keys actually cited by some Lean docstring."""
+    keys: set[str] = set()
+    for lf in lean:
+        keys.update(lf.module_refs)
+        for d in lf.decls:
+            keys.update(d.refs)
+    return {k for k in keys if re.fullmatch(r"Equation \d+", k)}
+
+
+def equation_elements(pdf: Path, cited: set[str], overrides: dict[str, int],
+                      base_seq: int) -> list[PaperElement]:
+    """Paper elements for the cited equations we can place (curated page, else the
+    heuristic). Equations we cannot place are omitted, so their citations stay
+    unresolved and surface in ``--check``."""
+    if not cited:
+        return []
+    located = locate_equations(pdf)
+    out = []
+    for key in sorted(cited, key=lambda k: int(k.split()[1])):
+        n = int(key.split()[1])
+        page = overrides.get(key) or located.get(n)
+        if page is None:
+            continue
+        out.append(PaperElement(
+            key=key, kind="Equation", number=str(n), label="", statement="",
+            section="", section_title="", page=page, seq=base_seq + n))
+    return out
 
 
 # A Lean declaration is the right *kind* of object for a paper element when a
@@ -865,10 +948,17 @@ def cmd_report(args) -> int:
     paper_all = extract_paper(src.pdf)
     lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
     summaries = load_summaries(src.summaries)
-    # Numbered environments are always tracked; figures and sections appear only
-    # when curated (given a summary), i.e. judged a formalizable contribution.
+    # Cite-driven equations: only equations a Lean docstring references are added,
+    # placed by the on-demand locator (or a curated page override).
+    paper_all = paper_all + equation_elements(
+        src.pdf, cited_equation_keys(lean), load_page_overrides(src.summaries),
+        base_seq=len(paper_all))
+    # Numbered environments and equations are always tracked; figures and sections
+    # appear only when curated (given a summary), i.e. judged a formalizable
+    # contribution.
     paper = [e for e in paper_all
              if e.kind not in ("Figure", "Section") or e.key in summaries]
+    paper.sort(key=lambda e: (e.page, e.seq))
     by_key = build(paper, lean)
     md = render_markdown(src, paper, by_key, lean, summaries)
 

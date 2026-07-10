@@ -80,3 +80,8 @@
 "Figure 8" = "The extractability game for a keyed-verification credential system, with attribute extractors Ext.I and Ext.P."
 "Figure 9" = "The μCMZ keyed-verification credential system construction (a variant of MAC_GGM); the boxed part is removable for the one-more unforgeable variant."
 "Figure 10" = "The μBBS keyed-verification credential system construction."
+
+# Equations are cite-driven: an entry here is shown only when a Lean docstring
+# cites it (`O24 Eq. N`). Do not add a summary for an equation no declaration
+# cites yet — `--check` flags it as a key naming no tracked element.
+"Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of (m⃗, s) with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ(m⃗) satisfied."

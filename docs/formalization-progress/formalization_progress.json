@@ -186,6 +186,18 @@
       "summary": "Extractability: an extractor recovers the certified attributes from any accepting presentation."
     },
     {
+      "key": "Equation 9",
+      "kind": "Equation",
+      "number": "9",
+      "label": "",
+      "statement": "",
+      "section": "",
+      "section_title": "",
+      "page": 33,
+      "seq": 110,
+      "summary": "R_iu, the μCMZ issuance user-proof relation: knowledge of (m⃗, s) with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ(m⃗) satisfied."
+    },
+    {
       "key": "Figure 9",
       "kind": "Figure",
       "number": "9",
@@ -1154,7 +1166,8 @@
       "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
       "module_refs": [
         "§5.1",
-        "Figure 9"
+        "Figure 9",
+        "Equation 9"
       ],
       "decls": [
         {
@@ -1186,7 +1199,9 @@
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 146,
-          "refs": [],
+          "refs": [
+            "Equation 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1194,7 +1209,9 @@
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 149,
-          "refs": [],
+          "refs": [
+            "Equation 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1202,7 +1219,10 @@
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 154,
-          "refs": [],
+          "refs": [
+            "Figure 9",
+            "Equation 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1218,7 +1238,10 @@
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 163,
-          "refs": [],
+          "refs": [
+            "Figure 9",
+            "Equation 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1226,7 +1249,9 @@
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 170,
-          "refs": [],
+          "refs": [
+            "Figure 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1234,7 +1259,9 @@
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 187,
-          "refs": [],
+          "refs": [
+            "Figure 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1258,7 +1285,9 @@
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 228,
-          "refs": [],
+          "refs": [
+            "Figure 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1282,7 +1311,9 @@
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 273,
-          "refs": [],
+          "refs": [
+            "Figure 9"
+          ],
           "has_sorry": false
         },
         {
@@ -1290,7 +1321,9 @@
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 281,
-          "refs": [],
+          "refs": [
+            "Equation 9"
+          ],
           "has_sorry": false
         }
       ]
