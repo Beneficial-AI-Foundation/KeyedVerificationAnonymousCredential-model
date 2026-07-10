@@ -84,6 +84,11 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
   - Modules: `KVAC/Core/Group.lean`, `KVAC/Core/Hash.lean`, `KVAC/Core/ZKProof.lean`, `KVAC/Core/AlgebraicMAC.lean`
   - Depends on: nothing
   - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
+  - **Status** (split into sub-issues #18–#21):
+    - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
+    - [ ] `Hash.lean` — still a stub (#19).
+    - [ ] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 (externalized extractor + completeness) in review.
+    - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
 
 ## Wave 1 — start once Track 0 lands
 
@@ -93,10 +98,14 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Modules: `KVAC/Preliminaries/Assumptions.lean`, `KVAC/Preliminaries/ZKArguments.lean`, `KVAC/Preliminaries/AnonymousTokens.lean`
   - Depends on: Track 0
   - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
+  - **Status** (partial):
+    - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30).
+    - [ ] Remaining with #2: `ZKArguments.lean`, `AnonymousTokens.lean`, and q-DDHI (only needed by the §8.2 rate-limiting extension, Track Ext-RL).
 - [ ] **Track Σ** — Proof systems
   - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
   - Depends on: Track 0
   - Σ-protocol meta-theory (completeness, special soundness, HVZK), the Fiat–Shamir transformation in the random oracle model, and straight-line extraction in the AGM (Sec. 9 of O24). Critical infrastructure for both schemes' security proofs.
+  - **Status:** not started as a generic layer. Concrete per-relation Σ-protocol instances for μCMZ (Eqs. 9–11) are being delivered under Track CMZ-C (#40, #41) directly on VCV-io's `SigmaProtocol`; this track remains the home for the generic meta-theory (Fiat–Shamir, straight-line extraction).
 - [ ] **Track F1** — Framework: syntax and correctness
   - Modules: `KVAC/Framework/Syntax.lean`, `KVAC/Framework/Correctness.lean`
   - Depends on: Track 0, Track Pre
@@ -109,9 +118,14 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Depends on: Track F1, Track Σ
   - Definitions 4.4 (anonymity, statistical / everlasting-forward variants) and 4.5 (multi-user MITM extractability) of O24.
 - [ ] **Track CMZ-C** — μCMZ construction
-  - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`
+  - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
+  - **Status** (split into sub-issues #39–#41 under #6):
+    - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
+    - [ ] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — in review (#40; PR #32).
+    - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32).
+    - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
 - [ ] **Track BBS-C** — μBBS construction
   - Modules: `KVAC/Schemes/MicroBBS/Construction.lean`
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
