@@ -1,0 +1,161 @@
+# Curated paper ↔ Lean mapping knowledge base.
+#
+# This is the learning store of the AI formalization-progress assistant (the
+# skill at `.claude/skills/formalization-progress/`). It grows as the project
+# grows: every mapping a reviewer confirms is recorded here so a later run
+# reuses the decision instead of re-deriving it, and every heuristic or edge
+# case a reviewer approves is written down so the assistant applies it again.
+#
+# It is versioned in git and meant to be read and edited by hand. The assistant
+# proposes additions; a human confirms them (workflow phases 2, 4, and 5 of the
+# skill). Nothing here is authoritative about the mathematics; each mapping is a
+# reviewed claim that the cited Lean declaration formalizes the cited paper
+# element, not a machine-checked proof of it.
+#
+# It coexists with the deterministic Python tracker
+# (`../formalization_progress.py`); see `README.md` in this directory.
+
+[meta]
+paper_tag = "O24"                      # citation prefix used in Lean docstrings
+paper = "Michele Orrù, Revisiting Keyed-Verification Anonymous Credentials, IACR ePrint 2024/1552"
+lean_root = "KVAC"
+
+# ---------------------------------------------------------------------------
+# Status vocabulary (kept identical to the Python tracker so the two agree).
+#   🟢  a sorry-free Lean declaration of the matching kind is cited
+#   🌐  a matching declaration exists but its body contains sorry / admit
+#   🌀  a declaration is cited but its kind does not match the paper object
+#   🟡  only module-level (/-! … -/) coverage
+#   ⚪  nothing yet
+# "Matching kind": a Definition / Construction / Figure(game or construction) /
+# Section(assumption or interface) must be backed by a definitional construct;
+# a Theorem / Lemma / Claim / Corollary must be backed by a theorem or lemma.
+# ---------------------------------------------------------------------------
+
+# Confirmed mappings. `element` is the paper element key (a numbered environment,
+# a curated figure or section, or any span the developer chose to track);
+# `decls` lists the Lean declarations; `evidence` records how the mapping was
+# established ("citation" for an O24 tag, "statement-match" for a judged match,
+# "asserted" for a reviewer's direct assertion); `confirmed_by` and
+# `confirmed_on` record the review; `rationale` states why it was accepted.
+# The mappings below were seeded from O24-tagged citations, so evidence is
+# "citation"; a fidelity sweep or a reviewer may add others.
+
+[[mapping]]
+element = "Definition 3.1"
+kind = "Definition"
+decls = ["AlgebraicMACSyntax", "AlgebraicMAC", "Correct", "μCMZBaseMAC"]
+files = [
+  "KVAC/Core/AlgebraicMAC/Construction.lean",
+  "KVAC/Core/AlgebraicMAC.lean",
+  "KVAC/Core/AlgebraicMAC/Correctness.lean",
+  "KVAC/Schemes/MicroCMZ/Construction.lean",
+]
+status = "🟢"
+rationale = "Syntax of an algebraic MAC (Setup, KeyGen, MAC, Verify) is a structure; correctness is a def; μCMZBaseMAC instantiates the same definition."
+
+[[mapping]]
+element = "Figure 5"
+kind = "Figure"
+decls = ["UF_CMVAGame"]
+files = ["KVAC/Core/AlgebraicMAC/Security.lean"]
+status = "🟢"
+rationale = "UF-CMVA game (Figure 5) realized as the game def UF_CMVAGame."
+
+[[mapping]]
+element = "§3.1"
+kind = "Section"
+decls = ["qdlogExp"]
+files = ["KVAC/Preliminaries/Assumptions.lean"]
+status = "🟢"
+rationale = "The §3.1 hardness assumptions are realized as experiments; qdlogExp is the q-DL experiment. gap-DL lives in the same file."
+
+[[mapping]]
+element = "§3.3"
+kind = "Section"
+decls = ["SimulationExtractable"]
+files = ["KVAC/Core/NIZKP/Basic.lean"]
+status = "🟢"
+rationale = "The §3.3 zero-knowledge-argument interface, simulation-extractability property."
+
+[[mapping]]
+element = "Figure 9"
+kind = "Figure"
+decls = ["μCMZBaseMACSyntax", "RiuStmt", "riuRel", "riuSigma", "riuSimTranscript"]
+files = [
+  "KVAC/Schemes/MicroCMZ/Construction.lean",
+  "KVAC/Schemes/MicroCMZ/Relations.lean",
+]
+status = "🟢"
+rationale = "The μCMZ construction of Figure 9 and its issuance-user Σ-protocol."
+
+[[mapping]]
+element = "Equation 9"
+kind = "Equation"
+decls = ["RiuBases", "RiuPolicy", "RiuStmt", "riuRel", "riuSigma_hvzk"]
+files = ["KVAC/Schemes/MicroCMZ/Relations.lean"]
+status = "🟢"
+rationale = "R_iu, the μCMZ issuance-user relation of Equation 9: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$)."
+
+# Cited but kind does not match the paper object (🌀). Recorded so the
+# assistant does not re-propose them as coverage on the next run.
+
+[[mapping]]
+element = "Theorem 5.1"
+kind = "Theorem"
+decls = ["threeDlogAdv"]
+files = ["KVAC/Preliminaries/Assumptions.lean"]
+status = "🌀"
+rationale = "threeDlogAdv is the 3-DL advantage Theorem 5.1 assumes, not a proof of the theorem. The assumption is formalized; the theorem is not. Not counted as coverage."
+
+[[mapping]]
+element = "Theorem 5.3"
+kind = "Theorem"
+decls = ["twoDlogAdv"]
+files = ["KVAC/Preliminaries/Assumptions.lean"]
+status = "🌀"
+rationale = "twoDlogAdv is the 2-DL advantage Theorem 5.3 assumes, not a proof of it. Not counted as coverage."
+
+# ---------------------------------------------------------------------------
+# Accumulated heuristics. Each is a rule a reviewer approved for deciding
+# whether a Lean declaration formalizes a paper element. The assistant applies
+# these before proposing a mapping and cites the one it used. Add a heuristic
+# only after it has settled a real case; delete one that misfires.
+# ---------------------------------------------------------------------------
+
+[[heuristic]]
+name = "citation-tag-join"
+rule = "A Lean docstring or module doc citing `O24 <Element>` (e.g. `O24 Definition 3.1`, `O24 §3.3`, `O24 Eq. 9`) is the primary evidence of a mapping. The tag is mandatory and sits immediately before the element; a bare `Definition 3.1` or a different paper's tag does not link."
+
+[[heuristic]]
+name = "kind-match"
+rule = "A Definition / Construction / game-or-construction Figure / assumption-or-interface Section needs a definitional construct (def, structure, abbrev, class, inductive, instance). A Theorem / Lemma / Claim / Corollary needs a theorem or lemma. A mismatch is 🌀, not 🟢, even when the citation is correct."
+
+[[heuristic]]
+name = "assumption-vs-theorem"
+rule = "A declaration naming the hardness advantage a theorem assumes (e.g. threeDlogAdv for Theorem 5.1) formalizes the assumption, not the theorem. Map it 🌀 against the theorem and 🟢 against the assumption's section (§3.1)."
+
+[[heuristic]]
+name = "sorry-demotes"
+rule = "A declaration of matching kind whose body reaches sorry or admit is 🌐, not 🟢. Check the transitive proof, not only the top-level term."
+
+[[heuristic]]
+name = "module-only-is-yellow"
+rule = "When a paper element is cited only in a module `/-! … -/` doc and no single declaration of matching kind cites it, the element is 🟡 (module-level coverage), not 🟢."
+
+[[heuristic]]
+name = "equations-are-cite-driven"
+rule = "Equations are tracked only when a Lean docstring cites `O24 Eq. N`. Do not enumerate every numbered equation; a numbered equation is a right-aligned `(N)` next to display math with no clean anchor, so scanning them is noisy."
+
+[[heuristic]]
+name = "figure-precedes-summary"
+rule = "A curated figure or section is a row only when it carries a formalizable object (a security game, a construction, a hardness assumption, a proof-system interface). Recalled prior-work objects and the §8 future-extensions are omitted."
+
+# ---------------------------------------------------------------------------
+# Open questions and edge cases the reviewer flagged but did not settle. The
+# assistant surfaces these at the review gates instead of guessing.
+# ---------------------------------------------------------------------------
+
+[[open_question]]
+about = "Theorem 5.2 / 5.8 / 5.10 (μCMZ credential security)"
+note = "These are stated with the hypothesis `ZKP proves R ⊇ R_cmz`. When the μCMZ credential proofs land, decide whether a partial formalization (statement without proof) is 🌐 or stays ⚪."
