@@ -20,7 +20,8 @@ adds the two assumptions O24 needs that VCVio does not provide.
   anonymous-token variant μCMZ_AT to 2-DL (Theorem 5.3), and μBBS to (q+2)-DL.
 - **gap-DL**: DL where the adversary may additionally query a DDH-decision
   oracle relative to the challenge, `Ddh(A, Z) = 1 ↔ Z = x·A`. Used in the
-  n-to-1 attribute reduction of O24 Lemma 5.5 (Claim 5.6).
+  n-to-1 attribute reduction (Lemma 5.5, Claim 5.6 in §5.3); this file provides
+  the assumption they rely on, it does not formalize those results.
 
 O24 §3.1 also states a q-DDHI assumption, needed for μBBS/HashDY,
 deferred together with μBBS; we therefore defer formalizing q-DDHI to future work.

@@ -7,9 +7,9 @@ Source of truth: Michele Orrù, *Revisiting Keyed-Verification Anonymous Credent
 ## Summary
 
 - Paper elements catalogued: **55**
-- Paper elements **formalized** (sorry-free Lean declaration of matching kind): **3** (5%)
-- Paper elements with some Lean association: **4**
-- Lean declarations scanned: **23** across **8** files (excluding `Scratch/` and git-ignored paths); **0** contain `sorry`
+- Paper elements **formalized** (sorry-free Lean declaration of matching kind): **5** (9%)
+- Paper elements with some Lean association: **7**
+- Lean declarations scanned: **65** across **11** files (excluding `Scratch/` and git-ignored paths); **0** contain `sorry`
 
 ### By paper element
 
@@ -18,23 +18,25 @@ Source of truth: Michele Orrù, *Revisiting Keyed-Verification Anonymous Credent
 | Claim | 5 | 0 | 0% |
 | Corollary | 4 | 0 | 0% |
 | Definition | 9 | 1 | 11% |
-| Figure | 5 | 1 | 20% |
+| Figure | 5 | 2 | 40% |
 | Lemma | 7 | 0 | 0% |
-| Section | 3 | 1 | 33% |
+| Section | 3 | 2 | 66% |
 | Theorem | 22 | 0 | 0% |
-| **Total** | **55** | **3** | **5%** |
+| **Total** | **55** | **5** | **9%** |
 
 ### By Lean declaration
 
 | Declaration kind | Count | Cite the paper |
 |---|--:|--:|
-| abbrev | 5 | 0 |
-| class | 3 | 0 |
-| def | 8 | 3 |
+| abbrev | 19 | 2 |
+| class | 1 | 0 |
+| def | 27 | 6 |
 | inductive | 1 | 0 |
+| instance | 1 | 0 |
+| lemma | 3 | 0 |
 | structure | 5 | 2 |
-| theorem | 1 | 0 |
-| **Total** | **23** | **5** |
+| theorem | 8 | 0 |
+| **Total** | **65** | **10** |
 
 Status legend: 🟢 sorry-free Lean declaration of matching kind · 🌐 matching declaration but contains `sorry` · 🌀 cited declaration of non-matching kind · 🟡 module-level coverage only · ⚪ not yet formalized
 
@@ -47,8 +49,8 @@ Each element name links to its page in the source PDF. Summaries are curated in 
 | [Theorem 1](../Orru_2024.pdf#page=4) | §1.1 Our contributions | 4 | μCMZ is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds. | — | ⚪ |
 | [Theorem 2](../Orru_2024.pdf#page=4) | §1.1 Our contributions | 4 | μBBS is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds. | — | ⚪ |
 | [Theorem 3](../Orru_2024.pdf#page=5) | §1.1 Our contributions | 5 | Compiling a polynomial interactive oracle proof with a designated-verifier polynomial commitment yields a designated-verifier fully-succinct SNARK without pairings. | — | ⚪ |
-| [§3.1](../Orru_2024.pdf#page=24) | — | 24 | The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI. | _module_ [Group.lean](../../KVAC/Core/Group.lean) | 🟡 |
-| [Definition 3.1](../Orru_2024.pdf#page=24) | §3.2 Algebraic message authentication codes | 24 | Syntax of an algebraic message authentication code for n attributes over a prime-order group: the algorithms Setup, KeyGen, MAC, and Verify. | `AlgebraicMACSyntax` (structure) [Construction.lean:94](../../KVAC/Core/AlgebraicMAC/Construction.lean#L94)<br>`Correct` (def) [Correctness.lean:60](../../KVAC/Core/AlgebraicMAC/Correctness.lean#L60)<br>`AlgebraicMAC` (structure) [AlgebraicMAC.lean:62](../../KVAC/Core/AlgebraicMAC.lean#L62) | 🟢 |
+| [§3.1](../Orru_2024.pdf#page=24) | — | 24 | The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI. | `qdlogExp` (def) [Assumptions.lean:59](../../KVAC/Preliminaries/Assumptions.lean#L59) | 🟢 |
+| [Definition 3.1](../Orru_2024.pdf#page=24) | §3.2 Algebraic message authentication codes | 24 | Syntax of an algebraic message authentication code for n attributes over a prime-order group: the algorithms Setup, KeyGen, MAC, and Verify. | `AlgebraicMACSyntax` (structure) [Construction.lean:94](../../KVAC/Core/AlgebraicMAC/Construction.lean#L94)<br>`Correct` (def) [Correctness.lean:60](../../KVAC/Core/AlgebraicMAC/Correctness.lean#L60)<br>`AlgebraicMAC` (structure) [AlgebraicMAC.lean:62](../../KVAC/Core/AlgebraicMAC.lean#L62)<br>`μCMZBaseMAC` (def) [Construction.lean:257](../../KVAC/Schemes/MicroCMZ/Construction.lean#L257) | 🟢 |
 | [Figure 5](../Orru_2024.pdf#page=25) | §3.2 Algebraic message authentication codes | 25 | The unforgeability-under-chosen-message-and-verification (UF-CMVA) security game for an algebraic MAC. | `UF_CMVAGame` (def) [Security.lean:113](../../KVAC/Core/AlgebraicMAC/Security.lean#L113) | 🟢 |
 | [§3.3](../Orru_2024.pdf#page=25) | — | 25 | The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs. | `SimulationExtractable` (def) [Basic.lean:136](../../KVAC/Core/NIZKP/Basic.lean#L136) | 🟢 |
 | [Figure 6](../Orru_2024.pdf#page=26) | §3.3 Zero-knowledge arguments | 26 | The one-more unforgeability game for an anonymous token scheme with non-interactive issuance. | — | ⚪ |
@@ -59,10 +61,10 @@ Each element name links to its page in the source PDF. Summaries are curated in 
 | [Definition 4.4](../Orru_2024.pdf#page=30) | §4.3 Anonymity | 30 | Anonymity: issuance and presentation are simulatable without the secret attributes, so presentations are unlinkable across executions. | — | ⚪ |
 | [Figure 8](../Orru_2024.pdf#page=31) | §4.3 Anonymity | 31 | The extractability game for a keyed-verification credential system, with attribute extractors Ext.I and Ext.P. | — | ⚪ |
 | [Definition 4.5](../Orru_2024.pdf#page=31) | §4.4 Extractability | 31 | Extractability: an extractor recovers the certified attributes from any accepting presentation. | — | ⚪ |
-| [Figure 9](../Orru_2024.pdf#page=34) | §5.1 Protocol description | 34 | The μCMZ keyed-verification credential system construction (a variant of MAC_GGM); the boxed part is removable for the one-more unforgeable variant. | — | ⚪ |
-| [Theorem 5.1](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under gap discrete log, with the stated advantage. | — | ⚪ |
+| [Figure 9](../Orru_2024.pdf#page=34) | §5.1 Protocol description | 34 | The μCMZ keyed-verification credential system construction (a variant of MAC_GGM); the boxed part is removable for the one-more unforgeable variant. | `μCMZBaseMACSyntax` (def) [Construction.lean:223](../../KVAC/Schemes/MicroCMZ/Construction.lean#L223) | 🟢 |
+| [Theorem 5.1](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under 3-DL (and DL), with advantage Adv^{3-dl} + Adv^{dl} + 3/p. | `threeDlogAdv` (abbrev) [Assumptions.lean:69](../../KVAC/Preliminaries/Assumptions.lean#L69) — kind mismatch | 🌀 |
 | [Theorem 5.2](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | If ZKP proves the relation R ⊇ R_cmz, then μCMZ is an extractable keyed-verification credential. | — | ⚪ |
-| [Theorem 5.3](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | If ZKP proves R ⊇ R_cmz.p ∪ R_cmz.is, then the variant μCMZ_AT is a one-more unforgeable anonymous token. | — | ⚪ |
+| [Theorem 5.3](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | If ZKP proves R ⊇ R_cmz.p ∪ R_cmz.is, then the variant μCMZ_AT is a one-more unforgeable anonymous token. | `twoDlogAdv` (abbrev) [Assumptions.lean:73](../../KVAC/Preliminaries/Assumptions.lean#L73) — kind mismatch | 🌀 |
 | [Lemma 5.4](../Orru_2024.pdf#page=36) | §5.3 Algebraic MAC | 36 | Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p. | — | ⚪ |
 | [Lemma 5.5](../Orru_2024.pdf#page=38) | §5.3 Algebraic MAC | 38 | Reduces n-attribute μCMZ security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p. | — | ⚪ |
 | [Claim 5.6](../Orru_2024.pdf#page=39) | §5.3 Algebraic MAC | 39 | In the μCMZ unforgeability proof, the first forgery case is bounded by the gap discrete-log advantage. | — | ⚪ |

@@ -24,6 +24,17 @@ The copyright holder is the author or their current employer. Authors who have m
 - File names are `UpperCamelCase.lean` and match the concept they define (`Group.lean`, `AlgebraicMAC.lean`, `Construction.lean`).
 - Multiple closely related theorems may live in the same file, but a file should have a single coherent topic.
 
+### Citing the paper
+
+When a declaration (or a module `/-! … -/` doc) formalizes a paper element, cite it as **`O24 <Element>`** in the docstring, where `<Element>` is the canonical name: `Definition 3.1`, `Theorem 5.1`, `Lemma 5.5`, `Claim 5.6`, `Corollary 6.13`, `Figure 5`, or a section like `§3.3`. The `O24` tag is required and must sit immediately before the element; a list under one tag is fine (`O24 §5.1, Figure 9`).
+
+The formalization-progress tracker (`docs/formalization-progress/`) keys on exactly this form. Consequences:
+
+- A mention **without** the `O24` tag is treated as prose, not a formalization claim. Use a bare `Lemma 5.5` (no tag) when a file only *uses* a result rather than formalizing it.
+- Cite other papers with their own tag (`CMZ14 Figure 5`); these are never attributed to O24.
+- Equations are not tracked elements; write `O24 Eq. 9` freely, but coverage is recorded against the enclosing `Figure`/`Definition`, so also cite that (e.g. `O24 Figure 9`) if the declaration formalizes it.
+- Use the full word `Figure` (not `Fig`).
+
 ### Avoiding flexible tactics
 
 Flexible (non-terminal) tactics make proofs fragile and harder to maintain. Avoid them as much as possible:

@@ -207,7 +207,7 @@
       "section_title": "Theorems",
       "page": 35,
       "seq": 38,
-      "summary": "In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under gap discrete log, with the stated advantage."
+      "summary": "In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under 3-DL (and DL), with advantage Adv^{3-dl} + Adv^{dl} + 3/p."
     },
     {
       "key": "Theorem 5.2",
@@ -811,16 +811,16 @@
       ],
       "decls": [
         {
-          "name": "abbrev",
-          "kind": "class",
+          "name": "PrimeOrderGroup",
+          "kind": "abbrev",
           "file": "KVAC/Core/Group.lean",
           "line": 95,
           "refs": [],
           "has_sorry": false
         },
         {
-          "name": "abbrev",
-          "kind": "class",
+          "name": "SampleableGroup",
+          "kind": "abbrev",
           "file": "KVAC/Core/Group.lean",
           "line": 125,
           "refs": [],
@@ -835,9 +835,7 @@
     },
     {
       "file": "KVAC/Core/NIZKP/Basic.lean",
-      "module_refs": [
-        "§3.3"
-      ],
+      "module_refs": [],
       "decls": [
         {
           "name": "NIZKPScheme",
@@ -921,6 +919,381 @@
         "§3.3"
       ],
       "decls": []
+    },
+    {
+      "file": "KVAC/Preliminaries/Assumptions.lean",
+      "module_refs": [
+        "§3.1",
+        "Theorem 5.1"
+      ],
+      "decls": [
+        {
+          "name": "QDLogAdversary",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 54,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "qdlogExp",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 59,
+          "refs": [
+            "§3.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "qdlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 65,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "threeDlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 69,
+          "refs": [
+            "Theorem 5.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "twoDlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 73,
+          "refs": [
+            "Theorem 5.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "dlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 77,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "GapDLogOracleSpec",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 85,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "GapDLogAdversary",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 89,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gapDdhOracleImpl",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 94,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gapDlogExp",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 100,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gapDlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 107,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+      "module_refs": [
+        "§5.1",
+        "Figure 9",
+        "Theorem 5.1"
+      ],
+      "decls": [
+        {
+          "name": "instSampleableTypeNeZero",
+          "kind": "instance",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 116,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "uniformNonzero",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 128,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "mem_support_uniformNonzero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 136,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Key",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 148,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Params",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 149,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Code",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 150,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "macScalar",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 164,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "setup",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 169,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "keygen",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 172,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "mac",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 184,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "verify",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 189,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "μCMZBaseMACSyntax",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 223,
+          "refs": [
+            "§5.1",
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "μCMZBaseMAC_correct",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 243,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "μCMZBaseMAC",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 257,
+          "refs": [
+            "Definition 3.1"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+      "module_refs": [
+        "§5.1",
+        "Figure 9"
+      ],
+      "decls": [
+        {
+          "name": "probOutput_decide_bind₃",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 84,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "probOutput_decide_bind₄",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 109,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "probOutput_bind_uniform_congr",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 137,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuBases",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 146,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuPolicy",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 149,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuStmt",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 154,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "trivialPolicy",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 158,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuRel",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 163,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 170,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_complete",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 187,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Enforces",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 210,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "enforces_trivialPolicy",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 218,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_speciallySoundAt",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 228,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_speciallySoundAt_trivial",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 260,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "simTranscriptValue",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 267,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSimTranscript",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 273,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_hvzk",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 281,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
     }
   ]
 }

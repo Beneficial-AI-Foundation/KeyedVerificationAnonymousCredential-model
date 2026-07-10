@@ -204,21 +204,34 @@ def extract_paper(pdf: Path) -> list[PaperElement]:
 DECL_RE = re.compile(
     r"^(?P<mods>(?:noncomputable\s+|private\s+|protected\s+|partial\s+|"
     r"@\[[^\]]*\]\s*)*)"
-    r"(?P<kind>def|structure|abbrev|class|instance|lemma|theorem|inductive)\s+"
-    r"(?P<name>[A-Za-z_][A-Za-z0-9_'.]*)?"
+    r"(?P<kind>def|structure|abbrev|class\s+abbrev|class|instance|lemma|theorem"
+    r"|inductive)\s+"
+    # The name runs up to the first whitespace or opening delimiter. This is
+    # Unicode-aware, so Lean identifiers with Greek/subscripts (e.g.
+    # `μCMZBaseMACSyntax`, `x₀`) are captured, not just ASCII ones.
+    r"(?P<name>[^\s:({\[]+)?"
 )
 # Reference kinds recognised inside Lean text: the numbered environments plus
 # figures and bare section signs. Kept in sync with the paper-side ENV_KINDS.
 REF_KINDS = ENV_KINDS + ("Figure",)
 
 
+# A single canonical element token: `Theorem 5.1`, `Definition 3.1`, `§3.3`, …
+_ELEMENT = (r"(?:(?:" + "|".join(REF_KINDS) + r")\s+\d+(?:\.\d+)*"
+            r"|§\s?\d+(?:\.\d+)*)")
+_ELEMENT_RE = re.compile(_ELEMENT)
+# Separators inside a tag-governed list, e.g. `O24 §5.1, Figure 9`.
+_SEP = r"(?:\s*(?:,|/|and|&)\s*)"
+
+
 def make_ref_re(tag: str) -> re.Pattern[str]:
-    """Reference matcher: optional ``<tag> `` prefix then a canonical token."""
-    return re.compile(
-        rf"(?:{re.escape(tag)}\s+)?"
-        r"(?P<ref>(?:" + "|".join(REF_KINDS) + r")\s+\d+(?:\.\d+)*"
-        r"|§\s?\d+(?:\.\d+)*)"
-    )
+    """Citation matcher. The ``<tag>`` prefix is **mandatory** and governs one or
+    more canonical element tokens, allowing a short ``,``/``/``/``and``-separated
+    list (e.g. ``O24 §5.1, Figure 9``). A bare element with no tag, or one after a
+    different tag (``CMZ14 Figure 5``), does not match — so a prose mention is not
+    silently read as a formalization claim, and a citation of another paper is not
+    misattributed to this one."""
+    return re.compile(rf"{re.escape(tag)}\s+({_ELEMENT}(?:{_SEP}{_ELEMENT})*)")
 
 
 def normalize_ref(raw: str) -> str:
@@ -249,10 +262,11 @@ class LeanFile:
 def find_refs(text: str, ref_re: re.Pattern[str]) -> list[str]:
     out, seen = [], set()
     for m in ref_re.finditer(text):
-        r = normalize_ref(m["ref"])
-        if r not in seen:
-            seen.add(r)
-            out.append(r)
+        for em in _ELEMENT_RE.finditer(m.group(1)):
+            r = normalize_ref(em.group())
+            if r not in seen:
+                seen.add(r)
+                out.append(r)
     return out
 
 
@@ -331,8 +345,10 @@ def extract_lean(root: Path, exclude_dirs: tuple[str, ...],
             if m and m["name"] and not ln.startswith(" "):
                 doc_text = "\n".join(doc_buf)
                 refs = find_refs(doc_text + "\n" + stripped, ref_re)
+                # `class abbrev` collapses to `abbrev` (its definitional nature)
+                # so it is a matching kind and keeps its real name.
                 lf.decls.append(LeanDecl(
-                    name=m["name"], kind=m["kind"].strip(),
+                    name=m["name"], kind=m["kind"].split()[-1],
                     file=rel, line=i + 1, refs=refs,
                 ))
                 doc_buf = []
@@ -846,15 +862,30 @@ def cmd_report(args) -> int:
     src = resolve_source(args)
     ref_re = make_ref_re(src.tag)
 
-    paper = extract_paper(src.pdf)
+    paper_all = extract_paper(src.pdf)
     lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
     summaries = load_summaries(src.summaries)
     # Numbered environments are always tracked; figures and sections appear only
     # when curated (given a summary), i.e. judged a formalizable contribution.
-    paper = [e for e in paper
+    paper = [e for e in paper_all
              if e.kind not in ("Figure", "Section") or e.key in summaries]
     by_key = build(paper, lean)
     md = render_markdown(src, paper, by_key, lean, summaries)
+
+    # Drift the tool exists to catch: a Lean citation or a summary key that names
+    # no element in the paper universe (a typo like `O24 Theorem 5.9`, a
+    # pdftotext extraction miss, or a stale summary key). These are otherwise
+    # dropped silently by the element-driven rendering, so surface them.
+    universe = {e.key for e in paper_all}
+    problems = []
+    unresolved = sorted(k for k in by_key if k not in universe)
+    if unresolved:
+        problems.append("Lean citations naming no paper element: "
+                        + ", ".join(unresolved))
+    unknown_summaries = sorted(k for k in summaries if k not in universe)
+    if unknown_summaries:
+        problems.append("element_summaries.toml keys naming no paper element: "
+                        + ", ".join(unknown_summaries))
 
     paper_json = []
     for e in paper:
@@ -876,14 +907,19 @@ def cmd_report(args) -> int:
             stale.append(str(src.out_md))
         if not src.out_json.exists() or src.out_json.read_text() != js:
             stale.append(str(src.out_json))
-        if stale:
-            print(f"Out of date (re-run {SCRIPT_REL}):", file=sys.stderr)
-            for s in stale:
-                print(f"  {s}", file=sys.stderr)
+        if stale or problems:
+            if stale:
+                print(f"Out of date (re-run {SCRIPT_REL}):", file=sys.stderr)
+                for s in stale:
+                    print(f"  {s}", file=sys.stderr)
+            for p in problems:
+                print(f"error: {p}", file=sys.stderr)
             return 1
         print("Up to date.")
         return 0
 
+    for p in problems:
+        print(f"warning: {p}", file=sys.stderr)
     src.out_md.write_text(md)
     src.out_json.write_text(js)
     covered = sum(1 for e in paper if e.key in by_key)

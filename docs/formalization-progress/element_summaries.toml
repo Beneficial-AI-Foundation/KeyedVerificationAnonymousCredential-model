@@ -26,7 +26,7 @@
 "Definition 4.4" = "Anonymity: issuance and presentation are simulatable without the secret attributes, so presentations are unlinkable across executions."
 "Definition 4.5" = "Extractability: an extractor recovers the certified attributes from any accepting presentation."
 
-"Theorem 5.1" = "In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under gap discrete log, with the stated advantage."
+"Theorem 5.1" = "In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under 3-DL (and DL), with advantage Adv^{3-dl} + Adv^{dl} + 3/p."
 "Theorem 5.2" = "If ZKP proves the relation R ⊇ R_cmz, then μCMZ is an extractable keyed-verification credential."
 "Theorem 5.3" = "If ZKP proves R ⊇ R_cmz.p ∪ R_cmz.is, then the variant μCMZ_AT is a one-more unforgeable anonymous token."
 "Lemma 5.4" = "Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p."
