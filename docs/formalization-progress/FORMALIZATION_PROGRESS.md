@@ -29,6 +29,20 @@ These figures are approximate (see the note above).
 | Theorem | 22 | 0 | 0% |
 | **Total** | **56** | **6** | **10%** |
 
+### By paper section
+
+| Section | In paper | Formalized | Coverage |
+|---|--:|--:|--:|
+| §1 Introduction | 3 | 0 | 0% |
+| §3 Preliminaries | 6 | 4 | 66% |
+| §4 Keyed-verification credential systems | 6 | 0 | 0% |
+| §5 Chase–Meiklejohn–Zaverucha credentials | 14 | 1 | 7% |
+| <span style="color:#a0a0a0">§6 Boneh–Boyen–Shacham credentials</span> | <span style="color:#a0a0a0">11</span> | <span style="color:#a0a0a0">0</span> | <span style="color:#a0a0a0">0%</span> |
+| <span style="color:#a0a0a0">§7 Designated-verifier fully-succinct SNARKs without pairings</span> | <span style="color:#a0a0a0">6</span> | <span style="color:#a0a0a0">0</span> | <span style="color:#a0a0a0">0%</span> |
+| <span style="color:#a0a0a0">§8 Building on keyed-verification credential systems</span> | <span style="color:#a0a0a0">7</span> | <span style="color:#a0a0a0">0</span> | <span style="color:#a0a0a0">0%</span> |
+| <span style="color:#a0a0a0">§9 Straight-line extraction from Σ-protocols</span> | <span style="color:#a0a0a0">2</span> | <span style="color:#a0a0a0">0</span> | <span style="color:#a0a0a0">0%</span> |
+| (unsectioned) | 1 | 1 | 100% |
+
 ### By Lean declaration
 
 | Declaration kind | Count | Cite the paper |

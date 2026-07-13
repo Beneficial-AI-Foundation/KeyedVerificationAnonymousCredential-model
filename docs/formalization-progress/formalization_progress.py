@@ -587,7 +587,8 @@ _DIM_OPEN, _DIM_CLOSE = '<span style="color:#a0a0a0">', "</span>"
 
 def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
                     lean: list[LeanFile], summaries: dict[str, str],
-                    dim: list[str], dim_note: str) -> str:
+                    dim: list[str], dim_note: str,
+                    sec_titles: dict[str, str]) -> str:
     status = {e.key: element_status(e, by_key) for e in paper}
     formalized = sum(1 for e in paper if status[e.key][0] == ST_DONE)
     covered = sum(1 for e in paper if e.key in by_key)
@@ -640,6 +641,31 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
         out.append(f"| {kind} | {n} | {c} | {100 * c // n if n else 0}% |")
     out.append(f"| **Total** | **{total}** | **{formalized}** | "
                f"**{100 * formalized // total if total else 0}%** |\n")
+
+    # Breakdown by top-level paper section — one row per protocol/topic
+    # (§5 µCMZ, §6 µBBS, ...). Out-of-scope sections render dimmed, matching
+    # the element table.
+    sections: dict[str, list[int]] = {}
+    for e in paper:
+        num = e.number if e.kind == "Section" else e.section
+        top = num.split(".")[0] if num else "—"
+        cell = sections.setdefault(top, [0, 0])
+        cell[0] += 1
+        if status[e.key][0] == ST_DONE:
+            cell[1] += 1
+    out.append("### By paper section\n")
+    out.append("| Section | In paper | Formalized | Coverage |")
+    out.append("|---|--:|--:|--:|")
+    for top in sorted(sections, key=lambda k: (k == "—", int(k) if k.isdigit()
+                                               else 0)):
+        n, c = sections[top]
+        label = (f"§{top} {sec_titles.get(top, '')}".strip() if top != "—"
+                 else "(unsectioned)")
+        cells = [label, str(n), str(c), f"{100 * c // n if n else 0}%"]
+        if f"§{top}" in dim:
+            cells = [f"{_DIM_OPEN}{c_}{_DIM_CLOSE}" for c_ in cells]
+        out.append("| " + " | ".join(cells) + " |")
+    out.append("")
 
     # Breakdown by Lean declaration kind: total vs those citing the paper.
     lean_kinds: dict[str, list[int]] = {}
@@ -1044,16 +1070,16 @@ def cmd_report(args) -> int:
     paper_all = paper_all + equation_elements(
         text, cited_equation_keys(lean), load_page_overrides(src.summaries),
         base_seq=len(paper_all))
+    # Section number -> title, from the extracted TOC (section elements).
+    sec_titles = {e.number: e.statement for e in paper_all
+                  if e.kind == "Section"}
     # Curated enclosing-section corrections ([element_sections] in the
     # summaries file); the section title comes from the extracted TOC.
     sec_over = load_section_overrides(src.summaries)
-    if sec_over:
-        titles = {e.number: e.statement for e in paper_all
-                  if e.kind == "Section"}
-        for e in paper_all:
-            num = sec_over.get(e.key)
-            if num is not None:
-                e.section, e.section_title = num, titles.get(num, "")
+    for e in paper_all:
+        num = sec_over.get(e.key)
+        if num is not None:
+            e.section, e.section_title = num, sec_titles.get(num, "")
     # Numbered environments and equations are always tracked; figures and sections
     # appear only when curated (given a summary), i.e. judged a formalizable
     # contribution.
@@ -1061,7 +1087,8 @@ def cmd_report(args) -> int:
              if e.kind not in ("Figure", "Section") or e.key in summaries]
     paper.sort(key=lambda e: (e.page, e.seq))
     by_key = build(paper, lean)
-    md = render_markdown(src, paper, by_key, lean, summaries, dim, dim_note)
+    md = render_markdown(src, paper, by_key, lean, summaries, dim, dim_note,
+                         sec_titles)
 
     # Drift the tool exists to catch: a Lean citation or a summary key that names
     # no element in the paper universe (a typo like `O24 Theorem 5.9`, a
