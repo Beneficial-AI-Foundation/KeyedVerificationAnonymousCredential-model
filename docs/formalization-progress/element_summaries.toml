@@ -15,9 +15,12 @@
 
 # Rows rendered in light gray. Entries are element keys ("Theorem 2") or
 # section prefixes ("§6" covers the section, its subsections, and their
-# elements). The µBBS line (O24 §6) is outside the current µCMZ scope.
-dim = ["§6", "Theorem 2"]
-dim_note = "µBBS-line elements (O24 §6), outside the current µCMZ formalization scope."
+# elements). Everything outside µCMZ and its prerequisites is dimmed: the
+# µBBS line (§6, Theorem 2), designated-verifier SNARKs (§7, Theorem 3),
+# the §8 extensions, and straight-line Σ-protocol extraction (§9). Kept
+# undimmed: Theorem 1, the §3 preliminaries, the §4 KVAC definitions, §5.
+dim = ["§6", "§7", "§8", "§9", "Theorem 2", "Theorem 3"]
+dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), designated-verifier SNARKs (§7), extensions (§8), straight-line Σ-protocol extraction (§9), and their contribution theorems."
 
 [summaries]
 "Theorem 1" = "μCMZ is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
