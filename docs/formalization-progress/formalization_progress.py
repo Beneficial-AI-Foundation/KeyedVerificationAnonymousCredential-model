@@ -490,6 +490,17 @@ def load_page_overrides(path: Path) -> dict[str, int]:
     return {k: int(v) for k, v in data.get("equation_pages", {}).items()}
 
 
+def load_section_overrides(path: Path) -> dict[str, str]:
+    """Curated ``key -> section number`` overrides from an optional
+    ``[element_sections]`` table, for elements the extractor files under the
+    wrong enclosing section (e.g. a figure placed just above the heading of
+    the section it belongs to)."""
+    if not path.exists():
+        return {}
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return {k: str(v) for k, v in data.get("element_sections", {}).items()}
+
+
 def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
     """The ``Equation N`` keys actually cited by some Lean docstring."""
     keys: set[str] = set()
@@ -1033,6 +1044,16 @@ def cmd_report(args) -> int:
     paper_all = paper_all + equation_elements(
         text, cited_equation_keys(lean), load_page_overrides(src.summaries),
         base_seq=len(paper_all))
+    # Curated enclosing-section corrections ([element_sections] in the
+    # summaries file); the section title comes from the extracted TOC.
+    sec_over = load_section_overrides(src.summaries)
+    if sec_over:
+        titles = {e.number: e.statement for e in paper_all
+                  if e.kind == "Section"}
+        for e in paper_all:
+            num = sec_over.get(e.key)
+            if num is not None:
+                e.section, e.section_title = num, titles.get(num, "")
     # Numbered environments and equations are always tracked; figures and sections
     # appear only when curated (given a summary), i.e. judged a formalizable
     # contribution.
@@ -1056,6 +1077,10 @@ def cmd_report(args) -> int:
     if unknown_summaries:
         problems.append("element_summaries.toml keys naming no paper element: "
                         + ", ".join(unknown_summaries))
+    unknown_sections = sorted(k for k in sec_over if k not in universe)
+    if unknown_sections:
+        problems.append("[element_sections] keys naming no paper element: "
+                        + ", ".join(unknown_sections))
 
     paper_json = []
     for e in paper:
