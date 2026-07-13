@@ -14,6 +14,26 @@ board in the top-level `README.md`. That board tracks **work items**; this tool
 tracks **paper elements** and derives everything from the sources, so it cannot
 silently disagree with the code.
 
+## Update cadence
+
+The three inputs of the pipeline change at very different rates, and each has
+its own update mechanism.
+
+| Input | Updated | How |
+|---|---|---|
+| `Orru_2024.txt` (paper text) | **once per paper** | the `extract` subcommand, run by hand |
+| `element_summaries.toml` (summaries, dim list) | occasionally, by hand | edit the file in a normal PR |
+| `FORMALIZATION_PROGRESS.md` / `.json` (outputs) | **every merge to `main`** | regenerated and committed by CI |
+
+The paper is a frozen input: the PDF never changes, so its text extraction is
+performed once, committed, and never touched again unless the PDF itself or the
+extraction tooling is replaced. The curated summaries likewise change only when
+a human writes a new one-line description or adjusts the dim list; they evolve
+with the project's scope, not with each commit. The generated table is the only
+moving part. Nobody regenerates it in a PR: at every merge to `main` the CI
+workflow reruns the tool against the merged Lean sources and commits the
+refreshed table automatically (see *Continuous integration* below).
+
 ## How it works
 
 1. **Paper side.** The committed text extraction of the paper
