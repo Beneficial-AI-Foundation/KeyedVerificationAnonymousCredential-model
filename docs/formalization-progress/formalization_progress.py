@@ -10,8 +10,9 @@ docstrings and module docs, e.g.:
 
 This script:
 
-1. Extracts the paper element universe from the source PDF via
-   ``pdftotext -layout`` (numbered environments, figure captions, TOC sections).
+1. Extracts the paper element universe (numbered environments, figure captions,
+   TOC sections) from the committed text extraction of the source PDF (see
+   ``extract`` below).
 2. Extracts Lean declarations (def/structure/abbrev/class/instance/lemma/
    theorem/inductive) and the citation references attached to each, both at the
    declaration level (preceding ``/-- -/`` docstring + signature) and the file
@@ -25,14 +26,20 @@ then individual CLI flags. This keeps zero-argument runs and CI working while
 letting the same tool target a different paper.
 
 It is dependency-free (standard library only; ``tomllib`` ships with Python
-3.11+) so it can run in CI. The only external requirement is the ``pdftotext``
-binary (poppler-utils).
+3.11+) so it can run in CI. ``report`` and ``--check`` read the **committed**
+text extraction of the paper (the ``text`` source field), so they never run
+``pdftotext`` and are deterministic across machines. The ``pdftotext`` binary
+(poppler-utils) is needed only for ``extract`` and ``init``, which run once
+per paper.
 
 Usage (run from the repository root):
     P=docs/formalization-progress/formalization_progress.py
 
     # Generate the source-of-truth TOML from a paper file and its URL:
     python3 $P init --pdf docs/Orru_2024.pdf --url https://eprint.iacr.org/2024/1552
+
+    # Extract the paper text once and commit it (requires pdftotext):
+    python3 $P extract --config s.toml
 
     # Generate the progress table (`report` is the default subcommand):
     python3 $P                  # built-in default source
@@ -80,6 +87,7 @@ class Source:
     """A paper acting as the source of truth, and where to read/write."""
     tag: str            # citation prefix used in the Lean docstrings, e.g. "O24"
     pdf: Path           # the paper PDF
+    text: Path          # committed `pdftotext -layout` extraction of the PDF
     title: str          # full reference, shown in the generated header
     lean_root: Path     # directory of Lean sources to scan
     exclude_dirs: tuple[str, ...]  # subdirectory names to skip (e.g. Scratch)
@@ -92,6 +100,7 @@ class Source:
 DEFAULT_SOURCE = Source(
     tag="O24",
     pdf=REPO / "docs" / "Orru_2024.pdf",
+    text=PROGRESS_DIR / "Orru_2024.txt",
     title="Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, "
           "IACR ePrint 2024/1552",
     lean_root=REPO / "KVAC",
@@ -148,8 +157,10 @@ class PaperElement:
 
 @functools.lru_cache(maxsize=None)
 def pdf_to_text(pdf: Path) -> str:
-    """Layout-preserving text of the PDF (form-feed separated pages), cached so
-    the paper and the equation locator share a single ``pdftotext`` run."""
+    """Layout-preserving text of the PDF (form-feed separated pages). Run only
+    by ``extract`` (and ``init``); ``report``/``--check`` read the committed
+    extraction instead, so their output does not depend on the local poppler
+    version."""
     if not pdf.exists():
         raise SystemExit(f"error: source PDF not found: {pdf}")
     try:
@@ -164,9 +175,17 @@ def pdf_to_text(pdf: Path) -> str:
     return proc.stdout
 
 
-def extract_paper(pdf: Path) -> list[PaperElement]:
-    text = pdf_to_text(pdf)
+def paper_text(path: Path) -> str:
+    """The committed text extraction of the paper (form-feed separated pages),
+    the single input of the paper side of the report."""
+    if not path.exists():
+        raise SystemExit(
+            f"error: paper text extraction not found: {path}\n"
+            f"generate and commit it with: python3 {SCRIPT_REL} extract")
+    return path.read_text(encoding="utf-8")
 
+
+def extract_paper(text: str) -> list[PaperElement]:
     # Section-title map from the TOC, used to recognise body headings.
     toc: dict[str, str] = {}
     for ln in text.splitlines():
@@ -412,13 +431,38 @@ def load_summaries(path: Path) -> dict[str, str]:
     return {k: str(v).strip() for k, v in table.items()}
 
 
+def load_dim(path: Path) -> tuple[list[str], str]:
+    """Curated dim-list from the summaries file: a top-level ``dim`` array of
+    element keys ("Theorem 2") or section prefixes ("§6", which dims every
+    element of section 6 and its subsections), plus an optional ``dim_note``
+    explaining the graying, shown above the table."""
+    if not path.exists():
+        return [], ""
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return [str(d) for d in data.get("dim", [])], str(data.get("dim_note", ""))
+
+
+def is_dimmed(e: PaperElement, dim: list[str]) -> bool:
+    """Whether ``e`` matches the curated dim-list (exact key, or `§N` prefix
+    covering the section, its subsections, and their elements)."""
+    for d in dim:
+        if e.key == d:
+            return True
+        if d.startswith("§"):
+            sec = d[1:]
+            for num in (e.section, e.number if e.kind == "Section" else ""):
+                if num and (num == sec or num.startswith(sec + ".")):
+                    return True
+    return False
+
+
 # --- equations (cite-driven) --------------------------------------------------
 
 # A right-aligned equation number `(N)` at the end of a display-math line.
 _EQ_LINE_RE = re.compile(r"\S.*?\s{2,}\((\d+)\)\s*$")
 
 
-def locate_equations(pdf: Path) -> dict[int, int]:
+def locate_equations(text: str) -> dict[int, int]:
     """Best-effort ``equation number -> 1-based page`` map, from the right-aligned
     ``(N)`` marker at the end of a display line (first occurrence wins).
 
@@ -428,7 +472,7 @@ def locate_equations(pdf: Path) -> dict[int, int]:
     by ``--check`` (never silently dropped); give its page in an
     ``[equation_pages]`` table of the summaries file to override."""
     found: dict[int, int] = {}
-    for pno, page in enumerate(pdf_to_text(pdf).split("\f"), start=1):
+    for pno, page in enumerate(text.split("\f"), start=1):
         for ln in page.splitlines():
             m = _EQ_LINE_RE.search(ln)
             if m:
@@ -455,14 +499,14 @@ def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
     return {k for k in keys if re.fullmatch(r"Equation \d+", k)}
 
 
-def equation_elements(pdf: Path, cited: set[str], overrides: dict[str, int],
+def equation_elements(text: str, cited: set[str], overrides: dict[str, int],
                       base_seq: int) -> list[PaperElement]:
     """Paper elements for the cited equations we can place (curated page, else the
     heuristic). Equations we cannot place are omitted, so their citations stay
     unresolved and surface in ``--check``."""
     if not cited:
         return []
-    located = locate_equations(pdf)
+    located = locate_equations(text)
     out = []
     for key in sorted(cited, key=lambda k: int(k.split()[1])):
         n = int(key.split()[1])
@@ -524,8 +568,14 @@ def element_status(e: PaperElement, by_key: dict) -> tuple[str, list]:
     return ST_NONE, []
 
 
+# Light-gray wrapper for dimmed rows. Inline styles render in VS Code and most
+# Markdown viewers; github.com strips the style attribute and shows plain text.
+_DIM_OPEN, _DIM_CLOSE = '<span style="color:#a0a0a0">', "</span>"
+
+
 def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
-                    lean: list[LeanFile], summaries: dict[str, str]) -> str:
+                    lean: list[LeanFile], summaries: dict[str, str],
+                    dim: list[str], dim_note: str) -> str:
     status = {e.key: element_status(e, by_key) for e in paper}
     formalized = sum(1 for e in paper if status[e.key][0] == ST_DONE)
     covered = sum(1 for e in paper if e.key in by_key)
@@ -621,6 +671,8 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
                "Summaries are curated in "
                f"`{os.path.relpath(source.summaries, REPO)}`"
                + (f" ({missing} still pending)." if missing else ".") + "\n")
+    if dim and dim_note:
+        out.append(f"Rows in light gray: {dim_note}\n")
     out.append("| Paper element | Section | Page | Summary | "
                "Lean declarations | Status |")
     out.append("|---|---|---|---|---|---|")
@@ -662,10 +714,11 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
             summary = f"**{e.label}.** {summary}"
         summary = summary.replace("|", "\\|")
 
-        out.append(
-            f"| {name} | {section} | {e.page} | {summary} | "
-            f"{'<br>'.join(lean_cells) if lean_cells else '—'} | {mark} |"
-        )
+        cells = [name, section, str(e.page), summary,
+                 "<br>".join(lean_cells) if lean_cells else "—", mark]
+        if is_dimmed(e, dim):
+            cells = [f"{_DIM_OPEN}{c}{_DIM_CLOSE}" for c in cells]
+        out.append("| " + " | ".join(cells) + " |")
 
     out.append("")
     return "\n".join(out)
@@ -675,7 +728,7 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
 
 # Maps TOML/CLI keys to Source fields and how to coerce them. Paths are resolved
 # relative to the repository root when given relative.
-_PATH_FIELDS = {"pdf", "lean_root", "out_md", "out_json", "summaries"}
+_PATH_FIELDS = {"pdf", "text", "lean_root", "out_md", "out_json", "summaries"}
 
 
 def _resolve_path(value) -> Path:
@@ -688,7 +741,7 @@ def source_from_config(path: Path) -> dict:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     table = data.get("source", data)
     overrides = {}
-    for key in ("tag", "pdf", "title", "lean_root", "exclude_dirs",
+    for key in ("tag", "pdf", "text", "title", "lean_root", "exclude_dirs",
                 "out_md", "out_json", "summaries"):
         if key not in table:
             continue
@@ -707,10 +760,10 @@ def resolve_source(args) -> Source:
     if args.config:
         overrides.update(source_from_config(args.config))
     for key in ("tag", "title"):
-        if getattr(args, key) is not None:
+        if getattr(args, key, None) is not None:
             overrides[key] = getattr(args, key)
-    for key in ("pdf", "lean_root", "out_md", "out_json"):
-        if getattr(args, key) is not None:
+    for key in ("pdf", "text", "lean_root", "out_md", "out_json"):
+        if getattr(args, key, None) is not None:
             overrides[key] = _resolve_path(getattr(args, key))
     if args.exclude_dirs is not None:
         overrides["exclude_dirs"] = tuple(args.exclude_dirs)
@@ -850,7 +903,7 @@ def build_reference(title: str, authors: list[str], suffix: str) -> str:
     return ", ".join(parts)
 
 
-def emit_toml(tag: str, pdf: Path, title: str, lean_root: Path,
+def emit_toml(tag: str, pdf: Path, text: Path, title: str, lean_root: Path,
               exclude_dirs: tuple[str, ...], out_md: Path,
               out_json: Path, summaries: Path) -> str:
     def rel(p: Path) -> str:
@@ -865,6 +918,7 @@ def emit_toml(tag: str, pdf: Path, title: str, lean_root: Path,
         "[source]\n"
         f'tag = "{tag}"\n'
         f'pdf = "{rel(pdf)}"\n'
+        f'text = "{rel(text)}"  # committed pdftotext extraction (regenerate with `extract`)\n'
         f'title = "{esc}"\n'
         f'lean_root = "{rel(lean_root)}"\n'
         f"exclude_dirs = [{excl}]\n"
@@ -942,8 +996,9 @@ def cmd_init(args) -> int:
                      "file there before running `report`")
 
     summaries = DEFAULT_SOURCE.summaries
-    toml_text = emit_toml(tag, pdf_field, reference, lean_root, exclude_dirs,
-                          out_md, out_json, summaries)
+    text_field = PROGRESS_DIR / f"{pdf_field.stem}.txt"
+    toml_text = emit_toml(tag, pdf_field, text_field, reference, lean_root,
+                          exclude_dirs, out_md, out_json, summaries)
     out_cfg.write_text(toml_text)
     print(f"Wrote {out_cfg}")
     print(f"  title : {reference}")
@@ -963,13 +1018,15 @@ def cmd_report(args) -> int:
     src = resolve_source(args)
     ref_re = make_ref_re(src.tag)
 
-    paper_all = extract_paper(src.pdf)
+    text = paper_text(src.text)
+    paper_all = extract_paper(text)
     lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
     summaries = load_summaries(src.summaries)
+    dim, dim_note = load_dim(src.summaries)
     # Cite-driven equations: only equations a Lean docstring references are added,
     # placed by the on-demand locator (or a curated page override).
     paper_all = paper_all + equation_elements(
-        src.pdf, cited_equation_keys(lean), load_page_overrides(src.summaries),
+        text, cited_equation_keys(lean), load_page_overrides(src.summaries),
         base_seq=len(paper_all))
     # Numbered environments and equations are always tracked; figures and sections
     # appear only when curated (given a summary), i.e. judged a formalizable
@@ -978,7 +1035,7 @@ def cmd_report(args) -> int:
              if e.kind not in ("Figure", "Section") or e.key in summaries]
     paper.sort(key=lambda e: (e.page, e.seq))
     by_key = build(paper, lean)
-    md = render_markdown(src, paper, by_key, lean, summaries)
+    md = render_markdown(src, paper, by_key, lean, summaries, dim, dim_note)
 
     # Drift the tool exists to catch: a Lean citation or a summary key that names
     # no element in the paper universe (a typo like `O24 Theorem 5.9`, a
@@ -1036,13 +1093,26 @@ def cmd_report(args) -> int:
     return 0
 
 
+# --- extract ------------------------------------------------------------------
+
+def cmd_extract(args) -> int:
+    src = resolve_source(args)
+    text = pdf_to_text(src.pdf)
+    src.text.parent.mkdir(parents=True, exist_ok=True)
+    src.text.write_text(text, encoding="utf-8")
+    pages = text.count("\f") + 1
+    print(f"Wrote {src.text} ({pages} pages) from {src.pdf}.")
+    print("Commit it: `report` and `--check` read this file, not the PDF.")
+    return 0
+
+
 # --- CLI ----------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # `report` is the default subcommand, so existing invocations such as
     # `formalization_progress.py --config x.toml --check` keep working.
-    if not argv or argv[0] not in ("report", "init"):
+    if not argv or argv[0] not in ("report", "init", "extract"):
         argv = ["report"] + argv
 
     ap = argparse.ArgumentParser(description=__doc__,
@@ -1057,6 +1127,8 @@ def main(argv: list[str] | None = None) -> int:
     # Per-field overrides (take precedence over --config and the default).
     rep.add_argument("--tag", help="citation prefix used in Lean docstrings")
     rep.add_argument("--pdf", type=Path, help="source paper PDF")
+    rep.add_argument("--text", type=Path,
+                     help="committed text extraction of the paper")
     rep.add_argument("--title", help="full reference shown in the header")
     rep.add_argument("--lean-root", dest="lean_root", type=Path,
                      help="directory of Lean sources to scan")
@@ -1065,6 +1137,19 @@ def main(argv: list[str] | None = None) -> int:
     rep.add_argument("--out-md", dest="out_md", type=Path)
     rep.add_argument("--out-json", dest="out_json", type=Path)
     rep.set_defaults(func=cmd_report)
+
+    ext = sub.add_parser(
+        "extract",
+        help="run pdftotext on the source PDF and write the committed text "
+             "extraction that `report`/`--check` read (requires poppler)")
+    ext.add_argument("--config", type=Path,
+                     help="TOML file with a [source] table describing the paper")
+    ext.add_argument("--pdf", type=Path, help="source paper PDF")
+    ext.add_argument("--text", type=Path,
+                     help="where to write the text extraction")
+    ext.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
+                     help=argparse.SUPPRESS)
+    ext.set_defaults(func=cmd_extract)
 
     ini = sub.add_parser(
         "init", help="generate the source-of-truth TOML from a PDF and/or a URL")

@@ -14,14 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Install pdftotext (poppler-utils)
-        run: sudo apt-get update && sudo apt-get install -y poppler-utils
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       # Fails if docs/FORMALIZATION_PROGRESS.md or the JSON intermediate are out
       # of date with the Lean sources or the paper. Regenerate locally with
-      # `python3 scripts/formalization_progress.py` and commit the result.
+      # `python3 docs/formalization-progress/formalization_progress.py --config
+      # docs/formalization-progress/formalization_source.toml` and commit the
+      # result. The paper side reads the committed text extraction
+      # (docs/formalization-progress/Orru_2024.txt), so no poppler is needed;
+      # refresh that file with the `extract` subcommand only if the PDF or the
+      # extraction tooling changes.
       - name: Check formalization-progress table is up to date
         run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml --check
