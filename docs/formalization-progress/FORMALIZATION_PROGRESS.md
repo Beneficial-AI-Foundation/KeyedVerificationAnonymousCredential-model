@@ -17,17 +17,17 @@ These figures are approximate (see the note above).
 
 ### By paper element
 
-| Element kind | In paper | Formalized | Coverage |
-|---|--:|--:|--:|
-| Claim | 5 | 0 | 0% |
-| Corollary | 4 | 0 | 0% |
-| Definition | 9 | 1 | 11% |
-| Equation | 1 | 1 | 100% |
-| Figure | 5 | 2 | 40% |
-| Lemma | 7 | 0 | 0% |
-| Section | 3 | 2 | 66% |
-| Theorem | 22 | 0 | 0% |
-| **Total** | **56** | **6** | **10%** |
+| Element kind | Elements | In paper | Formalized | Coverage |
+|---|---|--:|--:|--:|
+| Claim | [5.6](../Orru_2024.pdf#page=39), [5.7](../Orru_2024.pdf#page=39), [5.12](../Orru_2024.pdf#page=46), [5.13](../Orru_2024.pdf#page=47), [5.14](../Orru_2024.pdf#page=47) | 5 | 0 | 0% |
+| Corollary | <span style="color:#a0a0a0">[6.13](../Orru_2024.pdf#page=57)</span>, <span style="color:#a0a0a0">[7.7](../Orru_2024.pdf#page=63)</span>, <span style="color:#a0a0a0">[8.5](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[8.12](../Orru_2024.pdf#page=74)</span> | 4 | 0 | 0% |
+| Definition | [3.1](../Orru_2024.pdf#page=24), [4.1](../Orru_2024.pdf#page=28), [4.2](../Orru_2024.pdf#page=28), [4.3](../Orru_2024.pdf#page=29), [4.4](../Orru_2024.pdf#page=30), [4.5](../Orru_2024.pdf#page=31), <span style="color:#a0a0a0">[7.1](../Orru_2024.pdf#page=58)</span>, <span style="color:#a0a0a0">[7.4](../Orru_2024.pdf#page=61)</span>, <span style="color:#a0a0a0">[9.1](../Orru_2024.pdf#page=77)</span> | 9 | 1 | 11% |
+| Equation | [9](../Orru_2024.pdf#page=33) | 1 | 1 | 100% |
+| Figure | [5](../Orru_2024.pdf#page=25), [6](../Orru_2024.pdf#page=26), [8](../Orru_2024.pdf#page=31), [9](../Orru_2024.pdf#page=34), <span style="color:#a0a0a0">[10](../Orru_2024.pdf#page=48)</span> | 5 | 2 | 40% |
+| Lemma | [5.4](../Orru_2024.pdf#page=36), [5.5](../Orru_2024.pdf#page=38), <span style="color:#a0a0a0">[6.8](../Orru_2024.pdf#page=51)</span>, <span style="color:#a0a0a0">[6.9](../Orru_2024.pdf#page=52)</span>, <span style="color:#a0a0a0">[6.12](../Orru_2024.pdf#page=56)</span>, <span style="color:#a0a0a0">[8.6](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[8.13](../Orru_2024.pdf#page=74)</span> | 7 | 0 | 0% |
+| Section | [3.1](../Orru_2024.pdf#page=24), [3.3](../Orru_2024.pdf#page=25), [3.4](../Orru_2024.pdf#page=26) | 3 | 2 | 66% |
+| Theorem | [1](../Orru_2024.pdf#page=4), <span style="color:#a0a0a0">[2](../Orru_2024.pdf#page=4)</span>, <span style="color:#a0a0a0">[3](../Orru_2024.pdf#page=5)</span>, [5.1](../Orru_2024.pdf#page=35), [5.2](../Orru_2024.pdf#page=35), [5.3](../Orru_2024.pdf#page=35), [5.8](../Orru_2024.pdf#page=40), [5.10](../Orru_2024.pdf#page=42), [5.11](../Orru_2024.pdf#page=43), <span style="color:#a0a0a0">[6.1](../Orru_2024.pdf#page=49)</span>, <span style="color:#a0a0a0">[6.5](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[6.6](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[6.7](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[6.10](../Orru_2024.pdf#page=53)</span>, <span style="color:#a0a0a0">[6.11](../Orru_2024.pdf#page=55)</span>, <span style="color:#a0a0a0">[7.3](../Orru_2024.pdf#page=60)</span>, <span style="color:#a0a0a0">[7.5](../Orru_2024.pdf#page=62)</span>, <span style="color:#a0a0a0">[7.6](../Orru_2024.pdf#page=63)</span>, <span style="color:#a0a0a0">[8.2](../Orru_2024.pdf#page=67)</span>, <span style="color:#a0a0a0">[8.7](../Orru_2024.pdf#page=69)</span>, <span style="color:#a0a0a0">[8.9](../Orru_2024.pdf#page=73)</span>, <span style="color:#a0a0a0">[9.2](../Orru_2024.pdf#page=77)</span> | 22 | 0 | 0% |
+| **Total** | | **56** | **6** | **10%** |
 
 ### By paper section
 

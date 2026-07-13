@@ -626,20 +626,35 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
                f"**{n_files}** files; **{n_sorry}** detected to contain "
                "`sorry`\n")
 
-    # Breakdown by paper element kind: catalogued vs formalized (✅).
-    paper_kinds: dict[str, list[int]] = {}
+    # All links are written relative to the Markdown file's own directory, so
+    # they resolve correctly wherever the report is placed in the tree.
+    base = source.out_md.parent
+    pdf_rel = os.path.relpath(source.pdf, base)
+
+    def link(repo_rel_path: str) -> str:
+        return os.path.relpath(REPO / repo_rel_path, base)
+
+    # Breakdown by paper element kind: catalogued vs formalized (✅), with the
+    # member elements listed by number, each linking to its page in the PDF
+    # (dimmed individually when out of scope).
+    paper_kinds: dict[str, list] = {}
     for e in paper:
-        cell = paper_kinds.setdefault(e.kind, [0, 0])
+        cell = paper_kinds.setdefault(e.kind, [0, 0, []])
         cell[0] += 1
         if status[e.key][0] == ST_DONE:
             cell[1] += 1
+        num = f"[{e.number}]({pdf_rel}#page={e.page})"
+        if is_dimmed(e, dim):
+            num = f"{_DIM_OPEN}{num}{_DIM_CLOSE}"
+        cell[2].append(num)
     out.append("### By paper element\n")
-    out.append("| Element kind | In paper | Formalized | Coverage |")
-    out.append("|---|--:|--:|--:|")
+    out.append("| Element kind | Elements | In paper | Formalized | Coverage |")
+    out.append("|---|---|--:|--:|--:|")
     for kind in sorted(paper_kinds):
-        n, c = paper_kinds[kind]
-        out.append(f"| {kind} | {n} | {c} | {100 * c // n if n else 0}% |")
-    out.append(f"| **Total** | **{total}** | **{formalized}** | "
+        n, c, nums = paper_kinds[kind]
+        out.append(f"| {kind} | {', '.join(nums)} | {n} | {c} | "
+                   f"{100 * c // n if n else 0}% |")
+    out.append(f"| **Total** | | **{total}** | **{formalized}** | "
                f"**{100 * formalized // total if total else 0}%** |\n")
 
     # Breakdown by top-level paper section — one row per protocol/topic
@@ -693,14 +708,6 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
         f"{ST_MISMATCH} a declaration cites it but its kind looks non-matching · "
         f"{ST_MODULE} only module-level coverage detected · "
         f"{ST_NONE} nothing detected yet\n")
-
-    # All links are written relative to the Markdown file's own directory, so
-    # they resolve correctly wherever the report is placed in the tree.
-    base = source.out_md.parent
-    pdf_rel = os.path.relpath(source.pdf, base)
-
-    def link(repo_rel_path: str) -> str:
-        return os.path.relpath(REPO / repo_rel_path, base)
 
     missing = sum(1 for e in paper if e.key not in summaries)
     out.append("## Paper element → Lean declarations\n")
