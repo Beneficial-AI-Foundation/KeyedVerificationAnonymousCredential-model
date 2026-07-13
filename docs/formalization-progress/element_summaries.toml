@@ -1,0 +1,87 @@
+# Curated one-line summaries of the paper's elements, consumed by
+# scripts/formalization_progress.py to fill the "Summary" column. Keys are the
+# element identifiers ("Theorem 5.1", "Definition 3.1", "Figure 5", "§3.1", ...)
+# exactly as the script extracts them from the PDF. Edit these by hand; they are
+# descriptions, not the paper's verbatim prose.
+#
+# Inclusion rule:
+#   * Numbered environments (Theorem/Lemma/Definition/Claim/Corollary) are
+#     always rows; without an entry here they render as "(summary pending)".
+#   * Figures and sections are rows ONLY if they appear below, i.e. only when
+#     they carry a mathematical object that should be formalized and that is
+#     part of the paper's contributions (a security game, a construction, a
+#     hardness assumption, a proof-system interface). Recalled prior-work
+#     objects and the §8 "future extensions" are intentionally omitted.
+
+[summaries]
+"Theorem 1" = "μCMZ is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
+"Theorem 2" = "μBBS is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
+"Theorem 3" = "Compiling a polynomial interactive oracle proof with a designated-verifier polynomial commitment yields a designated-verifier fully-succinct SNARK without pairings."
+
+"Definition 3.1" = "Syntax of an algebraic message authentication code for n attributes over a prime-order group: the algorithms Setup, KeyGen, MAC, and Verify."
+
+"Definition 4.1" = "A credential predicate: an efficiently-computable function on attributes that fixes what a presentation proves."
+"Definition 4.2" = "A keyed-verification credential system KVAC = (Setup, KeyGen, Issue, Prove) for a predicate family."
+"Definition 4.3" = "Honestly issued credentials always produce accepting presentations for the predicates they satisfy."
+"Definition 4.4" = "Anonymity: issuance and presentation are simulatable without the secret attributes, so presentations are unlinkable across executions."
+"Definition 4.5" = "Extractability: an extractor recovers the certified attributes from any accepting presentation."
+
+"Theorem 5.1" = "In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under 3-DL (and DL), with advantage Adv^{3-dl} + Adv^{dl} + 3/p."
+"Theorem 5.2" = "If ZKP proves the relation R ⊇ R_cmz, then μCMZ is an extractable keyed-verification credential."
+"Theorem 5.3" = "If ZKP proves R ⊇ R_cmz.p ∪ R_cmz.is, then the variant μCMZ_AT is a one-more unforgeable anonymous token."
+"Lemma 5.4" = "Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p."
+"Lemma 5.5" = "Reduces n-attribute μCMZ security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p."
+"Claim 5.6" = "In the μCMZ unforgeability proof, the first forgery case is bounded by the gap discrete-log advantage."
+"Claim 5.7" = "In the μCMZ unforgeability proof, the second forgery case is bounded by the single-attribute MAC's UF-CMVA advantage."
+"Theorem 5.8" = "If ZKP proves R ⊇ R_cmz, then μCMZ is anonymous (issuance and presentation are simulatable)."
+"Theorem 5.10" = "If ZKP proves R ⊇ R_cmz, then μCMZ is extractable for the supported attribute family."
+"Theorem 5.11" = "In the algebraic group model, μCMZ_AT is a one-more unforgeable anonymous token for n attributes."
+"Claim 5.12" = "In the μCMZ_AT one-more unforgeability proof, case (i) occurs with probability at most q/p plus the discrete-log advantage."
+"Claim 5.13" = "In the μCMZ_AT one-more unforgeability proof, case (ii) occurs with probability at most 1/p plus the discrete-log advantage."
+"Claim 5.14" = "In the μCMZ_AT one-more unforgeability proof, case (iii) occurs with probability at most 3(1/p plus the 2-discrete-log advantage)."
+
+"Theorem 6.1" = "In the algebraic group model, μBBS is an n-attribute algebraic MAC, with the stated advantage."
+"Theorem 6.5" = "Gives the algebraic-MAC advantage of n-attribute μBBS over ℤ_p."
+"Theorem 6.6" = "If ZKP proves R ⊇ R_bbs, then μBBS is an extractable keyed-verification credential."
+"Theorem 6.7" = "If ZKP proves R ⊇ R_bbs.is ∪ R_bbs.p, then the variant μBBS_AT is a one-more unforgeable anonymous token."
+"Lemma 6.8" = "Base case of Theorem 6.1: in the algebraic group model, single-attribute μBBS is an algebraic MAC over ℤ_p."
+"Lemma 6.9" = "Reduces n-attribute μBBS security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p."
+"Theorem 6.10" = "If ZKP proves R ⊇ R_bbs, then μBBS is anonymous."
+"Theorem 6.11" = "If ZKP proves R ⊇ R_bbs, then n-attribute μBBS is extractable."
+"Lemma 6.12" = "Reduces the μBBS_AT one-more unforgeability game to q-strong discrete log (via Cheon's attack), quantifying the security loss."
+"Corollary 6.13" = "Exhibits a p.p.t. adversary breaking μBBS_AT one-more unforgeability through the Lemma 6.12 reduction."
+
+"Definition 7.1" = "Syntax and security of a designated-verifier polynomial commitment scheme over a field."
+"Theorem 7.3" = "dvKZG, a pairing-free designated-verifier variant of KZG, is a perfectly hiding polynomial commitment scheme."
+"Definition 7.4" = "A multi-round interactive oracle proof whose prover messages are low-degree polynomials, for an indexed relation."
+"Theorem 7.5" = "Compiling a knowledge-sound PIOP with a designated-verifier polynomial commitment yields a knowledge-sound designated-verifier argument."
+"Theorem 7.6" = "Compiling a bounded zero-knowledge PIOP with dvKZG yields a zero-knowledge designated-verifier argument."
+"Corollary 7.7" = "Combining the soundness and zero-knowledge compilers gives a designated-verifier fully-succinct zk-SNARK without pairings."
+
+"Theorem 8.2" = "The compiler cRTL[KVAC, PRF] turns a keyed-verification credential (predicates ⊇ {φ_prf, φ_range}) and a compatible PRF into a one-more unforgeable rate-limiting anonymous token."
+"Corollary 8.5" = "Instantiates the rate-limiting token from a one-more unforgeable KVAC_AT ∈ {μCMZ_AT, μBBS_AT} with an explicit advantage bound."
+"Lemma 8.6" = "Bounds the one-more unforgeability advantage of cRTL[KVAC, PRF] via reductions to KVAC extractability, anonymity, and PRF security (Theorem 8.2 analysis)."
+"Theorem 8.7" = "In the random oracle model, if q-DDHI holds over the group generator, the Dodis–Yampolskiy-style HashDY is a pseudorandom function."
+"Theorem 8.9" = "A re-randomizable single-attribute keyed-verification credential yields a secure keyed-verification pseudonym system."
+"Corollary 8.12" = "Instantiates the pseudonym system from a one-more unforgeable KVAC_AT ∈ {μCMZ_AT, μBBS_AT}."
+"Lemma 8.13" = "Security reduction underpinning the pseudonym construction (Theorem 8.9 analysis)."
+
+"Definition 9.1" = "A relation family is admissible if no p.p.t. adversary can find a non-zero kernel vector of the relation's matrix (or of its distinct group generators)."
+"Theorem 9.2" = "The Fiat–Shamir Σ-protocol for an admissible linear relation is strongly simulation-extractable (straight-line) in the algebraic group and random oracle models."
+
+# Sections carrying a formalizable object (assumptions, interfaces, primitives).
+"§3.1" = "The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI."
+"§3.3" = "The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs."
+"§3.4" = "Syntax and security of anonymous token schemes with non-interactive issuance."
+
+# Figures that are security games or constructions, i.e. core contributions.
+"Figure 5" = "The unforgeability-under-chosen-message-and-verification (UF-CMVA) security game for an algebraic MAC."
+"Figure 6" = "The one-more unforgeability game for an anonymous token scheme with non-interactive issuance."
+"Figure 8" = "The extractability game for a keyed-verification credential system, with attribute extractors Ext.I and Ext.P."
+"Figure 9" = "The μCMZ keyed-verification credential system construction (a variant of MAC_GGM); the boxed part is removable for the one-more unforgeable variant."
+"Figure 10" = "The μBBS keyed-verification credential system construction."
+
+# Equations are cite-driven: an entry here is shown only when a Lean docstring
+# cites it (`O24 Eq. N`). Do not add a summary for an equation no declaration
+# cites yet — `--check` flags it as a key naming no tracked element.
+"Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."

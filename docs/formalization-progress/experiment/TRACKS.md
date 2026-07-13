@@ -4,6 +4,8 @@ Status board for parallel work tracks. For the rationale and overall design, see
 
 Each track corresponds to one open issue (`track-0`, `track-A`, `track-pre`, …) and one or more `.lean` files under `KVAC/`. To claim a track, comment on its issue.
 
+> **Experiment — heuristic-derived, not canonical.** The check marks and `🟢`/`🌀`/`⚪` tags below are applied from `FORMALIZATION_PROGRESS.md`, an approximate map (see its header): `🟢` an element the tracker reports as *appearing* formalized, `🌀` a cited-but-kind-mismatched element, `⚪` nothing found — each a claim to review, not a verified fact. This is a scratch copy under `docs/formalization-progress/experiment/`; the canonical board is `docs/TRACKS.md`.
+
 > **Status:** The tracks and their dependencies below are a tentative suggestion for parallelizing the work, derived from the current state of [`PLAN.md`](PLAN.md). Track boundaries, the dependency graph, and even whether some tracks survive in their current form may change as we discover new dependencies, refactor the shared API, or reshape the plan. Coordinate any structural changes (splitting, merging, removing tracks) via the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot).
 
 ## Dependency graph
@@ -85,10 +87,10 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
   - Depends on: nothing
   - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
   - **Status** (split into sub-issues #18–#21):
-    - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
-    - [ ] `Hash.lean` — still a stub (#19).
-    - [ ] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 (externalized extractor + completeness) in review.
-    - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
+    - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`. Tracker: 🟢 O24 §3.1.
+    - [ ] `Hash.lean` — still a stub (#19). Tracker: ⚪.
+    - [x] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 closed (superseded by the paper-faithful NIZKP work). Tracker: 🟢 O24 §3.3 (agnostic `SimulationExtractable`).
+    - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5). Tracker: 🟢 O24 Definition 3.1, Figure 5.
 
 ## Wave 1 — start once Track 0 lands
 
@@ -99,7 +101,7 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Depends on: Track 0
   - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
   - **Status** (partial):
-    - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30).
+    - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30). Tracker: 🟢 O24 §3.1.
     - [ ] Remaining with #2: `ZKArguments.lean`, `AnonymousTokens.lean`, and q-DDHI (only needed by the §8.2 rate-limiting extension, Track Ext-RL).
 - [ ] **Track Σ** — Proof systems
   - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
@@ -122,9 +124,9 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
   - **Status** (split into sub-issues #39–#41 under #6):
-    - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
-    - [ ] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — in review (#40; PR #32).
-    - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32).
+    - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness. Tracker: 🟢 O24 Figure 9.
+    - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40; PR #32). Tracker: 🟢 O24 Equation 9.
+    - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32). Tracker: ⚪ (not yet on main / uncited).
     - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
 - [ ] **Track BBS-C** — μBBS construction
   - Modules: `KVAC/Schemes/MicroBBS/Construction.lean`
@@ -139,6 +141,7 @@ The security tracks for each scheme are mostly independent of the other scheme. 
   - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`
   - Depends on: Track CMZ-C
   - Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n). Uses straight-line extraction from Track Σ.
+  - Tracker: 🌀 O24 Theorem 5.1 — only the 3-DL assumption (`Assumptions.lean`) is formalized; the theorem itself is not.
 - [ ] **Track CMZ-A** — μCMZ anonymity (§5.4)
   - Modules: `KVAC/Schemes/MicroCMZ/Anonymity.lean`
   - Depends on: Track CMZ-C, Track F2
@@ -150,6 +153,7 @@ The security tracks for each scheme are mostly independent of the other scheme. 
 - [ ] **Track CMZ-OMUF** — μCMZ one-more unforgeability (§5.6)
   - Modules: `KVAC/Schemes/MicroCMZ/OneMoreUnforgeability.lean`
   - Depends on: Track CMZ-C, Track CMZ-M
+  - Tracker: 🌀 O24 Theorem 5.3 — only the 2-DL assumption (`Assumptions.lean`) is formalized; the theorem itself is not.
   - Theorem 5.3: μCMZ$_{AT}$ (the anonymous-token variant, with $\pi_{iu}$ removed) is one-more unforgeable in AGM under 2-DL. Reduces non-tightly to DL.
 - [ ] **Track BBS-M** — μBBS as algebraic MAC (§6.3)
   - Modules: `KVAC/Schemes/MicroBBS/AlgebraicMAC.lean`

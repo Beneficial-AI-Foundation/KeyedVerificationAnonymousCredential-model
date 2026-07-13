@@ -1,0 +1,1332 @@
+{
+  "source": {
+    "tag": "O24",
+    "title": "Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552",
+    "pdf": "docs/Orru_2024.pdf"
+  },
+  "paper": [
+    {
+      "key": "Theorem 1",
+      "kind": "Theorem",
+      "number": "1",
+      "label": "",
+      "statement": "µCMZ (Figure 1) is a keyed-verification anonymous credential system with extractability",
+      "section": "1.1",
+      "section_title": "Our contributions",
+      "page": 4,
+      "seq": 2,
+      "summary": "μCMZ is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
+    },
+    {
+      "key": "Theorem 2",
+      "kind": "Theorem",
+      "number": "2",
+      "label": "",
+      "statement": "µBBS (Figure 1) is a keyed-verification anonymous credential system with extractability",
+      "section": "1.1",
+      "section_title": "Our contributions",
+      "page": 4,
+      "seq": 3,
+      "summary": "μBBS is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
+    },
+    {
+      "key": "Theorem 3",
+      "kind": "Theorem",
+      "number": "3",
+      "label": "",
+      "statement": "Let IOP be a polynomial interactive oracle proofs. Let PCS be a designated-verifier",
+      "section": "1.1",
+      "section_title": "Our contributions",
+      "page": 5,
+      "seq": 4,
+      "summary": "Compiling a polynomial interactive oracle proof with a designated-verifier polynomial commitment yields a designated-verifier fully-succinct SNARK without pairings."
+    },
+    {
+      "key": "§3.1",
+      "kind": "Section",
+      "number": "3.1",
+      "label": "",
+      "statement": "Cryptographic assumptions",
+      "section": "3.1",
+      "section_title": "Cryptographic assumptions",
+      "page": 24,
+      "seq": 15,
+      "summary": "The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI."
+    },
+    {
+      "key": "Definition 3.1",
+      "kind": "Definition",
+      "number": "3.1",
+      "label": "",
+      "statement": "An algebraic message authentication code (MAC) for n attributes over",
+      "section": "3.2",
+      "section_title": "Algebraic message authentication codes",
+      "page": 24,
+      "seq": 17,
+      "summary": "Syntax of an algebraic message authentication code for n attributes over a prime-order group: the algorithms Setup, KeyGen, MAC, and Verify."
+    },
+    {
+      "key": "Figure 5",
+      "kind": "Figure",
+      "number": "5",
+      "label": "",
+      "statement": "Unforgeability of an algebraic message authentication code MAC.",
+      "section": "3.2",
+      "section_title": "Algebraic message authentication codes",
+      "page": 25,
+      "seq": 18,
+      "summary": "The unforgeability-under-chosen-message-and-verification (UF-CMVA) security game for an algebraic MAC."
+    },
+    {
+      "key": "§3.3",
+      "kind": "Section",
+      "number": "3.3",
+      "label": "",
+      "statement": "Zero-knowledge arguments",
+      "section": "3.3",
+      "section_title": "Zero-knowledge arguments",
+      "page": 25,
+      "seq": 19,
+      "summary": "The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs."
+    },
+    {
+      "key": "Figure 6",
+      "kind": "Figure",
+      "number": "6",
+      "label": "",
+      "statement": "One-more unforgeability game for an anonymous token scheme AT with non-interactive issuance.",
+      "section": "3.3",
+      "section_title": "Zero-knowledge arguments",
+      "page": 26,
+      "seq": 20,
+      "summary": "The one-more unforgeability game for an anonymous token scheme with non-interactive issuance."
+    },
+    {
+      "key": "§3.4",
+      "kind": "Section",
+      "number": "3.4",
+      "label": "",
+      "statement": "Anonymous Tokens",
+      "section": "3.4",
+      "section_title": "Anonymous Tokens",
+      "page": 26,
+      "seq": 21,
+      "summary": "Syntax and security of anonymous token schemes with non-interactive issuance."
+    },
+    {
+      "key": "Definition 4.1",
+      "kind": "Definition",
+      "number": "4.1",
+      "label": "",
+      "statement": "A credential predicate is an efficiently-computable function φ mapping some",
+      "section": "4.1",
+      "section_title": "Syntax",
+      "page": 28,
+      "seq": 25,
+      "summary": "A credential predicate: an efficiently-computable function on attributes that fixes what a presentation proves."
+    },
+    {
+      "key": "Definition 4.2",
+      "kind": "Definition",
+      "number": "4.2",
+      "label": "",
+      "statement": "A keyed-verification credential system KVAC = (S, K, I, P) for predicate family",
+      "section": "4.1",
+      "section_title": "Syntax",
+      "page": 28,
+      "seq": 26,
+      "summary": "A keyed-verification credential system KVAC = (Setup, KeyGen, Issue, Prove) for a predicate family."
+    },
+    {
+      "key": "Definition 4.3",
+      "kind": "Definition",
+      "number": "4.3",
+      "label": "Correctness",
+      "statement": "A keyed-verification credential system KVAC for a family of n ≤",
+      "section": "4.2",
+      "section_title": "Correctness",
+      "page": 29,
+      "seq": 28,
+      "summary": "Honestly issued credentials always produce accepting presentations for the predicates they satisfy."
+    },
+    {
+      "key": "Definition 4.4",
+      "kind": "Definition",
+      "number": "4.4",
+      "label": "",
+      "statement": "A keyed-verification credential system KVAC for a family of n ≤ poly(λ) attributes,",
+      "section": "4.3",
+      "section_title": "Anonymity",
+      "page": 30,
+      "seq": 30,
+      "summary": "Anonymity: issuance and presentation are simulatable without the secret attributes, so presentations are unlinkable across executions."
+    },
+    {
+      "key": "Figure 8",
+      "kind": "Figure",
+      "number": "8",
+      "label": "",
+      "statement": "Extraction game for a keyed-verification credential system KVAC with extractors Ext.I and Ext.P,",
+      "section": "4.3",
+      "section_title": "Anonymity",
+      "page": 31,
+      "seq": 31,
+      "summary": "The extractability game for a keyed-verification credential system, with attribute extractors Ext.I and Ext.P."
+    },
+    {
+      "key": "Definition 4.5",
+      "kind": "Definition",
+      "number": "4.5",
+      "label": "",
+      "statement": "A keyed-verification credential system KVAC for a family of n ≤ poly(λ) attributes,",
+      "section": "4.4",
+      "section_title": "Extractability",
+      "page": 31,
+      "seq": 33,
+      "summary": "Extractability: an extractor recovers the certified attributes from any accepting presentation."
+    },
+    {
+      "key": "Equation 9",
+      "kind": "Equation",
+      "number": "9",
+      "label": "",
+      "statement": "",
+      "section": "",
+      "section_title": "",
+      "page": 33,
+      "seq": 110,
+      "summary": "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
+    },
+    {
+      "key": "Figure 9",
+      "kind": "Figure",
+      "number": "9",
+      "label": "",
+      "statement": "The keyed-verification credential system µCMZ. Boxed , the part that may be removed for",
+      "section": "5.1",
+      "section_title": "Protocol description",
+      "page": 34,
+      "seq": 36,
+      "summary": "The μCMZ keyed-verification credential system construction (a variant of MAC_GGM); the boxed part is removable for the one-more unforgeable variant."
+    },
+    {
+      "key": "Theorem 5.1",
+      "kind": "Theorem",
+      "number": "5.1",
+      "label": "",
+      "statement": "In the algebraic group model, µCMZ is an algebraic MAC for n = poly(λ) attributes",
+      "section": "5.2",
+      "section_title": "Theorems",
+      "page": 35,
+      "seq": 38,
+      "summary": "In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under 3-DL (and DL), with advantage Adv^{3-dl} + Adv^{dl} + 3/p."
+    },
+    {
+      "key": "Theorem 5.2",
+      "kind": "Theorem",
+      "number": "5.2",
+      "label": "",
+      "statement": "If ZKP is a proof system for the relation R ⊇ Rcmz , then µCMZ is a keyed-verification",
+      "section": "5.2",
+      "section_title": "Theorems",
+      "page": 35,
+      "seq": 39,
+      "summary": "If ZKP proves the relation R ⊇ R_cmz, then μCMZ is an extractable keyed-verification credential."
+    },
+    {
+      "key": "Theorem 5.3",
+      "kind": "Theorem",
+      "number": "5.3",
+      "label": "",
+      "statement": "If ZKP is a proof system for the relation R ⊇ Rcmz.p ∪ Rcmz.is , then µCMZAT is an",
+      "section": "5.2",
+      "section_title": "Theorems",
+      "page": 35,
+      "seq": 40,
+      "summary": "If ZKP proves R ⊇ R_cmz.p ∪ R_cmz.is, then the variant μCMZ_AT is a one-more unforgeable anonymous token."
+    },
+    {
+      "key": "Lemma 5.4",
+      "kind": "Lemma",
+      "number": "5.4",
+      "label": "",
+      "statement": "In the algebraic group model, µCMZ is an algebraic MAC for n = 1 attributes in Zp",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 36,
+      "seq": 42,
+      "summary": "Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p."
+    },
+    {
+      "key": "Lemma 5.5",
+      "kind": "Lemma",
+      "number": "5.5",
+      "label": "",
+      "statement": "µCMZ is an algebraic MAC for n = poly(λ) attributes in Zp with advantage:",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 38,
+      "seq": 43,
+      "summary": "Reduces n-attribute μCMZ security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p."
+    },
+    {
+      "key": "Claim 5.6",
+      "kind": "Claim",
+      "number": "5.6",
+      "label": "",
+      "statement": "Item (i) happens with advantage Advgapdl",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 39,
+      "seq": 44,
+      "summary": "In the μCMZ unforgeability proof, the first forgery case is bounded by the gap discrete-log advantage."
+    },
+    {
+      "key": "Claim 5.7",
+      "kind": "Claim",
+      "number": "5.7",
+      "label": "",
+      "statement": "Item (ii) happens with advantage at most Advufcmva",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 39,
+      "seq": 45,
+      "summary": "In the μCMZ unforgeability proof, the second forgery case is bounded by the single-attribute MAC's UF-CMVA advantage."
+    },
+    {
+      "key": "Theorem 5.8",
+      "kind": "Theorem",
+      "number": "5.8",
+      "label": "",
+      "statement": "If ZKP a proof system for the relation R ⊇ Rcmz , then µCMZ is anonymous for",
+      "section": "5.4",
+      "section_title": "Anonymity",
+      "page": 40,
+      "seq": 47,
+      "summary": "If ZKP proves R ⊇ R_cmz, then μCMZ is anonymous (issuance and presentation are simulatable)."
+    },
+    {
+      "key": "Theorem 5.10",
+      "kind": "Theorem",
+      "number": "5.10",
+      "label": "",
+      "statement": "If ZKP is a proof system for the relation R ⊇ Rcmz , then µCMZ is extractable for",
+      "section": "5.5",
+      "section_title": "Extractability",
+      "page": 42,
+      "seq": 49,
+      "summary": "If ZKP proves R ⊇ R_cmz, then μCMZ is extractable for the supported attribute family."
+    },
+    {
+      "key": "Theorem 5.11",
+      "kind": "Theorem",
+      "number": "5.11",
+      "label": "",
+      "statement": "In the algebraic group model, µCMZAT is an anonymous token for n = poly(λ)",
+      "section": "5.6",
+      "section_title": "One-more unforgeability",
+      "page": 43,
+      "seq": 51,
+      "summary": "In the algebraic group model, μCMZ_AT is a one-more unforgeable anonymous token for n attributes."
+    },
+    {
+      "key": "Claim 5.12",
+      "kind": "Claim",
+      "number": "5.12",
+      "label": "",
+      "statement": "Item (i) happens with probability at most q 1/p + Advdl",
+      "section": "5.6",
+      "section_title": "One-more unforgeability",
+      "page": 46,
+      "seq": 52,
+      "summary": "In the μCMZ_AT one-more unforgeability proof, case (i) occurs with probability at most q/p plus the discrete-log advantage."
+    },
+    {
+      "key": "Claim 5.13",
+      "kind": "Claim",
+      "number": "5.13",
+      "label": "",
+      "statement": "Item (ii) happens with probability at most 1/p + Advdl",
+      "section": "5.6",
+      "section_title": "One-more unforgeability",
+      "page": 47,
+      "seq": 53,
+      "summary": "In the μCMZ_AT one-more unforgeability proof, case (ii) occurs with probability at most 1/p plus the discrete-log advantage."
+    },
+    {
+      "key": "Claim 5.14",
+      "kind": "Claim",
+      "number": "5.14",
+      "label": "",
+      "statement": "Item (iii) happens with probability at most 3(1/p + Adv2-dl",
+      "section": "5.6",
+      "section_title": "One-more unforgeability",
+      "page": 47,
+      "seq": 54,
+      "summary": "In the μCMZ_AT one-more unforgeability proof, case (iii) occurs with probability at most 3(1/p plus the 2-discrete-log advantage)."
+    },
+    {
+      "key": "Figure 10",
+      "kind": "Figure",
+      "number": "10",
+      "label": "",
+      "statement": "The keyed-verification credential system µBBS. The variable φ denotes the arbitrary predicates",
+      "section": "5.6",
+      "section_title": "One-more unforgeability",
+      "page": 48,
+      "seq": 55,
+      "summary": "The μBBS keyed-verification credential system construction."
+    },
+    {
+      "key": "Theorem 6.1",
+      "kind": "Theorem",
+      "number": "6.1",
+      "label": "",
+      "statement": "In the algebraic group model, µBBS is an algebraic MAC for n = poly(λ) attributes",
+      "section": "6.1",
+      "section_title": "Protocol description",
+      "page": 49,
+      "seq": 58,
+      "summary": "In the algebraic group model, μBBS is an n-attribute algebraic MAC, with the stated advantage."
+    },
+    {
+      "key": "Theorem 6.5",
+      "kind": "Theorem",
+      "number": "6.5",
+      "label": "",
+      "statement": "µBBS is an algebraic MAC for n = poly(λ) attributes in Zp with advantage:",
+      "section": "6.2",
+      "section_title": "Theorems",
+      "page": 50,
+      "seq": 60,
+      "summary": "Gives the algebraic-MAC advantage of n-attribute μBBS over ℤ_p."
+    },
+    {
+      "key": "Theorem 6.6",
+      "kind": "Theorem",
+      "number": "6.6",
+      "label": "",
+      "statement": "If ZKP is a proof system for R ⊇ Rbbs , then µBBS is a keyed-verification extractable",
+      "section": "6.2",
+      "section_title": "Theorems",
+      "page": 50,
+      "seq": 61,
+      "summary": "If ZKP proves R ⊇ R_bbs, then μBBS is an extractable keyed-verification credential."
+    },
+    {
+      "key": "Theorem 6.7",
+      "kind": "Theorem",
+      "number": "6.7",
+      "label": "",
+      "statement": "If ZKP is a proof system for the relation R ⊇ Rbbs.is ∪ Rbbs.p , them µBBSAT is an",
+      "section": "6.2",
+      "section_title": "Theorems",
+      "page": 50,
+      "seq": 62,
+      "summary": "If ZKP proves R ⊇ R_bbs.is ∪ R_bbs.p, then the variant μBBS_AT is a one-more unforgeable anonymous token."
+    },
+    {
+      "key": "Lemma 6.8",
+      "kind": "Lemma",
+      "number": "6.8",
+      "label": "",
+      "statement": "In the algebraic group model, µBBS is an algebraic MAC for n = 1 attributes in Zp",
+      "section": "6.3",
+      "section_title": "Algebraic MAC",
+      "page": 51,
+      "seq": 64,
+      "summary": "Base case of Theorem 6.1: in the algebraic group model, single-attribute μBBS is an algebraic MAC over ℤ_p."
+    },
+    {
+      "key": "Lemma 6.9",
+      "kind": "Lemma",
+      "number": "6.9",
+      "label": "",
+      "statement": "µBBS is an algebraic MAC for n = poly(λ) attributes in Zp with advantage:",
+      "section": "6.3",
+      "section_title": "Algebraic MAC",
+      "page": 52,
+      "seq": 65,
+      "summary": "Reduces n-attribute μBBS security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p."
+    },
+    {
+      "key": "Theorem 6.10",
+      "kind": "Theorem",
+      "number": "6.10",
+      "label": "",
+      "statement": "Let ZKP be a proof system for the relation R ⊇ Rbbs , then µBBS is anonymous",
+      "section": "6.4",
+      "section_title": "Anonymity",
+      "page": 53,
+      "seq": 67,
+      "summary": "If ZKP proves R ⊇ R_bbs, then μBBS is anonymous."
+    },
+    {
+      "key": "Theorem 6.11",
+      "kind": "Theorem",
+      "number": "6.11",
+      "label": "",
+      "statement": "If ZKP is a proof system for the relation R ⊇ Rbbs , then µBBS for n = poly(λ) is",
+      "section": "6.5",
+      "section_title": "Extractability",
+      "page": 55,
+      "seq": 69,
+      "summary": "If ZKP proves R ⊇ R_bbs, then n-attribute μBBS is extractable."
+    },
+    {
+      "key": "Lemma 6.12",
+      "kind": "Lemma",
+      "number": "6.12",
+      "label": "",
+      "statement": "There exists a reduction for the game OMUFµBBSAT ,A (λ, n) to q- DLGrGen,A (λ) with:",
+      "section": "6.6",
+      "section_title": "One-more unforgeability analysis",
+      "page": 56,
+      "seq": 71,
+      "summary": "Reduces the μBBS_AT one-more unforgeability game to q-strong discrete log (via Cheon's attack), quantifying the security loss."
+    },
+    {
+      "key": "Corollary 6.13",
+      "kind": "Corollary",
+      "number": "6.13",
+      "label": "",
+      "statement": "There exists a p.p.t. adversary A for one-morenunforgeability of µBBSAT that can",
+      "section": "6.6",
+      "section_title": "One-more unforgeability analysis",
+      "page": 57,
+      "seq": 72,
+      "summary": "Exhibits a p.p.t. adversary breaking μBBS_AT one-more unforgeability through the Lemma 6.12 reduction."
+    },
+    {
+      "key": "Definition 7.1",
+      "kind": "Definition",
+      "number": "7.1",
+      "label": "",
+      "statement": "A designated-verifier polynomial commitment scheme (PCS) over the field",
+      "section": "7",
+      "section_title": "Designated-verifier fully-succinct SNARKs without pairings",
+      "page": 58,
+      "seq": 74,
+      "summary": "Syntax and security of a designated-verifier polynomial commitment scheme over a field."
+    },
+    {
+      "key": "Theorem 7.3",
+      "kind": "Theorem",
+      "number": "7.3",
+      "label": "",
+      "statement": "dvKZG is a perfectly hiding polynomial commitment scheme.",
+      "section": "7.1",
+      "section_title": "Designated-verifier Kate–Zaverucha–Goldberg commitments",
+      "page": 60,
+      "seq": 76,
+      "summary": "dvKZG, a pairing-free designated-verifier variant of KZG, is a perfectly hiding polynomial commitment scheme."
+    },
+    {
+      "key": "Definition 7.4",
+      "kind": "Definition",
+      "number": "7.4",
+      "label": "PIOP",
+      "statement": "A polynomial interactive oracle proof for an indexed relation R over",
+      "section": "7.2",
+      "section_title": "IOP compiler for designated-verifier polynomial commitments",
+      "page": 61,
+      "seq": 78,
+      "summary": "A multi-round interactive oracle proof whose prover messages are low-degree polynomials, for an indexed relation."
+    },
+    {
+      "key": "Theorem 7.5",
+      "kind": "Theorem",
+      "number": "7.5",
+      "label": "",
+      "statement": "Let IOP be a knowledge-sound, polynomial interactive oracle proof over field family",
+      "section": "7.2",
+      "section_title": "IOP compiler for designated-verifier polynomial commitments",
+      "page": 62,
+      "seq": 79,
+      "summary": "Compiling a knowledge-sound PIOP with a designated-verifier polynomial commitment yields a knowledge-sound designated-verifier argument."
+    },
+    {
+      "key": "Theorem 7.6",
+      "kind": "Theorem",
+      "number": "7.6",
+      "label": "",
+      "statement": "Let IOP be a q-query bounded zero-knowledge polynomial interactive oracle proof for",
+      "section": "7.2",
+      "section_title": "IOP compiler for designated-verifier polynomial commitments",
+      "page": 63,
+      "seq": 80,
+      "summary": "Compiling a bounded zero-knowledge PIOP with dvKZG yields a zero-knowledge designated-verifier argument."
+    },
+    {
+      "key": "Corollary 7.7",
+      "kind": "Corollary",
+      "number": "7.7",
+      "label": "",
+      "statement": "Let IOP be a q-query bounded zero-knowledge polynomial interactive oracle proof",
+      "section": "7.2",
+      "section_title": "IOP compiler for designated-verifier polynomial commitments",
+      "page": 63,
+      "seq": 81,
+      "summary": "Combining the soundness and zero-knowledge compilers gives a designated-verifier fully-succinct zk-SNARK without pairings."
+    },
+    {
+      "key": "Theorem 8.2",
+      "kind": "Theorem",
+      "number": "8.2",
+      "label": "",
+      "statement": "Let ` > 0, and Φ ⊃ {φprf , φrange }. If KVAC be a keyed-verification credential for",
+      "section": "8.2",
+      "section_title": "Rate-limiting",
+      "page": 67,
+      "seq": 86,
+      "summary": "The compiler cRTL[KVAC, PRF] turns a keyed-verification credential (predicates ⊇ {φ_prf, φ_range}) and a compatible PRF into a one-more unforgeable rate-limiting anonymous token."
+    },
+    {
+      "key": "Corollary 8.5",
+      "kind": "Corollary",
+      "number": "8.5",
+      "label": "",
+      "statement": "Let ` > 0, and Φ ⊃ {φprf , φrange }. Consider a one-more unforgeable keyed-",
+      "section": "8.2",
+      "section_title": "Rate-limiting",
+      "page": 68,
+      "seq": 87,
+      "summary": "Instantiates the rate-limiting token from a one-more unforgeable KVAC_AT ∈ {μCMZ_AT, μBBS_AT} with an explicit advantage bound."
+    },
+    {
+      "key": "Lemma 8.6",
+      "kind": "Lemma",
+      "number": "8.6",
+      "label": "",
+      "statement": "Let ` > 0, and Φ ⊃ {φprf , φrange }. If KVAC be a keyed-verification credential for",
+      "section": "8.2",
+      "section_title": "Rate-limiting",
+      "page": 68,
+      "seq": 88,
+      "summary": "Bounds the one-more unforgeability advantage of cRTL[KVAC, PRF] via reductions to KVAC extractability, anonymity, and PRF security (Theorem 8.2 analysis)."
+    },
+    {
+      "key": "Theorem 8.7",
+      "kind": "Theorem",
+      "number": "8.7",
+      "label": "",
+      "statement": "In the random oracle model, if q-DDHI holds over GrGen, then HashDY is pseudo-",
+      "section": "8.2",
+      "section_title": "Rate-limiting",
+      "page": 69,
+      "seq": 89,
+      "summary": "In the random oracle model, if q-DDHI holds over the group generator, the Dodis–Yampolskiy-style HashDY is a pseudorandom function."
+    },
+    {
+      "key": "Theorem 8.9",
+      "kind": "Theorem",
+      "number": "8.9",
+      "label": "",
+      "statement": "Let KVAC be a keyed-verification credential for n = 1 attributes, with re-randomizable",
+      "section": "8.3",
+      "section_title": "Pseudonyms",
+      "page": 73,
+      "seq": 93,
+      "summary": "A re-randomizable single-attribute keyed-verification credential yields a secure keyed-verification pseudonym system."
+    },
+    {
+      "key": "Corollary 8.12",
+      "kind": "Corollary",
+      "number": "8.12",
+      "label": "",
+      "statement": "Consider a one-more unforgeable keyed-verification credential KVACAT ∈ {µCMZAT , µBBSAT },",
+      "section": "8.3",
+      "section_title": "Pseudonyms",
+      "page": 74,
+      "seq": 94,
+      "summary": "Instantiates the pseudonym system from a one-more unforgeable KVAC_AT ∈ {μCMZ_AT, μBBS_AT}."
+    },
+    {
+      "key": "Lemma 8.13",
+      "kind": "Lemma",
+      "number": "8.13",
+      "label": "",
+      "statement": "Let KVAC be a keyed-verification credential for n = 1 attributes, with re-randomizable",
+      "section": "8.3",
+      "section_title": "Pseudonyms",
+      "page": 74,
+      "seq": 95,
+      "summary": "Security reduction underpinning the pseudonym construction (Theorem 8.9 analysis)."
+    },
+    {
+      "key": "Definition 9.1",
+      "kind": "Definition",
+      "number": "9.1",
+      "label": "",
+      "statement": "A relation family RF is admissible if: for any p.p.t. adversary A, it is compu-",
+      "section": "9",
+      "section_title": "Straight-line extraction from Σ-protocols",
+      "page": 77,
+      "seq": 98,
+      "summary": "A relation family is admissible if no p.p.t. adversary can find a non-zero kernel vector of the relation's matrix (or of its distinct group generators)."
+    },
+    {
+      "key": "Theorem 9.2",
+      "kind": "Theorem",
+      "number": "9.2",
+      "label": "",
+      "statement": "The protocol Σ for an admissible relation R F is strongly simulation-extractable in",
+      "section": "9",
+      "section_title": "Straight-line extraction from Σ-protocols",
+      "page": 77,
+      "seq": 99,
+      "summary": "The Fiat–Shamir Σ-protocol for an admissible linear relation is strongly simulation-extractable (straight-line) in the algebraic group and random oracle models."
+    }
+  ],
+  "lean": [
+    {
+      "file": "KVAC/Core/AlgebraicMAC/Construction.lean",
+      "module_refs": [
+        "Definition 3.1",
+        "Figure 5"
+      ],
+      "decls": [
+        {
+          "name": "AlgebraicMACSyntax",
+          "kind": "structure",
+          "file": "KVAC/Core/AlgebraicMAC/Construction.lean",
+          "line": 94,
+          "refs": [
+            "Definition 3.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "MsgVec",
+          "kind": "abbrev",
+          "file": "KVAC/Core/AlgebraicMAC/Construction.lean",
+          "line": 141,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/AlgebraicMAC/Correctness.lean",
+      "module_refs": [
+        "Definition 3.1"
+      ],
+      "decls": [
+        {
+          "name": "preserves",
+          "kind": "structure",
+          "file": "KVAC/Core/AlgebraicMAC/Correctness.lean",
+          "line": 37,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Correct",
+          "kind": "def",
+          "file": "KVAC/Core/AlgebraicMAC/Correctness.lean",
+          "line": 60,
+          "refs": [
+            "Definition 3.1"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+      "module_refs": [
+        "Figure 5"
+      ],
+      "decls": [
+        {
+          "name": "UFQuery",
+          "kind": "inductive",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 57,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "UFOracleSpec",
+          "kind": "def",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 69,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "UFAdversary",
+          "kind": "structure",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 79,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "SignedLog",
+          "kind": "abbrev",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 89,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ufOracleImpl",
+          "kind": "def",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 99,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "UF_CMVAGame",
+          "kind": "def",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 113,
+          "refs": [
+            "Figure 5"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "UF_CMVAAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Core/AlgebraicMAC/Security.lean",
+          "line": 130,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/AlgebraicMAC.lean",
+      "module_refs": [
+        "Definition 3.1"
+      ],
+      "decls": [
+        {
+          "name": "AlgebraicMAC",
+          "kind": "structure",
+          "file": "KVAC/Core/AlgebraicMAC.lean",
+          "line": 62,
+          "refs": [
+            "Definition 3.1"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/Group.lean",
+      "module_refs": [
+        "§3.1"
+      ],
+      "decls": [
+        {
+          "name": "PrimeOrderGroup",
+          "kind": "abbrev",
+          "file": "KVAC/Core/Group.lean",
+          "line": 95,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "SampleableGroup",
+          "kind": "abbrev",
+          "file": "KVAC/Core/Group.lean",
+          "line": 125,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/Hash.lean",
+      "module_refs": [],
+      "decls": []
+    },
+    {
+      "file": "KVAC/Core/NIZKP/Basic.lean",
+      "module_refs": [],
+      "decls": [
+        {
+          "name": "NIZKPScheme",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 56,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "SecurityModel",
+          "kind": "class",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 76,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "KnowledgeSound",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 107,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ZeroKnowledge",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 117,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Extractable",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 127,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "SimulationExtractable",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 136,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SimulationExtractable.toZeroKnowledge",
+          "kind": "theorem",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 141,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "SmallPFunctor",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 161,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "FreeNIZKPScheme",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Basic.lean",
+          "line": 168,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/ZKProof.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": []
+    },
+    {
+      "file": "KVAC/Preliminaries/Assumptions.lean",
+      "module_refs": [
+        "§3.1",
+        "Theorem 5.1"
+      ],
+      "decls": [
+        {
+          "name": "QDLogAdversary",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 54,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "qdlogExp",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 59,
+          "refs": [
+            "§3.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "qdlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 65,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "threeDlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 69,
+          "refs": [
+            "Theorem 5.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "twoDlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 73,
+          "refs": [
+            "Theorem 5.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "dlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 77,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "GapDLogOracleSpec",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 85,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "GapDLogAdversary",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 89,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gapDdhOracleImpl",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 94,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gapDlogExp",
+          "kind": "def",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 100,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gapDlogAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Preliminaries/Assumptions.lean",
+          "line": 107,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+      "module_refs": [
+        "§5.1",
+        "Figure 9",
+        "Theorem 5.1"
+      ],
+      "decls": [
+        {
+          "name": "instSampleableTypeNeZero",
+          "kind": "instance",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 116,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "uniformNonzero",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 128,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "mem_support_uniformNonzero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 136,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Key",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 148,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Params",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 149,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Code",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 150,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "macScalar",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 164,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "setup",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 169,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "keygen",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 172,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "mac",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 184,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "verify",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 189,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "μCMZBaseMACSyntax",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 223,
+          "refs": [
+            "§5.1",
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "μCMZBaseMAC_correct",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 243,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "μCMZBaseMAC",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
+          "line": 257,
+          "refs": [
+            "Definition 3.1"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+      "module_refs": [
+        "§5.1",
+        "Figure 9",
+        "Equation 9"
+      ],
+      "decls": [
+        {
+          "name": "probOutput_decide_bind₃",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 84,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "probOutput_decide_bind₄",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 109,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "probOutput_bind_uniform_congr",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 137,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuBases",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 146,
+          "refs": [
+            "Equation 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuPolicy",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 149,
+          "refs": [
+            "Equation 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuStmt",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 154,
+          "refs": [
+            "Figure 9",
+            "Equation 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "trivialPolicy",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 158,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuRel",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 163,
+          "refs": [
+            "Figure 9",
+            "Equation 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 170,
+          "refs": [
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_complete",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 187,
+          "refs": [
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "Enforces",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 210,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "enforces_trivialPolicy",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 218,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_speciallySoundAt",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 228,
+          "refs": [
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_speciallySoundAt_trivial",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 260,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "simTranscriptValue",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 267,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSimTranscript",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 273,
+          "refs": [
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "riuSigma_hvzk",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 281,
+          "refs": [
+            "Equation 9"
+          ],
+          "has_sorry": false
+        }
+      ]
+    }
+  ]
+}
