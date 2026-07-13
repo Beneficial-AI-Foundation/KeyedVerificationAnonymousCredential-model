@@ -191,8 +191,8 @@
       "number": "9",
       "label": "",
       "statement": "",
-      "section": "",
-      "section_title": "",
+      "section": "5.1",
+      "section_title": "Protocol description",
       "page": 33,
       "seq": 110,
       "summary": "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."

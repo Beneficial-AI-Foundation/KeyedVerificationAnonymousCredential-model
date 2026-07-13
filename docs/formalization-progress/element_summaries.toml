@@ -102,3 +102,6 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 # The µBBS system figure sits on page 48 just above the "6 Boneh–Boyen–Shacham
 # credentials" heading, so the extractor files it under §5.6; it belongs to §6.
 "Figure 10" = "6"
+# Cite-driven equations carry no extracted section; Eq. 9 (R_iu) is stated in
+# the µCMZ issuance protocol, §5.1.
+"Equation 9" = "5.1"

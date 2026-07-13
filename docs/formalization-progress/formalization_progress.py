@@ -588,7 +588,8 @@ _DIM_OPEN, _DIM_CLOSE = '<span style="color:#a0a0a0">', "</span>"
 def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
                     lean: list[LeanFile], summaries: dict[str, str],
                     dim: list[str], dim_note: str,
-                    sec_titles: dict[str, str]) -> str:
+                    sec_titles: dict[str, str],
+                    universe_counts: dict[str, int]) -> str:
     status = {e.key: element_status(e, by_key) for e in paper}
     formalized = sum(1 for e in paper if status[e.key][0] == ST_DONE)
     covered = sum(1 for e in paper if e.key in by_key)
@@ -634,9 +635,11 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     def link(repo_rel_path: str) -> str:
         return os.path.relpath(REPO / repo_rel_path, base)
 
-    # Breakdown by paper element kind: catalogued vs formalized (✅), with the
-    # member elements listed by number, each linking to its page in the PDF
-    # (dimmed individually when out of scope).
+    # Breakdown by paper element kind. "In paper" is the paper's universe of
+    # that kind (figure/equation totals estimated from their sequential
+    # numbering); "Tracked elements" lists the members the detail table
+    # follows, each linking to its page (dimmed individually when out of
+    # scope). Coverage divides by the paper's count, not the tracked one.
     paper_kinds: dict[str, list] = {}
     for e in paper:
         cell = paper_kinds.setdefault(e.kind, [0, 0, []])
@@ -648,38 +651,52 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
             num = f"{_DIM_OPEN}{num}{_DIM_CLOSE}"
         cell[2].append(num)
     out.append("### By paper element\n")
-    out.append("| Element kind | Elements | In paper | Formalized | Coverage |")
+    out.append("`In paper` counts the paper's elements of each kind (figure "
+               "and equation totals are estimated from their numbering); "
+               "`Tracked elements` lists the ones the table below follows — "
+               "all numbered environments, the curated figures and sections, "
+               "and the cited equations.\n")
+    out.append("| Element kind | Tracked elements | In paper | Formalized | "
+               "Coverage |")
     out.append("|---|---|--:|--:|--:|")
+    universe_total = 0
     for kind in sorted(paper_kinds):
         n, c, nums = paper_kinds[kind]
-        out.append(f"| {kind} | {', '.join(nums)} | {n} | {c} | "
-                   f"{100 * c // n if n else 0}% |")
-    out.append(f"| **Total** | | **{total}** | **{formalized}** | "
-               f"**{100 * formalized // total if total else 0}%** |\n")
+        n_paper = max(universe_counts.get(kind, n), n)
+        universe_total += n_paper
+        out.append(f"| {kind} | {', '.join(nums)} | {n_paper} | {c} | "
+                   f"{100 * c // n_paper if n_paper else 0}% |")
+    out.append(f"| **Total** | | **{universe_total}** | **{formalized}** | "
+               f"**{100 * formalized // universe_total if universe_total else 0}%** |\n")
 
     # Breakdown by top-level paper section — one row per protocol/topic
-    # (§5 µCMZ, §6 µBBS, ...). Out-of-scope sections render dimmed, matching
-    # the element table.
-    sections: dict[str, list[int]] = {}
+    # (§5 µCMZ, §6 µBBS, ...), listing the tracked elements of each section.
+    # Out-of-scope sections render dimmed, matching the element table.
+    sections: dict[str, list] = {}
     for e in paper:
         num = e.number if e.kind == "Section" else e.section
         top = num.split(".")[0] if num else "—"
-        cell = sections.setdefault(top, [0, 0])
+        cell = sections.setdefault(top, [0, 0, []])
         cell[0] += 1
         if status[e.key][0] == ST_DONE:
             cell[1] += 1
+        key = f"[{e.key}]({pdf_rel}#page={e.page})"
+        if is_dimmed(e, dim):
+            key = f"{_DIM_OPEN}{key}{_DIM_CLOSE}"
+        cell[2].append(key)
     out.append("### By paper section\n")
-    out.append("| Section | In paper | Formalized | Coverage |")
-    out.append("|---|--:|--:|--:|")
+    out.append("| Section | Tracked elements | Tracked | Formalized | "
+               "Coverage |")
+    out.append("|---|---|--:|--:|--:|")
     for top in sorted(sections, key=lambda k: (k == "—", int(k) if k.isdigit()
                                                else 0)):
-        n, c = sections[top]
+        n, c, keys = sections[top]
         label = (f"§{top} {sec_titles.get(top, '')}".strip() if top != "—"
                  else "(unsectioned)")
-        cells = [label, str(n), str(c), f"{100 * c // n if n else 0}%"]
         if f"§{top}" in dim:
-            cells = [f"{_DIM_OPEN}{c_}{_DIM_CLOSE}" for c_ in cells]
-        out.append("| " + " | ".join(cells) + " |")
+            label = f"{_DIM_OPEN}{label}{_DIM_CLOSE}"
+        out.append(f"| {label} | {', '.join(keys)} | {n} | {c} | "
+                   f"{100 * c // n if n else 0}% |")
     out.append("")
 
     # Breakdown by Lean declaration kind: total vs those citing the paper.
@@ -1077,6 +1094,23 @@ def cmd_report(args) -> int:
     paper_all = paper_all + equation_elements(
         text, cited_equation_keys(lean), load_page_overrides(src.summaries),
         base_seq=len(paper_all))
+    # Universe sizes per kind: how many elements of each kind the paper
+    # contains, independent of curation and citation. Numbered environments
+    # are always tracked, so their extracted count is the universe. Figures
+    # and equations are numbered sequentially, so the largest number seen is
+    # the estimate of the total (captions and equation lines the extraction
+    # misses do not lower it). Sections count every extracted heading.
+    universe_counts: dict[str, int] = {}
+    for e in paper_all:
+        universe_counts[e.kind] = universe_counts.get(e.kind, 0) + 1
+    fig_nums = [int(e.number) for e in paper_all if e.kind == "Figure"]
+    if fig_nums:
+        universe_counts["Figure"] = max(universe_counts["Figure"],
+                                        max(fig_nums))
+    eq_nums = [n for n in locate_equations(text) if n >= 1]
+    if eq_nums:
+        universe_counts["Equation"] = max(universe_counts.get("Equation", 0),
+                                          max(eq_nums))
     # Section number -> title, from the extracted TOC (section elements).
     sec_titles = {e.number: e.statement for e in paper_all
                   if e.kind == "Section"}
@@ -1095,7 +1129,7 @@ def cmd_report(args) -> int:
     paper.sort(key=lambda e: (e.page, e.seq))
     by_key = build(paper, lean)
     md = render_markdown(src, paper, by_key, lean, summaries, dim, dim_note,
-                         sec_titles)
+                         sec_titles, universe_counts)
 
     # Drift the tool exists to catch: a Lean citation or a summary key that names
     # no element in the paper universe (a typo like `O24 Theorem 5.9`, a
