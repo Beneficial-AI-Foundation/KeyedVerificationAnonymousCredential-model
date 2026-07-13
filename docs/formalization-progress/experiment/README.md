@@ -32,35 +32,45 @@ Contributions are very welcome. Start by reading [`CONTRIBUTING.md`](CONTRIBUTIN
 
 ## Status
 
+> **Experiment — heuristic-derived, not canonical.** The tags below are applied
+> from `FORMALIZATION_PROGRESS.md`, an approximate map (see its header). `🟢 O24 …`
+> marks an element the tracker reports as *appearing* formalized; `🌀` a
+> cited-but-kind-mismatched element; `⚪` nothing found. Each is a claim to review,
+> not a verified fact. This is a scratch copy under
+> `docs/formalization-progress/experiment/`; the canonical board is `README.md`.
+
 When a track is split into sub-issues, list them as nested bullets under the track (as Track 0 is below).
 
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
-  - [X] `Core/Group.lean` ([#18])
-  - [ ] `Core/Hash.lean` ([#19])
+  - [X] `Core/Group.lean` ([#18]) — 🟢 O24 §3.1
+  - [ ] `Core/Hash.lean` ([#19]) — ⚪ still a stub
   - [X] `Core/ZKProof.lean` ([#20])
-  - [X] `Core/NIZKP/Basic.lean` ([#20])
-  - [X] `Core/AlgebraicMAC.lean` ([#21])
+  - [X] `Core/NIZKP/Basic.lean` ([#20]) — 🟢 O24 §3.3 (agnostic spec)
+  - [X] `Core/AlgebraicMAC.lean` ([#21]) — 🟢 O24 Definition 3.1, Figure 5
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
-  - [ ] Track Pre — Preliminaries ([#2])
-  - [ ] Track Σ — ProofSystems ([#3])
-  - [ ] Track F1 — Framework syntax and correctness ([#4])
+  - [ ] Track Pre — Preliminaries ([#2]) — partial: 🟢 O24 §3.1 (Assumptions); ZK arguments, anonymous tokens, q-DDHI pending
+  - [ ] Track Σ — ProofSystems ([#3]) — partial: 🟢 O24 Equation 9 (R_iu); R_is/R_p pending
+  - [ ] Track F1 — Framework syntax and correctness ([#4]) — ⚪
 - [ ] **Wave 2** — framework anonymity/extractability, scheme constructions
-  - [ ] Track F2 — Framework anonymity and extractability ([#5])
-  - [ ] Track CMZ-C — μCMZ construction ([#6])
-  - [ ] Track BBS-C — μBBS construction ([#7])
+  - [ ] Track F2 — Framework anonymity and extractability ([#5]) — ⚪
+  - [ ] Track CMZ-C — μCMZ construction ([#6]) — partial:
+    - [x] Base MAC — 🟢 O24 Figure 9
+    - [x] R_iu Σ-protocol — 🟢 O24 Equation 9
+    - [ ] R_is / R_p Σ-protocols, issuance / presentation
+  - [ ] Track BBS-C — μBBS construction ([#7]) — ⚪
 - [ ] **Wave 3** — security tracks (μCMZ and μBBS)
-  - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
-  - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
-  - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
-  - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
-  - [ ] Track BBS-M — μBBS as algebraic MAC ([#13])
-  - [ ] Track BBS-A — μBBS anonymity ([#14])
-  - [ ] Track BBS-E — μBBS extractability ([#15])
-  - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) ([#16])
+  - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8]) — 🌀 O24 Theorem 5.1 (only the 3-DL assumption is formalized; the theorem is not)
+  - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10]) — ⚪
+  - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11]) — ⚪
+  - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12]) — 🌀 O24 Theorem 5.3 (only the 2-DL assumption is formalized)
+  - [ ] Track BBS-M — μBBS as algebraic MAC ([#13]) — ⚪
+  - [ ] Track BBS-A — μBBS anonymity ([#14]) — ⚪
+  - [ ] Track BBS-E — μBBS extractability ([#15]) — ⚪
+  - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) ([#16]) — ⚪
 - [ ] **Wave 4** — concrete μCMZ run with Ristretto255
-  - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency ([#17])
+  - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency ([#17]) — ⚪
 
-Per-track status and dependency graph in [`docs/TRACKS.md`](docs/TRACKS.md).
+Per-track status and dependency graph in [`TRACKS.md`](TRACKS.md).
 
 ## License
 
