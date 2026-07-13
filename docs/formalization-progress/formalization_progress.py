@@ -436,25 +436,33 @@ def load_dim(path: Path) -> tuple[list[str], str]:
     """Curated dim-list from the summaries file: a top-level ``dim`` array of
     element keys ("Theorem 2") or section prefixes ("§6", which dims every
     element of section 6 and its subsections), plus an optional ``dim_note``
-    explaining the graying, shown above the table."""
+    explaining the graying, shown above the table. An entry starting with
+    ``!`` is an exception: a matching element is *not* dimmed even when
+    another entry covers it (e.g. ``["§8", "!Theorem 8.7"]``). The list can
+    be overridden per run with the repeatable ``--dim`` flag."""
     if not path.exists():
         return [], ""
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     return [str(d) for d in data.get("dim", [])], str(data.get("dim_note", ""))
 
 
+def _dim_matches(e: PaperElement, d: str) -> bool:
+    if d.startswith("§"):
+        sec = d[1:]
+        for num in (e.section, e.number if e.kind == "Section" else ""):
+            if num and (num == sec or num.startswith(sec + ".")):
+                return True
+        return False
+    return e.key == d
+
+
 def is_dimmed(e: PaperElement, dim: list[str]) -> bool:
-    """Whether ``e`` matches the curated dim-list (exact key, or `§N` prefix
-    covering the section, its subsections, and their elements)."""
-    for d in dim:
-        if e.key == d:
-            return True
-        if d.startswith("§"):
-            sec = d[1:]
-            for num in (e.section, e.number if e.kind == "Section" else ""):
-                if num and (num == sec or num.startswith(sec + ".")):
-                    return True
-    return False
+    """Whether ``e`` matches the dim-list (exact key, or `§N` prefix covering
+    the section, its subsections, and their elements). ``!``-prefixed
+    exceptions win over any dim entry."""
+    if any(_dim_matches(e, d[1:]) for d in dim if d.startswith("!")):
+        return False
+    return any(_dim_matches(e, d) for d in dim if not d.startswith("!"))
 
 
 # --- equations (cite-driven) --------------------------------------------------
@@ -1089,6 +1097,8 @@ def cmd_report(args) -> int:
     lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
     summaries = load_summaries(src.summaries)
     dim, dim_note = load_dim(src.summaries)
+    if getattr(args, "dim", None):
+        dim = list(args.dim)
     # Cite-driven equations: only equations a Lean docstring references are added,
     # placed by the on-demand locator (or a curated page override).
     paper_all = paper_all + equation_elements(
@@ -1191,6 +1201,96 @@ def cmd_report(args) -> int:
     return 0
 
 
+# --- xref (cross-reference audit) ----------------------------------------------
+
+def crossref_findings(src: Source) -> tuple[list[str], list[str]]:
+    """Cross-reference audit of the pipeline's joins, over the same inputs as
+    ``report``. Returns ``(errors, warnings)``.
+
+    Errors (exit non-zero):
+    - a curated key (``dim``, ``[summaries]``, ``[element_sections]``,
+      ``[equation_pages]``) naming no element of the paper universe;
+    - a ``dim`` section prefix naming no extracted section;
+    - a numbered environment whose number places it in one chapter while its
+      enclosing section says another — a misfiled element that needs an
+      ``[element_sections]`` override (how Figure 10 was caught).
+
+    Warnings (reported, exit zero):
+    - a Lean citation naming a paper element that exists but is not tracked
+      as a row (an uncurated figure or section), so its coverage is invisible
+      in the rendered table.
+    """
+    ref_re = make_ref_re(src.tag)
+    text = paper_text(src.text)
+    paper_all = extract_paper(text)
+    lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
+    summaries = load_summaries(src.summaries)
+    dim, _ = load_dim(src.summaries)
+    sec_over = load_section_overrides(src.summaries)
+    eq_pages = load_page_overrides(src.summaries)
+    paper_all = paper_all + equation_elements(
+        text, cited_equation_keys(lean), eq_pages, base_seq=len(paper_all))
+    for e in paper_all:
+        num = sec_over.get(e.key)
+        if num is not None:
+            e.section = num
+    universe = {e.key for e in paper_all}
+    tracked = {e.key for e in paper_all
+               if e.kind not in ("Figure", "Section") or e.key in summaries}
+
+    errors, warnings = [], []
+    dim_keys = [d.lstrip("!") for d in dim]
+    for label, keys in (("dim", [d for d in dim_keys
+                                 if not d.startswith("§")]),
+                        ("[summaries]", summaries),
+                        ("[element_sections]", sec_over),
+                        ("[equation_pages]", eq_pages)):
+        bad = sorted(k for k in keys if k not in universe)
+        if bad:
+            errors.append(f"{label} keys naming no paper element: "
+                          + ", ".join(bad))
+    secs = {e.number for e in paper_all if e.kind == "Section"}
+    bad = sorted(d for d in dim_keys
+                 if d.startswith("§") and d[1:] not in secs)
+    if bad:
+        errors.append("dim section prefixes naming no extracted section: "
+                      + ", ".join(bad))
+    for e in paper_all:
+        if e.kind in ("Section", "Figure", "Equation") or not e.section:
+            continue
+        if "." in e.number and \
+                e.number.split(".")[0] != e.section.split(".")[0]:
+            errors.append(f"{e.key} is filed under §{e.section}; add an "
+                          "[element_sections] override")
+
+    citing: dict[str, set] = {}
+    for lf in lean:
+        refs = set(lf.module_refs)
+        for d in lf.decls:
+            refs.update(d.refs)
+        for r in refs:
+            citing.setdefault(r, set()).add(Path(lf.file).name)
+    for key in sorted(citing):
+        if key in universe and key not in tracked:
+            warnings.append(
+                f"{key} is cited ({', '.join(sorted(citing[key]))}) but not "
+                "curated, so the citation is not displayed; add a summary to "
+                "track it")
+    return errors, warnings
+
+
+def cmd_xref(args) -> int:
+    src = resolve_source(args)
+    errors, warnings = crossref_findings(src)
+    for w in warnings:
+        print(f"warning: {w}")
+    for e in errors:
+        print(f"error: {e}", file=sys.stderr)
+    if not errors and not warnings:
+        print("Cross-references consistent.")
+    return 1 if errors else 0
+
+
 # --- extract ------------------------------------------------------------------
 
 def cmd_extract(args) -> int:
@@ -1210,7 +1310,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # `report` is the default subcommand, so existing invocations such as
     # `formalization_progress.py --config x.toml --check` keep working.
-    if not argv or argv[0] not in ("report", "init", "extract"):
+    if not argv or argv[0] not in ("report", "init", "extract", "xref"):
         argv = ["report"] + argv
 
     ap = argparse.ArgumentParser(description=__doc__,
@@ -1232,9 +1332,28 @@ def main(argv: list[str] | None = None) -> int:
                      help="directory of Lean sources to scan")
     rep.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
                      help="subdirectory name to skip (repeatable)")
+    rep.add_argument("--dim", action="append",
+                     help="element key or § prefix to render light gray "
+                          "(repeatable; \"!\" prefix exempts; overrides the "
+                          "summaries file's dim list)")
     rep.add_argument("--out-md", dest="out_md", type=Path)
     rep.add_argument("--out-json", dest="out_json", type=Path)
     rep.set_defaults(func=cmd_report)
+
+    xrf = sub.add_parser(
+        "xref", help="cross-reference audit: stale curated keys, misfiled "
+                     "elements, citations invisible in the table")
+    xrf.add_argument("--config", type=Path,
+                     help="TOML file with a [source] table describing the paper")
+    xrf.add_argument("--tag", help="citation prefix used in Lean docstrings")
+    xrf.add_argument("--pdf", type=Path, help="source paper PDF")
+    xrf.add_argument("--text", type=Path,
+                     help="committed text extraction of the paper")
+    xrf.add_argument("--lean-root", dest="lean_root", type=Path,
+                     help="directory of Lean sources to scan")
+    xrf.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
+                     help="subdirectory name to skip (repeatable)")
+    xrf.set_defaults(func=cmd_xref)
 
     ext = sub.add_parser(
         "extract",

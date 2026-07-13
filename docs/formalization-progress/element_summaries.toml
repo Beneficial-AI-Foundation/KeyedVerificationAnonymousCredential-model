@@ -15,7 +15,10 @@
 
 # Rows rendered in light gray. Entries are element keys ("Theorem 2") or
 # section prefixes ("§6" covers the section, its subsections, and their
-# elements). Everything outside µCMZ and its prerequisites is dimmed: the
+# elements); a "!" prefix exempts a matching element from dimming (e.g.
+# "!Theorem 8.7" keeps it undimmed inside a dimmed "§8"). A run can override
+# this list with repeatable --dim flags.
+# Everything outside µCMZ and its prerequisites is dimmed: the
 # µBBS line (§6, Theorem 2), designated-verifier SNARKs (§7, Theorem 3),
 # the §8 extensions, and straight-line Σ-protocol extraction (§9). Kept
 # undimmed: Theorem 1, the §3 preliminaries, the §4 KVAC definitions, §5.

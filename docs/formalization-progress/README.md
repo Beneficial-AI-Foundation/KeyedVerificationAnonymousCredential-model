@@ -84,6 +84,16 @@ mathematical object that should be formalized and is part of the paper's
 contributions (a security game, a construction, a hardness assumption, a
 proof-system interface).
 
+### Dimmed rows
+
+The top-level `dim` array of `element_summaries.toml` specifies what renders
+light gray (out-of-scope work). Entries are element keys (`"Theorem 2"`) or
+section prefixes (`"§6"`, covering the section, its subsections, and their
+elements); a `!`-prefixed entry is an exception that keeps a matching element
+undimmed inside a dimmed section (e.g. `["§8", "!Theorem 8.7"]`). The
+`dim_note` string is shown above the table. A single run can override the
+curated list with repeatable `--dim` flags on `report`.
+
 ## Files
 
 | File | Role |
@@ -155,8 +165,9 @@ python3 $P --config docs/formalization-progress/formalization_source.toml
 
 `report` reads the source descriptor and writes `FORMALIZATION_PROGRESS.md` and
 `formalization_progress.json`. Per-field overrides: `--tag`, `--pdf`, `--text`,
-`--title`, `--lean-root`, `--exclude-dir` (repeatable), `--out-md`,
-`--out-json`. Precedence: built-in default < `--config` < explicit flags.
+`--title`, `--lean-root`, `--exclude-dir` (repeatable), `--dim` (repeatable,
+see *Dimmed rows*), `--out-md`, `--out-json`. Precedence: built-in default <
+`--config` < explicit flags.
 
 ### Check for drift
 
@@ -166,6 +177,21 @@ python3 $P --config docs/formalization-progress/formalization_source.toml --chec
 
 Exits non-zero (without writing) if the committed outputs differ from a fresh
 run. Useful locally; CI does not gate on it (see below).
+
+### Cross-reference audit (`xref`)
+
+```bash
+python3 $P xref --config docs/formalization-progress/formalization_source.toml
+```
+
+Audits the joins between the paper, the curation files, and the Lean sources.
+Errors (non-zero exit): a curated key (`dim`, `[summaries]`,
+`[element_sections]`, `[equation_pages]`) naming no paper element; a `dim`
+section prefix naming no extracted section; a numbered environment filed under
+a chapter other than the one its number indicates (the miss that misfiled
+Figure 10). Warnings (exit zero): a Lean citation naming an element that
+exists but is not curated, so the citation is invisible in the table. CI runs
+it after regenerating.
 
 ## Continuous integration
 

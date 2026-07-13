@@ -41,3 +41,9 @@ jobs:
       # `report` merely warns about these; this step turns them red.
       - name: Check for unresolved citations
         run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml --check
+      # Audits the joins between the paper, the curation files, and the Lean
+      # sources: stale curated keys, misfiled elements (chapter mismatch),
+      # and citations that resolve but are invisible because their element is
+      # not curated (warnings).
+      - name: Cross-reference audit
+        run: python3 docs/formalization-progress/formalization_progress.py xref --config docs/formalization-progress/formalization_source.toml
