@@ -8,6 +8,11 @@ import ToMathlib.PFunctor.Free
 /-!
 # NIZKP specification, agnostic with respect to the security model
 
+**Status: set aside.** The paper-faithful, game-based specification
+(`KVAC.Core.NIZKP`, per `docs/NIZKP_PAPER_FAITHFUL_STRATEGY.md`) is the primary
+spec. This module is kept in the tree but is no longer imported from the root.
+Its revisit is tracked in issue #43.
+
 A non-interactive zero-knowledge proof (NIZKP) lets a prover convince a verifier of a
 statement with a single message, revealing nothing beyond its truth.
 
