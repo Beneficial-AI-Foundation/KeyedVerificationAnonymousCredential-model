@@ -140,10 +140,11 @@ python3 $P init --pdf docs/Orru_2024.pdf --url https://eprint.iacr.org/2024/1552
 python3 $P extract --config docs/formalization-progress/formalization_source.toml
 ```
 
-Runs `pdftotext -layout` on the source PDF and writes the committed extraction
-(the `text` field of the source descriptor, `Orru_2024.txt` here). This is the
-only step that needs poppler. Commit the result; rerun only if the PDF or the
-extraction tooling changes.
+Runs `pdftotext -layout` on the source PDF and writes the committed extraction.
+The destination is the `text` field of the source descriptor; when unset it is
+named after the source PDF, `<pdf stem>.txt` beside the tool (`Orru_2024.txt`
+here). This is the only step that needs poppler. Commit the result; rerun only
+if the PDF or the extraction tooling changes.
 
 ### Generate the progress table (`report`, the default)
 

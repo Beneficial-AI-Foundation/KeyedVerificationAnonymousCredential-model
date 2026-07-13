@@ -87,7 +87,8 @@ class Source:
     """A paper acting as the source of truth, and where to read/write."""
     tag: str            # citation prefix used in the Lean docstrings, e.g. "O24"
     pdf: Path           # the paper PDF
-    text: Path          # committed `pdftotext -layout` extraction of the PDF
+    text: Path | None   # committed `pdftotext -layout` extraction of the PDF;
+                        # None derives `<pdf stem>.txt` in PROGRESS_DIR
     title: str          # full reference, shown in the generated header
     lean_root: Path     # directory of Lean sources to scan
     exclude_dirs: tuple[str, ...]  # subdirectory names to skip (e.g. Scratch)
@@ -100,7 +101,7 @@ class Source:
 DEFAULT_SOURCE = Source(
     tag="O24",
     pdf=REPO / "docs" / "Orru_2024.pdf",
-    text=PROGRESS_DIR / "Orru_2024.txt",
+    text=None,  # derived: PROGRESS_DIR / "Orru_2024.txt"
     title="Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, "
           "IACR ePrint 2024/1552",
     lean_root=REPO / "KVAC",
@@ -583,7 +584,6 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     n_decls = sum(len(lf.decls) for lf in lean)
     n_files = len(lean)
     n_sorry = sum(1 for lf in lean for d in lf.decls if d.has_sorry)
-    excluded = ", ".join(f"`{d}/`" for d in source.exclude_dirs) or "none"
 
     out = []
     out.append("# Formalization progress ↔ Lean\n")
@@ -611,8 +611,8 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
                f"(~{100 * formalized // total if total else 0}%)")
     out.append(f"- Paper elements with some Lean association: **{covered}**")
     out.append(f"- Lean declarations scanned: **{n_decls}** across "
-               f"**{n_files}** files (excluding {excluded} and git-ignored "
-               f"paths); **{n_sorry}** detected to contain `sorry`\n")
+               f"**{n_files}** files; **{n_sorry}** detected to contain "
+               "`sorry`\n")
 
     # Breakdown by paper element kind: catalogued vs formalized (✅).
     paper_kinds: dict[str, list[int]] = {}
@@ -767,7 +767,12 @@ def resolve_source(args) -> Source:
             overrides[key] = _resolve_path(getattr(args, key))
     if args.exclude_dirs is not None:
         overrides["exclude_dirs"] = tuple(args.exclude_dirs)
-    return replace(DEFAULT_SOURCE, **overrides)
+    src = replace(DEFAULT_SOURCE, **overrides)
+    if src.text is None:
+        # Named after the source PDF, so a different paper never collides
+        # with another paper's committed extraction.
+        src = replace(src, text=PROGRESS_DIR / f"{src.pdf.stem}.txt")
+    return src
 
 
 # --- metadata extraction (init) -----------------------------------------------

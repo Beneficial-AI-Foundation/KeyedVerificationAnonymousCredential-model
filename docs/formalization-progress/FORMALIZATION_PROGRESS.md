@@ -13,7 +13,7 @@ These figures are approximate (see the note above).
 - Paper elements catalogued: roughly **56**
 - Paper elements *reported* formalized (a sorry-free Lean declaration of matching kind cites them): **6** (~10%)
 - Paper elements with some Lean association: **8**
-- Lean declarations scanned: **68** across **14** files (excluding `Scratch/` and git-ignored paths); **0** detected to contain `sorry`
+- Lean declarations scanned: **68** across **14** files; **0** detected to contain `sorry`
 
 ### By paper element
 

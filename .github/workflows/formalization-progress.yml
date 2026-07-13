@@ -35,3 +35,9 @@ jobs:
             git pull --rebase origin main
             git push
           fi
+      # Right after regeneration nothing is stale, so --check exits non-zero
+      # only for genuine problems: a Lean docstring citing a paper element that
+      # does not exist (a typo, an extraction miss, or a stale summary key).
+      # `report` merely warns about these; this step turns them red.
+      - name: Check for unresolved citations
+        run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml --check
