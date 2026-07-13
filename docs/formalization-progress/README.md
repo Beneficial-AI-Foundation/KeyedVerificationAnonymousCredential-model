@@ -144,31 +144,25 @@ python3 $P --config docs/formalization-progress/formalization_source.toml --chec
 ```
 
 Exits non-zero (without writing) if the committed outputs differ from a fresh
-run. This is what CI runs.
+run. Useful locally; CI does not gate on it (see below).
 
 ## Continuous integration
 
-`.github/workflows/formalization-progress.yml` runs the `--check` gate on pull
-requests and on pushes to `main`. It sets up Python (no poppler; the check
-reads the committed extraction) and runs:
-
-```bash
-python3 docs/formalization-progress/formalization_progress.py \
-  --config docs/formalization-progress/formalization_source.toml --check
-```
-
-If the job fails, the committed table is stale relative to the Lean sources, the
-paper, or the summaries. **Fix it by regenerating and committing:**
+`.github/workflows/formalization-progress.yml` regenerates the table **on each
+push to `main`** (and on manual dispatch) and commits the result when it
+changed, as `github-actions[bot]`. It sets up Python (no poppler; the paper
+side reads the committed extraction) and runs:
 
 ```bash
 python3 docs/formalization-progress/formalization_progress.py \
   --config docs/formalization-progress/formalization_source.toml
-git add docs/formalization-progress/FORMALIZATION_PROGRESS.md \
-        docs/formalization-progress/formalization_progress.json
-git commit -m "docs: refresh formalization progress"
 ```
 
-The check gates rather than auto-commits, so the regenerated table stays under
-review. To make a new paper element show as formalized, add a Lean declaration
+Pull requests are **not** gated on the table, so a PR that adds or renames Lean
+declarations needs no regeneration step; the table catches up automatically
+when the PR merges. Regenerating inside a PR is still fine — the merge-time run
+then finds nothing to commit.
+
+To make a new paper element show as formalized, add a Lean declaration
 of the right kind that cites it (e.g. `… per O24 Theorem 5.1 …`) and remove any
-`sorry`; the next run reflects it.
+`sorry`; the run after the merge reflects it.
