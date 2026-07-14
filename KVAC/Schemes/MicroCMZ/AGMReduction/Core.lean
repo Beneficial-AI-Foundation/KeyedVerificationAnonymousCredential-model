@@ -325,13 +325,20 @@ Given the challenge `(g, X = x·g, X' = x²·g, X'' = x³·g)`, it:
    `ψ = affineSubst a b (verifPoly …)`, and returns `recoverDlog g X ψ` — the
    challenge exponent `x`, recovered among `ψ`'s `≤ 3` roots.
 
-Specialized to `g = gen`: the experiment's group argument is ignored
-(`fun _ pows => …`) and `gen` is used internally. Sound because the security
-statements instantiate `qdlogAdv 3 gen (microCMZ3DLReduction gen A)`, so the
-supplied `g` *is* `gen` and the powers are `x^(i+1) · gen`. -/
+**Base convention.** The reduction embeds and extracts relative to `gen`; the
+experiment's base argument is ignored (`fun _g pows => …`), so it is sound only at
+base `gen`. Rather than leave that as a caller obligation, consume the reduction
+through `microCMZ3DLReductionExp` / `microCMZ3DLReductionAdv` below, which fix the
+experiment base to `gen` by construction — the security bound is stated in terms of
+those, so no base parameter is ever chosen. (This cannot be a type-level constraint:
+`QDLogAdversary` carries no `base = gen` field, and `gen`'s bijectivity `Fact` is
+unavailable for an arbitrary base — the order-instance hazard, see the note at
+`glog` — so the reduction cannot simply consume its base argument instead.) -/
 noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     QDLogAdversary 3 F G :=
-  fun _ pows => do
+  -- `_g`: the q-DL challenge base, ignored by design — `microCMZ3DLReductionExp`
+  -- fixes the base to `gen`, so `_g` is always `gen`; the reduction uses `gen`.
+  fun _g pows => do
     let X := pows 0
     let X' := pows 1
     let X'' := pows 2
@@ -356,5 +363,19 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
         (ρU.toReprCoeffs L.length) (ρV.toReprCoeffs L.length))
     pure (recoverDlog gen X ψ)
 
+/--
+The 3-DL experiment for the reduction, with the challenge base **fixed to `gen`**.
+This is the canonical entry point: the base is baked in here, not chosen by a
+caller, so the reduction is never run at a base other than `gen` and its base
+convention (see `microCMZ3DLReduction`) holds by construction. The forthcoming
+security theorem bounds `AGM_UF_CMVAAdv` via `microCMZ3DLReductionAdv`, never a bare
+`threeDlogAdv _ (microCMZ3DLReduction …)` with a free base. -/
+noncomputable def microCMZ3DLReductionExp (A : AGMUFAdversary F G 1) : ProbComp Bool :=
+  qdlogExp 3 gen (microCMZ3DLReduction gen A)
+
+/-- The 3-DL advantage of the reduction at base `gen`, as `Pr[= true | …]` over
+`microCMZ3DLReductionExp`. The 3-DL term of O24 Lemma 5.4's bound. -/
+noncomputable abbrev microCMZ3DLReductionAdv (A : AGMUFAdversary F G 1) : ℝ≥0∞ :=
+  Pr[= true | microCMZ3DLReductionExp gen A]
 
 end KVAC.Schemes.MicroCMZ
