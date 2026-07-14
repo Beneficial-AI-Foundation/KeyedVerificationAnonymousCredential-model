@@ -34,11 +34,10 @@ theorems (O24 Lemma 5.4 / Theorem 5.1) are assembled by the forthcoming parts of
 the stack (not this branch).
 
 This is a separate module from `AlgebraicMAC` on purpose: it imports
-`AGMPolynomial`, whose `MvPolynomial`/`Polynomial` order instances would derail
-the `Module F`-instance search behind the `gen`-bijectivity `Fact` (`· • gen`).
-Keeping that in `AlgebraicMAC` — which does *not* import `AGMPolynomial` — lets it
-elaborate cleanly; here we only *use* the resulting `glog`, so nothing re-triggers
-that search.
+`AGMPolynomial`, which arms the order-instance hazard (see the note at `glog` in
+`AlgebraicMAC.lean`). Keeping `glog` and its laws in `AlgebraicMAC` — which does
+*not* import `AGMPolynomial` — lets them elaborate cleanly; here we only *use* the
+sealed `glog`, so nothing re-triggers that search.
 
 The reduction states its bad-event bound as `deg ψ / p = 3/p` (Schwartz–Zippel on
 the degree-≤3 masked univariate `ψ`), not the `1/p` O24 prints; the full argument
