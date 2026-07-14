@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
+import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 
 set_option autoImplicit false
@@ -14,9 +15,11 @@ open KVAC.Core KVAC.Preliminaries OracleSpec OracleComp ENNReal
 
 variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
 variable {G : Type} [DecidableEq G] [SampleableGroup F G]
+variable (gen : G)
+variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable {n : ℕ}
 
-/-! # AGMReduction Core — dictionary, eval bridge, adversary B₃, root recovery -/
+/-! # AGMReduction Core — dictionary, eval bridge, reduction adversary, root recovery -/
 
 /-! ## The game ↔ polynomial dictionary -/
 
@@ -33,15 +36,15 @@ def AGMRepr.toReprCoeffs (ρ : AGMRepr F 1) (q : ℕ) : AGMPoly.ReprCoeffs F q w
   cv := fun j => (ρ.uv.getD (j : ℕ) (0, 0)).2
 
 /-- The discrete-log evaluation point of a μCMZ transcript: each polynomial
-variable maps to the `generator G`-discrete-log of the basis element it
-abbreviates (`η = log H`, the key components `x₀, xᵣ, x₁`, and `uⱼ = log Uⱼ`). -/
+variable maps to the `gen`-discrete-log of the basis element it abbreviates
+(`η = log H`, the key components `x₀, xᵣ, x₁`, and `uⱼ = log Uⱼ`). -/
 noncomputable def gamePoint (H : G) (x0 xr x1 : F) (tags : List (G × G)) :
     AGMPoly.Var tags.length → F
-  | .eta => glog H
+  | .eta => glog gen H
   | .x0 => x0
   | .xr => xr
   | .x1 => x1
-  | .u j => glog (tags.get j).1
+  | .u j => glog gen (tags.get j).1
 
 /-- A `zipWith`-sum over two lists equals a `Fin`-indexed sum over the second
 list's length, reading the first list with `getD` (default `da`, which `f` sends
@@ -75,30 +78,29 @@ theorem zipWith_smul_sum {α β M : Type*} [AddCommMonoid M] (f : α → β → 
   rw [List.get_eq_getElem, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem j.isLt]
   rfl
 
-/-! ## The eval bridge (keystone) -/
+/-! ## The eval bridge -/
 
 /--
-**Eval bridge (keystone).** Over an honestly-generated transcript (`htag`: each
-issued tag satisfies `Vⱼ = (x₀+xᵣ+mⱼx₁)·Uⱼ`), a representation's group-level
-evaluation `AGMRepr.eval` equals the polynomial `ReprCoeffs.toPoly` evaluated at
-the transcript's discrete-log point, scaled onto `generator G`.
+**Eval bridge.** Over an honestly-generated transcript (`htag`: each issued tag
+satisfies `Vⱼ = (x₀+xᵣ+mⱼx₁)·Uⱼ`), a representation's group-level evaluation
+`AGMRepr.eval` equals the polynomial `ReprCoeffs.toPoly` evaluated at the
+transcript's discrete-log point, scaled onto `gen`.
 
-This is the `AGMRepr ↔ ReprCoeffs` glue the `AGMPolynomial` module docstring
-defers ("glue between the two lives with the game"). The proof writes the
-uniformly-sampled basis element `H` as `η • generator G` (`smul_generator_surjective`),
-reconciles the `zipWith` tag fold with `toPoly`'s `Fin`-sum (`zipWith_smul_sum`),
-expands the polynomial evaluation (`ReprCoeffs.eval_toPoly`), and closes the
-resulting `generator G`-module identity with `module` (using `htag` for the
-`Vⱼ`). -/
+This is the `AGMRepr ↔ ReprCoeffs` glue between the group and polynomial layers.
+The proof writes the uniformly-sampled basis element `H` as `η • gen`
+(`hgen.out.surjective`), reconciles the `zipWith` tag fold with `toPoly`'s
+`Fin`-sum (`zipWith_smul_sum`), expands the polynomial evaluation
+(`ReprCoeffs.eval_toPoly`), and closes the resulting `gen`-module identity with
+`module` (using `htag` for the `Vⱼ`). -/
 theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
     (x : Fin 1 → F) (tags : List (G × G)) (msgs : Fin tags.length → F)
     (htag : ∀ j : Fin tags.length,
       (tags.get j).2 = (x0 + xr + msgs j * x 0) • (tags.get j).1) :
-    ρ.eval (generator G) H (x0 • H) (xr • generator G)
-        (fun i => x i • generator G) tags
-      = MvPolynomial.eval (gamePoint H x0 xr (x 0) tags)
-          ((ρ.toReprCoeffs tags.length).toPoly msgs) • generator G := by
-  obtain ⟨η, rfl⟩ := smul_generator_surjective (F := F) H
+    ρ.eval gen H (x0 • H) (xr • gen)
+        (fun i => x i • gen) tags
+      = MvPolynomial.eval (gamePoint gen H x0 xr (x 0) tags)
+          ((ρ.toReprCoeffs tags.length).toPoly msgs) • gen := by
+  obtain ⟨η, rfl⟩ := hgen.out.surjective H
   rw [AGMRepr.eval, AGMPoly.ReprCoeffs.eval_toPoly,
     zipWith_smul_sum (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
       ((0, 0) : F × F) ((0, 0) : G × G) (by intro t; simp) ρ.uv tags]
@@ -108,37 +110,36 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
   · module
   · apply Finset.sum_congr rfl
     intro j _
-    obtain ⟨u, hu⟩ := smul_generator_surjective (F := F) (tags.get j).1
+    obtain ⟨u, hu⟩ := hgen.out.surjective (tags.get j).1
     rw [htag j, ← hu, glog_smul_self]
     module
 
-/-! ## The identity branch (mechanized) -/
+/-! ## The identity branch -/
 
 /--
-**Identity branch of O24 Lemma 5.4 (mechanized).** If a consistent forgery for a
-*fresh* message has a verification polynomial that vanishes identically, then
-`U* = 0`. Together with the `U* ≠ 0` check inside `microCMZVerify`, this makes
-the identity case contribute nothing to the win probability — the contradiction
-O24 derives by coefficient matching, here delivered by the already-proven
-`identity_case` (via `toPoly_eq_zero_of_verifPoly_eq_zero`) routed through the
-`agmRepr_eval_eq_eval_toPoly` bridge. -/
+**Identity branch of O24 Lemma 5.4.** If a consistent forgery for a *fresh*
+message has a verification polynomial that vanishes identically, then `U* = 0`.
+Together with the `U* ≠ 0` check inside `microCMZVerify`, this makes the identity
+case contribute nothing to the win probability — the contradiction O24 derives by
+coefficient matching, here delivered by `toPoly_eq_zero_of_verifPoly_eq_zero`
+routed through the `agmRepr_eval_eq_eval_toPoly` bridge. -/
 theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F)
     (x : Fin 1 → F) (σStar : G × G) (mStar : F) (tags : List (G × G))
     (msgs : Fin tags.length → F)
     (htag : ∀ j : Fin tags.length,
       (tags.get j).2 = (x0 + xr + msgs j * x 0) • (tags.get j).1)
     (hfresh : ∀ j, mStar ≠ msgs j)
-    (hconsistent : ρU.eval (generator G) H (x0 • H) (xr • generator G)
-      (fun i => x i • generator G) tags = σStar.1)
+    (hconsistent : ρU.eval gen H (x0 • H) (xr • gen)
+      (fun i => x i • gen) tags = σStar.1)
     (hverif : AGMPoly.verifPoly msgs mStar (ρU.toReprCoeffs tags.length)
       (ρV.toReprCoeffs tags.length) = 0) :
     σStar.1 = 0 := by
-  rw [← hconsistent, agmRepr_eval_eq_eval_toPoly ρU H x0 xr x tags msgs htag,
+  rw [← hconsistent, agmRepr_eval_eq_eval_toPoly gen ρU H x0 xr x tags msgs htag,
     AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero msgs mStar hfresh
       (ρU.toReprCoeffs tags.length) (ρV.toReprCoeffs tags.length) hverif]
   simp
 
-/-! ## The reduction adversary `B₃` -/
+/-! ## The reduction adversary -/
 
 /-- The affine-mask point `Var q → F` of the embedding: the fixed-variable masks
 `(cη, c0, cXr, cX1)` for `η, x₀, xᵣ, x₁`, together with the per-query `u`-masks
@@ -177,20 +178,19 @@ lemma exponentEval_eq (g : G) (x : F) (p : Polynomial F) (hp : p.natDegree ≤ 3
 
 /-- **Reduction `sign` step** (factored out of `reductionOracleImpl` so that reducing the
 implementation on a `.sign` query never re-elaborates the `MvPolynomial`/`affineSubst`-heavy
-`verify`/`help` branches — the instance-search loop that hangs `evalDist`/`RelTriple` statements
-over `reductionOracleImpl (.sign _)` in this `MvPolynomial` import context). Samples the
-non-vanishing masks `(au, bu)`, builds the honest tag `(U, V)` with `U = au·g + bu·X`,
-`V = key·U` (see `sign_tag_honest`), and appends `(m, (U,V), au, bu)` to the log. -/
+`verify`/`help` branches, whose instance search loops in this `MvPolynomial` import context).
+Samples the non-vanishing masks `(au, bu)`, builds the honest tag `(U, V)` with
+`U = au·gen + bu·X`, `V = key·U`, and appends `(m, (U,V), au, bu)` to the log. -/
 noncomputable def reductionSignStep (X X' : G) (a0 aXr aX1 b0 bXr bX1 : F) (m : Fin 1 → F) :
     StateT (RedLog F G) ProbComp (G × G) :=
   StateT.mk fun L => do
-      let aubu ← reductionMaskSample X
+      let aubu ← reductionMaskSample (gen := gen) X
       let au := aubu.val.1
       let bu := aubu.val.2
       let A := a0 + aXr + m 0 * aX1
       let B := b0 + bXr + m 0 * bX1
-      let U := au • generator G + bu • X
-      let V := (A * au) • generator G + (A * bu + B * au) • X + (B * bu) • X'
+      let U := au • gen + bu • X
+      let V := (A * au) • gen + (A * bu + B * au) • X + (B * bu) • X'
       pure ((U, V), L ++ [(m, (U, V), au, bu)])
 
 /-- **Reduction `verify` step** (factored out; see `reductionSignStep`). -/
@@ -207,10 +207,10 @@ noncomputable def reductionVerifyStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX
         Polynomial.C (a0 + aXr + m 0 * aX1) +
           Polynomial.C (b0 + bXr + m 0 * bX1) * Polynomial.X
       let consistent :=
-        ρU.eval (generator G) H X0 Xr (fun _ => X1) tags = σ.1 ∧
-        ρV.eval (generator G) H X0 Xr (fun _ => X1) tags = σ.2
+        ρU.eval gen H X0 Xr (fun _ => X1) tags = σ.1 ∧
+        ρV.eval gen H X0 Xr (fun _ => X1) tags = σ.2
       pure (decide consistent && decide (σ.1 ≠ 0) &&
-        decide (σ.2 = exponentEval (generator G) X X' X'' (keyUniv * pU)), L)
+        decide (σ.2 = exponentEval gen X X' X'' (keyUniv * pU)), L)
 
 /-- **Reduction `help` step** (factored out; see `reductionSignStep`). -/
 noncomputable def reductionHelpStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX1 bX1 : F)
@@ -229,31 +229,31 @@ noncomputable def reductionHelpStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX1 
       let x1Univ : Polynomial F :=
         Polynomial.C aX1 + Polynomial.C bX1 * Polynomial.X
       let consistent :=
-        ρ₀.eval (generator G) H X0 Xr (fun _ => X1) tags = A₀ ∧
-        (∀ i, (ρA i).eval (generator G) H X0 Xr (fun _ => X1) tags = Av i) ∧
-        ρZ.eval (generator G) H X0 Xr (fun _ => X1) tags = Z
+        ρ₀.eval gen H X0 Xr (fun _ => X1) tags = A₀ ∧
+        (∀ i, (ρA i).eval gen H X0 Xr (fun _ => X1) tags = Av i) ∧
+        ρZ.eval gen H X0 Xr (fun _ => X1) tags = Z
       pure (decide consistent &&
-        decide (Z = exponentEval (generator G) X X' X'' (keyUniv * p0 + x1Univ * p1)), L)
+        decide (Z = exponentEval gen X X' X'' (keyUniv * p0 + x1Univ * p1)), L)
 
 /--
 The reduction's **simulated oracle** — answers `A`'s queries with no knowledge of
 the secret key `sk`, using only the embedded public elements `(H, X₀, Xᵣ, X₁)`,
-the 3-DL powers `(X, X', X'')` over `G₀ = generator G`, and the masks. Each branch
-is a thin call to its factored `step` def (`reductionSignStep` / `reductionVerifyStep` /
+the 3-DL powers `(X, X', X'')` over the base `gen`, and the masks. Each branch is a
+thin call to its factored `step` def (`reductionSignStep` / `reductionVerifyStep` /
 `reductionHelpStep`) so that reducing the implementation on one constructor never
 re-elaborates the others — the `verify`/`help` arms carry `MvPolynomial`/`affineSubst`
 terms that loop `SampleableType` instance search in this import context, hanging any
-`evalDist`/`RelTriple` statement over `reductionOracleImpl (.sign _)` (see memory
-`cmz-probevent-functiontype-hang`). The branch bodies are documented on the step defs.
-The masks define the `affineSubst` point via `embedPoint`. -/
+statement over `reductionOracleImpl (.sign _)`. The branch bodies are documented on
+the step defs. The masks define the `affineSubst` point via `embedPoint`. -/
 noncomputable def reductionOracleImpl (X X' X'' : G)
     (aEta bEta a0 b0 aXr bXr aX1 bX1 : F) (H X0 Xr X1 : G) :
     QueryImpl (AGMOracleSpec F G 1) (StateT (RedLog F G) ProbComp)
-  | .sign m => reductionSignStep X X' a0 aXr aX1 b0 bXr bX1 m
+  | .sign m => reductionSignStep (gen := gen) X X' a0 aXr aX1 b0 bXr bX1 m
   | .verify m σ ρU ρV =>
-      reductionVerifyStep X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1 m σ ρU ρV
+      reductionVerifyStep (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1 m σ ρU ρV
   | .help A₀ Av Z ρ₀ ρA ρZ =>
-      reductionHelpStep X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1 A₀ Av Z ρ₀ ρA ρZ
+      reductionHelpStep (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1
+        A₀ Av Z ρ₀ ρA ρZ
 
 /-! ## Root recovery (the reduction's discrete-log extraction step) -/
 
@@ -291,7 +291,7 @@ lemma recoverDlog_eq {g : G} (hg : g ≠ 0) {x : F} {ψ : Polynomial F}
   exact smul_left_injective F hg hpy
 
 /--
-**Win implies extract (deterministic core).** Suppose the masks `a, b` embed the
+**Win implies extract.** Suppose the masks `a, b` embed the
 challenge so that the verification polynomial of the forgery vanishes at the
 embedded point `v ↦ a v + x · b v` (this is the verification equation, O24
 Eq. 16, evaluated at the challenge exponent `x`), and the masked univariate
@@ -307,9 +307,9 @@ lemma recoverDlog_verifPoly_eq {q : ℕ} {a b : AGMPoly.Var q → F} {x : F}
     (hroot : MvPolynomial.eval (fun v => a v + x * b v)
       (AGMPoly.verifPoly msgs mStar α β) = 0)
     (hne : AGMPoly.affineSubst a b (AGMPoly.verifPoly msgs mStar α β) ≠ 0) :
-    recoverDlog (generator G) (x • generator G)
+    recoverDlog gen (x • gen)
         (AGMPoly.affineSubst a b (AGMPoly.verifPoly msgs mStar α β)) = x := by
-  apply recoverDlog_eq generator_ne_zero hne
+  apply recoverDlog_eq (gen_ne_zero (gen := gen)) hne
   rw [Polynomial.IsRoot.def, AGMPoly.eval_affineSubst]
   exact hroot
 
@@ -325,12 +325,12 @@ Given the challenge `(g, X = x·g, X' = x²·g, X'' = x³·g)`, it:
    `ψ = affineSubst a b (verifPoly …)`, and returns `recoverDlog g X ψ` — the
    challenge exponent `x`, recovered among `ψ`'s `≤ 3` roots.
 
-Specialized to `g = generator G`: the experiment's group argument is ignored
-(`fun _ pows => …`) and `generator G` is used internally. Sound because the
-security statements instantiate `qdlAdv 3 (generator G) B₃`, so the supplied `g`
-*is* `generator G` and the powers are `x^(i+1) · generator G`. -/
+Specialized to `g = gen`: the experiment's group argument is ignored
+(`fun _ pows => …`) and `gen` is used internally. Sound because the security
+statements instantiate `qdlogAdv 3 gen (microCMZ3DLReduction gen A)`, so the
+supplied `g` *is* `gen` and the powers are `x^(i+1) · gen`. -/
 noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
-    QDLAdversary 3 F G :=
+    QDLogAdversary 3 F G :=
   fun _ pows => do
     let X := pows 0
     let X' := pows 1
@@ -339,14 +339,14 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     let a0 ← $ᵗ F; let b0 ← $ᵗ F
     let aXr ← $ᵗ F; let bXr ← $ᵗ F
     let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
-    let H := aEta • generator G + bEta • X
-    let X0 := (a0 * aEta) • generator G + (a0 * bEta + b0 * aEta) • X + (b0 * bEta) • X'
-    let Xr := aXr • generator G + bXr • X
-    let X1 := aX1 • generator G + bX1 • X
+    let H := aEta • gen + bEta • X
+    let X0 := (a0 * aEta) • gen + (a0 * bEta + b0 * aEta) • X + (b0 * bEta) • X'
+    let Xr := aXr • gen + bXr • X
+    let X1 := aX1 • gen + bX1 • X
     let pp : G × G × (Fin 1 → G) := (X0, Xr, fun _ => X1)
     let ((mStar, _σStar, ρU, ρV), L) ←
       (simulateQ
-        (reductionOracleImpl X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1)
+        (reductionOracleImpl (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1)
         (A.run H pp)).run []
     let a := embedPoint aEta a0 aXr aX1 (fun j : Fin L.length => (L.get j).2.2.1)
     let b := embedPoint bEta b0 bXr bX1 (fun j : Fin L.length => (L.get j).2.2.2)
@@ -354,7 +354,7 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     let ψ := AGMPoly.affineSubst a b
       (AGMPoly.verifPoly msgs (mStar 0)
         (ρU.toReprCoeffs L.length) (ρV.toReprCoeffs L.length))
-    pure (recoverDlog (generator G) X ψ)
+    pure (recoverDlog gen X ψ)
 
 
 end KVAC.Schemes.MicroCMZ
