@@ -13,6 +13,18 @@
 #     hardness assumption, a proof-system interface). Recalled prior-work
 #     objects and the §8 "future extensions" are intentionally omitted.
 
+# Rows rendered in light gray. Entries are element keys ("Theorem 2") or
+# section prefixes ("§6" covers the section, its subsections, and their
+# elements); a "!" prefix exempts a matching element from dimming (e.g.
+# "!Theorem 8.7" keeps it undimmed inside a dimmed "§8"). A run can override
+# this list with repeatable --dim flags.
+# Everything outside µCMZ and its prerequisites is dimmed: the
+# µBBS line (§6, Theorem 2), designated-verifier SNARKs (§7, Theorem 3),
+# the §8 extensions, and straight-line Σ-protocol extraction (§9). Kept
+# undimmed: Theorem 1, the §3 preliminaries, the §4 KVAC definitions, §5.
+dim = ["§6", "§7", "§8", "§9", "Theorem 2", "Theorem 3"]
+dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), designated-verifier SNARKs (§7), extensions (§8), straight-line Σ-protocol extraction (§9), and their contribution theorems."
+
 [summaries]
 "Theorem 1" = "μCMZ is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
 "Theorem 2" = "μBBS is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
@@ -85,3 +97,14 @@
 # cites it (`O24 Eq. N`). Do not add a summary for an equation no declaration
 # cites yet — `--check` flags it as a key naming no tracked element.
 "Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
+
+# Corrections to the extractor's enclosing-section assignment, for elements
+# whose heading order in the text misleads the heuristic. Values are section
+# numbers; the section title is looked up from the extracted TOC.
+[element_sections]
+# The µBBS system figure sits on page 48 just above the "6 Boneh–Boyen–Shacham
+# credentials" heading, so the extractor files it under §5.6; it belongs to §6.
+"Figure 10" = "6"
+# Cite-driven equations carry no extracted section; Eq. 9 (R_iu) is stated in
+# the µCMZ issuance protocol, §5.1.
+"Equation 9" = "5.1"
