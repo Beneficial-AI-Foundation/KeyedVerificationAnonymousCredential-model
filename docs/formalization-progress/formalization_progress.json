@@ -853,7 +853,7 @@
           "name": "NIZKPScheme",
           "kind": "structure",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 56,
+          "line": 61,
           "refs": [],
           "has_sorry": false
         },
@@ -861,7 +861,7 @@
           "name": "SecurityModel",
           "kind": "class",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 76,
+          "line": 81,
           "refs": [],
           "has_sorry": false
         },
@@ -869,7 +869,7 @@
           "name": "KnowledgeSound",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 107,
+          "line": 112,
           "refs": [],
           "has_sorry": false
         },
@@ -877,7 +877,7 @@
           "name": "ZeroKnowledge",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 117,
+          "line": 122,
           "refs": [],
           "has_sorry": false
         },
@@ -885,7 +885,7 @@
           "name": "Extractable",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 127,
+          "line": 132,
           "refs": [],
           "has_sorry": false
         },
@@ -893,7 +893,7 @@
           "name": "SimulationExtractable",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 136,
+          "line": 141,
           "refs": [
             "§3.3"
           ],
@@ -903,7 +903,7 @@
           "name": "SimulationExtractable.toZeroKnowledge",
           "kind": "theorem",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 141,
+          "line": 146,
           "refs": [],
           "has_sorry": false
         },
@@ -911,7 +911,7 @@
           "name": "SmallPFunctor",
           "kind": "abbrev",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 161,
+          "line": 166,
           "refs": [],
           "has_sorry": false
         },
@@ -919,8 +919,62 @@
           "name": "FreeNIZKPScheme",
           "kind": "abbrev",
           "file": "KVAC/Core/NIZKP/Basic.lean",
-          "line": 168,
+          "line": 173,
           "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/NIZKP/Completeness.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": [
+        {
+          "name": "PerfectlyComplete",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Completeness.lean",
+          "line": 37,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/NIZKP/Construction.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": [
+        {
+          "name": "NIZKPSyntax",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP/Construction.lean",
+          "line": 85,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/NIZKP.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": [
+        {
+          "name": "NIZKP",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP.lean",
+          "line": 33,
+          "refs": [
+            "§3.3"
+          ],
           "has_sorry": false
         }
       ]

@@ -13,7 +13,7 @@ These figures are approximate (see the note above).
 - Paper elements catalogued: roughly **56**
 - Paper elements *reported* formalized (a sorry-free Lean declaration of matching kind cites them): **6** (~10%)
 - Paper elements with some Lean association: **8**
-- Lean declarations scanned: **65** across **11** files (excluding `Scratch/` and git-ignored paths); **0** detected to contain `sorry`
+- Lean declarations scanned: **68** across **14** files (excluding `Scratch/` and git-ignored paths); **0** detected to contain `sorry`
 
 ### By paper element
 
@@ -35,13 +35,13 @@ These figures are approximate (see the note above).
 |---|--:|--:|
 | abbrev | 19 | 5 |
 | class | 1 | 0 |
-| def | 27 | 9 |
+| def | 28 | 10 |
 | inductive | 1 | 0 |
 | instance | 1 | 0 |
 | lemma | 3 | 0 |
-| structure | 5 | 2 |
+| structure | 7 | 4 |
 | theorem | 8 | 3 |
-| **Total** | **65** | **19** |
+| **Total** | **68** | **22** |
 
 Status legend (heuristic reads, each a claim to verify rather than a proof): 🟢 appears formalized — a sorry-free declaration of matching kind seems to cite it · 🌐 a matching declaration is cited but looks to contain `sorry` · 🌀 a declaration cites it but its kind looks non-matching · 🟡 only module-level coverage detected · ⚪ nothing detected yet
 
@@ -57,7 +57,7 @@ Each element name links to its page in the source PDF. Summaries are curated in 
 | [§3.1](../Orru_2024.pdf#page=24) | — | 24 | The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI. | `qdlogExp` (def) [Assumptions.lean:59](../../KVAC/Preliminaries/Assumptions.lean#L59) | 🟢 |
 | [Definition 3.1](../Orru_2024.pdf#page=24) | §3.2 Algebraic message authentication codes | 24 | Syntax of an algebraic message authentication code for n attributes over a prime-order group: the algorithms Setup, KeyGen, MAC, and Verify. | `AlgebraicMACSyntax` (structure) [Construction.lean:94](../../KVAC/Core/AlgebraicMAC/Construction.lean#L94)<br>`Correct` (def) [Correctness.lean:60](../../KVAC/Core/AlgebraicMAC/Correctness.lean#L60)<br>`AlgebraicMAC` (structure) [AlgebraicMAC.lean:62](../../KVAC/Core/AlgebraicMAC.lean#L62)<br>`μCMZBaseMAC` (def) [Construction.lean:257](../../KVAC/Schemes/MicroCMZ/Construction.lean#L257) | 🟢 |
 | [Figure 5](../Orru_2024.pdf#page=25) | §3.2 Algebraic message authentication codes | 25 | The unforgeability-under-chosen-message-and-verification (UF-CMVA) security game for an algebraic MAC. | `UF_CMVAGame` (def) [Security.lean:113](../../KVAC/Core/AlgebraicMAC/Security.lean#L113) | 🟢 |
-| [§3.3](../Orru_2024.pdf#page=25) | — | 25 | The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs. | `SimulationExtractable` (def) [Basic.lean:136](../../KVAC/Core/NIZKP/Basic.lean#L136) | 🟢 |
+| [§3.3](../Orru_2024.pdf#page=25) | — | 25 | The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs. | `SimulationExtractable` (def) [Basic.lean:141](../../KVAC/Core/NIZKP/Basic.lean#L141)<br>`PerfectlyComplete` (def) [Completeness.lean:37](../../KVAC/Core/NIZKP/Completeness.lean#L37)<br>`NIZKPSyntax` (structure) [Construction.lean:85](../../KVAC/Core/NIZKP/Construction.lean#L85)<br>`NIZKP` (structure) [NIZKP.lean:33](../../KVAC/Core/NIZKP.lean#L33) | 🟢 |
 | [Figure 6](../Orru_2024.pdf#page=26) | §3.3 Zero-knowledge arguments | 26 | The one-more unforgeability game for an anonymous token scheme with non-interactive issuance. | — | ⚪ |
 | [§3.4](../Orru_2024.pdf#page=26) | — | 26 | Syntax and security of anonymous token schemes with non-interactive issuance. | — | ⚪ |
 | [Definition 4.1](../Orru_2024.pdf#page=28) | §4.1 Syntax | 28 | A credential predicate: an efficiently-computable function on attributes that fixes what a presentation proves. | — | ⚪ |
