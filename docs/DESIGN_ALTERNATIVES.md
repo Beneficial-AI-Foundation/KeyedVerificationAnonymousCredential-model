@@ -86,7 +86,10 @@ The optional crs trapdoor is omitted; the paper's instantiations never use it
 
 **Rejected alternative.** The standard black-box convention, where the
 extractor has rewindable oracle access to the prover and sees neither its
-coins nor its code. Tom Shrimpton advocates it.
+coins nor its code. Tom Shrimpton advocated it during the review of the
+security-model-agnostic specification (PR #34), before the paper-faithful
+specification existed; it is not a comment on the extraction layer now
+committed.
 
 **Fidelity argument.** O24 defines the extractor over the coins and code of A,
 and its §9 instantiation is inherently non-black-box, since it relies on AGM
