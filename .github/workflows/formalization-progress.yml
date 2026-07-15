@@ -17,24 +17,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # Regenerates the progress table after each merge to main and commits the
-      # result when it changed. PRs are not gated on the table; it is derived
-      # from the merged sources here, so it can never stay stale on main. The
-      # paper side reads the committed text extraction
-      # (docs/formalization-progress/Orru_2024.txt); refresh that file with the
-      # `extract` subcommand only if the PDF or the extraction tooling changes.
+      # Sync before regenerating so the table derives from the latest main and
+      # the later push does not have to rebase a local commit over new ones.
+      - name: Sync with main
+        run: git pull --rebase origin main
+      # Regenerates the progress table after each merge to main. PRs are not
+      # gated on the table; it is derived from the merged sources here, so it
+      # can never stay stale on main. The paper side reads the committed text
+      # extraction (docs/formalization-progress/Orru_2024.txt); refresh that
+      # file with the `extract` subcommand only if the PDF or the extraction
+      # tooling changes.
       - name: Regenerate formalization-progress table
         run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml
-      - name: Commit the regenerated table (if changed)
-        run: |
-          if ! git diff --quiet -- docs/formalization-progress; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docs/formalization-progress/FORMALIZATION_PROGRESS.md docs/formalization-progress/formalization_progress.json
-            git commit -m "docs(progress): regenerate formalization-progress table"
-            git pull --rebase origin main
-            git push
-          fi
       # Right after regeneration nothing is stale, so --check exits non-zero
       # only for genuine problems: a Lean docstring citing a paper element that
       # does not exist (a typo, an extraction miss, or a stale summary key).
@@ -47,3 +41,14 @@ jobs:
       # not curated (warnings).
       - name: Cross-reference audit
         run: python3 docs/formalization-progress/formalization_progress.py xref --config docs/formalization-progress/formalization_source.toml
+      # Runs only when --check and xref both passed, so a bad state never
+      # lands on main through this workflow.
+      - name: Commit and push the regenerated table (if changed)
+        run: |
+          if ! git diff --quiet -- docs/formalization-progress; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/formalization-progress/FORMALIZATION_PROGRESS.md docs/formalization-progress/formalization_progress.json
+            git commit -m "docs(progress): regenerate formalization-progress table"
+            git push
+          fi
