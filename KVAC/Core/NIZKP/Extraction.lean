@@ -34,12 +34,6 @@ open OracleComp OracleSpec ENNReal
 extractors. -/
 abbrev ROCache (H : HashSpec) : Type := ((H.Dom →ₒ H.Rng).QueryCache)
 
-/-- Decidability of the relation, deciding the (x, w) ∉ R win condition of the
-O24 §3.3 games. The paper's algebraic relations satisfy it. -/
-abbrev RelationDecidable (zkp : NIZKPSyntax ProbComp) : Type :=
-  ∀ {secParam : Nat} (crs : zkp.Crs secParam) (x : zkp.Stmt crs)
-    (w : zkp.Witness crs), Decidable (zkp.relation crs x w)
-
 /-- Decidable equality on statements, deciding freshness and the
 candidate-statement check of the O24 §3.3 simulation-extractability game. -/
 abbrev StmtDecEq (zkp : NIZKPSyntax ProbComp) : Type :=
@@ -52,7 +46,7 @@ abbrev ProofDecEq (zkp : NIZKPSyntax ProbComp) : Type :=
 
 /-- `true` iff the extractor returned a witness satisfying the relation. The
 O24 §3.3 games win for the adversary when this fails on a verifying proof. -/
-def witnessValid (zkp : NIZKPSyntax ProbComp) (dec : RelationDecidable zkp)
+def witnessValid (zkp : NIZKPSyntax ProbComp) (dec : zkp.DecidableRelation)
     {secParam : Nat} (crs : zkp.Crs secParam) (x : zkp.Stmt crs) :
     Option (zkp.Witness crs) → Bool
   | none => false
@@ -78,7 +72,7 @@ abbrev KSNDExtractor (zkp : NIZKPSyntax ProbComp) (H : HashSpec) : Type :=
 (x, π) ← A(crs); w ← Ext; A wins iff ZKP.V(crs, x, π) = 1 ∧ (x, w) ∉ R. -/
 def ksndGame (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
     (ext : KSNDExtractor zkp H) (A : KSNDAdversary zkp H)
-    (dec : RelationDecidable zkp) (secParam : Nat) : ProbComp Bool := do
+    (dec : zkp.DecidableRelation) (secParam : Nat) : ProbComp Bool := do
   let crs ← zkp.setup secParam
   let ((x, π), cache) ← (simulateQ (zkROImpl H) (A.run crs)).run ∅
   let w? ← ext A crs x π cache
@@ -89,7 +83,7 @@ def ksndGame (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
 returns `true`. -/
 noncomputable abbrev KSNDAdv (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
     (ext : KSNDExtractor zkp H) (A : KSNDAdversary zkp H)
-    (dec : RelationDecidable zkp) (secParam : Nat) : ℝ≥0∞ :=
+    (dec : zkp.DecidableRelation) (secParam : Nat) : ℝ≥0∞ :=
   Pr[= true | ksndGame zkp H ext A dec secParam]
 
 /-! ## Simulation extractability -/
@@ -159,7 +153,7 @@ IACR ePrint 2023/494, plus the candidate statement): A^Sim(crs) outputs
 pairs, and extraction fails, where success demands x̂ = x and (x, w) ∈ R. -/
 def seGame (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
     (sim : ZKSimulator zkp H) (ext : SEExtractor zkp H)
-    (A : SEAdversary zkp H) (dec : RelationDecidable zkp)
+    (A : SEAdversary zkp H) (dec : zkp.DecidableRelation)
     (ds : StmtDecEq zkp) (dp : ProofDecEq zkp) (secParam : Nat) :
     ProbComp Bool := do
   let crs ← zkp.setup secParam
@@ -179,7 +173,7 @@ the probability that `seGame` returns `true`. The hypothesis the μCMZ and μBBS
 credential theorems consume. -/
 noncomputable abbrev SEAdv (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
     (sim : ZKSimulator zkp H) (ext : SEExtractor zkp H)
-    (A : SEAdversary zkp H) (dec : RelationDecidable zkp)
+    (A : SEAdversary zkp H) (dec : zkp.DecidableRelation)
     (ds : StmtDecEq zkp) (dp : ProofDecEq zkp) (secParam : Nat) : ℝ≥0∞ :=
   Pr[= true | seGame zkp H sim ext A dec ds dp secParam]
 
