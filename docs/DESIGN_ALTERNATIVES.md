@@ -74,10 +74,26 @@ if (x, w) ∈ R" before answering. The check belongs to the oracle, not to the
 query interface, and a type-level restriction silently narrows the game's
 interface. The `none` answer encodes the paper's implicit ⊥.
 
+## White-box knowledge-soundness extractor
+
+**Decision.** The knowledge-soundness and simulation-extractability extractors
+are white-box, per O24 §3.3 (p. 25), which has Ext take "the random coins and
+the code of the p.p.t. adversary A". The extractor receives the adversary
+value (the code) and the run's trace, that is, the output pair, the
+random-oracle cache, and, for simulation extractability, the simulation log.
+The optional crs trapdoor is omitted; the paper's instantiations never use it
+(PR #54, `Extraction.lean`).
+
+**Rejected alternative.** The standard black-box convention, where the
+extractor has rewindable oracle access to the prover and sees neither its
+coins nor its code. Tom Shrimpton advocates it.
+
+**Fidelity argument.** O24 defines the extractor over the coins and code of A,
+and its §9 instantiation is inherently non-black-box, since it relies on AGM
+representations. White-box access subsumes rewindable black-box access, since
+the extractor can re-run the adversary value. Issue #43 records the
+discussion; the paper-fidelity requirement decides it.
+
 ## Open alternatives
 
-- White-box versus black-box knowledge-soundness extractor, issue #43. O24
-  §3.3 defines the extractor over the coins and code of the adversary
-  (white-box); Tom Shrimpton advocates black-box rewindable access. The
-  formalization follows O24. Confirmation is pending on whether black-box
-  access is a hard constraint for the μCMZ instantiations.
+None at present.
