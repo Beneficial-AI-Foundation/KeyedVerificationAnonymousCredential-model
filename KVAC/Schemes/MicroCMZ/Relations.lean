@@ -13,7 +13,9 @@ import VCVio.ProgramLogic.Tactics
 The keyed-verification credential μCMZ of Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.1, proves three relations
 `R_cmz = R_iu ∪ R_is ∪ R_p` (issuance-user, issuance-server, presentation).
-**This file implements `R_iu`; `R_is` and `R_p` land in follow-up PRs.**
+They are built as VCVio `SigmaProtocol` instances, reusing the Schnorr template
+(`.lake/packages/VCVio/Examples/Schnorr.lean`) generalized to vectors of
+bases/scalars.
 
 All three are generalized-Schnorr Σ-protocols:
 
@@ -22,7 +24,7 @@ All three are generalized-Schnorr Σ-protocols:
 - **R_is** (Eq. 10): the issuer proves knowledge of `(x₀, u)` with
   `U' = u • G ∧ X₀ = x₀ • H ∧ V' = x₀ • U' + u • C''`.
 - **R_p** (Eq. 11): the user proves knowledge of `(r', r⃗, m⃗)` with
-  `(∀ i, Cᵢ = mᵢ • U' + rᵢ • G) ∧ Z = Σᵢ rᵢ • Xᵢ − r' • H`.
+  `(∀ i, Cᵢ = mᵢ • U' + rᵢ • G) ∧ Z = Σᵢ rᵢ • Xᵢ − r' • H ∧ φ m⃗`.
   (The `U' ≠ 0` check of Figure 9 is performed by the presentation verifier
   outside the proof, so it is not part of the relation.)
 
@@ -35,7 +37,7 @@ configuration. The base credential instantiates `φ` with `trivialPolicy`.
 
 Soundness for a non-trivial `φ` is conditional on `Enforces`: the linear `verify`
 checks only the representation equation, so it cannot enforce `φ` on extracted
-witnesses; `trivialPolicy` discharges `Enforces` (`enforces_trivialPolicy`).
+witnesses; `trivialPolicy` discharges `Enforces` (`riu_enforces_trivialPolicy`).
 `PerfectlyComplete` and `HVZK` hold for any `φ` (neither touches `φ`).
 
 ## Elaboration pitfalls (read before editing)
@@ -140,41 +142,54 @@ private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
   rw [probOutput_bind_eq_tsum ($ᵗ A) k₁ t, probOutput_bind_eq_tsum ($ᵗ A) k₂ t]
   exact tsum_congr fun a => by rw [h a]
 
-/-! ## R_iu — issuance user proof (O24 Eq. 9) -/
+/-! ## Shared statement components (O24 §5.1)
 
-/-- Public bases `X⃗` (O24 Eq. 9): `Fin n → G`. -/
-abbrev RiuBases (G : Type) (n : ℕ) : Type := Fin n → G
+The public bases `X⃗` and the attribute predicate `φ` appear in both the
+issuance-user relation `R_iu` (Eq. 9) and the presentation relation `R_p`
+(Eq. 11), so they are factored out here rather than named per-relation. -/
 
-/-- Issuance predicate `φ` (O24 Eq. 9): `(Fin n → F) → Bool`. -/
-abbrev RiuPolicy (F : Type) (n : ℕ) : Type := (Fin n → F) → Bool
+/-- Public bases `X⃗ = (X₁,…,Xₙ)` (O24 §5.1 public parameters, `Xᵢ = xᵢ • G`):
+the issuer public-key components, used as the generalized-Schnorr bases in both
+`R_iu` (Eq. 9) and `R_p` (Eq. 11). -/
+abbrev PublicBases (G : Type) (n : ℕ) : Type := Fin n → G
 
-/-- R_iu statement `(C', X⃗, φ)` (O24 Fig 9 / Eq. 9):
-`G × RiuBases G n × RiuPolicy F n`. Right-associated: `stmt.1 = C'`,
-`stmt.2.1 = X⃗`, `stmt.2.2 = φ`. -/
-abbrev RiuStmt (G : Type) (F : Type) (n : ℕ) : Type :=
-  G × RiuBases G n × RiuPolicy F n
+/-- Attribute predicate `φ` (O24 §5.1): the issuance/presentation predicate on
+the messages `m⃗`, `(Fin n → F) → Bool`. -/
+abbrev Policy (F : Type) (n : ℕ) : Type := (Fin n → F) → Bool
 
 /-- No-policy predicate `φ ≡ ⊤` (O24 anonymous-token / base-credential case). -/
-def trivialPolicy : RiuPolicy F n := fun _ => true
+def trivialPolicy : Policy F n := fun _ => true
+
+/-! ## R_iu — issuance user proof (O24 Eq. 9) -/
+
+/-- R_iu statement `(C', X⃗, φ)` (O24 Fig 9 / Eq. 9):
+`G × PublicBases G n × Policy F n`. Right-associated: `stmt.1 = C'`,
+`stmt.2.1 = X⃗`, `stmt.2.2 = φ`. -/
+abbrev RiuStmt (G : Type) (F : Type) (n : ℕ) : Type :=
+  G × PublicBases G n × Policy F n
+
+/-- R_iu witness `(m⃗, s)` (O24 Eq. 9): the attributes `m⃗` and the commitment
+blinding scalar `s`, `(Fin n → F) × F`. -/
+abbrev RiuWitness (F : Type) (n : ℕ) : Type := (Fin n → F) × F
 
 /-- R_iu relation (O24 Fig 9 / Eq. 9): `(C', X⃗, φ)` holds for witness `(m⃗, s)`
 iff `C' = Σᵢ mᵢ • Xᵢ + s • gen ∧ φ m⃗`. Use `trivialPolicy` for the no-policy
 case. -/
-def riuRel (gen : G) : RiuStmt G F n → ((Fin n → F) × F) → Bool :=
-  fun stmt w => decide (stmt.1 = (∑ i, w.1 i • stmt.2.1 i) + w.2 • gen) && stmt.2.2 w.1
+def riuRel (gen : G) : RiuStmt G F n → RiuWitness F n → Bool :=
+  fun ⟨Cp, X, φ⟩ ⟨m, s⟩ => decide (Cp = (∑ i, m i • X i) + s • gen) && φ m
 
 /-- R_iu as a generalized-Schnorr Σ-protocol (O24 Fig 9): PoK of a
 representation of `C'` in bases `X⃗, G`. `verify` checks only the linear
 equation; `φ`-enforcement on extracted witnesses is the `Enforces` hypothesis
 (see `riuSigma_speciallySoundAt`). -/
 def riuSigma (gen : G) :
-    SigmaProtocol (RiuStmt G F n) ((Fin n → F) × F) G
+    SigmaProtocol (RiuStmt G F n) (RiuWitness F n) G
       ((Fin n → F) × F) F ((Fin n → F) × F) (riuRel gen) where
   commit s _w := do
     let ρ ← $ᵗ (Fin n → F)
     let ρs ← $ᵗ F
     return ((∑ i, ρ i • s.2.1 i) + ρs • gen, (ρ, ρs))
-  respond _s w sc c := pure (fun i => sc.1 i + c * w.1 i, sc.2 + c * w.2)
+  respond _s := fun ⟨m, s⟩ sc c => pure (fun i => sc.1 i + c * m i, sc.2 + c * s)
   verify s R c z := decide ((∑ i, z.1 i • s.2.1 i) + z.2 • gen = R + c • s.1)
   sim s := do
     let ρ ← $ᵗ (Fin n → F); let ρs ← $ᵗ F
@@ -186,13 +201,13 @@ def riuSigma (gen : G) :
 Holds for any `φ` — `verify` ignores the `φ` arm. -/
 theorem riuSigma_complete (gen : G) :
     PerfectlyComplete (riuSigma (F := F) (n := n) gen) := by
-  rintro ⟨Cp, X, φ⟩ w h
+  rintro ⟨Cp, X, φ⟩ ⟨m, s⟩ h
   simp only [riuRel] at h
   obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp h
-  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hlin
+  have h_eq : Cp = (∑ i, m i • X i) + s • gen := of_decide_eq_true hlin
   simp only [riuSigma, bind_assoc, pure_bind]
   have hverify : ∀ (ρ : Fin n → F) (ρs c : F),
-      (∑ i, (ρ i + c * w.1 i) • X i) + (ρs + c * w.2) • gen
+      (∑ i, (ρ i + c * m i) • X i) + (ρs + c * s) • gen
         = ((∑ i, ρ i • X i) + ρs • gen) + c • Cp := by
     intro ρ ρs c
     rw [h_eq]
@@ -202,7 +217,7 @@ theorem riuSigma_complete (gen : G) :
 
 /-- `verify` enforces `φ`: every witness the extractor can produce from two
 accepting transcripts (same announcement, distinct challenges) satisfies `φ`.
-For `R_iu` instantiated with `fun w => stmt.2.2 w.1`. Provable for
+For `R_iu` instantiated with `fun ⟨m, _s⟩ => φ m`. Provable for
 `φ = trivialPolicy` (`enforces_trivialPolicy`); a `verify` that checks `φ` in
 ZK would discharge it for a proper `φ`.
 
@@ -215,22 +230,22 @@ def Enforces {S W PC SC Ω P : Type} {p : S → W → Bool}
     ∀ w ∈ support (σ.extract c₁ z₁ c₂ z₂), φ w = true
 
 /-- `trivialPolicy` is enforced by any `verify` (it holds of every `m⃗`). -/
-theorem enforces_trivialPolicy (gen : G) (Cp : G) (X : RiuBases G n) :
+theorem riu_enforces_trivialPolicy (gen : G) (Cp : G) (X : PublicBases G n) :
     Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, trivialPolicy)
-      (fun w => trivialPolicy w.1) := by
-  rintro _ _ _ _ _ _ _ _ w _
+      (fun ⟨m, _s⟩ => trivialPolicy m) := by
+  rintro _ _ _ _ _ _ _ _ ⟨m, _s⟩ _
   rfl
 
 /-- Special soundness (O24 Fig 9), conditional on `Enforces`: two accepting
 transcripts (same announcement, distinct challenges) extract to a witness
 satisfying the linear equation and `φ`. Discharge `hφ` with
-`enforces_trivialPolicy` for `φ = trivialPolicy`. -/
-theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : RiuBases G n)
-    (φ : RiuPolicy F n)
-    (hφ : Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, φ) (fun w => φ w.1)) :
+`riu_enforces_trivialPolicy` for `φ = trivialPolicy`. -/
+theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
+    (φ : Policy F n)
+    (hφ : Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, φ) (fun ⟨m, _s⟩ => φ m)) :
     SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, φ) := by
   intro R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
-  have hφw : φ w.1 = true := hφ R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  have hφw := hφ R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
   dsimp [riuSigma] at h_v1 h_v2 h_w
   simp only [support_pure, Set.mem_singleton_iff] at h_w
   subst h_w
@@ -256,15 +271,15 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : RiuBases G n)
         simp only [mul_comm]
 
 /-- Special soundness at `trivialPolicy` for every statement (discharges
-`Enforces` via `enforces_trivialPolicy`). -/
-theorem riuSigma_speciallySoundAt_trivial (gen : G) (Cp : G) (X : RiuBases G n) :
+`Enforces` via `riu_enforces_trivialPolicy`). -/
+theorem riuSigma_speciallySoundAt_trivial (gen : G) (Cp : G) (X : PublicBases G n) :
     SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, trivialPolicy) :=
-  riuSigma_speciallySoundAt gen Cp X trivialPolicy (enforces_trivialPolicy gen Cp X)
+  riuSigma_speciallySoundAt gen Cp X trivialPolicy (riu_enforces_trivialPolicy gen Cp X)
 
 /-- Simulated transcript as a function of response `(a,b)` and challenge `c`:
 announcement `R = Σ aᵢ·Xᵢ + b·gen − c·C'`, paired with `(c, (a,b))`.
 `riuSimTranscript` samples `(c,a,b)` uniformly. -/
-private def simTranscriptValue (gen : G) (X : RiuBases G n) (Cp : G)
+private def riuSimTranscriptValue (gen : G) (X : PublicBases G n) (Cp : G)
     (a : Fin n → F) (b c : F) : G × F × (Fin n → F) × F :=
   ((∑ i, a i • X i) + b • gen - c • Cp, c, a, b)
 
@@ -272,18 +287,19 @@ private def simTranscriptValue (gen : G) (X : RiuBases G n) (Cp : G)
 `R = Σ zᵢ•Xᵢ + zₛ•gen − c•C'`. -/
 noncomputable def riuSimTranscript (gen : G) (stmt : RiuStmt G F n) :
     ProbComp (G × F × ((Fin n → F) × F)) := do
+  let ⟨Cp, X, _⟩ := stmt 
   let c ← $ᵗ F
   let zm ← $ᵗ (Fin n → F)
   let zs ← $ᵗ F
-  return (simTranscriptValue gen stmt.2.1 stmt.1 zm zs c)
+  return (riuSimTranscriptValue gen X Cp zm zs c)
 
 /-- HVZK (O24 Eq. 9): real transcripts match `riuSimTranscript` exactly. -/
 theorem riuSigma_hvzk (gen : G) :
     HVZK (riuSigma (F := F) (n := n) gen) (riuSimTranscript gen) := by
-  rintro ⟨Cp, X, φ⟩ w hrel
+  rintro ⟨Cp, X, φ⟩ ⟨m, s⟩ hrel
   simp only [riuRel] at hrel
   obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp hrel
-  have h_eq : Cp = (∑ i, w.1 i • X i) + w.2 • gen := of_decide_eq_true hlin
+  have h_eq : Cp = (∑ i, m i • X i) + s • gen := of_decide_eq_true hlin
   simp only [riuSigma, riuSimTranscript, bind_assoc, pure_bind]
   apply evalDist_ext; intro t
   -- 1. Bring the challenge to the front (TWO swaps: a single `vcstep rw` would
@@ -294,25 +310,432 @@ theorem riuSigma_hvzk (gen : G) :
   -- 2. For fixed `c`, rewrite the real value to the simulated value with each mask
   --    shifted by the challenge-scaled witness, then strip the two shifts.
   have hbody : ∀ (ρ : Fin n → F) (ρs : F),
-      ((∑ i, ρ i • X i) + ρs • gen, c, (fun i => ρ i + c * w.1 i), ρs + c * w.2)
-        = simTranscriptValue gen X Cp ((fun j => c * w.1 j) + ρ) (c * w.2 + ρs) c := by
+      ((∑ i, ρ i • X i) + ρs • gen, c, (fun i => ρ i + c * m i), ρs + c * s)
+        = riuSimTranscriptValue gen X Cp ((fun j => c * m j) + ρ) (c * s + ρs) c := by
     intro ρ ρs
     have e1 : (∑ i, ρ i • X i) + ρs • gen
-        = (∑ i, ((fun j => c * w.1 j) + ρ) i • X i) + (c * w.2 + ρs) • gen - c • Cp := by
+        = (∑ i, ((fun j => c * m j) + ρ) i • X i) + (c * s + ρs) • gen - c • Cp := by
       rw [h_eq]
       simp only [Pi.add_apply, add_smul, mul_smul, smul_add, Finset.smul_sum,
         Finset.sum_add_distrib]
       abel
-    have e3 : (fun i => ρ i + c * w.1 i) = (fun j => c * w.1 j) + ρ := by
+    have e3 : (fun i => ρ i + c * m i) = (fun j => c * m j) + ρ := by
       funext i; simp only [Pi.add_apply]; ring
-    simp only [simTranscriptValue, e1, e3, add_comm ρs (c * w.2)]
+    simp only [riuSimTranscriptValue, e1, e3, add_comm ρs (c * s)]
   simp only [hbody]
-  refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun j => c * w.1 j)
-    (f := fun ρ => ($ᵗ F : ProbComp F) >>= fun ρs => 
-      pure (simTranscriptValue gen X Cp ρ (c * w.2 + ρs) c))
+  refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun j => c * m j)
+    (f := fun ρ => ($ᵗ F : ProbComp F) >>= fun ρs =>
+      pure (riuSimTranscriptValue gen X Cp ρ (c * s + ρs) c))
     (z := t)).trans ?_
   refine probOutput_bind_uniform_congr fun ρ => ?_
-  exact probOutput_bind_add_left_uniform (α := F) (m := c * w.2)
-    (f := fun ρs => pure (simTranscriptValue gen X Cp ρ ρs c)) (z := t)
+  exact probOutput_bind_add_left_uniform (α := F) (m := c * s)
+    (f := fun ρs => pure (riuSimTranscriptValue gen X Cp ρ ρs c)) (z := t)
+
+/-! ## R_is — issuance server proof (O24 Eq. 10) -/
+
+/-- R_is statement `(X₀, C'', U', V')` (O24 Fig 9 / Eq. 10): `G × G × G × G`.
+Right-associated: `stmt.1 = X₀`, `stmt.2.1 = C''`, `stmt.2.2.1 = U'`,
+`stmt.2.2.2 = V'`. -/
+abbrev RisStmt (G : Type) : Type := G × G × G × G
+
+/-- R_is witness `(x₀, u)` (O24 Eq. 10): the issuer secret-key component `x₀`
+and the MAC nonce scalar `u`, `F × F`. -/
+abbrev RisWitness (F : Type) : Type := F × F
+
+/-- The R_is relation (O24 Fig 9, issuance server proof): the statement
+`(X₀, C'', U', V')` is satisfied by the witness `(x₀, u)` iff
+`U' = u • gen ∧ X₀ = x₀ • H ∧ V' = x₀ • U' + u • C''`. -/
+def risRel (gen H : G) : RisStmt G → RisWitness F → Bool :=
+  fun ⟨X₀, C'', U', V'⟩ ⟨x₀, u⟩ => decide
+    (U' = u • gen ∧ X₀ = x₀ • H ∧
+      V' = x₀ • U' + u • C'')
+
+/-- R_is as a Σ-protocol: a three-equation AND-composition Schnorr proof over
+the bases `gen`, `H`, and the statement-dependent bases `U'`, `C''`. The
+announcement is one group element per equation; the response is the masked
+witness `(z_x, z_u)`. -/
+def risSigma (gen H : G) :
+    SigmaProtocol (RisStmt G) (RisWitness F) (G × G × G) (F × F) F (F × F)
+      (risRel gen H) where
+  commit := fun ⟨_X₀, C'', U', _V'⟩ _w => do
+    let ρx ← $ᵗ F
+    let ρu ← $ᵗ F
+    return ((ρu • gen, ρx • H, ρx • U' + ρu • C''), (ρx, ρu))
+  respond _s := fun ⟨x₀, u⟩ sc c => pure (sc.1 + c * x₀, sc.2 + c * u)
+  verify := fun ⟨X₀, C'', U', V'⟩ R c z => decide
+    (z.2 • gen = R.1 + c • U' ∧
+      z.1 • H = R.2.1 + c • X₀ ∧
+      z.1 • U' + z.2 • C'' = R.2.2 + c • V')
+  sim := fun ⟨_X₀, C'', U', _V'⟩ => do
+    let ρx ← $ᵗ F
+    let ρu ← $ᵗ F
+    return (ρu • gen, ρx • H, ρx • U' + ρu • C'')
+  extract c₁ z₁ c₂ z₂ :=
+    pure ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹, (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
+
+/-- Completeness of the R_is Σ-protocol. -/
+theorem risSigma_complete (gen H : G) :
+    PerfectlyComplete (risSigma (F := F) gen H) := by
+  intro s w h
+  obtain ⟨X₀, C'', U', V'⟩ := s
+  obtain ⟨x₀, u⟩ := w
+  obtain ⟨hU, hX, hV⟩ := of_decide_eq_true h
+  simp only [risSigma, bind_assoc, pure_bind]
+  have h1 : ∀ (ρu c : F), (ρu + c * u) • gen = ρu • gen + c • U' := by
+    intro ρu c; rw [add_smul, mul_smul, ← hU]
+  have h2 : ∀ (ρx c : F), (ρx + c * x₀) • H = ρx • H + c • X₀ := by
+    intro ρx c; rw [add_smul, mul_smul, ← hX]
+  have h3 : ∀ (ρx ρu c : F),
+      (ρx + c * x₀) • U' + (ρu + c * u) • C''
+        = (ρx • U' + ρu • C'') + c • V' := by
+    intro ρx ρu c
+    rw [hV]
+    simp only [add_smul, mul_smul, smul_add]
+    abel
+  exact probOutput_decide_bind₃ _ fun ρx ρu c =>
+    decide_eq_true ⟨h1 ρu c, h2 ρx c, h3 ρx ρu c⟩
+
+/-- Special soundness of the R_is Σ-protocol. -/
+theorem risSigma_speciallySound (gen H : G) :
+    SpeciallySound (risSigma (F := F) gen H) := by
+  intro s R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  obtain ⟨X₀, C'', U', V'⟩ := s
+  dsimp [risSigma] at *
+  simp only [support_pure, Set.mem_singleton_iff] at h_w
+  subst h_w
+  simp only [decide_eq_true_eq] at h_v1 h_v2
+  obtain ⟨h1U, h1X, h1V⟩ := h_v1
+  obtain ⟨h2U, h2X, h2V⟩ := h_v2
+  simp only [risRel, decide_eq_true_eq]
+  have h_ne' : c₁ - c₂ ≠ 0 := sub_ne_zero.mpr h_ne
+  have hdiv : ∀ (a : F) (A B : G), (c₁ - c₂) • B = a • A →
+      B = (a * (c₁ - c₂)⁻¹) • A := by
+    intro a A B hab
+    calc B = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • B) := by
+          rw [← mul_smul, inv_mul_cancel₀ h_ne', one_smul]
+      _ = (c₁ - c₂)⁻¹ • (a • A) := by rw [hab]
+      _ = (a * (c₁ - c₂)⁻¹) • A := by rw [← mul_smul, mul_comm]
+  refine ⟨?_, ?_, ?_⟩
+  · -- U' = ((z₁.2 - z₂.2) * (c₁ - c₂)⁻¹) • gen
+    refine hdiv _ _ _ ?_
+    calc (c₁ - c₂) • U'
+        = (z₁.2 • gen) - (z₂.2 • gen) := by rw [h1U, h2U, sub_smul]; abel
+      _ = (z₁.2 - z₂.2) • gen := by rw [sub_smul]
+  · -- X₀ = ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹) • H
+    refine hdiv _ _ _ ?_
+    calc (c₁ - c₂) • X₀
+        = (z₁.1 • H) - (z₂.1 • H) := by rw [h1X, h2X, sub_smul]; abel
+      _ = (z₁.1 - z₂.1) • H := by rw [sub_smul]
+  · -- V' = wx • U' + wu • C''
+    have h_sub : (c₁ - c₂) • V'
+        = (z₁.1 - z₂.1) • U' + (z₁.2 - z₂.2) • C'' := by
+      calc (c₁ - c₂) • V'
+          = (z₁.1 • U' + z₁.2 • C'')
+              - (z₂.1 • U' + z₂.2 • C'') := by
+            rw [h1V, h2V, sub_smul]; abel
+        _ = (z₁.1 - z₂.1) • U' + (z₁.2 - z₂.2) • C'' := by
+            simp only [sub_smul]; abel
+    calc V'
+        = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • V') := by
+          rw [← mul_smul, inv_mul_cancel₀ h_ne', one_smul]
+      _ = (c₁ - c₂)⁻¹ • ((z₁.1 - z₂.1) • U' + (z₁.2 - z₂.2) • C'') := by
+          rw [h_sub]
+      _ = ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹) • U'
+            + ((z₁.2 - z₂.2) * (c₁ - c₂)⁻¹) • C'' := by
+          simp only [smul_add, ← mul_smul]
+          simp only [mul_comm]
+
+/-- The simulated-transcript value of `risSigma` on responses `(a, b) = (zx, zu)`
+and challenge `c`: the three announcements are solved from the verification
+equations, given the statement pieces `X₀, C'', U', V'`. Mirrors
+`riuSimTranscriptValue`. -/
+private def risSimTranscriptValue (gen H : G) (X₀ C'' U' V' : G) (a b c : F) :
+    (G × G × G) × F × (F × F) :=
+  ((b • gen - c • U', a • H - c • X₀, a • U' + b • C'' - c • V'), c, (a, b))
+
+/-- Transcript simulator for the R_is Σ-protocol: sample the challenge and the
+response uniformly and solve the three verification equations for the
+announcements. -/
+noncomputable def risSimTranscript (gen H : G) (stmt : RisStmt G) :
+    ProbComp ((G × G × G) × F × (F × F)) := do
+  let ⟨X₀, C'', U', V'⟩ := stmt
+  let c ← $ᵗ F
+  let zx ← $ᵗ F
+  let zu ← $ᵗ F
+  return (risSimTranscriptValue gen H X₀ C'' U' V' zx zu c)
+
+/-- Honest-verifier zero-knowledge of the R_is Σ-protocol (O24 Eq. 10). Same
+shape as `riuSigma_hvzk`: reorder the challenge to the front, rewrite the real
+announcement to the simulated one with each mask shifted by the challenge-scaled
+witness, then strip the two shifts. Both masks are scalars here, so both shifts
+are over `F`. -/
+theorem risSigma_hvzk (gen H : G) :
+    HVZK (risSigma (F := F) gen H) (risSimTranscript gen H) := by
+  intro s w hrel
+  obtain ⟨X₀, C'', U', V'⟩ := s
+  obtain ⟨x₀, u⟩ := w
+  obtain ⟨hU, hX, hV⟩ := of_decide_eq_true hrel
+  simp only [risSigma, risSimTranscript, bind_assoc, pure_bind]
+  apply evalDist_ext; intro t
+  vcstep rw under 1
+  vcstep rw
+  vcstep rw congr' as ⟨c⟩
+  have hbody : ∀ (ρx ρu : F),
+      ((ρu • gen, ρx • H, ρx • U' + ρu • C''), c, (ρx + c * x₀, ρu + c * u))
+        = risSimTranscriptValue gen H X₀ C'' U' V' (c * x₀ + ρx) (c * u + ρu) c := by
+    intro ρx ρu
+    have e1 : ρu • gen = (c * u + ρu) • gen - c • U' := by
+      rw [hU]; simp only [add_smul, mul_smul]; abel
+    have e2 : ρx • H = (c * x₀ + ρx) • H - c • X₀ := by
+      rw [hX]; simp only [add_smul, mul_smul]; abel
+    have e3 : ρx • U' + ρu • C''
+        = (c * x₀ + ρx) • U' + (c * u + ρu) • C'' - c • V' := by
+      rw [hV]; simp only [add_smul, mul_smul, smul_add]; abel
+    simp only [risSimTranscriptValue, e1, e2, e3, add_comm ρx (c * x₀), add_comm ρu (c * u)]
+  simp only [hbody]
+  refine (probOutput_bind_add_left_uniform (α := F) (m := c * x₀)
+    (f := fun ρx => ($ᵗ F : ProbComp F) >>= fun ρu =>
+      pure (risSimTranscriptValue gen H X₀ C'' U' V' ρx (c * u + ρu) c)) (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρx => ?_
+  exact probOutput_bind_add_left_uniform (α := F) (m := c * u)
+    (f := fun ρu => pure (risSimTranscriptValue gen H X₀ C'' U' V' ρx ρu c)) (z := t)
+
+/-! ## R_p — presentation proof (O24 Eq. 11) -/
+
+/-- R_p statement `(U', X⃗, C⃗, Z, φ)` (O24 Fig 9 / Eq. 11):
+`G × PublicBases G n × (Fin n → G) × G × Policy F n`. Right-associated:
+`stmt.1 = U'`, `stmt.2.1 = X⃗`, `stmt.2.2.1 = C⃗`, `stmt.2.2.2.1 = Z`,
+`stmt.2.2.2.2 = φ`. Mirrors `RiuStmt`: the public bases `X⃗` and the policy `φ`
+live in the statement rather than as protocol parameters. -/
+abbrev RpStmt (G : Type) (F : Type) (n : ℕ) : Type :=
+  G × PublicBases G n × (Fin n → G) × G × Policy F n
+
+/-- R_p witness `(r', r⃗, m⃗)` (O24 Eq. 11): the presentation blinding scalar `r'`,
+the per-commitment randomness `r⃗`, and the attributes `m⃗`,
+`F × (Fin n → F) × (Fin n → F)`. -/
+abbrev RpWitness (F : Type) (n : ℕ) : Type := F × (Fin n → F) × (Fin n → F)
+
+/-- The R_p relation (O24 Fig 9, presentation proof): the statement
+`(U', X⃗, C⃗, Z, φ)` is satisfied by the witness `(r', r⃗, m⃗)` iff
+`(∀ i, Cᵢ = mᵢ • U' + rᵢ • gen) ∧ Z = Σᵢ rᵢ • Xᵢ − r' • H ∧ φ m⃗`. Mirrors
+`riuRel`: `verify` checks only the linear arm, `φ`-enforcement on extracted
+witnesses is the `Enforces` hypothesis (see `rpSigma_speciallySoundAt`). Use
+`trivialPolicy` for the no-policy case. -/
+def rpRel (gen H : G) : RpStmt G F n → RpWitness F n → Bool :=
+  fun ⟨U, X, C, Z, φ⟩ ⟨r', r, m⟩ => decide
+    ((∀ i, C i = m i • U + r i • gen) ∧
+      Z = (∑ i, r i • X i) - r' • H) && φ m
+
+/-- R_p as a Σ-protocol: `n` opening equations for the commitments `Cᵢ` (over
+the statement-dependent base `U'` and `gen`) AND one equation for `Z` (over
+`X⃗` and `H`). The announcement is one group element per equation; the response
+is the masked witness `(z_{r'}, z⃗_r, z⃗_m)`. -/
+def rpSigma (gen H : G) :
+    SigmaProtocol (RpStmt G F n) (RpWitness F n)
+      ((Fin n → G) × G) (F × (Fin n → F) × (Fin n → F)) F
+      (F × (Fin n → F) × (Fin n → F)) (rpRel gen H) where
+  commit := fun ⟨U, X, _C, _Z, _φ⟩ _w => do
+    let ρr' ← $ᵗ F
+    let ρr ← $ᵗ (Fin n → F)
+    let ρm ← $ᵗ (Fin n → F)
+    return ((fun i => ρm i • U + ρr i • gen, (∑ i, ρr i • X i) - ρr' • H),
+      (ρr', ρr, ρm))
+  respond _s := fun ⟨r', r, m⟩ sc c => pure
+    (sc.1 + c * r', fun i => sc.2.1 i + c * r i,
+      fun i => sc.2.2 i + c * m i)
+  verify := fun ⟨U, X, C, Z, _φ⟩ R c z => decide
+    ((∀ i, z.2.2 i • U + z.2.1 i • gen = R.1 i + c • C i) ∧
+      (∑ i, z.2.1 i • X i) - z.1 • H = R.2 + c • Z)
+  sim := fun ⟨U, X, _C, _Z, _φ⟩ => do
+    let ρr' ← $ᵗ F
+    let ρr  ← $ᵗ (Fin n → F)
+    let ρm  ← $ᵗ (Fin n → F)
+    return (fun i => ρm i • U + ρr i • gen, (∑ i, ρr i • X i) - ρr' • H)
+  extract c₁ z₁ c₂ z₂ := pure
+    ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹,
+      fun i => (z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹,
+      fun i => (z₁.2.2 i - z₂.2.2 i) * (c₁ - c₂)⁻¹)
+
+/-- Completeness of the R_p Σ-protocol. Holds for any `φ` — `verify` ignores the
+`φ` arm. -/
+theorem rpSigma_complete (gen H : G) :
+    PerfectlyComplete (rpSigma (F := F) (n := n) gen H) := by
+  intro s w h
+  obtain ⟨U, X, C, Z, φ⟩ := s
+  obtain ⟨r', r, m⟩ := w
+  simp only [rpRel] at h
+  obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp h
+  obtain ⟨hC, hZ⟩ := of_decide_eq_true hlin
+  simp only [rpSigma, bind_assoc, pure_bind]
+  have h1 : ∀ (ρm ρr : Fin n → F) (c : F) (i : Fin n),
+      (ρm i + c * m i) • U + (ρr i + c * r i) • gen
+        = (ρm i • U + ρr i • gen) + c • C i := by
+    intro ρm ρr c i
+    rw [hC i]
+    simp only [add_smul, mul_smul, smul_add]
+    abel
+  have h2 : ∀ (ρr : Fin n → F) (ρr' c : F),
+      (∑ i, (ρr i + c * r i) • X i) - (ρr' + c * r') • H
+        = ((∑ i, ρr i • X i) - ρr' • H) + c • Z := by
+    intro ρr ρr' c
+    rw [hZ]
+    simp only [add_smul, mul_smul, smul_sub, Finset.smul_sum,
+      Finset.sum_add_distrib]
+    abel
+  exact probOutput_decide_bind₄ _ fun ρr' ρr ρm c =>
+    decide_eq_true ⟨fun i => h1 ρm ρr c i, h2 ρr ρr' c⟩
+
+/-- `trivialPolicy` is enforced by any `verify` for R_p (it holds of every `m⃗`). -/
+theorem rp_enforces_trivialPolicy (gen H : G) (Up : G) (X : PublicBases G n)
+    (C : Fin n → G) (Z : G) :
+    Enforces (rpSigma (F := F) (n := n) gen H) (Up, X, C, Z, trivialPolicy)
+      (fun ⟨_r', _r, m⟩ => trivialPolicy m) := by
+  rintro _ _ _ _ _ _ _ _ ⟨_r', _r, m⟩ _
+  rfl
+
+/-- Special soundness of the R_p Σ-protocol, conditional on `Enforces`: two
+accepting transcripts (same announcement, distinct challenges) extract to a
+witness satisfying the linear equations and `φ`. Discharge `hφ` with
+`rp_enforces_trivialPolicy` for `φ = trivialPolicy`. Mirrors
+`riuSigma_speciallySoundAt`. -/
+theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
+    (C : Fin n → G) (Z : G) (φ : Policy F n)
+    (hφ : Enforces (rpSigma (F := F) (n := n) gen H) (Up, X, C, Z, φ)
+      (fun ⟨_r', _r, m⟩ => φ m)) :
+    SpeciallySoundAt (rpSigma (F := F) (n := n) gen H) (Up, X, C, Z, φ) := by
+  intro R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  have hφw := hφ R c₁ c₂ z₁ z₂ h_ne h_v1 h_v2 w h_w
+  dsimp [rpSigma] at h_v1 h_v2 h_w
+  simp only [support_pure, Set.mem_singleton_iff] at h_w
+  subst h_w
+  simp only [decide_eq_true_eq] at h_v1 h_v2
+  obtain ⟨h1C, h1Z⟩ := h_v1
+  obtain ⟨h2C, h2Z⟩ := h_v2
+  simp only [rpRel, Bool.and_eq_true, decide_eq_true_eq]
+  have h_ne' : c₁ - c₂ ≠ 0 := sub_ne_zero.mpr h_ne
+  have hcancel : ∀ B : G, (c₁ - c₂)⁻¹ • ((c₁ - c₂) • B) = B := by
+    intro B; rw [← mul_smul, inv_mul_cancel₀ h_ne', one_smul]
+  refine ⟨⟨?_, ?_⟩, hφw⟩
+  · -- per-commitment openings
+    intro i
+    have h_sub : (c₁ - c₂) • C i
+        = (z₁.2.2 i - z₂.2.2 i) • Up + (z₁.2.1 i - z₂.2.1 i) • gen := by
+      calc (c₁ - c₂) • C i
+          = (z₁.2.2 i • Up + z₁.2.1 i • gen)
+              - (z₂.2.2 i • Up + z₂.2.1 i • gen) := by
+            rw [h1C i, h2C i, sub_smul]; abel
+        _ = (z₁.2.2 i - z₂.2.2 i) • Up + (z₁.2.1 i - z₂.2.1 i) • gen := by
+            simp only [sub_smul]; abel
+    calc C i
+        = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • C i) := (hcancel _).symm
+      _ = (c₁ - c₂)⁻¹ • ((z₁.2.2 i - z₂.2.2 i) • Up
+            + (z₁.2.1 i - z₂.2.1 i) • gen) := by rw [h_sub]
+      _ = ((z₁.2.2 i - z₂.2.2 i) * (c₁ - c₂)⁻¹) • Up
+            + ((z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹) • gen := by
+          simp only [smul_add, ← mul_smul]
+          simp only [mul_comm]
+  · -- the Z equation
+    have h_sub : (c₁ - c₂) • Z
+        = (∑ i, (z₁.2.1 i - z₂.2.1 i) • X i) - (z₁.1 - z₂.1) • H := by
+      calc (c₁ - c₂) • Z
+          = ((∑ i, z₁.2.1 i • X i) - z₁.1 • H)
+              - ((∑ i, z₂.2.1 i • X i) - z₂.1 • H) := by
+            rw [h1Z, h2Z, sub_smul]; abel
+        _ = (∑ i, (z₁.2.1 i - z₂.2.1 i) • X i) - (z₁.1 - z₂.1) • H := by
+            simp only [sub_smul, Finset.sum_sub_distrib]; abel
+    calc Z
+        = (c₁ - c₂)⁻¹ • ((c₁ - c₂) • Z) := (hcancel _).symm
+      _ = (c₁ - c₂)⁻¹ • ((∑ i, (z₁.2.1 i - z₂.2.1 i) • X i)
+            - (z₁.1 - z₂.1) • H) := by rw [h_sub]
+      _ = (∑ i, ((z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹) • X i)
+            - ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹) • H := by
+          simp only [smul_sub, Finset.smul_sum, ← mul_smul]
+          simp only [mul_comm]
+
+/-- Special soundness at `trivialPolicy` for every statement (discharges
+`Enforces` via `rp_enforces_trivialPolicy`). -/
+theorem rpSigma_speciallySoundAt_trivial (gen H : G) (Up : G)
+    (X : PublicBases G n) (C : Fin n → G) (Z : G) :
+    SpeciallySoundAt (rpSigma (F := F) (n := n) gen H) (Up, X, C, Z, trivialPolicy) :=
+  rpSigma_speciallySoundAt gen H Up X C Z trivialPolicy
+    (rp_enforces_trivialPolicy gen H Up X C Z)
+
+/-- The simulated-transcript value of `rpSigma` on responses `(a, b, d) = (z_{r'}, z⃗_r, z⃗_m)`
+and challenge `c`: the `n` opening announcements and the `Z`-announcement are solved
+from the verification equations, given the statement pieces `U' = U`, `C⃗ = C`,
+`Z`, `X⃗ = X`. Mirrors `riuSimTranscriptValue`. -/
+private def rpSimTranscriptValue (gen H : G) (U : G) (X : PublicBases G n)
+    (C : Fin n → G) (Z : G) (a : F) (b d : Fin n → F) (c : F) :
+    ((Fin n → G) × G) × F × (F × (Fin n → F) × (Fin n → F)) :=
+  ((fun i => d i • U + b i • gen - c • C i,
+    (∑ i, b i • X i) - a • H - c • Z), c, (a, b, d))
+
+/-- Transcript simulator for the R_p Σ-protocol: sample the challenge and the
+response uniformly and solve the `n + 1` verification equations for the
+announcements. -/
+noncomputable def rpSimTranscript (gen H : G) (stmt : RpStmt G F n) :
+    ProbComp (((Fin n → G) × G) × F × (F × (Fin n → F) × (Fin n → F))) := do
+  let ⟨U, X, C, Z, _φ⟩ := stmt
+  let c ← $ᵗ F
+  let zr' ← $ᵗ F
+  let zr ← $ᵗ (Fin n → F)
+  let zm ← $ᵗ (Fin n → F)
+  return (rpSimTranscriptValue gen H U X C Z zr' zr zm c)
+
+/-- Honest-verifier zero-knowledge of the R_p Σ-protocol (O24 Eq. 11). Same shape
+as before, scaled to three masks: a scalar `ρr'` and two vector masks `ρr, ρm`,
+with an `n`-opening + one-`Z` announcement. Reorder the challenge to the front
+(three swaps), rewrite to the simulated value with each mask shifted, then strip
+the three shifts (one over `F`, two over `Fin n → F`). -/
+theorem rpSigma_hvzk (gen H : G) :
+    HVZK (rpSigma (F := F) (n := n) gen H) (rpSimTranscript gen H) := by
+  intro s w hrel
+  obtain ⟨U, X, C, Z, φ⟩ := s
+  obtain ⟨r', r, m⟩ := w
+  simp only [rpRel] at hrel
+  obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp hrel
+  obtain ⟨hC, hZ⟩ := of_decide_eq_true hlin
+  simp only [rpSigma, rpSimTranscript, bind_assoc, pure_bind]
+  apply evalDist_ext; intro t
+  vcstep rw under 2
+  vcstep rw under 1
+  vcstep rw
+  vcstep rw congr' as ⟨c⟩
+  have hbody : ∀ (ρr' : F) (ρr ρm : Fin n → F),
+      ((fun i => ρm i • U + ρr i • gen, (∑ i, ρr i • X i) - ρr' • H), c,
+       (ρr' + c * r', fun i => ρr i + c * r i, fun i => ρm i + c * m i))
+        = rpSimTranscriptValue gen H U X C Z (c * r' + ρr') ((fun i => c * r i) + ρr)
+            ((fun i => c * m i) + ρm) c := by
+    intro ρr' ρr ρm
+    have eAnn1 : (fun i => ρm i • U + ρr i • gen)
+        = (fun i => ((fun i => c * m i) + ρm) i • U
+            + ((fun i => c * r i) + ρr) i • gen - c • C i) := by
+      funext i; rw [hC i]; simp only [Pi.add_apply, add_smul, mul_smul, smul_add]; abel
+    have eAnn2 : (∑ i, ρr i • X i) - ρr' • H
+        = (∑ i, ((fun i => c * r i) + ρr) i • X i) - (c * r' + ρr') • H
+            - c • Z := by
+      rw [hZ]
+      simp only [Pi.add_apply, add_smul, mul_smul, smul_sub, Finset.smul_sum,
+        Finset.sum_add_distrib]
+      abel
+    have eR2 : (fun i => ρr i + c * r i) = (fun i => c * r i) + ρr := by
+      funext i; simp only [Pi.add_apply]; ring
+    have eR3 : (fun i => ρm i + c * m i) = (fun i => c * m i) + ρm := by
+      funext i; simp only [Pi.add_apply]; ring
+    simp only [rpSimTranscriptValue, eAnn1, eAnn2, eR2, eR3, add_comm ρr' (c * r')]
+  simp only [hbody]
+  refine (probOutput_bind_add_left_uniform (α := F) (m := c * r')
+    (f := fun ρr' => ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) >>= fun ρr =>
+      ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) >>= fun ρm =>
+        pure (rpSimTranscriptValue gen H U X C Z ρr' ((fun i => c * r i) + ρr)
+          ((fun i => c * m i) + ρm) c)) (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρr' => ?_
+  refine (probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun i => c * r i)
+    (f := fun ρr => ($ᵗ (Fin n → F) : ProbComp (Fin n → F)) >>= fun ρm =>
+      pure (rpSimTranscriptValue gen H U X C Z ρr' ρr ((fun i => c * m i) + ρm) c))
+        (z := t)).trans ?_
+  refine probOutput_bind_uniform_congr fun ρr => ?_
+  exact probOutput_bind_add_left_uniform (α := Fin n → F) (m := fun i => c * m i)
+    (f := fun ρm => pure (rpSimTranscriptValue gen H U X C Z ρr' ρr ρm c)) (z := t)
 
 end KVAC.Schemes.MicroCMZ
