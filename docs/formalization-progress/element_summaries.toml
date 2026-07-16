@@ -70,6 +70,7 @@
 "Theorem 9.2" = "The Fiat–Shamir Σ-protocol for an admissible linear relation is strongly simulation-extractable (straight-line) in the algebraic group and random oracle models."
 
 # Sections carrying a formalizable object (assumptions, interfaces, primitives).
+"§3" = "The Notation paragraph opening §3 (only): the random-oracle hashes H_p : {0,1}* → ℤ_p (Fiat–Shamir transcripts) and H_𝔾 : {0,1}* → 𝔾 (hash-to-curve). The numbered subsections §3.1–§3.4 are tracked as their own rows."
 "§3.1" = "The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI."
 "§3.3" = "The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs."
 "§3.4" = "Syntax and security of anonymous token schemes with non-interactive issuance."
