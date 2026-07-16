@@ -126,4 +126,24 @@ class abbrev SampleableGroup (F G : Type)
     [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] :=
   PrimeOrderGroup F G, SampleableType G
 
+/--
+`SampleableType` instance for a nonempty finite subtype, by transport from
+`Fin (Fintype.card _)` via `Fintype.equivFin`. Centralises the
+`NeZero (Fintype.card _)` + `SampleableType.ofEquiv (Fintype.equivFin _).symm`
+idiom that every uniform-subtype sample needs. The caller supplies the
+(site-specific) `Nonempty` witness; the rest is uniform.
+
+Kept as a `def` (not a global `instance`) so a site opts in explicitly — a
+global `SampleableType {x // p x}` instance would risk the `SampleableType` /
+`Fintype` instance-search derailment the AGM scaffolding carefully avoids
+(see `KVAC.Schemes.MicroCMZ.SignMask`). Used by μCMZ's `uniformNonzero` over
+`{g : G // g ≠ 0}` and the AGM reduction's non-vanishing signing masks.
+-/
+noncomputable def SampleableType.ofNonemptySubtype {α : Type} [Fintype α]
+    [DecidableEq α] (p : α → Prop) [DecidablePred p]
+    (h : Nonempty {x : α // p x}) : SampleableType {x : α // p x} := by
+  haveI : Nonempty {x : α // p x} := h
+  haveI : NeZero (Fintype.card {x : α // p x}) := ⟨Fintype.card_ne_zero⟩
+  exact SampleableType.ofEquiv (Fintype.equivFin {x : α // p x}).symm
+
 end KVAC.Core

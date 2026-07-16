@@ -114,9 +114,8 @@ via `Fintype.equivFin` (the `(exists_ne …).choose_spec` in the `Nonempty`
 witness lives in `Prop` and is erased, so it is not the obstruction).
 -/
 noncomputable instance instSampleableTypeNeZero : SampleableType {g : G // g ≠ 0} :=
-  haveI : Nonempty {g : G // g ≠ 0} := ⟨⟨_, (exists_ne (0 : G)).choose_spec⟩⟩
-  haveI : NeZero (Fintype.card {g : G // g ≠ 0}) := ⟨Fintype.card_ne_zero⟩
-  SampleableType.ofEquiv (Fintype.equivFin {g : G // g ≠ 0}).symm
+  SampleableType.ofNonemptySubtype (fun g : G => g ≠ 0)
+    ⟨⟨_, (exists_ne (0 : G)).choose_spec⟩⟩
 
 /--
 Uniform sampling from `G ∖ {0}`, returned as a plain `G`. This is `U ←$ G∖{0}`
