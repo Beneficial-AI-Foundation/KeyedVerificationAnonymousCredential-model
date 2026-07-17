@@ -70,6 +70,7 @@ jobs:
       # diff disappears. The PR skips other workflows (GITHUB_TOKEN) but still
       # needs the one required review. Action pinned by commit SHA (v7.0.9).
       - name: Open or update the regeneration PR (if changed)
+        id: regen-pr
         uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412 # v7.0.9
         with:
           base: main
@@ -87,6 +88,14 @@ jobs:
             derived from main @ ${{ github.sha }} (workflow run
             ${{ github.run_id }}). `--check` and the xref audit passed before
             this PR was opened. Subsequent merges update this PR in place.
+      # Arm auto-merge so a maintainer's approval is the only manual action;
+      # GitHub merges the moment the required review lands. Armed only on
+      # creation: a force-update of an existing PR keeps its armed state.
+      - name: Enable auto-merge on the regeneration PR
+        if: steps.regen-pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge --auto --merge "${{ steps.regen-pr.outputs.pull-request-number }}"
       # If validation failed above, an open bot PR from an earlier run still
       # carries output derived from an older main; close it rather than let
       # stale content be approved and merged.
