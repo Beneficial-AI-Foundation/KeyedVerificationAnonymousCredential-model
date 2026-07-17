@@ -9,16 +9,13 @@ import VCVio
 /-!
 # μCMZ sign-mask uniformity (O24 §5.3)
 
-The sign-arm distribution lemmas the AGM reduction consumes — establishing that
-the reduction's simulated `sign` oracle produces exactly the real oracle's tag
-distribution — extracted into their
-own `AGMPolynomial`-free module so `KVAC.Schemes.MicroCMZ.AGMReduction` (which
-imports `AGMPolynomial` / `MvPolynomial`) can reuse them by name without
-re-elaborating their proofs in a `MvPolynomial`-heavy instance context. This file
-imports only `AlgebraicMAC.lean` (for the discrete-log machinery `glog` /
-`gen_ne_zero` / `glog_smul`) and `VCVio` — no `MvPolynomial` — so the
-`$ᵗ`-subtype samples and `SampleableType` / `Fintype` instance search here stay
-clean. See `AlgebraicMAC.lean` for the AGM game these lemmas characterize.
+The sign-arm distribution lemmas the AGM reduction consumes: the reduction's
+simulated `sign` oracle produces exactly the real oracle's tag distribution. Kept
+in their own `AGMPolynomial`-free module so `AGMReduction` (which imports
+`MvPolynomial`) can reuse them by name without re-elaborating the proofs in an
+`MvPolynomial`-heavy instance context, where the `$ᵗ`-subtype samples below would
+loop `SampleableType` / `Fintype` search. Imports only `AlgebraicMAC.lean` (for
+`glog` / `gen_ne_zero` / `glog_smul`) and `VCVio`.
 -/
 
 set_option autoImplicit false
@@ -35,37 +32,26 @@ variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
 /-! ## Sign-mask uniformity
 
-These lemmas establish that the reduction's `sign` oracle samples
-`Uⱼ = aᵤ·gen + bᵤ·X` (non-vanishing masks, `X = x·gen`) *uniformly over `G^×`*,
-matching the real oracle's `U ←$ {g // g ≠ 0}` exactly (no per-query slack). They
-live in this `AGMPolynomial`-free layer because the `$ᵗ ({g : G // g ≠ 0} × F)`
-product sample in `sign_U_dist_eq`'s proof derails `SampleableType` / `Fintype`
-instance search in `AGMReduction`'s `MvPolynomial`-heavy import context (the same
-order-instance landmine that keeps `glog` here); here it is clean. `AGMReduction`
-reuses them by name (same namespace, imported module).
--/
+These lemmas show the reduction's `sign` oracle samples `Uⱼ = aᵤ·gen + bᵤ·X`
+(non-vanishing masks, `X = x·gen`) uniformly over `G^×`, matching the real oracle's
+`U ←$ {g // g ≠ 0}` exactly (no per-query slack). `AGMReduction` reuses them by
+name. -/
 
 /-- `SampleableType` for the signing masks `(aᵤ, bᵤ)` whose tag
-`Uⱼ = aᵤ·G₀ + bᵤ·X` is nonzero: a nonempty (via `(1, 0)`, as `gen ≠ 0`) `Fintype`
-subtype, exactly like the nonzero-`G` subtype `uniformNonzero` draws from. Sampling
-masks here makes the reduction's `Uⱼ` uniform over `G^×`, matching the real
-oracle's `U ←$ {g // g ≠ 0}` exactly (no per-query slack); the `bᵤ`-marginal stays
-uniform (each `b` excludes one `a`), so Schwartz–Zippel is unaffected. This lets
-the `+1/p` bound hold with `Correct` left perfect. -/
+`Uⱼ = aᵤ·gen + bᵤ·X` is nonzero: a `Fintype` subtype, nonempty via `(1, 0)` since
+`gen ≠ 0`. Sampling masks here makes `Uⱼ` uniform over `G^×`; the `bᵤ`-marginal
+stays uniform (each `b` excludes one `a`), so Schwartz–Zippel is unaffected and the
+`+1/p` bound holds with `Correct` left perfect. -/
 noncomputable instance instSampleableNonVanishingMasks (X : G) :
     SampleableType {p : F × F // p.1 • gen + p.2 • X ≠ 0} :=
   SampleableType.ofNonemptySubtype (fun p : F × F => p.1 • gen + p.2 • X ≠ 0)
     ⟨⟨(1, 0), by simp only [one_smul, zero_smul, add_zero]; exact gen_ne_zero (gen := gen)⟩⟩
 
-/-- **Opaque wrapper for the reduction's sign-mask sample.** Definitionally
-`$ᵗ {(aᵤ,bᵤ) // Uⱼ ≠ 0}`, but kept named (and `irreducible`) in this
-`AGMPolynomial`-free layer so downstream modules — `AGMReduction`, whose
-`MvPolynomial` import context makes the bare `$ᵗ {p : F × F // …}` subtype sample
-loop `SampleableType` search — can reason about the `sign` branch through the
-`sign_*_dist_eq` characterizations below without ever elaborating the raw `$ᵗ`.
-`irreducible` stops `whnf`/instance reduction downstream from unfolding it back to
-the looping form. The forthcoming reduction's `sign` arm (in `AGMReduction`, not
-this branch) samples from this. -/
+/-- **Opaque wrapper for the reduction's sign-mask sample,** definitionally
+`$ᵗ {(aᵤ,bᵤ) // Uⱼ ≠ 0}`. Kept named and `irreducible` so `AGMReduction` can reason
+about the `sign` branch through the `sign_*_dist_eq` characterizations below without
+elaborating the raw `$ᵗ` (whose `SampleableType` search loops in that module's
+import context); `irreducible` stops `whnf` from unfolding it back. -/
 @[irreducible] noncomputable def reductionMaskSample (X : G) :
     ProbComp {p : F × F // p.1 • gen + p.2 • X ≠ 0} :=
   ($ᵗ {p : F × F // p.1 • gen + p.2 • X ≠ 0} :
@@ -158,10 +144,8 @@ lemma sign_U_dist_eq (x : F) :
         ($ᵗ {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} :
           ProbComp {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0}))
       = evalDist (Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})) := by
-  -- Pointwise equality of `probOutput`, avoiding the `$ᵗ ({g : G // g ≠ 0} × F)`
-  -- product sample (whose `SampleableType` / `Fintype` instance search loops in
-  -- this module's import context — the same landmine that kept the
-  -- bijection-transport proof out of `AGMReduction`).
+  -- Pointwise `probOutput` equality, avoiding the `$ᵗ ({g : G // g ≠ 0} × F)`
+  -- product sample (whose `SampleableType` / `Fintype` search loops here).
   apply evalDist_ext
   intro y
   -- Both sides: `Pr[= y | U <$> $ᵗM]` and `Pr[= y | Subtype.val <$> $ᵗ{g≠0}]`.
@@ -184,12 +168,10 @@ lemma sign_U_dist_eq (x : F) :
       exact absurd (hy ▸ hg) g.property
     rw [hL, hR]
   · -- `y ≠ 0`: each such `y` has exactly `|F|` preimage masks, so
-    -- `Pr[= y | U <$> $ᵗM] = |F| / |M| = 1 / |{g ≠ 0}|`. Compute the fiber
-    -- cardinality via `signMaskEquiv x : M ≃ {g ≠ 0} × F` (a bijection), NOT via a
-    -- `glog`-based fiber bijection: any term producing `glog y` with bare `y : G`
-    -- hangs — it unfolds `glog` and re-elaborates the `hgen` bijectivity instance,
-    -- the landmine that keeps `glog`'s *proof* in this layer. `Fintype.card` of the
-    -- product subtype is pure `Finset`/`Fintype` (no `$ᵗ`/`SampleableType`/`glog`).
+    -- `Pr[= y | U <$> $ᵗM] = |F| / |M| = 1 / |{g ≠ 0}|`. Count the fiber via
+    -- `signMaskEquiv x : M ≃ {g ≠ 0} × F`, not a `glog`-based fiber map: a bare
+    -- `glog y` unfolds `glog` and re-elaborates `hgen`, the landmine that keeps
+    -- `glog`'s proof in this layer. `Fintype.card` here is pure `Finset`/`Fintype`.
     set M := {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0}
     set U : M → G := fun p => p.val.1 • gen + p.val.2 • (x • gen)
     -- `|M| = |F| · |{g ≠ 0}|` via `signMaskEquiv x : M ≃ {g ≠ 0} × F`.
@@ -250,16 +232,13 @@ lemma sign_U_dist_eq (x : F) :
     rw [mul_one] at hkey
     exact hkey.trans (one_div _)
 
-/-- **Masked tag = honest tag (`AGMPolynomial`-free).** Sampling the
-non-vanishing masks `(aᵤ, bᵤ)` and forming the *honest* tag `(U, key·U)` at
-`U = aᵤ·g + bᵤ·X` (`X = x·g`) gives *exactly* the distribution of
-`mac`-style `(U ←$ {g ≠ 0}; (U, key·U))`: both are
+/-- **Masked tag = honest tag (`AGMPolynomial`-free).** Sampling the non-vanishing
+masks and forming the honest tag `(U, key·U)` at `U = aᵤ·g + bᵤ·X` (`X = x·g`) gives
+exactly the distribution of `(U ←$ {g ≠ 0}; (U, key·U))`: both are
 `(fun g => (g, key·g)) <$> (uniform U)`, and the `U`-laws agree by `sign_U_dist_eq`.
-
-Same-layer rationale as `sign_U_dist_eq`. The mask sample is the opaque
-`reductionMaskSample`, so the forthcoming reduction's `sign`-arm coupling (in
-`AGMReduction`, not this branch) can first rewrite its degree-2 tag `V` to `key·U`
-and then apply this lemma *by name* without surfacing the raw `$ᵗ`. -/
+The mask sample is the opaque `reductionMaskSample`, so `AGMReduction` can rewrite
+its degree-2 tag `V` to `key·U` and apply this by name without surfacing the raw
+`$ᵗ`. -/
 lemma sign_masked_tag_dist_eq (x key : F) :
     evalDist ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
         ((p.val.1 • gen + p.val.2 • (x • gen),
@@ -298,16 +277,13 @@ lemma sign_masked_tag_dist_eq (x key : F) :
       (fun g : G => (g, key • g)),
     sign_U_dist_eq (gen := gen) x]
 
-/-- **`(U, bᵤ)` joint distribution under the sign shear.**
-The non-vanishing masks `(aᵤ, bᵤ) ←$ {U ≠ 0}` have the *same* `(U, bᵤ)`
-joint law as a free independent pair `U ←$ {g ≠ 0}`, `bᵤ ←$ F`: the shear
-`(aᵤ, bᵤ) ↦ ((aᵤ+x·bᵤ)·g, bᵤ)` is `signMaskEquiv x : {U ≠ 0} ≃ {g ≠ 0} × F`, with
-`bᵤ` the free second factor. The `(U, bᵤ)`-joint analogue of `sign_U_dist_eq`
-(which keeps only the `U` marginal); stated with `U` via `$ᵗ {g ≠ 0}` and `bᵤ` via
-a separate `$ᵗ F` (never the product `$ᵗ ({g≠0} × F)`, which loops `SampleableType`
-search), and `glog`-free (the fiber count uses `signMaskEquiv` / `gen_ne_zero`).
-Feeds the per-query sign step of the forthcoming Schwartz–Zippel argument (in
-`AGMReduction`, not this branch). -/
+/-- **`(U, bᵤ)` joint distribution under the sign shear.** The non-vanishing masks
+`(aᵤ, bᵤ) ←$ {U ≠ 0}` have the same `(U, bᵤ)` joint law as a free pair
+`U ←$ {g ≠ 0}`, `bᵤ ←$ F`, via the shear `signMaskEquiv x : {U ≠ 0} ≃ {g ≠ 0} × F`
+with `bᵤ` the free second factor. The joint analogue of `sign_U_dist_eq` (which
+keeps only the `U` marginal); stated with separate `$ᵗ {g ≠ 0}` and `$ᵗ F` (never
+the product, which loops `SampleableType` search) and `glog`-free. Feeds the
+per-query sign step of the forthcoming Schwartz–Zippel argument in `AGMReduction`. -/
 lemma sign_U_bu_dist_eq (x : F) :
     evalDist ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
         (p.val.1 • gen + p.val.2 • (x • gen), p.val.2)) <$>
