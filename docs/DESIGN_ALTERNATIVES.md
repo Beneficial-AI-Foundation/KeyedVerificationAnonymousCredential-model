@@ -97,6 +97,22 @@ representations. White-box access subsumes rewindable black-box access, since
 the extractor can re-run the adversary value. Issue #43 records the
 discussion; the paper-fidelity requirement decides it.
 
+## Structured hash domains
+
+**Decision.** `HashSpec.Dom` is an arbitrary type; each scheme picks a
+structured domain type for what it hashes (PR #57, `Core/Hash.lean`).
+
+**Rejected alternative.** Fixing `Dom := List Bool` to match the paper's
+`{0,1}*` literally.
+
+**Fidelity argument.** A typed-domain random oracle is a *stronger* model
+than the paper's: distinct Lean values answer independently, where their
+bitstring serializations could collide. The divergence is deliberate and
+documented in `Core/Hash.lean`: a concrete instantiation owes an injective
+canonical encoding of its domain type and domain-separation tags wherever
+two uses share one oracle. A literal bitstring domain would push encoding
+boilerplate into every caller without strengthening any theorem.
+
 ## Open alternatives
 
 None at present.
