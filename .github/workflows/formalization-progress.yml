@@ -7,12 +7,23 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+
+# One run at a time; later runs queue rather than cancel an in-flight
+# branch/PR update mid-mutation.
+concurrency:
+  group: formalization-progress
+  cancel-in-progress: false
 
 jobs:
   regenerate:
     runs-on: ubuntu-latest
     steps:
+      # Pin to main so a manual workflow_dispatch from another ref cannot
+      # regenerate against (or open a PR based on) the wrong branch.
       - uses: actions/checkout@v5
+        with:
+          ref: main
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -41,14 +52,49 @@ jobs:
       # not curated (warnings).
       - name: Cross-reference audit
         run: python3 docs/formalization-progress/formalization_progress.py xref --config docs/formalization-progress/formalization_source.toml
+      # The PR step's add-paths would silently stash any other modified file;
+      # fail loudly instead if the generator ever writes outside its two
+      # declared outputs.
+      - name: Fail on unexpected generated changes
+        run: |
+          extra=$(git status --porcelain | grep -vE 'docs/formalization-progress/(FORMALIZATION_PROGRESS\.md|formalization_progress\.json)$' || true)
+          if [ -n "$extra" ]; then
+            echo "Unexpected changes outside the generated table:"
+            echo "$extra"
+            exit 1
+          fi
       # Runs only when --check and xref both passed, so a bad state never
       # lands on main through this workflow.
-      - name: Commit and push the regenerated table (if changed)
+      # Branch protection blocks direct pushes to main, so the table lands via
+      # an auto-PR: one fixed branch, one PR updated in place, closed if the
+      # diff disappears. The PR skips other workflows (GITHUB_TOKEN) but still
+      # needs the one required review. Action pinned by commit SHA (v7.0.9).
+      - name: Open or update the regeneration PR (if changed)
+        uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412 # v7.0.9
+        with:
+          base: main
+          add-paths: |
+            docs/formalization-progress/FORMALIZATION_PROGRESS.md
+            docs/formalization-progress/formalization_progress.json
+          commit-message: "docs(progress): regenerate formalization-progress table"
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          branch: bot/progress-regen
+          delete-branch: true
+          title: "docs(progress): regenerate formalization-progress table"
+          body: |
+            Automated regeneration of the formalization-progress table,
+            derived from main @ ${{ github.sha }} (workflow run
+            ${{ github.run_id }}). `--check` and the xref audit passed before
+            this PR was opened. Subsequent merges update this PR in place.
+      # If validation failed above, an open bot PR from an earlier run still
+      # carries output derived from an older main; close it rather than let
+      # stale content be approved and merged.
+      - name: Close stale regeneration PR on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if ! git diff --quiet -- docs/formalization-progress; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docs/formalization-progress/FORMALIZATION_PROGRESS.md docs/formalization-progress/formalization_progress.json
-            git commit -m "docs(progress): regenerate formalization-progress table"
-            git push
-          fi
+          gh pr close bot/progress-regen --delete-branch \
+            --comment "Closed automatically: a newer run on main failed validation, so this PR's content may be stale. It will be recreated by the next successful run." \
+            || true
