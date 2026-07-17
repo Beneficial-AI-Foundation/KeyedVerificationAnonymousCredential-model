@@ -98,6 +98,8 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 # cites it (`O24 Eq. N`). Do not add a summary for an equation no declaration
 # cites yet — `--check` flags it as a key naming no tracked element.
 "Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
+"Equation 10" = "R_is, the μCMZ issuance server-proof relation: knowledge of $(x_0, u)$ with X₀ = x₀·H, U' = u·G and V' = x₀·U' + u·C''."
+"Equation 11" = "R_p, the μCMZ presentation-proof relation: knowledge of $(r', \\vec{r}, \\vec{m})$ opening the commitments C⃗ over U' and Z = Σᵢ rᵢ·Xᵢ − r'·H, with policy φ($\\vec{m}$) satisfied."
 
 # Corrections to the extractor's enclosing-section assignment, for elements
 # whose heading order in the text misleads the heuristic. Values are section
@@ -106,6 +108,8 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 # The µBBS system figure sits on page 48 just above the "6 Boneh–Boyen–Shacham
 # credentials" heading, so the extractor files it under §5.6; it belongs to §6.
 "Figure 10" = "6"
-# Cite-driven equations carry no extracted section; Eq. 9 (R_iu) is stated in
-# the µCMZ issuance protocol, §5.1.
+# Cite-driven equations carry no extracted section; Eqs. 9–11 (R_iu, R_is,
+# R_p) are all stated in the µCMZ protocol description, §5.1.
 "Equation 9" = "5.1"
+"Equation 10" = "5.1"
+"Equation 11" = "5.1"
