@@ -86,7 +86,7 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
   - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
   - **Status** (split into sub-issues #18–#21):
     - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
-    - [ ] `Hash.lean` — still a stub (#19).
+    - [x] `Hash.lean` — landed (#19): `HashSpec` (taken over from PR #47) + the lazy `randomOracle` binding, with `transcriptHashSpec` (`H_p`) and `curveHashSpec` (`H_𝔾`).
     - [ ] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 (externalized extractor + completeness) in review.
     - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
 
