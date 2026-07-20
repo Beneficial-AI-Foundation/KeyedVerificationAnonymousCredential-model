@@ -74,6 +74,31 @@ if (x, w) ∈ R" before answering. The check belongs to the oracle, not to the
 query interface, and a type-level restriction silently narrows the game's
 interface. The `none` answer encodes the paper's implicit ⊥.
 
+## Relation decidability scoped to the game
+
+**Decision.** `Decidable (relation crs x w)` is required only by the
+zero-knowledge game that runs the Proveᵦ guard, supplied as a game argument
+through `NIZKPSyntax.DecidableRelation`. `NIZKPSyntax.relation` stays a plain
+`Prop`-valued field with no decidability (PR #47, `Security.lean`).
+
+**Rejected alternative.** Making decidability intrinsic to the syntax, a
+`DecidableRel` field or instance on `NIZKPSyntax.relation`, so every scheme
+value carries a decision procedure.
+
+**Design argument.** A `Decidable` instance is data, a computable decision
+procedure, not a derivable property. The abstract `relation` field is an
+opaque `Prop` with no algorithm, so a genuine instance must come from a
+concrete scheme regardless; closing it classically is noncomputable and the
+`ProbComp` guard would not execute. Scoping the obligation to its single
+consumer, the computational game, keeps abstract and symbolic instances that
+never execute the relation from carrying a procedure they never use, while
+concrete schemes over decidable-equality carriers supply it directly. This is
+the same layering that keeps `evalDist` and the computational security notions
+out of the dependency-free core. The choice does not rest on decidability
+failing, since the NP relations O24's proof systems target are always
+decidable, and it differs from the extractor, which is externalized because it
+varies per protocol rather than because it is data unavailable abstractly.
+
 ## White-box knowledge-soundness extractor
 
 **Decision.** The knowledge-soundness and simulation-extractability extractors
