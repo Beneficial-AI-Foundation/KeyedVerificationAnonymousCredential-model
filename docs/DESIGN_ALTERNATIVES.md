@@ -86,18 +86,25 @@ through `NIZKPSyntax.DecidableRelation`. `NIZKPSyntax.relation` stays a plain
 value carries a decision procedure.
 
 **Design argument.** A `Decidable` instance is data, a computable decision
-procedure, not a derivable property. The abstract `relation` field is an
-opaque `Prop` with no algorithm, so a genuine instance must come from a
-concrete scheme regardless; closing it classically is noncomputable and the
-`ProbComp` guard would not execute. Scoping the obligation to its single
-consumer, the computational game, keeps abstract and symbolic instances that
-never execute the relation from carrying a procedure they never use, while
-concrete schemes over decidable-equality carriers supply it directly. This is
-the same layering that keeps `evalDist` and the computational security notions
-out of the dependency-free core. The choice does not rest on decidability
-failing, since the NP relations O24's proof systems target are always
-decidable, and it differs from the extractor, which is externalized because it
-varies per protocol rather than because it is data unavailable abstractly.
+procedure, not a derivable property. `NIZKPSyntax.relation` is an abstract
+field, so over a generic scheme it is an arbitrary `Prop`-valued function with
+no decision procedure available; closing it classically is noncomputable and
+the `ProbComp` guard would not execute. A concrete scheme supplies both the
+relation and its decision procedure. The game that runs the guard is the only
+consumer that needs the procedure, so scoping the obligation there keeps a
+generic `NIZKPSyntax` from carrying a procedure it cannot provide, while
+concrete schemes over decidable-equality carriers supply it directly. The
+choice does not rest on decidability failing, since the NP relations O24's
+proof systems target are always decidable, and it differs from the extractor,
+which is externalized because it varies per protocol rather than because it is
+data unavailable over a generic scheme.
+
+The monad polymorphism of `NIZKPSyntax` realizes the computational layer on
+VCV-io's `ProbComp`, which is a free monad on a polynomial functor
+(`PFunctor.FreeM`). That realization touches only the `M`-valued operations
+`setup`, `prove`, and `verify`; `relation` stays `Prop`-valued and outside
+`M`. Decidability is therefore orthogonal to the monad choice and scoped to
+the game rather than the carrier.
 
 ## White-box knowledge-soundness extractor
 
