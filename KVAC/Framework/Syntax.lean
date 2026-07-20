@@ -3,6 +3,7 @@ Copyright 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
+import KVAC.Core.KeyedSetup
 
 /-!
 # Keyed-verification credential system — syntax (O24 Definitions 4.1, 4.2)
@@ -40,11 +41,14 @@ of the attached zero-knowledge proofs. So the structure carries a type
 `Pred` with its semantics `holds`, plus the family's closure properties — a
 trivial predicate and conjunction — as fields.
 
-Carrier types are indexed by the CRS and the structure is monad-polymorphic,
-both as in `AlgebraicMACSyntax`.
+The CRS, message space, and `setup`/`keygen` come from `KeyedSetupSyntax`
+(`KVAC.Core.KeyedSetup`); this file adds the predicate family and the
+issuance/presentation algorithms.
 -/
 
 namespace KVAC.Framework
+
+open KVAC.Core
 
 /--
 Syntactic keyed-verification credential system (O24 Definition 4.2),
@@ -65,12 +69,8 @@ all selected by the CRS:
 Correctness and the security games are standalone predicates on a
 `KVACSyntax ProbComp`, not fields — matching `AlgebraicMACSyntax`.
 -/
-structure KVACSyntax (M : Type → Type) [Monad M] where
-  /-- Common-reference-string type, indexed by security parameter and
-  attribute count (O24 `crs ← KVAC.S(1^λ, n)`). -/
-  Crs : Nat → Nat → Type
-  /-- Attribute (message) type, selected by the CRS. -/
-  Msg : {secParam n : Nat} → Crs secParam n → Type
+structure KVACSyntax (M : Type → Type) [Monad M]
+    extends KeyedSetupSyntax M where
   /-- Predicate descriptions `φ ∈ Φ` (O24 Definition 4.1), selected by the
   CRS. Predicates are data because they are inputs to issuance and
   presentation. -/
@@ -93,10 +93,6 @@ structure KVACSyntax (M : Type → Type) [Monad M] where
   holds_andPred : ∀ {secParam n : Nat} (crs : Crs secParam n)
     (φ φ' : Pred crs) (m : Fin n → Msg crs),
     holds crs (andPred crs φ φ') m = (holds crs φ m && holds crs φ' m)
-  /-- Secret-key type, selected by the CRS. -/
-  Sk : {secParam n : Nat} → Crs secParam n → Type
-  /-- Public-parameter type, selected by the CRS. -/
-  Pp : {secParam n : Nat} → Crs secParam n → Type
   /-- Credential type `σ`, selected by the CRS. -/
   Cred : {secParam n : Nat} → Crs secParam n → Type
   /-- User issuance state `st_u`, selected by the CRS. -/
@@ -107,16 +103,6 @@ structure KVACSyntax (M : Type → Type) [Monad M] where
   BlindCred : {secParam n : Nat} → Crs secParam n → Type
   /-- Presentation message `ρ`, selected by the CRS. -/
   PresentMsg : {secParam n : Nat} → Crs secParam n → Type
-  /-- Decidable equality on attributes, needed by the security games'
-  freshness checks. An implementation requirement, not an assumption
-  (cf. `AlgebraicMACSyntax.DecidableEqMsg`). -/
-  DecidableEqMsg : {secParam n : Nat} → (crs : Crs secParam n) →
-    DecidableEq (Msg crs)
-  /-- Setup `crs ← KVAC.S(1^λ, n)`. -/
-  setup : (secParam n : Nat) → M (Crs secParam n)
-  /-- Key generation `(sk, pp) ← KVAC.K(crs)`. -/
-  keygen : {secParam n : Nat} → (crs : Crs secParam n) →
-    M (Sk crs × Pp crs)
   /-- Issuance, user's first move: `(st_u, μ) ← KVAC.I.Usr₁(pp, m⃗, φ)`. -/
   issueUsr₁ : {secParam n : Nat} → (crs : Crs secParam n) → Pp crs →
     (Fin n → Msg crs) → Pred crs → M (UsrState crs × IssueMsg crs)
@@ -142,13 +128,6 @@ namespace KVACSyntax
 
 variable {M : Type → Type} [Monad M] (kvac : KVACSyntax M)
 variable {secParam n : Nat}
-
-/-- The `DecidableEqMsg` field promoted to a typeclass instance. -/
-instance (crs : kvac.Crs secParam n) : DecidableEq (kvac.Msg crs) :=
-  kvac.DecidableEqMsg crs
-
-/-- An `n`-attribute vector under the CRS (O24's `m⃗ ∈ M^n`). -/
-abbrev MsgVec (crs : kvac.Crs secParam n) : Type := Fin n → kvac.Msg crs
 
 /--
 The full one-round issuance protocol: the user's first move, the issuer's

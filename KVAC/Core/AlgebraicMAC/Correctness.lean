@@ -61,7 +61,7 @@ def Correct (mac : AlgebraicMACSyntax ProbComp) : Prop :=
   ∀ (secParam n : Nat),
   ∀ (crs : mac.Crs secParam n), crs ∈ support (mac.setup secParam n) →
   ∀ (keys : mac.Sk crs × mac.Pp crs), keys ∈ support (mac.keygen crs) →
-  ∀ (m : MsgVec mac crs),
+  ∀ (m : mac.MsgVec crs),
   ∀ (sig : mac.Tag crs), sig ∈ support (mac.MAC crs keys.1 m) →
     mac.verify crs keys.1 m sig = true
 

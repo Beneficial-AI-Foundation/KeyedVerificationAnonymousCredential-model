@@ -56,8 +56,8 @@ and tag types refer to the concrete CRS.
 -/
 inductive UFQuery (mac : AlgebraicMACSyntax ProbComp)
     (crs : mac.Crs secParam n) : Type where
-  | sign : MsgVec mac crs → UFQuery mac crs
-  | verify : MsgVec mac crs → mac.Tag crs → UFQuery mac crs
+  | sign : mac.MsgVec crs → UFQuery mac crs
+  | verify : mac.MsgVec crs → mac.Tag crs → UFQuery mac crs
 
 /--
 The `OracleSpec` for UF-CMVA: each `UFQuery` arm maps to the response
@@ -78,7 +78,7 @@ forgery `(m*, σ*)`.
 -/
 structure UFAdversary (mac : AlgebraicMACSyntax ProbComp) where
   run : {secParam n : Nat} → (crs : mac.Crs secParam n) → mac.Pp crs →
-    OracleComp (UFOracleSpec mac crs) (MsgVec mac crs × mac.Tag crs)
+    OracleComp (UFOracleSpec mac crs) (mac.MsgVec crs × mac.Tag crs)
 
 /--
 The list of message vectors the adversary has had MAC'd so far during a
@@ -88,7 +88,7 @@ forgery is fresh.
 -/
 abbrev SignedLog (mac : AlgebraicMACSyntax ProbComp)
     (crs : mac.Crs secParam n) : Type :=
-  List (MsgVec mac crs)
+  List (mac.MsgVec crs)
 
 /--
 Honest implementation of the UF-CMVA oracles for a fixed secret key
