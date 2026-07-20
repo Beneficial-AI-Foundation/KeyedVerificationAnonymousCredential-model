@@ -81,17 +81,10 @@ theorem zipWith_smul_sum {α β M : Type*} [AddCommMonoid M] (f : α → β → 
 /-! ## The eval bridge -/
 
 /--
-**Eval bridge.** Over an honestly-generated transcript (`htag`: each issued tag
-satisfies `Vⱼ = (x₀+xᵣ+mⱼx₁)·Uⱼ`), a representation's group-level evaluation
-`AGMRepr.eval` equals the polynomial `ReprCoeffs.toPoly` evaluated at the
-transcript's discrete-log point, scaled onto `gen`.
-
-This is the `AGMRepr ↔ ReprCoeffs` glue between the group and polynomial layers.
-The proof writes the uniformly-sampled basis element `H` as `η • gen`
-(`hgen.out.surjective`), reconciles the `zipWith` tag fold with `toPoly`'s
-`Fin`-sum (`zipWith_smul_sum`), expands the polynomial evaluation
-(`ReprCoeffs.eval_toPoly`), and closes the resulting `gen`-module identity with
-`module` (using `htag` for the `Vⱼ`). -/
+**Eval bridge.** Over an honest transcript (`htag`: each tag satisfies
+`Vⱼ = (x₀+xᵣ+mⱼx₁)·Uⱼ`), a representation's group evaluation `AGMRepr.eval` equals
+`ReprCoeffs.toPoly` evaluated at the transcript's discrete-log point, scaled onto
+`gen` — the glue between the group and polynomial layers. -/
 theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
     (x : Fin 1 → F) (tags : List (G × G)) (msgs : Fin tags.length → F)
     (htag : ∀ j : Fin tags.length,
@@ -118,11 +111,10 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
 
 /--
 **Identity branch of O24 Lemma 5.4.** If a consistent forgery for a *fresh*
-message has a verification polynomial that vanishes identically, then `U* = 0`.
-Together with the `U* ≠ 0` check inside `microCMZVerify`, this makes the identity
-case contribute nothing to the win probability — the contradiction O24 derives by
-coefficient matching, here delivered by `toPoly_eq_zero_of_verifPoly_eq_zero`
-routed through the `agmRepr_eval_eq_eval_toPoly` bridge. -/
+message has an identically-vanishing verification polynomial, then `U* = 0`. With
+the `U* ≠ 0` check in `microCMZVerify`, the identity case contributes nothing to
+the win probability — O24's coefficient-matching contradiction, here via
+`toPoly_eq_zero_of_verifPoly_eq_zero` through the eval bridge. -/
 theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F)
     (x : Fin 1 → F) (σStar : G × G) (mStar : F) (tags : List (G × G))
     (msgs : Fin tags.length → F)
@@ -176,11 +168,10 @@ lemma exponentEval_eq (g : G) (x : F) (p : Polynomial F) (hp : p.natDegree ≤ 3
   simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add, pow_zero,
     mul_one, pow_one, add_smul, smul_smul]
 
-/-- **Reduction `sign` step** (factored out of `reductionOracleImpl` so that reducing the
-implementation on a `.sign` query never re-elaborates the `MvPolynomial`/`affineSubst`-heavy
-`verify`/`help` branches, whose instance search loops in this `MvPolynomial` import context).
-Samples the non-vanishing masks `(au, bu)`, builds the honest tag `(U, V)` with
-`U = au·gen + bu·X`, `V = key·U`, and appends `(m, (U,V), au, bu)` to the log. -/
+/-- **Reduction `sign` step** (factored out of `reductionOracleImpl`; see its
+docstring for why). Samples the non-vanishing masks `(au, bu)`, builds the honest
+tag `(U, V)` with `U = au·gen + bu·X`, `V = key·U`, and appends
+`(m, (U,V), au, bu)` to the log. -/
 noncomputable def reductionSignStep (X X' : G) (a0 aXr aX1 b0 bXr bX1 : F) (m : Fin 1 → F) :
     StateT (RedLog F G) ProbComp (G × G) :=
   StateT.mk fun L => do
@@ -236,15 +227,12 @@ noncomputable def reductionHelpStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX1 
         decide (Z = exponentEval gen X X' X'' (keyUniv * p0 + x1Univ * p1)), L)
 
 /--
-The reduction's **simulated oracle** — answers `A`'s queries with no knowledge of
-the secret key `sk`, using only the embedded public elements `(H, X₀, Xᵣ, X₁)`,
-the 3-DL powers `(X, X', X'')` over the base `gen`, and the masks. Each branch is a
-thin call to its factored `step` def (`reductionSignStep` / `reductionVerifyStep` /
-`reductionHelpStep`) so that reducing the implementation on one constructor never
-re-elaborates the others — the `verify`/`help` arms carry `MvPolynomial`/`affineSubst`
-terms that loop `SampleableType` instance search in this import context, hanging any
-statement over `reductionOracleImpl (.sign _)`. The branch bodies are documented on
-the step defs. The masks define the `affineSubst` point via `embedPoint`. -/
+The reduction's **simulated oracle** — answers `A`'s queries with no secret key
+`sk`, using only the embedded public elements `(H, X₀, Xᵣ, X₁)`, the 3-DL powers
+`(X, X', X'')` over `gen`, and the masks. Each branch is a thin call to its
+factored `step` def: the `verify`/`help` arms carry `MvPolynomial`/`affineSubst`
+terms whose instance search loops in this import context, so splitting them keeps
+reduction on a `.sign` query from re-elaborating the others. -/
 noncomputable def reductionOracleImpl (X X' X'' : G)
     (aEta bEta a0 b0 aXr bXr aX1 bX1 : F) (H X0 Xr X1 : G) :
     QueryImpl (AGMOracleSpec F G 1) (StateT (RedLog F G) ProbComp)
@@ -258,16 +246,12 @@ noncomputable def reductionOracleImpl (X X' X'' : G)
 /-! ## Root recovery (the reduction's discrete-log extraction step) -/
 
 /--
-The reduction's root-finding step. Given the masked univariate polynomial `ψ`
-(which vanishes at the challenge exponent `x`, since the forgery satisfies the
-verification equation) and the challenge point `X = x • g`, return the root of
-`ψ` whose `g`-multiple equals `X`. There is exactly one such root — the discrete
-logarithm `x` — so the reduction recovers it after inspecting at most
-`deg ψ ≤ 3` candidates.
-
-This is the *honest* extraction: it consults only `ψ.roots` and the decidable
-test `r • g = X`; it never uses the noncomputable `glog`. Defaults to `0` when no
-root matches (a branch the success analysis rules out). -/
+The reduction's root-finding step. Given the masked univariate `ψ` (which vanishes
+at the challenge exponent `x`) and the challenge `X = x • g`, return the root of
+`ψ` whose `g`-multiple is `X`. There is exactly one — the discrete log `x` — found
+among `ψ`'s `≤ 3` roots. Honest extraction: consults only `ψ.roots` and the
+decidable test `r • g = X`, never the noncomputable `glog`. Defaults to `0` when no
+root matches (ruled out by the success analysis). -/
 noncomputable def recoverDlog (g X : G) (ψ : Polynomial F) : F :=
   ((ψ.roots.toList).find? (fun r => decide (r • g = X))).getD 0
 
@@ -291,17 +275,12 @@ lemma recoverDlog_eq {g : G} (hg : g ≠ 0) {x : F} {ψ : Polynomial F}
   exact smul_left_injective F hg hpy
 
 /--
-**Win implies extract.** Suppose the masks `a, b` embed the
-challenge so that the verification polynomial of the forgery vanishes at the
-embedded point `v ↦ a v + x · b v` (this is the verification equation, O24
-Eq. 16, evaluated at the challenge exponent `x`), and the masked univariate
-`ψ = affineSubst a b (verifPoly …)` is nonzero. Then the reduction's
-root-recovery returns the discrete logarithm `x` of the challenge `X = x · g`.
-
-Combines `eval_affineSubst` (the masked polynomial evaluated at `x` is the
-verification equation) with `recoverDlog_eq` (the unique matching root is `x`).
-The nonvanishing hypothesis `hne` is the Schwartz–Zippel "good" event, supplied
-with probability `≥ 1 − 1/p` at the game layer. -/
+**Win implies extract.** If the masks `a, b` embed the challenge so the forgery's
+verification polynomial vanishes at `v ↦ a v + x · b v` (O24 Eq. 16 at the
+challenge exponent `x`) and the masked univariate `ψ = affineSubst a b (verifPoly …)`
+is nonzero, then root-recovery returns the discrete log `x` of `X = x · g`.
+Combines `eval_affineSubst` with `recoverDlog_eq`; the nonvanishing hypothesis
+`hne` is the Schwartz–Zippel good event. -/
 lemma recoverDlog_verifPoly_eq {q : ℕ} {a b : AGMPoly.Var q → F} {x : F}
     {msgs : Fin q → F} {mStar : F} {α β : AGMPoly.ReprCoeffs F q}
     (hroot : MvPolynomial.eval (fun v => a v + x * b v)
@@ -320,24 +299,20 @@ Given the challenge `(g, X = x·g, X' = x²·g, X'' = x³·g)`, it:
 1. samples the fixed-variable masks and builds the embedded public parameters
    `H, X₀, Xᵣ, X₁` (O24 Eq. 13);
 2. runs `A` against `reductionOracleImpl` (no `sk`), collecting the forgery and
-   the final log of issued tags + their `u`-masks;
-3. assembles the `affineSubst` point from all masks, forms the masked univariate
-   `ψ = affineSubst a b (verifPoly …)`, and returns `recoverDlog g X ψ` — the
-   challenge exponent `x`, recovered among `ψ`'s `≤ 3` roots.
+   the log of issued tags with their `u`-masks;
+3. forms the masked univariate `ψ = affineSubst a b (verifPoly …)` from all masks
+   and returns `recoverDlog g X ψ` — the challenge exponent `x`, among `ψ`'s roots.
 
-**Base convention.** The reduction embeds and extracts relative to `gen`; the
-experiment's base argument is ignored (`fun _g pows => …`), so it is sound only at
-base `gen`. Rather than leave that as a caller obligation, consume the reduction
-through `microCMZ3DLReductionExp` / `microCMZ3DLReductionAdv` below, which fix the
-experiment base to `gen` by construction — the security bound is stated in terms of
-those, so no base parameter is ever chosen. (This cannot be a type-level constraint:
-`QDLogAdversary` carries no `base = gen` field, and `gen`'s bijectivity `Fact` is
-unavailable for an arbitrary base — the order-instance hazard, see the note at
-`glog` — so the reduction cannot simply consume its base argument instead.) -/
+**Base convention.** The reduction works relative to `gen` and ignores the
+experiment's base argument (`fun _g pows => …`), so it is only sound at base `gen`.
+Consume it through `microCMZ3DLReductionExp` / `microCMZ3DLReductionAdv` below,
+which fix the base to `gen` by construction. (It can't be a type-level constraint:
+`QDLogAdversary` has no `base = gen` field, and `gen`'s bijectivity `Fact` isn't
+available at an arbitrary base — the order-instance hazard.) -/
 noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     QDLogAdversary 3 F G :=
-  -- `_g`: the q-DL challenge base, ignored by design — `microCMZ3DLReductionExp`
-  -- fixes the base to `gen`, so `_g` is always `gen`; the reduction uses `gen`.
+  -- `_g`: the challenge base, ignored by design — `microCMZ3DLReductionExp` fixes
+  -- it to `gen`.
   fun _g pows => do
     let X := pows 0
     let X' := pows 1
@@ -365,11 +340,10 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
 
 /--
 The 3-DL experiment for the reduction, with the challenge base **fixed to `gen`**.
-This is the canonical entry point: the base is baked in here, not chosen by a
-caller, so the reduction is never run at a base other than `gen` and its base
-convention (see `microCMZ3DLReduction`) holds by construction. The forthcoming
-security theorem bounds `AGM_UF_CMVAAdv` via `microCMZ3DLReductionAdv`, never a bare
-`threeDlogAdv _ (microCMZ3DLReduction …)` with a free base. -/
+The canonical entry point: baking the base in here means the reduction never runs
+at another base, so its base convention holds by construction. The security
+theorem bounds `AGM_UF_CMVAAdv` via `microCMZ3DLReductionAdv`, never a bare
+`threeDlogAdv` with a free base. -/
 noncomputable def microCMZ3DLReductionExp (A : AGMUFAdversary F G 1) : ProbComp Bool :=
   qdlogExp 3 gen (microCMZ3DLReduction gen A)
 
