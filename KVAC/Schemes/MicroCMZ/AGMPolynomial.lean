@@ -403,7 +403,9 @@ lemma eval_affineSubst (a b : Var q → F) (χ : F) (ϕ : P F q) :
       MvPolynomial.aeval (fun v => a v + χ * b v) := by
     apply MvPolynomial.algHom_ext
     intro v
-    simp [affineSubst]
+    simp only [affineSubst, Polynomial.X_mul_C, AlgHom.coe_comp, Polynomial.coe_aeval_eq_eval,
+    Function.comp_apply, aeval_X, Polynomial.eval_add, Polynomial.eval_C, Polynomial.eval_mul,
+    Polynomial.eval_X, add_right_inj]
     ring
   have h := DFunLike.congr_fun key ϕ
   rw [AlgHom.comp_apply, MvPolynomial.aeval_eq_eval,
