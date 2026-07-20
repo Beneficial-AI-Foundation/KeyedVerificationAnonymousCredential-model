@@ -12,6 +12,7 @@ import Mathlib.Algebra.Polynomial.BigOperators
 import Mathlib.Algebra.Polynomial.Coeff
 import Mathlib.Algebra.Polynomial.Roots
 import Mathlib.Tactic.LinearCombination
+import Mathlib.Tactic.DeriveFintype
 
 /-!
 # μCMZ AGM verification polynomial — Eq. 12 encoding (O24 §5.3, Lemma 5.4)
@@ -56,29 +57,7 @@ inductive Var (q : ℕ) : Type where
   | xr : Var q
   | x1 : Var q
   | u : Fin q → Var q
-  deriving DecidableEq
-
-/-- `Var q` is equivalent to `Unit ⊕ Unit ⊕ Unit ⊕ Unit ⊕ Fin q` (the four
-fixed variables `η, x₀, xᵣ, x₁` plus the `q` tag variables `uⱼ`); used to give it
-a `Fintype` instance (needed for Schwartz–Zippel over `Var q → F`). -/
-def varEquivSum (q : ℕ) : Var q ≃ Unit ⊕ Unit ⊕ Unit ⊕ Unit ⊕ Fin q where
-  toFun
-    | .eta => .inl ()
-    | .x0 => .inr (.inl ())
-    | .xr => .inr (.inr (.inl ()))
-    | .x1 => .inr (.inr (.inr (.inl ())))
-    | .u j => .inr (.inr (.inr (.inr j)))
-  invFun
-    | .inl _ => .eta
-    | .inr (.inl _) => .x0
-    | .inr (.inr (.inl _)) => .xr
-    | .inr (.inr (.inr (.inl _))) => .x1
-    | .inr (.inr (.inr (.inr j))) => .u j
-  left_inv := by intro v; cases v <;> rfl
-  right_inv := by rintro (_ | _ | _ | _ | _) <;> rfl
-
-instance instFintypeVar (q : ℕ) : Fintype (Var q) :=
-  Fintype.ofEquiv _ (varEquivSum q).symm
+  deriving DecidableEq, Fintype
 
 variable {F : Type} [Field F] {q : ℕ}
 
