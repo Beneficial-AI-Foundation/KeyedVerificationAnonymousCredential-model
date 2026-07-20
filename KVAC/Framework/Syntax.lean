@@ -5,76 +5,65 @@ Authors: Semar Augusto
 -/
 
 /-!
-# Keyed-verification credential system — syntactic layer (O24 Definitions 4.1, 4.2)
+# Keyed-verification credential system — syntax (O24 Definitions 4.1, 4.2)
 
-Syntactic part of a keyed-verification anonymous credential system per Orrù,
-*Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552
-(O24), Definitions 4.1 and 4.2.
+The syntactic algorithms of a keyed-verification anonymous credential
+system, following Orrù, *Revisiting Keyed-Verification Anonymous
+Credentials*, IACR ePrint 2024/1552 (O24), Definitions 4.1 and 4.2.
 
-The paper-level object is layered exactly like the algebraic MAC
-(`KVAC.Core.AlgebraicMAC`):
+Layered like the algebraic MAC (`KVAC.Core.AlgebraicMAC`): the algorithms
+live here as a monad-polymorphic structure, and the semantic obligations
+sit in their own files.
 
-- **`KVACSyntax M`** (this file) — the algorithms of Definition 4.2 with no
-  semantic obligations, polymorphic in the randomness monad `M`.
-- **`Correct`** (in `Correctness.lean`) — Definition 4.3, support-based.
-- **Anonymity** game + advantage (in `Anonymity.lean`) — Definition 4.4.
-- **Extractability** game (Definition 4.5, O24 Figure 8) — deferred to the
-  extractability track.
+- `KVACSyntax M` (this file) — the Definition 4.2 algorithms, no obligations.
+- `Correct` (`Correctness.lean`) — Definition 4.3.
+- Anonymity (`Anonymity.lean`) — Definition 4.4.
+- Extractability (Definition 4.5, Figure 8) — deferred.
 
-## Protocol shape (O24 §4.1)
+## Protocol shape
 
-All issuance and presentation protocols in O24 are one-round, so the paper
-splits them into non-interactive algorithms, which we adopt verbatim:
+Every O24 protocol is one-round, so we split each into non-interactive
+algorithms as the paper does:
 
-- Issuance `KVAC.I`:
-  `(st_u, μ) ← I.Usr₁(pp, m⃗, φ)`, then `σ' ← I.Srv(sk, φ, μ)` (the issuer may
-  reject, returning `⊥`), then `σ ← I.Usr₂(st_u, σ')` (the user checks the
-  issuer's response and may abort).
-- Presentation `KVAC.P`:
-  `ρ ← P.Usr(pp, m⃗, σ, φ)`, then `0/1 ← P.Srv(sk, φ, ρ)`.
+- Issuance: `I.Usr₁` (the user's request), `I.Srv` (the issuer's response,
+  which may reject), `I.Usr₂` (the user checks and unblinds, and may abort).
+- Presentation: `P.Usr` (the user's proof), `P.Srv` (accept/reject).
 
-Rejection/abort is modeled with `Option` on the *output* side of `I.Srv` and
-`I.Usr₂` (the paper's `σ' = ⊥` and the user's `check` lines in Figure 9).
+Rejection and abort are the `Option` results of `I.Srv` and `I.Usr₂` — the
+paper's `σ' = ⊥` and its `check` lines in Figure 9.
 
-## Predicates (O24 Definition 4.1)
+## Predicates (Definition 4.1)
 
-A credential predicate is an efficiently-computable Boolean function on
-attribute vectors; a predicate family contains the trivial predicate and is
-closed under conjunction. Predicates are *data* (they are inputs to the
-algorithms and statements of the associated zero-knowledge proofs), so the
-structure carries a per-CRS type `Pred` of predicate descriptions together
-with its Boolean semantics `holds`, the trivial predicate, and conjunction —
-the closure properties of Definition 4.1 become structure fields.
+A predicate is an efficiently-computable Boolean test on attribute vectors.
+Predicates are *data*: they are inputs to the algorithms and the statements
+of the attached zero-knowledge proofs. So the structure carries a type
+`Pred` with its semantics `holds`, plus the family's closure properties — a
+trivial predicate and conjunction — as fields.
 
-## Design notes
-
-Carrier families are intrinsically typed by the CRS, and the structure is
-monad-polymorphic, both exactly as in `AlgebraicMACSyntax` — see the design
-notes in `KVAC/Core/AlgebraicMAC/Construction.lean`.
+Carrier types are indexed by the CRS and the structure is monad-polymorphic,
+both as in `AlgebraicMACSyntax`.
 -/
 
-namespace KVAC.Core
+namespace KVAC.Framework
 
 /--
-Syntactic keyed-verification credential system per O24 Definition 4.2, with
-the predicate family of Definition 4.1 carried as structure fields.
+Syntactic keyed-verification credential system (O24 Definition 4.2),
+carrying the Definition 4.1 predicate family as fields.
 
-A value `kvac : KVACSyntax M` packages the algorithms
-`S / K / I.{Usr₁,Srv,Usr₂} / P.{Usr,Srv}` under an abstract monad `M`.
-Carrier type families (all selected by the CRS):
+`kvac : KVACSyntax M` bundles the algorithms `S / K / I.{Usr₁,Srv,Usr₂} /
+P.{Usr,Srv}` over an abstract randomness monad `M`. The carrier types are
+all selected by the CRS:
 
-- `Msg` — attribute type; the system operates on `Fin n → Msg crs`.
-- `Pred` — predicate descriptions `φ ∈ Φ`, with semantics `holds`.
+- `Msg` — attributes; the system works on vectors `Fin n → Msg crs`.
+- `Pred` — predicate descriptions `φ`, with semantics `holds`.
 - `Sk`, `Pp` — the issuer's secret key and public parameters.
 - `Cred` — credentials `σ`.
 - `UsrState` — the user's issuance state `st_u`.
-- `IssueMsg` — the user's issuance-request message `μ`.
-- `BlindCred` — the issuer's blinded-credential response `σ'`.
+- `IssueMsg`, `BlindCred` — the issuance request `μ` and response `σ'`.
 - `PresentMsg` — the presentation message `ρ`.
 
-Correctness and the security games are *not* fields — they are standalone
-predicates on a `KVACSyntax ProbComp` (`Correctness.lean`, `Anonymity.lean`),
-matching the layering of `AlgebraicMACSyntax`.
+Correctness and the security games are standalone predicates on a
+`KVACSyntax ProbComp`, not fields — matching `AlgebraicMACSyntax`.
 -/
 structure KVACSyntax (M : Type → Type) [Monad M] where
   /-- Common-reference-string type, indexed by security parameter and
@@ -118,9 +107,9 @@ structure KVACSyntax (M : Type → Type) [Monad M] where
   BlindCred : {secParam n : Nat} → Crs secParam n → Type
   /-- Presentation message `ρ`, selected by the CRS. -/
   PresentMsg : {secParam n : Nat} → Crs secParam n → Type
-  /-- Decidable equality on the attribute type (needed by the security
-  games' freshness checks; an implementation requirement, not an
-  assumption — cf. `AlgebraicMACSyntax.DecidableEqMsg`). -/
+  /-- Decidable equality on attributes, needed by the security games'
+  freshness checks. An implementation requirement, not an assumption
+  (cf. `AlgebraicMACSyntax.DecidableEqMsg`). -/
   DecidableEqMsg : {secParam n : Nat} → (crs : Crs secParam n) →
     DecidableEq (Msg crs)
   /-- Setup `crs ← KVAC.S(1^λ, n)`. -/
@@ -144,8 +133,8 @@ structure KVACSyntax (M : Type → Type) [Monad M] where
   presentUsr : {secParam n : Nat} → (crs : Crs secParam n) → Pp crs →
     (Fin n → Msg crs) → Cred crs → Pred crs → M (PresentMsg crs)
   /-- Presentation, issuer side: `0/1 ← KVAC.P.Srv(sk, φ, ρ)`. `M`-valued
-  (unlike the MAC's deterministic `verify`) so that oracle-querying
-  verifiers, e.g. Fiat–Shamir, fit the API. -/
+  (unlike the MAC's deterministic `verify`) so oracle-querying verifiers
+  like Fiat–Shamir fit. -/
   presentSrv : {secParam n : Nat} → (crs : Crs secParam n) → Sk crs →
     Pred crs → PresentMsg crs → M Bool
 
@@ -162,11 +151,10 @@ instance (crs : kvac.Crs secParam n) : DecidableEq (kvac.Msg crs) :=
 abbrev MsgVec (crs : kvac.Crs secParam n) : Type := Fin n → kvac.Msg crs
 
 /--
-The full one-round issuance protocol
-`σ ← (KVAC.I.Usr(pp, m⃗, φ) ⇌ KVAC.I.Srv(sk, φ))`: user's first move, issuer's
-response, user's unblinding. `none` propagates both the issuer's rejection
-and the user's abort. Together with `present` below this gives the paper's
-shorthand `KVAC.M(sk, m⃗)` (O24 §4.1). -/
+The full one-round issuance protocol: the user's first move, the issuer's
+response, and the user's unblinding, chained. `none` propagates either the
+issuer's rejection or the user's abort. With `present`, this is the paper's
+`KVAC.M(sk, m⃗)` (O24 §4.1). -/
 def issue (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
     (m : kvac.MsgVec crs) (φ : kvac.Pred crs) : M (Option (kvac.Cred crs)) := do
   let (stU, μ) ← kvac.issueUsr₁ crs pp m φ
@@ -175,9 +163,9 @@ def issue (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
   | some σ' => kvac.issueUsr₂ crs stU σ'
 
 /--
-The full one-round presentation protocol
-`0/1 ← (KVAC.P.Srv(sk, φ) ⇌ KVAC.P.Usr(pp, m⃗, σ, φ))`: the paper's shorthand
-`KVAC.V(sk, m⃗, σ)` when `φ` is the trivial predicate (O24 §4.1). -/
+The full one-round presentation protocol: the user's proof followed by the
+issuer's check. The paper's `KVAC.V(sk, m⃗, σ)` when `φ` is trivial
+(O24 §4.1). -/
 def present (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
     (m : kvac.MsgVec crs) (σ : kvac.Cred crs) (φ : kvac.Pred crs) : M Bool := do
   let ρ ← kvac.presentUsr crs pp m σ φ
@@ -185,4 +173,4 @@ def present (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
 
 end KVACSyntax
 
-end KVAC.Core
+end KVAC.Framework

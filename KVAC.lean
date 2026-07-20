@@ -7,3 +7,5 @@ import KVAC.Core.NIZKP
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Preliminaries.Assumptions
+import KVAC.Framework.Syntax
+import KVAC.Framework.Correctness
