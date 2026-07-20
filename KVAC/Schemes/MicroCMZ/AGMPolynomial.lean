@@ -174,13 +174,13 @@ noncomputable def spec (E P0 Pr P1 : Polynomial F) (Uf : Fin q → Polynomial F)
     | Var.x1 => P1
     | Var.u j => Uf j
 
-lemma spec_keyPoly (E P0 Pr P1 : Polynomial F) (Uf : Fin q → Polynomial F)
+private lemma spec_keyPoly (E P0 Pr P1 : Polynomial F) (Uf : Fin q → Polynomial F)
     (m : F) :
     spec E P0 Pr P1 Uf (keyPoly m) = P0 + Pr + Polynomial.C m * P1 := by
   simp only [keyPoly, x₀, xᵣ, x₁, spec, map_add, map_mul, aeval_X, aeval_C,
     Polynomial.algebraMap_eq]
 
-lemma spec_toPoly (E P0 Pr P1 : Polynomial F) (Uf : Fin q → Polynomial F)
+private lemma spec_toPoly (E P0 Pr P1 : Polynomial F) (Uf : Fin q → Polynomial F)
     (ρ : ReprCoeffs F q) (msgs : Fin q → F) :
     spec E P0 Pr P1 Uf (ρ.toPoly msgs) =
       Polynomial.C ρ.cg + Polynomial.C ρ.ch * E +
@@ -205,7 +205,7 @@ lemma ReprCoeffs.eval_toPoly (pt : Var q → F) (ρ : ReprCoeffs F q) (msgs : Fi
     eval_C, eval_X]
 
 /-- `spec` with all `uⱼ ↦ 0`: the tag terms vanish. -/
-lemma spec_toPoly_uZero (E P0 Pr P1 : Polynomial F) (ρ : ReprCoeffs F q)
+private lemma spec_toPoly_uZero (E P0 Pr P1 : Polynomial F) (ρ : ReprCoeffs F q)
     (msgs : Fin q → F) :
     spec E P0 Pr P1 (fun _ => 0) (ρ.toPoly msgs) =
       Polynomial.C ρ.cg + Polynomial.C ρ.ch * E +
@@ -216,7 +216,7 @@ lemma spec_toPoly_uZero (E P0 Pr P1 : Polynomial F) (ρ : ReprCoeffs F q)
 
 /-- `spec` with `u_k ↦ U` and the other `uⱼ ↦ 0`: only the `k`-th tag term
 survives. -/
-lemma spec_toPoly_uSingle (E P0 Pr P1 U : Polynomial F) (k : Fin q)
+private lemma spec_toPoly_uSingle (E P0 Pr P1 U : Polynomial F) (k : Fin q)
     (ρ : ReprCoeffs F q) (msgs : Fin q → F) :
     spec E P0 Pr P1 (fun j => if j = k then U else 0) (ρ.toPoly msgs) =
       Polynomial.C ρ.cg + Polynomial.C ρ.ch * E +
@@ -299,6 +299,9 @@ theorem identity_case (msgs : Fin q → F) (mStar : F)
       (spec (0 : Polynomial F) (Polynomial.X ^ 2) 0 (Polynomial.X ^ 1)
         (fun _ => 0)) hid
     rw [map_mul, spec_toPoly_uZero, spec_toPoly_uZero, spec_keyPoly] at h
+    -- Cross terms: `keyPoly mStar`'s `C mStar·x₁` summand is live here (x₁ ↦ X),
+    -- so `α.cg` and `α.c1` each pick up an extra `·(C mStar · X^…)` copy at
+    -- degrees 1 and 2. They miss degree 3, so the degree-3 read still isolates α.c1.
     have h2 : Polynomial.C α.cg * Polynomial.X ^ 2 +
           Polynomial.C α.cg * (Polynomial.C mStar * Polynomial.X ^ 1) +
           Polynomial.C α.c1 * Polynomial.X ^ 3 +
@@ -336,6 +339,9 @@ theorem identity_case (msgs : Fin q → F) (mStar : F)
       (spec (0 : Polynomial F) 0 0 (Polynomial.X ^ 2)
         (fun j => if j = k then Polynomial.X ^ 1 else 0)) hid
     rw [map_mul, spec_toPoly_uSingle, spec_toPoly_uSingle, spec_keyPoly] at h
+    -- Cross terms: with x₁ ↦ X² the `C mStar·x₁` summand of `keyPoly mStar`
+    -- multiplies every LHS term by `C mStar`; the target `α.cu k·mStar` sits at
+    -- degree 3, the `mStar`-weighted α.cg/α.c1/α.cv copies at degrees 2/4/5.
     have h2 : Polynomial.C α.cg * (Polynomial.C mStar * Polynomial.X ^ 2) +
           Polynomial.C α.c1 * (Polynomial.C mStar * Polynomial.X ^ 4) +
           Polynomial.C (α.cu k) * (Polynomial.C mStar * Polynomial.X ^ 3) +
