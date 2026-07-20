@@ -66,16 +66,18 @@ The notation convention is *additive* throughout, matching O24, Section
 # Hash and random-oracle interfaces
 
 :::group "core_hash"
-Abstract typeclasses for the two hash functions of O24: a transcript hash
-`H_p` mapping bit-strings to `ZMod p` (used in Fiat–Shamir), and a
-hash-to-curve `H_G` mapping bit-strings to group elements. Either stated
-abstractly or wired directly to VCV-io's `OracleSpec` / `OracleComp`
-types — the decision is tracked in issue #19.
+Abstract interface for the two hash functions of O24, both modelled as
+random oracles: a transcript hash `H_p` mapping bit-strings to `ZMod p`
+(used in Fiat–Shamir), and a hash-to-curve `H_G` mapping bit-strings to
+group elements. `HashSpec` packages a hash's domain and range with the
+instances a random-oracle implementation needs; `HashSpec.spec` is the
+induced VCV-io `OracleSpec` signature `Dom →ₒ Rng`, and `HashSpec.roImpl`
+binds it to VCV-io's lazy caching `randomOracle` over a `QueryCache`.
+`transcriptHashSpec` and `curveHashSpec` name the paper's two
+instantiations. Domains stay abstract (structured per scheme); the
+injective-encoding and domain-separation obligations of the paper's
+`{0,1}*` domain are discharged at the instantiation layer.
 :::
-
-*TODO (Track 0).* Define the hash typeclass(es) and the random-oracle
-game once issue #19 lands. The chapter should describe both the abstract
-surface (random-oracle hypothesis) and the wire-to-VCV-io option.
 
 # Generic NIZK proof system
 

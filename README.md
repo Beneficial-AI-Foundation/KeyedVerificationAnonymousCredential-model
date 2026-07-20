@@ -36,7 +36,7 @@ When a track is split into sub-issues, list them as nested bullets under the tra
 
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
   - [X] `Core/Group.lean` ([#18])
-  - [ ] `Core/Hash.lean` ([#19])
+  - [X] `Core/Hash.lean` ([#19])
   - [X] `Core/ZKProof.lean` ([#20])
   - [X] `Core/NIZKP/Basic.lean` ([#20])
   - [X] `Core/AlgebraicMAC.lean` ([#21])

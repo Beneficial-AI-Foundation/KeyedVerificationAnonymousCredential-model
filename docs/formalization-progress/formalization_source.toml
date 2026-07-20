@@ -6,6 +6,7 @@
 [source]
 tag = "O24"
 pdf = "docs/Orru_2024.pdf"
+text = "docs/formalization-progress/Orru_2024.txt"  # committed pdftotext extraction (regenerate with `extract`); optional, defaults to `<pdf stem>.txt` beside the tool
 title = "Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552"
 lean_root = "KVAC"
 exclude_dirs = ["Scratch"]
