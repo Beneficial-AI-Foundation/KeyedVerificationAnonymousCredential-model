@@ -8,45 +8,33 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.Core
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (O24 §5.3, Lemma 5.4)
 
-The reduction layer that connects the game (`KVAC.Schemes.MicroCMZ.AlgebraicMAC`)
-to the polynomial backbone (`KVAC.Schemes.MicroCMZ.AGMPolynomial`). Its `Core`
-part (the only part on this branch) provides:
+Connects the game (`AlgebraicMAC`) to the polynomial backbone (`AGMPolynomial`).
+The `Core` part here provides:
 
 - `AGMRepr.toReprCoeffs` / `gamePoint` — the game ↔ polynomial dictionary;
-- `agmRepr_eval_eq_eval_toPoly` — the **eval bridge**: a representation's group
-  evaluation equals its `ReprCoeffs.toPoly` evaluated at the transcript's
-  discrete-log point, scaled onto `gen`;
-- `agm_n1_identity_Ustar_eq_zero` — the **identity branch**: a fresh forgery whose
-  verification polynomial vanishes identically forces `U* = 0`, which
-  `microCMZVerify` rejects (`U* ≠ 0`);
-- `recoverDlog` / `recoverDlog_eq` — the reduction's **discrete-log extraction**:
-  among `ψ`'s `≤ 3` roots, the unique one hitting the challenge `X` is `log_gen X`
-  (honest — never uses `glog`);
-- `recoverDlog_verifPoly_eq` — the **win-implies-extract** step: when the
-  verification equation holds at the embedded point and `ψ ≠ 0`, the reduction
-  outputs the challenge exponent `x`;
+- `agmRepr_eval_eq_eval_toPoly` — the eval bridge: a representation's group
+  evaluation equals `ReprCoeffs.toPoly` at the transcript's discrete-log point;
+- `agm_n1_identity_Ustar_eq_zero` — the identity branch: a fresh forgery with an
+  identically-vanishing verification polynomial forces `U* = 0`, which
+  `microCMZVerify` rejects;
+- `recoverDlog` / `recoverDlog_eq` — discrete-log extraction: the unique root of
+  `ψ` hitting the challenge `X` is `log_gen X` (never uses `glog`);
+- `recoverDlog_verifPoly_eq` — win implies extract: when the verification equation
+  holds at the embedded point and `ψ ≠ 0`, the reduction outputs `x`;
 - `reductionOracleImpl` / `microCMZ3DLReduction` — the reduction adversary and its
-  simulated oracle: runs `A` with no `sk`, then extracts the challenge exponent
-  from `ψ`'s roots.
+  simulated oracle: runs `A` with no `sk`, then extracts `x` from `ψ`'s roots.
 
-The non-identity probability bound (3-DL + Schwartz–Zippel) and the security
-theorems (O24 Lemma 5.4 / Theorem 5.1) are assembled by the forthcoming parts of
-the stack (not this branch).
+The probability bound (3-DL + Schwartz–Zippel) and the security theorems are
+assembled downstream.
 
-This is a separate module from `AlgebraicMAC` on purpose: it imports
-`AGMPolynomial`, which arms the order-instance hazard (see the note at `glog` in
-`AlgebraicMAC.lean`). Keeping `glog` and its laws in `AlgebraicMAC` — which does
-*not* import `AGMPolynomial` — lets them elaborate cleanly; here we only *use* the
-sealed `glog`, so nothing re-triggers that search.
-
-The reduction states its bad-event bound as `deg ψ / p = 3/p` (Schwartz–Zippel on
-the degree-≤3 masked univariate `ψ`), not the `1/p` O24 prints; the full argument
-accompanies the bound where it is proven downstream.
+The module is separate from `AlgebraicMAC` because importing `AGMPolynomial` arms
+the order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
+only *use* the sealed `glog`. The bad-event bound is `deg ψ / p = 3/p`
+(Schwartz–Zippel on the degree-≤3 `ψ`), not the `1/p` O24 prints.
 -/
 
 /-!
-This file is an aggregator: the μCMZ AGM reduction lives in the `AGMReduction/`
-subdirectory (Core, Coupling, DeterministicCore, Assembly, Shear, ShearShift,
-Security), split so each unit is reviewable. Importing this file brings the whole
-reduction into scope, exactly as the former single module did.
+Aggregator: the reduction lives in the `AGMReduction/` subdirectory (Core,
+Coupling, DeterministicCore, Assembly, Shear, ShearShift, Security). Importing
+this file brings the whole reduction into scope.
 -/
