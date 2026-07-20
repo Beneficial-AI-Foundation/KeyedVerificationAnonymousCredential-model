@@ -127,3 +127,27 @@ Rows in light gray: elements outside µCMZ and its prerequisites — µBBS (§6)
 | <span style="color:#a0a0a0">[Lemma 8.13](../Orru_2024.pdf#page=74)</span> | <span style="color:#a0a0a0">§8.3 Pseudonyms</span> | <span style="color:#a0a0a0">74</span> | <span style="color:#a0a0a0">Security reduction underpinning the pseudonym construction (Theorem 8.9 analysis).</span> | <span style="color:#a0a0a0">—</span> | <span style="color:#a0a0a0">⚪</span> |
 | <span style="color:#a0a0a0">[Definition 9.1](../Orru_2024.pdf#page=77)</span> | <span style="color:#a0a0a0">§9 Straight-line extraction from Σ-protocols</span> | <span style="color:#a0a0a0">77</span> | <span style="color:#a0a0a0">A relation family is admissible if no p.p.t. adversary can find a non-zero kernel vector of the relation's matrix (or of its distinct group generators).</span> | <span style="color:#a0a0a0">—</span> | <span style="color:#a0a0a0">⚪</span> |
 | <span style="color:#a0a0a0">[Theorem 9.2](../Orru_2024.pdf#page=77)</span> | <span style="color:#a0a0a0">§9 Straight-line extraction from Σ-protocols</span> | <span style="color:#a0a0a0">77</span> | <span style="color:#a0a0a0">The Fiat–Shamir Σ-protocol for an admissible linear relation is strongly simulation-extractable (straight-line) in the algebraic group and random oracle models.</span> | <span style="color:#a0a0a0">—</span> | <span style="color:#a0a0a0">⚪</span> |
+
+## How this file is generated
+
+This file is built by `docs/formalization-progress/formalization_progress.py` by a deterministic, three-step algorithm: extract the paper's elements, extract the Lean declarations and their citations, then join the two on a canonical key such as `Definition 3.1`, `Figure 5`, or `§3.1`. The status of each element (🟢/🌐/🌀/🟡/⚪) follows from whether a citing Lean declaration of the matching kind exists and whether its body contains `sorry`. All extraction is regular-expression pattern matching over text, the committed `pdftotext -layout` extraction of the paper on one side and the `.lean` sources on the other. The result is fully determined by the inputs; what can be imperfect is the coverage of the patterns, whether a pattern matches exactly the intended set of elements, not any runtime guessing.
+
+### Patterns the script matches
+
+Paper side (the committed text extraction):
+
+| Pattern | Matches |
+|---|---|
+| `ENV_RE` | a numbered environment heading: one of `Theorem\|Lemma\|Definition\|Claim\|Corollary\|Proposition\|Construction`, a number `N` or `N.N`, an optional `(name)`, a period, then a statement of at least 15 characters on the same line (the length requirement rejects cross-references like `Theorem 6.12).`) |
+| `TOC_SUB_RE`, `TOC_SEC_RE` | table-of-contents entries (`3.1 Title . . . 24` and `3 Title 24`), used to name sections |
+| `HEAD_RE` | a numbered heading in the body, matched against the TOC to assign each element its enclosing section |
+| `FIG_RE` | a figure caption of the form `Figure N: …` |
+| `_EQ_LINE_RE` | a right-aligned equation number `(N)` at the end of a display-math line |
+
+Lean side (the `.lean` sources):
+
+| Pattern | Matches |
+|---|---|
+| `DECL_RE` | a top-level declaration: `def\|structure\|abbrev\|class abbrev\|class\|instance\|lemma\|theorem\|inductive` followed by a Unicode-aware name |
+| `make_ref_re` | a citation governed by the mandatory tag, followed by one or more element tokens: a numbered environment, `§N.N`, or `Equation\|Eq\|Fig N`. The tag is required, so a bare prose mention or a citation of another paper is not counted |
+| `SORRY_RE` | the tokens `sorry`, `sorryAx`, or `admit` in a declaration body |
