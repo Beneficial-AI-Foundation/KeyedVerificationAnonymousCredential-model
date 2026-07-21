@@ -359,4 +359,42 @@ theorem eval_eq_zero_of_toPoly_eq_zero (msgs : Fin q → F)
     eval point (α.toPoly msgs) = 0 := by
   rw [h]; simp
 
+/-! ## The affine substitution ψ(χ) = ϕ(a + χ·b) (O24 Eqs. 13–14)
+
+The 3-DL reduction of the non-identity case embeds its challenge by
+substituting every variable with an affine form `v ↦ a_v + χ·b_v` (the masked
+embedding of O24 Eqs. 13–14), turning a multivariate polynomial `ϕ` into the
+univariate `ψ(χ)`. This section provides that substitution as an algebra map
+and the bridge lemma relating `ψ(χ)` to `ϕ` evaluated at `v ↦ a v + χ·b v`.
+The verification polynomial `ϕ` it is applied to, and the resulting degree and
+root bounds, follow in the next PR of the stack. -/
+
+/-- The affine substitution of O24 Eqs. 13–14: every variable goes to
+`v ↦ a_v + χ·b_v`, the masked embedding of the 3-DL challenge. Applied to
+`verifPoly` (the polynomial `ϕ`) it yields the univariate `ψ(χ)` of Eq. 16. -/
+noncomputable def affineSubst (a b : Var q → F) : P F q →ₐ[F] Polynomial F :=
+  aeval fun v => Polynomial.C (a v) + Polynomial.X * Polynomial.C (b v)
+
+/-- Evaluating the affine substitution `ψ = affineSubst a b ϕ` at a scalar `χ`
+recovers the multivariate evaluation of `ϕ` at the point `v ↦ a v + χ · b v`.
+This is the bridge the 3-DL reduction uses: with the masks chosen so that
+`a v + χ · b v` is the real discrete log of variable `v` at `χ = x` (the
+challenge exponent), `ψ(x) = 0` becomes exactly the verification equation
+(O24 Eq. 16). -/
+lemma eval_affineSubst (a b : Var q → F) (χ : F) (ϕ : P F q) :
+    Polynomial.eval χ (affineSubst a b ϕ) =
+      MvPolynomial.eval (fun v => a v + χ * b v) ϕ := by
+  have key : (Polynomial.aeval χ).comp (affineSubst a b) =
+      MvPolynomial.aeval (fun v => a v + χ * b v) := by
+    apply MvPolynomial.algHom_ext
+    intro v
+    simp only [affineSubst, Polynomial.X_mul_C, AlgHom.coe_comp, Polynomial.coe_aeval_eq_eval,
+    Function.comp_apply, aeval_X, Polynomial.eval_add, Polynomial.eval_C, Polynomial.eval_mul,
+    Polynomial.eval_X, add_right_inj]
+    ring
+  have h := DFunLike.congr_fun key ϕ
+  rw [AlgHom.comp_apply, MvPolynomial.aeval_eq_eval,
+    Polynomial.coe_aeval_eq_eval] at h
+  exact h
+
 end KVAC.Schemes.MicroCMZ.AGMPoly
