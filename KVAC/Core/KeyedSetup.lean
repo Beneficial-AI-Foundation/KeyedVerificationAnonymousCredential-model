@@ -42,7 +42,9 @@ structure KeyedSetupSyntax (M : Type → Type) [Monad M] where
   vectors `Fin n → Msg crs`. -/
   Msg : {secParam n : Nat} → Crs secParam n → Type
   /-- Decidable equality on messages, needed by the security games' freshness
-  checks. An implementation requirement, not an assumption. -/
+  checks. As a field it does mildly constrain instantiators to decidable
+  message spaces — benign in practice, since the concrete schemes use finite
+  fields and groups. -/
   DecidableEqMsg : {secParam n : Nat} → (crs : Crs secParam n) →
     DecidableEq (Msg crs)
   /-- Secret-key type, selected by the CRS. -/

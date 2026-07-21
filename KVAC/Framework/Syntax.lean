@@ -3,7 +3,7 @@ Copyright 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
-import KVAC.Core.KeyedSetup
+import KVAC.Framework.PredicateFamily
 
 /-!
 # Keyed-verification credential system — syntax (O24 Definitions 4.1, 4.2)
@@ -18,8 +18,8 @@ sit in their own files.
 
 - `KVACSyntax M` (this file) — the Definition 4.2 algorithms, no obligations.
 - `Correct` (`Correctness.lean`) — Definition 4.3.
-- Anonymity (`Anonymity.lean`) — Definition 4.4.
-- Extractability (Definition 4.5, Figure 8) — deferred.
+- Anonymity (Definition 4.4) and extractability (Definition 4.5, Figure 8) —
+  deferred to later tracks.
 
 ## Protocol shape
 
@@ -33,34 +33,29 @@ algorithms as the paper does:
 Rejection and abort are the `Option` results of `I.Srv` and `I.Usr₂` — the
 paper's `σ' = ⊥` and its `check` lines in Figure 9.
 
-## Predicates (Definition 4.1)
+## Layering
 
-A predicate is an efficiently-computable Boolean test on attribute vectors.
-Predicates are *data*: they are inputs to the algorithms and the statements
-of the attached zero-knowledge proofs. So the structure carries a type
-`Pred` with its semantics `holds`, plus the family's closure properties — a
-trivial predicate and conjunction — as fields.
+This file adds only the Definition 4.2 issuance/presentation algorithms. The
+carriers beneath them come from the tower `KVACSyntax` extends:
 
-The CRS, message space, and `setup`/`keygen` come from `KeyedSetupSyntax`
-(`KVAC.Core.KeyedSetup`); this file adds the predicate family and the
-issuance/presentation algorithms.
+- `KeyedSetupSyntax` (`KVAC.Core.KeyedSetup`) — CRS, message space,
+  `setup`/`keygen`.
+- `PredicateFamily` (`PredicateFamily.lean`) — the Definition 4.1 predicate
+  family `Pred`/`holds` with its trivial-predicate and conjunction laws.
 -/
 
 namespace KVAC.Framework
 
-open KVAC.Core
-
 /--
-Syntactic keyed-verification credential system (O24 Definition 4.2),
-carrying the Definition 4.1 predicate family as fields.
+Syntactic keyed-verification credential system (O24 Definition 4.2).
 
-`kvac : KVACSyntax M` bundles the algorithms `S / K / I.{Usr₁,Srv,Usr₂} /
-P.{Usr,Srv}` over an abstract randomness monad `M`. The carrier types are
+`kvac : KVACSyntax M` extends `PredicateFamily M` (and, through it,
+`KeyedSetupSyntax M`) with the issuance and presentation algorithms
+`I.{Usr₁,Srv,Usr₂} / P.{Usr,Srv}`, over an abstract randomness monad `M`. The
+CRS-selected carriers `S / K` and the Definition 4.1 predicate family come
+from the extended structures; this layer adds only the following carriers,
 all selected by the CRS:
 
-- `Msg` — attributes; the system works on vectors `Fin n → Msg crs`.
-- `Pred` — predicate descriptions `φ`, with semantics `holds`.
-- `Sk`, `Pp` — the issuer's secret key and public parameters.
 - `Cred` — credentials `σ`.
 - `UsrState` — the user's issuance state `st_u`.
 - `IssueMsg`, `BlindCred` — the issuance request `μ` and response `σ'`.
@@ -70,29 +65,7 @@ Correctness and the security games are standalone predicates on a
 `KVACSyntax ProbComp`, not fields — matching `AlgebraicMACSyntax`.
 -/
 structure KVACSyntax (M : Type → Type) [Monad M]
-    extends KeyedSetupSyntax M where
-  /-- Predicate descriptions `φ ∈ Φ` (O24 Definition 4.1), selected by the
-  CRS. Predicates are data because they are inputs to issuance and
-  presentation. -/
-  Pred : {secParam n : Nat} → Crs secParam n → Type
-  /-- Boolean semantics of a predicate on an attribute vector: O24's
-  `φ(m⃗) ∈ {0,1}` (efficiently computable, hence `Bool`). -/
-  holds : {secParam n : Nat} → (crs : Crs secParam n) → Pred crs →
-    (Fin n → Msg crs) → Bool
-  /-- The trivial predicate `φ₁` that every attribute vector satisfies
-  (O24 Definition 4.1: every family contains it). -/
-  trivialPred : {secParam n : Nat} → (crs : Crs secParam n) → Pred crs
-  /-- `φ₁` accepts everything. -/
-  holds_trivialPred : ∀ {secParam n : Nat} (crs : Crs secParam n)
-    (m : Fin n → Msg crs), holds crs (trivialPred crs) m = true
-  /-- Conjunction of predicates (O24 Definition 4.1: families are closed
-  under conjunction). -/
-  andPred : {secParam n : Nat} → (crs : Crs secParam n) → Pred crs →
-    Pred crs → Pred crs
-  /-- `andPred` is semantic conjunction. -/
-  holds_andPred : ∀ {secParam n : Nat} (crs : Crs secParam n)
-    (φ φ' : Pred crs) (m : Fin n → Msg crs),
-    holds crs (andPred crs φ φ') m = (holds crs φ m && holds crs φ' m)
+    extends PredicateFamily M where
   /-- Credential type `σ`, selected by the CRS. -/
   Cred : {secParam n : Nat} → Crs secParam n → Type
   /-- User issuance state `st_u`, selected by the CRS. -/
@@ -130,10 +103,11 @@ variable {M : Type → Type} [Monad M] (kvac : KVACSyntax M)
 variable {secParam n : Nat}
 
 /--
-The full one-round issuance protocol: the user's first move, the issuer's
-response, and the user's unblinding, chained. `none` propagates either the
-issuer's rejection or the user's abort. With `present`, this is the paper's
-`KVAC.M(sk, m⃗)` (O24 §4.1). -/
+The full one-round issuance interaction `⟨I.Usr(pp, m⃗, φ) ⇌ I.Srv(sk, φ)⟩`
+over an arbitrary predicate `φ`: the user's first move, the issuer's response,
+and the user's unblinding, chained. `none` propagates either the issuer's
+rejection or the user's abort. The paper's shorthand `KVAC.M(sk, m⃗)` (O24 §4.1)
+is the special case `φ = φ_m⃗`. -/
 def issue (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
     (m : kvac.MsgVec crs) (φ : kvac.Pred crs) : M (Option (kvac.Cred crs)) := do
   let (stU, μ) ← kvac.issueUsr₁ crs pp m φ
@@ -142,9 +116,10 @@ def issue (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
   | some σ' => kvac.issueUsr₂ crs stU σ'
 
 /--
-The full one-round presentation protocol: the user's proof followed by the
-issuer's check. The paper's `KVAC.V(sk, m⃗, σ)` when `φ` is trivial
-(O24 §4.1). -/
+The full one-round presentation interaction `⟨P.Srv(sk, φ) ⇌ P.Usr(pp, m⃗, σ, φ)⟩`
+over an arbitrary predicate `φ`: the user's proof followed by the issuer's
+check. The paper's shorthand `KVAC.V(sk, m⃗, σ)` (O24 §4.1) is the special case
+`φ = φ_m⃗` (the exact-attribute predicate), not the trivial `φ₁`. -/
 def present (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
     (m : kvac.MsgVec crs) (σ : kvac.Cred crs) (φ : kvac.Pred crs) : M Bool := do
   let ρ ← kvac.presentUsr crs pp m σ φ

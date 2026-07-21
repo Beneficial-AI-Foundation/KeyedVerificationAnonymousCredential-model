@@ -21,6 +21,11 @@ form, which μCMZ satisfies perfectly. See
 `KVAC/Core/AlgebraicMAC/Correctness.lean` for why the support form is the
 lightest to prove.
 
+This is strictly stronger than the paper's "overwhelming": a scheme with
+negligible-but-nonzero correctness error would satisfy Definition 4.3 yet fail
+`Correct`. That is fine for the perfectly-correct schemes we formalize; a
+future scheme with correctness error would need a probabilistic restatement.
+
 We split the paper's single experiment into its two halves — "issuance
 completes" and "presentation accepts" — so downstream proofs, such as the
 anonymity hybrids, can cite each on its own.
