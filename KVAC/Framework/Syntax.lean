@@ -6,11 +6,12 @@ Authors: Semar Augusto
 import KVAC.Framework.PredicateFamily
 
 /-!
-# Keyed-verification credential system — syntax (O24 Definitions 4.1, 4.2)
+# Keyed-verification credential system — syntax (O24 Definition 4.2)
 
 The syntactic algorithms of a keyed-verification anonymous credential
 system, following Orrù, *Revisiting Keyed-Verification Anonymous
-Credentials*, IACR ePrint 2024/1552 (O24), Definitions 4.1 and 4.2.
+Credentials*, IACR ePrint 2024/1552 (O24), Definition 4.2. The credential
+predicate family (Definition 4.1) lives in `PredicateFamily.lean`.
 
 Layered like the algebraic MAC (`KVAC.Core.AlgebraicMAC`): the algorithms
 live here as a monad-polymorphic structure, and the semantic obligations
@@ -52,9 +53,9 @@ Syntactic keyed-verification credential system (O24 Definition 4.2).
 `kvac : KVACSyntax M` extends `PredicateFamily M` (and, through it,
 `KeyedSetupSyntax M`) with the issuance and presentation algorithms
 `I.{Usr₁,Srv,Usr₂} / P.{Usr,Srv}`, over an abstract randomness monad `M`. The
-CRS-selected carriers `S / K` and the Definition 4.1 predicate family come
-from the extended structures; this layer adds only the following carriers,
-all selected by the CRS:
+setup and key-generation algorithms `S / K` and the Definition 4.1 predicate
+family come from the extended structures; this layer adds only the following
+carriers, all selected by the CRS:
 
 - `Cred` — credentials `σ`.
 - `UsrState` — the user's issuance state `st_u`.
