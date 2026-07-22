@@ -3,25 +3,107 @@ name: Formalization progress
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+
+# One run at a time; later runs queue rather than cancel an in-flight
+# branch/PR update mid-mutation.
+concurrency:
+  group: formalization-progress
+  cancel-in-progress: false
 
 jobs:
-  check:
+  regenerate:
     runs-on: ubuntu-latest
     steps:
+      # Pin to main so a manual workflow_dispatch from another ref cannot
+      # regenerate against (or open a PR based on) the wrong branch.
       - uses: actions/checkout@v5
-      - name: Install pdftotext (poppler-utils)
-        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+        with:
+          ref: main
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      # Fails if docs/FORMALIZATION_PROGRESS.md or the JSON intermediate are out
-      # of date with the Lean sources or the paper. Regenerate locally with
-      # `python3 scripts/formalization_progress.py` and commit the result.
-      - name: Check formalization-progress table is up to date
+      # Sync before regenerating so the table derives from the latest main and
+      # the later push does not have to rebase a local commit over new ones.
+      - name: Sync with main
+        run: git pull --rebase origin main
+      # Regenerates the progress table after each merge to main. PRs are not
+      # gated on the table; it is derived from the merged sources here, so it
+      # can never stay stale on main. The paper side reads the committed text
+      # extraction (docs/formalization-progress/Orru_2024.txt); refresh that
+      # file with the `extract` subcommand only if the PDF or the extraction
+      # tooling changes.
+      - name: Regenerate formalization-progress table
+        run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml
+      # Right after regeneration nothing is stale, so --check exits non-zero
+      # only for genuine problems: a Lean docstring citing a paper element that
+      # does not exist (a typo, an extraction miss, or a stale summary key).
+      # `report` merely warns about these; this step turns them red.
+      - name: Check for unresolved citations
         run: python3 docs/formalization-progress/formalization_progress.py --config docs/formalization-progress/formalization_source.toml --check
+      # Audits the joins between the paper, the curation files, and the Lean
+      # sources: stale curated keys, misfiled elements (chapter mismatch),
+      # and citations that resolve but are invisible because their element is
+      # not curated (warnings).
+      - name: Cross-reference audit
+        run: python3 docs/formalization-progress/formalization_progress.py xref --config docs/formalization-progress/formalization_source.toml
+      # The PR step's add-paths would silently stash any other modified file;
+      # fail loudly instead if the generator ever writes outside its two
+      # declared outputs.
+      - name: Fail on unexpected generated changes
+        run: |
+          extra=$(git status --porcelain | grep -vE 'docs/formalization-progress/(FORMALIZATION_PROGRESS\.md|formalization_progress\.json)$' || true)
+          if [ -n "$extra" ]; then
+            echo "Unexpected changes outside the generated table:"
+            echo "$extra"
+            exit 1
+          fi
+      # Runs only when --check and xref both passed, so a bad state never
+      # lands on main through this workflow.
+      # Branch protection blocks direct pushes to main, so the table lands via
+      # an auto-PR: one fixed branch, one PR updated in place, closed if the
+      # diff disappears. The PR skips other workflows (GITHUB_TOKEN) but still
+      # needs the one required review. Action pinned by commit SHA (v7.0.9).
+      - name: Open or update the regeneration PR (if changed)
+        id: regen-pr
+        uses: peter-evans/create-pull-request@84ae59a2cdc2258d6fa0732dd66352dddae2a412 # v7.0.9
+        with:
+          base: main
+          add-paths: |
+            docs/formalization-progress/FORMALIZATION_PROGRESS.md
+            docs/formalization-progress/formalization_progress.json
+          commit-message: "docs(progress): regenerate formalization-progress table"
+          author: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          committer: "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+          branch: bot/progress-regen
+          delete-branch: true
+          title: "docs(progress): regenerate formalization-progress table"
+          body: |
+            Automated regeneration of the formalization-progress table,
+            derived from main @ ${{ github.sha }} (workflow run
+            ${{ github.run_id }}). `--check` and the xref audit passed before
+            this PR was opened. Subsequent merges update this PR in place.
+      # Arm auto-merge so a maintainer's approval is the only manual action;
+      # GitHub merges the moment the required review lands. Armed only on
+      # creation: a force-update of an existing PR keeps its armed state.
+      - name: Enable auto-merge on the regeneration PR
+        if: steps.regen-pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge --auto --merge "${{ steps.regen-pr.outputs.pull-request-number }}"
+      # If validation failed above, an open bot PR from an earlier run still
+      # carries output derived from an older main; close it rather than let
+      # stale content be approved and merged.
+      - name: Close stale regeneration PR on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr close bot/progress-regen --delete-branch \
+            --comment "Closed automatically: a newer run on main failed validation, so this PR's content may be stale. It will be recreated by the next successful run." \
+            || true

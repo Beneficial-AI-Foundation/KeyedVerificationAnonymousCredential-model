@@ -13,6 +13,18 @@
 #     hardness assumption, a proof-system interface). Recalled prior-work
 #     objects and the §8 "future extensions" are intentionally omitted.
 
+# Rows rendered in light gray. Entries are element keys ("Theorem 2") or
+# section prefixes ("§6" covers the section, its subsections, and their
+# elements); a "!" prefix exempts a matching element from dimming (e.g.
+# "!Theorem 8.7" keeps it undimmed inside a dimmed "§8"). A run can override
+# this list with repeatable --dim flags.
+# Everything outside µCMZ and its prerequisites is dimmed: the
+# µBBS line (§6, Theorem 2), designated-verifier SNARKs (§7, Theorem 3),
+# the §8 extensions, and straight-line Σ-protocol extraction (§9). Kept
+# undimmed: Theorem 1, the §3 preliminaries, the §4 KVAC definitions, §5.
+dim = ["§6", "§7", "§8", "§9", "Theorem 2", "Theorem 3"]
+dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), designated-verifier SNARKs (§7), extensions (§8), straight-line Σ-protocol extraction (§9), and their contribution theorems."
+
 [summaries]
 "Theorem 1" = "μCMZ is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
 "Theorem 2" = "μBBS is a keyed-verification anonymous credential system: extractable and anonymous in the algebraic group model, with the stated advantage bounds."
@@ -70,6 +82,7 @@
 "Theorem 9.2" = "The Fiat–Shamir Σ-protocol for an admissible linear relation is strongly simulation-extractable (straight-line) in the algebraic group and random oracle models."
 
 # Sections carrying a formalizable object (assumptions, interfaces, primitives).
+"§3" = "The Notation paragraph opening §3 (only): the random-oracle hashes H_p : {0,1}* → ℤ_p (Fiat–Shamir transcripts) and H_𝔾 : {0,1}* → 𝔾 (hash-to-curve). The numbered subsections §3.1–§3.4 are tracked as their own rows."
 "§3.1" = "The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI."
 "§3.3" = "The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs."
 "§3.4" = "Syntax and security of anonymous token schemes with non-interactive issuance."
@@ -85,3 +98,18 @@
 # cites it (`O24 Eq. N`). Do not add a summary for an equation no declaration
 # cites yet — `--check` flags it as a key naming no tracked element.
 "Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
+"Equation 10" = "R_is, the μCMZ issuance server-proof relation: knowledge of $(x_0, u)$ with X₀ = x₀·H, U' = u·G and V' = x₀·U' + u·C''."
+"Equation 11" = "R_p, the μCMZ presentation-proof relation: knowledge of $(r', \\vec{r}, \\vec{m})$ opening the commitments C⃗ over U' and Z = Σᵢ rᵢ·Xᵢ − r'·H, with policy φ($\\vec{m}$) satisfied."
+
+# Corrections to the extractor's enclosing-section assignment, for elements
+# whose heading order in the text misleads the heuristic. Values are section
+# numbers; the section title is looked up from the extracted TOC.
+[element_sections]
+# The µBBS system figure sits on page 48 just above the "6 Boneh–Boyen–Shacham
+# credentials" heading, so the extractor files it under §5.6; it belongs to §6.
+"Figure 10" = "6"
+# Cite-driven equations carry no extracted section; Eqs. 9–11 (R_iu, R_is,
+# R_p) are all stated in the µCMZ protocol description, §5.1.
+"Equation 9" = "5.1"
+"Equation 10" = "5.1"
+"Equation 11" = "5.1"

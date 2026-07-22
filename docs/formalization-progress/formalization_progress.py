@@ -10,8 +10,9 @@ docstrings and module docs, e.g.:
 
 This script:
 
-1. Extracts the paper element universe from the source PDF via
-   ``pdftotext -layout`` (numbered environments, figure captions, TOC sections).
+1. Extracts the paper element universe (numbered environments, figure captions,
+   TOC sections) from the committed text extraction of the source PDF (see
+   ``extract`` below).
 2. Extracts Lean declarations (def/structure/abbrev/class/instance/lemma/
    theorem/inductive) and the citation references attached to each, both at the
    declaration level (preceding ``/-- -/`` docstring + signature) and the file
@@ -25,14 +26,20 @@ then individual CLI flags. This keeps zero-argument runs and CI working while
 letting the same tool target a different paper.
 
 It is dependency-free (standard library only; ``tomllib`` ships with Python
-3.11+) so it can run in CI. The only external requirement is the ``pdftotext``
-binary (poppler-utils).
+3.11+) so it can run in CI. ``report`` and ``--check`` read the **committed**
+text extraction of the paper (the ``text`` source field), so they never run
+``pdftotext`` and are deterministic across machines. The ``pdftotext`` binary
+(poppler-utils) is needed only for ``extract`` and ``init``, which run once
+per paper.
 
 Usage (run from the repository root):
     P=docs/formalization-progress/formalization_progress.py
 
     # Generate the source-of-truth TOML from a paper file and its URL:
     python3 $P init --pdf docs/Orru_2024.pdf --url https://eprint.iacr.org/2024/1552
+
+    # Extract the paper text once and commit it (requires pdftotext):
+    python3 $P extract --config s.toml
 
     # Generate the progress table (`report` is the default subcommand):
     python3 $P                  # built-in default source
@@ -80,6 +87,8 @@ class Source:
     """A paper acting as the source of truth, and where to read/write."""
     tag: str            # citation prefix used in the Lean docstrings, e.g. "O24"
     pdf: Path           # the paper PDF
+    text: Path | None   # committed `pdftotext -layout` extraction of the PDF;
+                        # None derives `<pdf stem>.txt` in PROGRESS_DIR
     title: str          # full reference, shown in the generated header
     lean_root: Path     # directory of Lean sources to scan
     exclude_dirs: tuple[str, ...]  # subdirectory names to skip (e.g. Scratch)
@@ -92,6 +101,7 @@ class Source:
 DEFAULT_SOURCE = Source(
     tag="O24",
     pdf=REPO / "docs" / "Orru_2024.pdf",
+    text=None,  # derived: PROGRESS_DIR / "Orru_2024.txt"
     title="Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, "
           "IACR ePrint 2024/1552",
     lean_root=REPO / "KVAC",
@@ -148,8 +158,10 @@ class PaperElement:
 
 @functools.lru_cache(maxsize=None)
 def pdf_to_text(pdf: Path) -> str:
-    """Layout-preserving text of the PDF (form-feed separated pages), cached so
-    the paper and the equation locator share a single ``pdftotext`` run."""
+    """Layout-preserving text of the PDF (form-feed separated pages). Run only
+    by ``extract`` (and ``init``); ``report``/``--check`` read the committed
+    extraction instead, so their output does not depend on the local poppler
+    version."""
     if not pdf.exists():
         raise SystemExit(f"error: source PDF not found: {pdf}")
     try:
@@ -164,9 +176,17 @@ def pdf_to_text(pdf: Path) -> str:
     return proc.stdout
 
 
-def extract_paper(pdf: Path) -> list[PaperElement]:
-    text = pdf_to_text(pdf)
+def paper_text(path: Path) -> str:
+    """The committed text extraction of the paper (form-feed separated pages),
+    the single input of the paper side of the report."""
+    if not path.exists():
+        raise SystemExit(
+            f"error: paper text extraction not found: {path}\n"
+            f"generate and commit it with: python3 {SCRIPT_REL} extract")
+    return path.read_text(encoding="utf-8")
 
+
+def extract_paper(text: str) -> list[PaperElement]:
     # Section-title map from the TOC, used to recognise body headings.
     toc: dict[str, str] = {}
     for ln in text.splitlines():
@@ -412,13 +432,46 @@ def load_summaries(path: Path) -> dict[str, str]:
     return {k: str(v).strip() for k, v in table.items()}
 
 
+def load_dim(path: Path) -> tuple[list[str], str]:
+    """Curated dim-list from the summaries file: a top-level ``dim`` array of
+    element keys ("Theorem 2") or section prefixes ("§6", which dims every
+    element of section 6 and its subsections), plus an optional ``dim_note``
+    explaining the graying, shown above the table. An entry starting with
+    ``!`` is an exception: a matching element is *not* dimmed even when
+    another entry covers it (e.g. ``["§8", "!Theorem 8.7"]``). The list can
+    be overridden per run with the repeatable ``--dim`` flag."""
+    if not path.exists():
+        return [], ""
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return [str(d) for d in data.get("dim", [])], str(data.get("dim_note", ""))
+
+
+def _dim_matches(e: PaperElement, d: str) -> bool:
+    if d.startswith("§"):
+        sec = d[1:]
+        for num in (e.section, e.number if e.kind == "Section" else ""):
+            if num and (num == sec or num.startswith(sec + ".")):
+                return True
+        return False
+    return e.key == d
+
+
+def is_dimmed(e: PaperElement, dim: list[str]) -> bool:
+    """Whether ``e`` matches the dim-list (exact key, or `§N` prefix covering
+    the section, its subsections, and their elements). ``!``-prefixed
+    exceptions win over any dim entry."""
+    if any(_dim_matches(e, d[1:]) for d in dim if d.startswith("!")):
+        return False
+    return any(_dim_matches(e, d) for d in dim if not d.startswith("!"))
+
+
 # --- equations (cite-driven) --------------------------------------------------
 
 # A right-aligned equation number `(N)` at the end of a display-math line.
 _EQ_LINE_RE = re.compile(r"\S.*?\s{2,}\((\d+)\)\s*$")
 
 
-def locate_equations(pdf: Path) -> dict[int, int]:
+def locate_equations(text: str) -> dict[int, int]:
     """Best-effort ``equation number -> 1-based page`` map, from the right-aligned
     ``(N)`` marker at the end of a display line (first occurrence wins).
 
@@ -428,7 +481,7 @@ def locate_equations(pdf: Path) -> dict[int, int]:
     by ``--check`` (never silently dropped); give its page in an
     ``[equation_pages]`` table of the summaries file to override."""
     found: dict[int, int] = {}
-    for pno, page in enumerate(pdf_to_text(pdf).split("\f"), start=1):
+    for pno, page in enumerate(text.split("\f"), start=1):
         for ln in page.splitlines():
             m = _EQ_LINE_RE.search(ln)
             if m:
@@ -445,6 +498,17 @@ def load_page_overrides(path: Path) -> dict[str, int]:
     return {k: int(v) for k, v in data.get("equation_pages", {}).items()}
 
 
+def load_section_overrides(path: Path) -> dict[str, str]:
+    """Curated ``key -> section number`` overrides from an optional
+    ``[element_sections]`` table, for elements the extractor files under the
+    wrong enclosing section (e.g. a figure placed just above the heading of
+    the section it belongs to)."""
+    if not path.exists():
+        return {}
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return {k: str(v) for k, v in data.get("element_sections", {}).items()}
+
+
 def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
     """The ``Equation N`` keys actually cited by some Lean docstring."""
     keys: set[str] = set()
@@ -455,14 +519,14 @@ def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
     return {k for k in keys if re.fullmatch(r"Equation \d+", k)}
 
 
-def equation_elements(pdf: Path, cited: set[str], overrides: dict[str, int],
+def equation_elements(text: str, cited: set[str], overrides: dict[str, int],
                       base_seq: int) -> list[PaperElement]:
     """Paper elements for the cited equations we can place (curated page, else the
     heuristic). Equations we cannot place are omitted, so their citations stay
     unresolved and surface in ``--check``."""
     if not cited:
         return []
-    located = locate_equations(pdf)
+    located = locate_equations(text)
     out = []
     for key in sorted(cited, key=lambda k: int(k.split()[1])):
         n = int(key.split()[1])
@@ -524,8 +588,16 @@ def element_status(e: PaperElement, by_key: dict) -> tuple[str, list]:
     return ST_NONE, []
 
 
+# Light-gray wrapper for dimmed rows. Inline styles render in VS Code and most
+# Markdown viewers; github.com strips the style attribute and shows plain text.
+_DIM_OPEN, _DIM_CLOSE = '<span style="color:#a0a0a0">', "</span>"
+
+
 def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
-                    lean: list[LeanFile], summaries: dict[str, str]) -> str:
+                    lean: list[LeanFile], summaries: dict[str, str],
+                    dim: list[str], dim_note: str,
+                    sec_titles: dict[str, str],
+                    universe_counts: dict[str, int]) -> str:
     status = {e.key: element_status(e, by_key) for e in paper}
     formalized = sum(1 for e in paper if status[e.key][0] == ST_DONE)
     covered = sum(1 for e in paper if e.key in by_key)
@@ -533,7 +605,6 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     n_decls = sum(len(lf.decls) for lf in lean)
     n_files = len(lean)
     n_sorry = sum(1 for lf in lean for d in lf.decls if d.has_sorry)
-    excluded = ", ".join(f"`{d}/`" for d in source.exclude_dirs) or "none"
 
     out = []
     out.append("# Formalization progress ↔ Lean\n")
@@ -561,24 +632,80 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
                f"(~{100 * formalized // total if total else 0}%)")
     out.append(f"- Paper elements with some Lean association: **{covered}**")
     out.append(f"- Lean declarations scanned: **{n_decls}** across "
-               f"**{n_files}** files (excluding {excluded} and git-ignored "
-               f"paths); **{n_sorry}** detected to contain `sorry`\n")
+               f"**{n_files}** files; **{n_sorry}** detected to contain "
+               "`sorry`\n")
 
-    # Breakdown by paper element kind: catalogued vs formalized (✅).
-    paper_kinds: dict[str, list[int]] = {}
+    # All links are written relative to the Markdown file's own directory, so
+    # they resolve correctly wherever the report is placed in the tree.
+    base = source.out_md.parent
+    pdf_rel = os.path.relpath(source.pdf, base)
+
+    def link(repo_rel_path: str) -> str:
+        return os.path.relpath(REPO / repo_rel_path, base)
+
+    # Breakdown by paper element kind. "In paper" is the paper's universe of
+    # that kind (figure/equation totals estimated from their sequential
+    # numbering); "Tracked elements" lists the members the detail table
+    # follows, each linking to its page (dimmed individually when out of
+    # scope). Coverage divides by the paper's count, not the tracked one.
+    paper_kinds: dict[str, list] = {}
     for e in paper:
-        cell = paper_kinds.setdefault(e.kind, [0, 0])
+        cell = paper_kinds.setdefault(e.kind, [0, 0, []])
         cell[0] += 1
         if status[e.key][0] == ST_DONE:
             cell[1] += 1
+        num = f"[{e.number}]({pdf_rel}#page={e.page})"
+        if is_dimmed(e, dim):
+            num = f"{_DIM_OPEN}{num}{_DIM_CLOSE}"
+        cell[2].append(num)
     out.append("### By paper element\n")
-    out.append("| Element kind | In paper | Formalized | Coverage |")
-    out.append("|---|--:|--:|--:|")
+    out.append("`In paper` counts the paper's elements of each kind (figure "
+               "and equation totals are estimated from their numbering); "
+               "`Tracked elements` lists the ones the table below follows — "
+               "all numbered environments, the curated figures and sections, "
+               "and the cited equations.\n")
+    out.append("| Element kind | Tracked elements | In paper | Formalized | "
+               "Coverage |")
+    out.append("|---|---|--:|--:|--:|")
+    universe_total = 0
     for kind in sorted(paper_kinds):
-        n, c = paper_kinds[kind]
-        out.append(f"| {kind} | {n} | {c} | {100 * c // n if n else 0}% |")
-    out.append(f"| **Total** | **{total}** | **{formalized}** | "
-               f"**{100 * formalized // total if total else 0}%** |\n")
+        n, c, nums = paper_kinds[kind]
+        n_paper = max(universe_counts.get(kind, n), n)
+        universe_total += n_paper
+        out.append(f"| {kind} | {', '.join(nums)} | {n_paper} | {c} | "
+                   f"{100 * c // n_paper if n_paper else 0}% |")
+    out.append(f"| **Total** | | **{universe_total}** | **{formalized}** | "
+               f"**{100 * formalized // universe_total if universe_total else 0}%** |\n")
+
+    # Breakdown by top-level paper section — one row per protocol/topic
+    # (§5 µCMZ, §6 µBBS, ...), listing the tracked elements of each section.
+    # Out-of-scope sections render dimmed, matching the element table.
+    sections: dict[str, list] = {}
+    for e in paper:
+        num = e.number if e.kind == "Section" else e.section
+        top = num.split(".")[0] if num else "—"
+        cell = sections.setdefault(top, [0, 0, []])
+        cell[0] += 1
+        if status[e.key][0] == ST_DONE:
+            cell[1] += 1
+        key = f"[{e.key}]({pdf_rel}#page={e.page})"
+        if is_dimmed(e, dim):
+            key = f"{_DIM_OPEN}{key}{_DIM_CLOSE}"
+        cell[2].append(key)
+    out.append("### By paper section\n")
+    out.append("| Section | Tracked elements | Tracked | Formalized | "
+               "Coverage |")
+    out.append("|---|---|--:|--:|--:|")
+    for top in sorted(sections, key=lambda k: (k == "—", int(k) if k.isdigit()
+                                               else 0)):
+        n, c, keys = sections[top]
+        label = (f"§{top} {sec_titles.get(top, '')}".strip() if top != "—"
+                 else "(unsectioned)")
+        if f"§{top}" in dim:
+            label = f"{_DIM_OPEN}{label}{_DIM_CLOSE}"
+        out.append(f"| {label} | {', '.join(keys)} | {n} | {c} | "
+                   f"{100 * c // n if n else 0}% |")
+    out.append("")
 
     # Breakdown by Lean declaration kind: total vs those citing the paper.
     lean_kinds: dict[str, list[int]] = {}
@@ -607,20 +734,14 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
         f"{ST_MODULE} only module-level coverage detected · "
         f"{ST_NONE} nothing detected yet\n")
 
-    # All links are written relative to the Markdown file's own directory, so
-    # they resolve correctly wherever the report is placed in the tree.
-    base = source.out_md.parent
-    pdf_rel = os.path.relpath(source.pdf, base)
-
-    def link(repo_rel_path: str) -> str:
-        return os.path.relpath(REPO / repo_rel_path, base)
-
     missing = sum(1 for e in paper if e.key not in summaries)
     out.append("## Paper element → Lean declarations\n")
     out.append("Each element name links to its page in the source PDF. "
                "Summaries are curated in "
                f"`{os.path.relpath(source.summaries, REPO)}`"
                + (f" ({missing} still pending)." if missing else ".") + "\n")
+    if dim and dim_note:
+        out.append(f"Rows in light gray: {dim_note}\n")
     out.append("| Paper element | Section | Page | Summary | "
                "Lean declarations | Status |")
     out.append("|---|---|---|---|---|---|")
@@ -662,20 +783,60 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
             summary = f"**{e.label}.** {summary}"
         summary = summary.replace("|", "\\|")
 
-        out.append(
-            f"| {name} | {section} | {e.page} | {summary} | "
-            f"{'<br>'.join(lean_cells) if lean_cells else '—'} | {mark} |"
-        )
+        cells = [name, section, str(e.page), summary,
+                 "<br>".join(lean_cells) if lean_cells else "—", mark]
+        if is_dimmed(e, dim):
+            cells = [f"{_DIM_OPEN}{c}{_DIM_CLOSE}" for c in cells]
+        out.append("| " + " | ".join(cells) + " |")
 
     out.append("")
+    out.extend(_algorithm_note())
     return "\n".join(out)
+
+
+def _algorithm_note() -> list[str]:
+    """Prose appended to the report explaining how it is generated and which
+    regular-expression patterns the script matches. Kept here so the generated
+    file, which must not be edited by hand, always carries the explanation."""
+    return [
+        "## How this file is generated\n",
+        f"This file is built by `{SCRIPT_REL}` by a deterministic, three-step "
+        "algorithm: extract the paper's elements, extract the Lean declarations "
+        "and their citations, then join the two on a canonical key such as "
+        "`Definition 3.1`, `Figure 5`, or `§3.1`. The status of each element "
+        f"({ST_DONE}/{ST_SORRY}/{ST_MISMATCH}/{ST_MODULE}/{ST_NONE}) follows "
+        "from whether a citing Lean declaration of the matching kind exists and "
+        "whether its body contains `sorry`. All extraction is regular-expression "
+        "pattern matching over text, the committed `pdftotext -layout` extraction "
+        "of the paper on one side and the `.lean` sources on the other. The result "
+        "is fully determined by the inputs; what can be imperfect is the coverage "
+        "of the patterns, whether a pattern matches exactly the intended set of "
+        "elements, not any runtime guessing.\n",
+        "### Patterns the script matches\n",
+        "Paper side (the committed text extraction):\n",
+        "| Pattern | Matches |",
+        "|---|---|",
+        r"| `ENV_RE` | a numbered environment heading: one of `Theorem\|Lemma\|Definition\|Claim\|Corollary\|Proposition\|Construction`, a number `N` or `N.N`, an optional `(name)`, a period, then a statement of at least 15 characters on the same line (the length requirement rejects cross-references like `Theorem 6.12).`) |",
+        r"| `TOC_SUB_RE`, `TOC_SEC_RE` | table-of-contents entries (`3.1 Title . . . 24` and `3 Title 24`), used to name sections |",
+        r"| `HEAD_RE` | a numbered heading in the body, matched against the TOC to assign each element its enclosing section |",
+        r"| `FIG_RE` | a figure caption of the form `Figure N: …` |",
+        r"| `_EQ_LINE_RE` | a right-aligned equation number `(N)` at the end of a display-math line |",
+        "",
+        "Lean side (the `.lean` sources):\n",
+        "| Pattern | Matches |",
+        "|---|---|",
+        r"| `DECL_RE` | a top-level declaration: `def\|structure\|abbrev\|class abbrev\|class\|instance\|lemma\|theorem\|inductive` followed by a Unicode-aware name |",
+        r"| `make_ref_re` | a citation governed by the mandatory tag, followed by one or more element tokens: a numbered environment, `§N.N`, or `Equation\|Eq\|Fig N`. The tag is required, so a bare prose mention or a citation of another paper is not counted |",
+        r"| `SORRY_RE` | the tokens `sorry`, `sorryAx`, or `admit` in a declaration body |",
+        "",
+    ]
 
 
 # --- source resolution + main -------------------------------------------------
 
 # Maps TOML/CLI keys to Source fields and how to coerce them. Paths are resolved
 # relative to the repository root when given relative.
-_PATH_FIELDS = {"pdf", "lean_root", "out_md", "out_json", "summaries"}
+_PATH_FIELDS = {"pdf", "text", "lean_root", "out_md", "out_json", "summaries"}
 
 
 def _resolve_path(value) -> Path:
@@ -688,7 +849,7 @@ def source_from_config(path: Path) -> dict:
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     table = data.get("source", data)
     overrides = {}
-    for key in ("tag", "pdf", "title", "lean_root", "exclude_dirs",
+    for key in ("tag", "pdf", "text", "title", "lean_root", "exclude_dirs",
                 "out_md", "out_json", "summaries"):
         if key not in table:
             continue
@@ -707,14 +868,19 @@ def resolve_source(args) -> Source:
     if args.config:
         overrides.update(source_from_config(args.config))
     for key in ("tag", "title"):
-        if getattr(args, key) is not None:
+        if getattr(args, key, None) is not None:
             overrides[key] = getattr(args, key)
-    for key in ("pdf", "lean_root", "out_md", "out_json"):
-        if getattr(args, key) is not None:
+    for key in ("pdf", "text", "lean_root", "out_md", "out_json"):
+        if getattr(args, key, None) is not None:
             overrides[key] = _resolve_path(getattr(args, key))
     if args.exclude_dirs is not None:
         overrides["exclude_dirs"] = tuple(args.exclude_dirs)
-    return replace(DEFAULT_SOURCE, **overrides)
+    src = replace(DEFAULT_SOURCE, **overrides)
+    if src.text is None:
+        # Named after the source PDF, so a different paper never collides
+        # with another paper's committed extraction.
+        src = replace(src, text=PROGRESS_DIR / f"{src.pdf.stem}.txt")
+    return src
 
 
 # --- metadata extraction (init) -----------------------------------------------
@@ -850,7 +1016,7 @@ def build_reference(title: str, authors: list[str], suffix: str) -> str:
     return ", ".join(parts)
 
 
-def emit_toml(tag: str, pdf: Path, title: str, lean_root: Path,
+def emit_toml(tag: str, pdf: Path, text: Path, title: str, lean_root: Path,
               exclude_dirs: tuple[str, ...], out_md: Path,
               out_json: Path, summaries: Path) -> str:
     def rel(p: Path) -> str:
@@ -865,6 +1031,7 @@ def emit_toml(tag: str, pdf: Path, title: str, lean_root: Path,
         "[source]\n"
         f'tag = "{tag}"\n'
         f'pdf = "{rel(pdf)}"\n'
+        f'text = "{rel(text)}"  # committed pdftotext extraction (regenerate with `extract`)\n'
         f'title = "{esc}"\n'
         f'lean_root = "{rel(lean_root)}"\n'
         f"exclude_dirs = [{excl}]\n"
@@ -942,8 +1109,9 @@ def cmd_init(args) -> int:
                      "file there before running `report`")
 
     summaries = DEFAULT_SOURCE.summaries
-    toml_text = emit_toml(tag, pdf_field, reference, lean_root, exclude_dirs,
-                          out_md, out_json, summaries)
+    text_field = PROGRESS_DIR / f"{pdf_field.stem}.txt"
+    toml_text = emit_toml(tag, pdf_field, text_field, reference, lean_root,
+                          exclude_dirs, out_md, out_json, summaries)
     out_cfg.write_text(toml_text)
     print(f"Wrote {out_cfg}")
     print(f"  title : {reference}")
@@ -963,14 +1131,45 @@ def cmd_report(args) -> int:
     src = resolve_source(args)
     ref_re = make_ref_re(src.tag)
 
-    paper_all = extract_paper(src.pdf)
+    text = paper_text(src.text)
+    paper_all = extract_paper(text)
     lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
     summaries = load_summaries(src.summaries)
+    dim, dim_note = load_dim(src.summaries)
+    if getattr(args, "dim", None):
+        dim = list(args.dim)
     # Cite-driven equations: only equations a Lean docstring references are added,
     # placed by the on-demand locator (or a curated page override).
     paper_all = paper_all + equation_elements(
-        src.pdf, cited_equation_keys(lean), load_page_overrides(src.summaries),
+        text, cited_equation_keys(lean), load_page_overrides(src.summaries),
         base_seq=len(paper_all))
+    # Universe sizes per kind: how many elements of each kind the paper
+    # contains, independent of curation and citation. Numbered environments
+    # are always tracked, so their extracted count is the universe. Figures
+    # and equations are numbered sequentially, so the largest number seen is
+    # the estimate of the total (captions and equation lines the extraction
+    # misses do not lower it). Sections count every extracted heading.
+    universe_counts: dict[str, int] = {}
+    for e in paper_all:
+        universe_counts[e.kind] = universe_counts.get(e.kind, 0) + 1
+    fig_nums = [int(e.number) for e in paper_all if e.kind == "Figure"]
+    if fig_nums:
+        universe_counts["Figure"] = max(universe_counts["Figure"],
+                                        max(fig_nums))
+    eq_nums = [n for n in locate_equations(text) if n >= 1]
+    if eq_nums:
+        universe_counts["Equation"] = max(universe_counts.get("Equation", 0),
+                                          max(eq_nums))
+    # Section number -> title, from the extracted TOC (section elements).
+    sec_titles = {e.number: e.statement for e in paper_all
+                  if e.kind == "Section"}
+    # Curated enclosing-section corrections ([element_sections] in the
+    # summaries file); the section title comes from the extracted TOC.
+    sec_over = load_section_overrides(src.summaries)
+    for e in paper_all:
+        num = sec_over.get(e.key)
+        if num is not None:
+            e.section, e.section_title = num, sec_titles.get(num, "")
     # Numbered environments and equations are always tracked; figures and sections
     # appear only when curated (given a summary), i.e. judged a formalizable
     # contribution.
@@ -978,7 +1177,8 @@ def cmd_report(args) -> int:
              if e.kind not in ("Figure", "Section") or e.key in summaries]
     paper.sort(key=lambda e: (e.page, e.seq))
     by_key = build(paper, lean)
-    md = render_markdown(src, paper, by_key, lean, summaries)
+    md = render_markdown(src, paper, by_key, lean, summaries, dim, dim_note,
+                         sec_titles, universe_counts)
 
     # Drift the tool exists to catch: a Lean citation or a summary key that names
     # no element in the paper universe (a typo like `O24 Theorem 5.9`, a
@@ -994,6 +1194,10 @@ def cmd_report(args) -> int:
     if unknown_summaries:
         problems.append("element_summaries.toml keys naming no paper element: "
                         + ", ".join(unknown_summaries))
+    unknown_sections = sorted(k for k in sec_over if k not in universe)
+    if unknown_sections:
+        problems.append("[element_sections] keys naming no paper element: "
+                        + ", ".join(unknown_sections))
 
     paper_json = []
     for e in paper:
@@ -1036,13 +1240,116 @@ def cmd_report(args) -> int:
     return 0
 
 
+# --- xref (cross-reference audit) ----------------------------------------------
+
+def crossref_findings(src: Source) -> tuple[list[str], list[str]]:
+    """Cross-reference audit of the pipeline's joins, over the same inputs as
+    ``report``. Returns ``(errors, warnings)``.
+
+    Errors (exit non-zero):
+    - a curated key (``dim``, ``[summaries]``, ``[element_sections]``,
+      ``[equation_pages]``) naming no element of the paper universe;
+    - a ``dim`` section prefix naming no extracted section;
+    - a numbered environment whose number places it in one chapter while its
+      enclosing section says another — a misfiled element that needs an
+      ``[element_sections]`` override (how Figure 10 was caught).
+
+    Warnings (reported, exit zero):
+    - a Lean citation naming a paper element that exists but is not tracked
+      as a row (an uncurated figure or section), so its coverage is invisible
+      in the rendered table.
+    """
+    ref_re = make_ref_re(src.tag)
+    text = paper_text(src.text)
+    paper_all = extract_paper(text)
+    lean = extract_lean(src.lean_root, src.exclude_dirs, ref_re)
+    summaries = load_summaries(src.summaries)
+    dim, _ = load_dim(src.summaries)
+    sec_over = load_section_overrides(src.summaries)
+    eq_pages = load_page_overrides(src.summaries)
+    paper_all = paper_all + equation_elements(
+        text, cited_equation_keys(lean), eq_pages, base_seq=len(paper_all))
+    for e in paper_all:
+        num = sec_over.get(e.key)
+        if num is not None:
+            e.section = num
+    universe = {e.key for e in paper_all}
+    tracked = {e.key for e in paper_all
+               if e.kind not in ("Figure", "Section") or e.key in summaries}
+
+    errors, warnings = [], []
+    dim_keys = [d.lstrip("!") for d in dim]
+    for label, keys in (("dim", [d for d in dim_keys
+                                 if not d.startswith("§")]),
+                        ("[summaries]", summaries),
+                        ("[element_sections]", sec_over),
+                        ("[equation_pages]", eq_pages)):
+        bad = sorted(k for k in keys if k not in universe)
+        if bad:
+            errors.append(f"{label} keys naming no paper element: "
+                          + ", ".join(bad))
+    secs = {e.number for e in paper_all if e.kind == "Section"}
+    bad = sorted(d for d in dim_keys
+                 if d.startswith("§") and d[1:] not in secs)
+    if bad:
+        errors.append("dim section prefixes naming no extracted section: "
+                      + ", ".join(bad))
+    for e in paper_all:
+        if e.kind in ("Section", "Figure", "Equation") or not e.section:
+            continue
+        if "." in e.number and \
+                e.number.split(".")[0] != e.section.split(".")[0]:
+            errors.append(f"{e.key} is filed under §{e.section}; add an "
+                          "[element_sections] override")
+
+    citing: dict[str, set] = {}
+    for lf in lean:
+        refs = set(lf.module_refs)
+        for d in lf.decls:
+            refs.update(d.refs)
+        for r in refs:
+            citing.setdefault(r, set()).add(Path(lf.file).name)
+    for key in sorted(citing):
+        if key in universe and key not in tracked:
+            warnings.append(
+                f"{key} is cited ({', '.join(sorted(citing[key]))}) but not "
+                "curated, so the citation is not displayed; add a summary to "
+                "track it")
+    return errors, warnings
+
+
+def cmd_xref(args) -> int:
+    src = resolve_source(args)
+    errors, warnings = crossref_findings(src)
+    for w in warnings:
+        print(f"warning: {w}")
+    for e in errors:
+        print(f"error: {e}", file=sys.stderr)
+    if not errors and not warnings:
+        print("Cross-references consistent.")
+    return 1 if errors else 0
+
+
+# --- extract ------------------------------------------------------------------
+
+def cmd_extract(args) -> int:
+    src = resolve_source(args)
+    text = pdf_to_text(src.pdf)
+    src.text.parent.mkdir(parents=True, exist_ok=True)
+    src.text.write_text(text, encoding="utf-8")
+    pages = text.count("\f") + 1
+    print(f"Wrote {src.text} ({pages} pages) from {src.pdf}.")
+    print("Commit it: `report` and `--check` read this file, not the PDF.")
+    return 0
+
+
 # --- CLI ----------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # `report` is the default subcommand, so existing invocations such as
     # `formalization_progress.py --config x.toml --check` keep working.
-    if not argv or argv[0] not in ("report", "init"):
+    if not argv or argv[0] not in ("report", "init", "extract", "xref"):
         argv = ["report"] + argv
 
     ap = argparse.ArgumentParser(description=__doc__,
@@ -1057,14 +1364,48 @@ def main(argv: list[str] | None = None) -> int:
     # Per-field overrides (take precedence over --config and the default).
     rep.add_argument("--tag", help="citation prefix used in Lean docstrings")
     rep.add_argument("--pdf", type=Path, help="source paper PDF")
+    rep.add_argument("--text", type=Path,
+                     help="committed text extraction of the paper")
     rep.add_argument("--title", help="full reference shown in the header")
     rep.add_argument("--lean-root", dest="lean_root", type=Path,
                      help="directory of Lean sources to scan")
     rep.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
                      help="subdirectory name to skip (repeatable)")
+    rep.add_argument("--dim", action="append",
+                     help="element key or § prefix to render light gray "
+                          "(repeatable; \"!\" prefix exempts; overrides the "
+                          "summaries file's dim list)")
     rep.add_argument("--out-md", dest="out_md", type=Path)
     rep.add_argument("--out-json", dest="out_json", type=Path)
     rep.set_defaults(func=cmd_report)
+
+    xrf = sub.add_parser(
+        "xref", help="cross-reference audit: stale curated keys, misfiled "
+                     "elements, citations invisible in the table")
+    xrf.add_argument("--config", type=Path,
+                     help="TOML file with a [source] table describing the paper")
+    xrf.add_argument("--tag", help="citation prefix used in Lean docstrings")
+    xrf.add_argument("--pdf", type=Path, help="source paper PDF")
+    xrf.add_argument("--text", type=Path,
+                     help="committed text extraction of the paper")
+    xrf.add_argument("--lean-root", dest="lean_root", type=Path,
+                     help="directory of Lean sources to scan")
+    xrf.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
+                     help="subdirectory name to skip (repeatable)")
+    xrf.set_defaults(func=cmd_xref)
+
+    ext = sub.add_parser(
+        "extract",
+        help="run pdftotext on the source PDF and write the committed text "
+             "extraction that `report`/`--check` read (requires poppler)")
+    ext.add_argument("--config", type=Path,
+                     help="TOML file with a [source] table describing the paper")
+    ext.add_argument("--pdf", type=Path, help="source paper PDF")
+    ext.add_argument("--text", type=Path,
+                     help="where to write the text extraction")
+    ext.add_argument("--exclude-dir", dest="exclude_dirs", action="append",
+                     help=argparse.SUPPRESS)
+    ext.set_defaults(func=cmd_extract)
 
     ini = sub.add_parser(
         "init", help="generate the source-of-truth TOML from a PDF and/or a URL")
