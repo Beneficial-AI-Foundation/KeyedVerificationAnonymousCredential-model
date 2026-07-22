@@ -790,7 +790,46 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
         out.append("| " + " | ".join(cells) + " |")
 
     out.append("")
+    out.extend(_algorithm_note())
     return "\n".join(out)
+
+
+def _algorithm_note() -> list[str]:
+    """Prose appended to the report explaining how it is generated and which
+    regular-expression patterns the script matches. Kept here so the generated
+    file, which must not be edited by hand, always carries the explanation."""
+    return [
+        "## How this file is generated\n",
+        f"This file is built by `{SCRIPT_REL}` by a deterministic, three-step "
+        "algorithm: extract the paper's elements, extract the Lean declarations "
+        "and their citations, then join the two on a canonical key such as "
+        "`Definition 3.1`, `Figure 5`, or `§3.1`. The status of each element "
+        f"({ST_DONE}/{ST_SORRY}/{ST_MISMATCH}/{ST_MODULE}/{ST_NONE}) follows "
+        "from whether a citing Lean declaration of the matching kind exists and "
+        "whether its body contains `sorry`. All extraction is regular-expression "
+        "pattern matching over text, the committed `pdftotext -layout` extraction "
+        "of the paper on one side and the `.lean` sources on the other. The result "
+        "is fully determined by the inputs; what can be imperfect is the coverage "
+        "of the patterns, whether a pattern matches exactly the intended set of "
+        "elements, not any runtime guessing.\n",
+        "### Patterns the script matches\n",
+        "Paper side (the committed text extraction):\n",
+        "| Pattern | Matches |",
+        "|---|---|",
+        r"| `ENV_RE` | a numbered environment heading: one of `Theorem\|Lemma\|Definition\|Claim\|Corollary\|Proposition\|Construction`, a number `N` or `N.N`, an optional `(name)`, a period, then a statement of at least 15 characters on the same line (the length requirement rejects cross-references like `Theorem 6.12).`) |",
+        r"| `TOC_SUB_RE`, `TOC_SEC_RE` | table-of-contents entries (`3.1 Title . . . 24` and `3 Title 24`), used to name sections |",
+        r"| `HEAD_RE` | a numbered heading in the body, matched against the TOC to assign each element its enclosing section |",
+        r"| `FIG_RE` | a figure caption of the form `Figure N: …` |",
+        r"| `_EQ_LINE_RE` | a right-aligned equation number `(N)` at the end of a display-math line |",
+        "",
+        "Lean side (the `.lean` sources):\n",
+        "| Pattern | Matches |",
+        "|---|---|",
+        r"| `DECL_RE` | a top-level declaration: `def\|structure\|abbrev\|class abbrev\|class\|instance\|lemma\|theorem\|inductive` followed by a Unicode-aware name |",
+        r"| `make_ref_re` | a citation governed by the mandatory tag, followed by one or more element tokens: a numbered environment, `§N.N`, or `Equation\|Eq\|Fig N`. The tag is required, so a bare prose mention or a citation of another paper is not counted |",
+        r"| `SORRY_RE` | the tokens `sorry`, `sorryAx`, or `admit` in a declaration body |",
+        "",
+    ]
 
 
 # --- source resolution + main -------------------------------------------------
