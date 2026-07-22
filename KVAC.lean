@@ -5,6 +5,7 @@ import KVAC.Core.AlgebraicMAC
 import KVAC.Core.AlgebraicMAC.Security
 import KVAC.Core.NIZKP
 import KVAC.Core.NIZKP.Security
+import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Preliminaries.Assumptions
