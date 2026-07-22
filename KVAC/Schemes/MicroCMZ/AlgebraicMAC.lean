@@ -11,12 +11,20 @@ import VCVio
 /-!
 # μCMZ as an algebraic MAC: AGM game scaffolding (O24 §5.3)
 
-The algebraic group model (AGM) UF-CMVA(+Help) game for the μCMZ base MAC
-(`μCMZBaseMAC`), following Orrù, *Revisiting Keyed-Verification Anonymous
-Credentials*, IACR ePrint 2024/1552, §5.3. This is the `AGMPolynomial`-free
-foundation: the game definitions the Lemma 5.4 reduction consumes, but not the
-reduction itself (that lands in `AGMReduction`), and not the sign-arm distribution
-lemmas (those live in the sibling module `SignMask`).
+Instrumented scaffolding for the algebraic group model (AGM) UF-CMVA(+Help) game
+of the μCMZ base MAC (`μCMZBaseMAC`), following Orrù, *Revisiting
+Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, §5.3. This is
+the `AGMPolynomial`-free foundation: the game definitions the Lemma 5.4 reduction
+consumes, but not the reduction itself (that lands in `AGMReduction`), and not the
+sign-arm distribution lemmas (those live in the sibling module `SignMask`).
+
+A word of caution on naming: this is scaffolding, not the honest game. The
+oracles here are *gated* — they answer honestly only when the submitted
+representation is consistent, and return `false` otherwise. So the game matches
+the honest UF-CMVA game only for *well-behaved* adversaries, the ones that never
+submit an inconsistent representation. Closing that gap is the job of the
+`WellBehaved` bridging lemma; that equivalence is deferred and is not proved in
+this file.
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 `AGMRepr` / `AGMRepr.eval`; and the instrumented game (`AGMOracleSpec`,
@@ -25,13 +33,15 @@ Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 The AGM is a restriction on the adversary class: every group element the adversary
 submits (in `Verify`/`Help` queries and in the forgery) carries an *algebraic
 representation*, coefficients over the transcript basis received so far
-(`G₀, H, X₀, Xᵣ, X⃗`, and `(Uⱼ, Vⱼ)` per Sign query). The instrumented oracles
-answer honestly iff the representation is transcript-consistent (else `false`), as
-does the win condition. This is the interface the Lemma 5.4 reduction needs: it
-answers `Verify`/`Help` by evaluating the represented degree-≤3 polynomial at the
-embedded 3-DL instance. Tag coefficients are stored as a *list* (one `(αᵤ, αᵥ)` per
-Sign query, `zipWith`-evaluated against issued tags), keeping the type independent
-of the dynamic query count.
+(`G₀, H, X₀, Xᵣ, X⃗`, and `(Uⱼ, Vⱼ)` per Sign query). Each oracle answers honestly
+iff the representation is transcript-consistent (else `false`), as does the win
+condition — this is the gate. It is exactly the interface the Lemma 5.4 reduction
+wants: it answers `Verify`/`Help` by evaluating the represented degree-≤3
+polynomial at the embedded 3-DL instance. Gating the *answers* like this, rather
+than restricting the adversary *type*, is a deliberate choice; see
+`DESIGN_ALTERNATIVES.md` for the alternative we passed over. Tag coefficients are
+stored as a *list* (one `(αᵤ, αᵥ)` per Sign query, `zipWith`-evaluated against
+issued tags), keeping the type independent of the dynamic query count.
 
 The `Help(A₀, A⃗, Z)` arm (O24 §5.2/§5.3) answers whether
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`, the stronger notion the credential-level
