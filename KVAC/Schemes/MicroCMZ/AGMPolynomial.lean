@@ -534,26 +534,4 @@ lemma natDegree_affineSubst_le (a b : Var q → F) (ϕ : P F q) :
       ≤ m v * 1 := Nat.mul_le_mul_left _ (haff v)
     _ = m v := Nat.mul_one _
 
-/-- `deg ψ ≤ 3` for the verification polynomial (O24 Eq. 16). -/
-lemma natDegree_affineSubst_verifPoly_le (a b : Var q → F)
-    (msgs : Fin q → F) (mStar : F) (α β : ReprCoeffs F q) :
-    (affineSubst a b (verifPoly msgs mStar α β)).natDegree ≤ 3 :=
-  le_trans (natDegree_affineSubst_le a b _)
-    (totalDegree_verifPoly_le msgs mStar α β)
-
-/-- A nonzero `ψ(χ)` has at most 3 roots in `F` — the root-finding bound of
-the Lemma 5.4 reduction (the discrete log of the 3-DL challenge is among the
-roots, so the reduction succeeds after at most 3 candidate checks). -/
-lemma card_roots_affineSubst_verifPoly_le [Fintype F] [DecidableEq F]
-    (a b : Var q → F) (msgs : Fin q → F) (mStar : F) (α β : ReprCoeffs F q)
-    (hne : affineSubst a b (verifPoly msgs mStar α β) ≠ 0) :
-    ((Finset.univ : Finset F).filter fun χ =>
-      Polynomial.eval χ (affineSubst a b (verifPoly msgs mStar α β)) = 0).card
-        ≤ 3 := by
-  refine le_trans (Polynomial.card_le_degree_of_subset_roots fun χ hχ => ?_)
-    (natDegree_affineSubst_verifPoly_le a b msgs mStar α β)
-  rw [Finset.mem_val, Finset.mem_filter] at hχ
-  rw [Polynomial.mem_roots hne]
-  exact hχ.2
-
 end KVAC.Schemes.MicroCMZ.AGMPoly
