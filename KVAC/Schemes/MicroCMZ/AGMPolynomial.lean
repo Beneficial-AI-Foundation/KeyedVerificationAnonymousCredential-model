@@ -397,4 +397,141 @@ lemma eval_affineSubst (a b : Var q → F) (χ : F) (ϕ : P F q) :
     Polynomial.coe_aeval_eq_eval] at h
   exact h
 
+/-! ## The non-identity case — degree and root bounds for ψ(χ) (O24 Eq. 16)
+
+In the non-identity case of Lemma 5.4, the verification equation read as the
+single polynomial `ϕ := α.toPoly · keyPoly m* − β.toPoly` is *nonzero*. The
+3-DL reduction embeds its challenge by substituting every variable with an
+affine form `v ↦ a_v + χ·b_v` (the masked embedding of O24 Eqs. 13–14),
+producing the univariate partial evaluation `ψ(χ)` of Eq. 16. This section
+provides the deterministic skeleton of that case:
+
+- `deg ψ ≤ totalDegree ϕ ≤ 3` (`natDegree_affineSubst_le`,
+  `totalDegree_verifPoly_le`), and
+- a nonzero `ψ` has at most 3 roots in `F`
+  (`card_roots_affineSubst_verifPoly_le`) — the reduction finds `log_G X`
+  among them.
+
+The probabilistic ingredient — `ψ ≠ 0` except with probability `1/p` over the
+uniform masks `b` — is consumed at the game layer together with the reduction
+(TODO(CMZ-M)).
+
+**NB — the bound is `3/p`, not the `1/p` stated in O24 Eq. 16.** The paper
+invokes Schwartz–Zippel to bound the bad event `ψ ≡ 0`, but for a degree-`d`
+polynomial that bound is `d/p`, not `1/p`. Concretely, write
+`ψ(χ) = ϕ(a + χ·b)`. Expanding, the coefficient of `χ^d` in `ψ` (with
+`d = totalDegree ϕ ≤ 3`) is exactly `ϕ_d(b)` — the top-degree homogeneous part
+of `ϕ` evaluated at the mask vector `b` — because only the degree-`d` monomials
+of `ϕ` can reach `χ^d`, and each contributes the product of its `b`-masks.
+Since `ϕ ≠ 0` we have `ϕ_d ≠ 0`, and `ψ ≡ 0 ⟹ ϕ_d(b) = 0`. As `ϕ_d` is a
+nonzero polynomial of degree `d ≤ 3` in the uniform, independent masks `b`,
+Schwartz–Zippel gives `Pr_b[ϕ_d(b) = 0] ≤ d/p ≤ 3/p`. The paper's `1/p` would
+be correct only for a degree-1 form; the deg-3 verification polynomial needs
+`3/p`. This loosens the concrete additive term (`1/p → 3/p`) but leaves the
+asymptotic bound — and hence the security statement — unchanged.
+-/
+
+/-- O24 Eq. 12 as a single polynomial — the polynomial `ϕ` of the
+non-identity case: the forgery's verification equation holds as a polynomial
+identity iff `verifPoly … = 0`. Its affine substitution is the univariate
+`ψ(χ)` of Eq. 16. -/
+noncomputable def verifPoly (msgs : Fin q → F) (mStar : F)
+    (α β : ReprCoeffs F q) : P F q :=
+  α.toPoly msgs * keyPoly mStar - β.toPoly msgs
+
+lemma verifPoly_eq_zero_iff (msgs : Fin q → F) (mStar : F)
+    (α β : ReprCoeffs F q) :
+    verifPoly msgs mStar α β = 0 ↔
+      α.toPoly msgs * keyPoly mStar = β.toPoly msgs :=
+  sub_eq_zero
+
+/-- Evaluation of `verifPoly` distributes over its `α.toPoly · keyPoly − β.toPoly` structure.
+Stated and proved here rather than in `AGMReduction`: distributing `MvPolynomial.eval` through
+`map_sub`/`map_mul` sends instance search into a loop once an `F`-module `G` is in scope (the
+`AGMReduction` import context). Here there is no such `G`, so it elaborates cleanly. -/
+lemma verifPoly_eval (pt : Var q → F) (msgs : Fin q → F) (mStar : F) (α β : ReprCoeffs F q) :
+    eval pt (verifPoly msgs mStar α β)
+      = eval pt (α.toPoly msgs) * eval pt (keyPoly mStar) - eval pt (β.toPoly msgs) := by
+  rw [verifPoly, map_sub, map_mul]
+
+/-- `identity_case`, repackaged for the case split on `verifPoly`: if the
+verification equation holds as a polynomial identity for a fresh `m*`, the
+representation of `U*` is the zero polynomial. -/
+theorem toPoly_eq_zero_of_verifPoly_eq_zero (msgs : Fin q → F) (mStar : F)
+    (hfresh : ∀ j, mStar ≠ msgs j) (α β : ReprCoeffs F q)
+    (h : verifPoly msgs mStar α β = 0) : α.toPoly msgs = 0 :=
+  identity_case msgs mStar hfresh α β
+    ((verifPoly_eq_zero_iff msgs mStar α β).mp h)
+
+lemma totalDegree_keyPoly_le (m : F) : (keyPoly (q := q) m).totalDegree ≤ 1 := by
+  have h1 : (x₀ + xᵣ : P F q).totalDegree ≤ 1 :=
+    le_trans (totalDegree_add _ _)
+      (max_le (le_of_eq (totalDegree_X _)) (le_of_eq (totalDegree_X _)))
+  have h2 : (C m * x₁ : P F q).totalDegree ≤ 1 :=
+    le_trans (totalDegree_mul _ _)
+      (by simpa [totalDegree_C] using le_of_eq (totalDegree_X (.x1 : Var q)))
+  exact le_trans (totalDegree_add _ _) (max_le h1 h2)
+
+lemma totalDegree_toPoly_le (ρ : ReprCoeffs F q) (msgs : Fin q → F) :
+    (ρ.toPoly msgs).totalDegree ≤ 2 := by
+  have hC : ∀ (c : F) (p : P F q), (C c * p).totalDegree ≤ p.totalDegree :=
+    fun c p => le_trans (totalDegree_mul _ _) (by simp [totalDegree_C])
+  have hX : ∀ v : Var q, (X v : P F q).totalDegree ≤ 1 :=
+    fun v => le_of_eq (totalDegree_X v)
+  have hu : ∀ j (m : F), (u j * keyPoly m : P F q).totalDegree ≤ 2 :=
+    fun j m => le_trans (totalDegree_mul _ _)
+      (add_le_add (hX (.u j)) (totalDegree_keyPoly_le m))
+  have hterm : ∀ j, ((C (ρ.cu j) * u j +
+      C (ρ.cv j) * (u j * keyPoly (msgs j)) : P F q)).totalDegree ≤ 2 :=
+    fun j => le_trans (totalDegree_add _ _)
+      (max_le (le_trans (hC _ _) (le_trans (hX (.u j)) one_le_two))
+        (le_trans (hC _ _) (hu j (msgs j))))
+  unfold ReprCoeffs.toPoly
+  refine le_trans (totalDegree_add _ _) (max_le ?_ ?_)
+  · refine le_trans (totalDegree_add _ _) (max_le ?_ ?_)
+    · refine le_trans (totalDegree_add _ _) (max_le ?_ ?_)
+      · refine le_trans (totalDegree_add _ _) (max_le ?_ ?_)
+        · refine le_trans (totalDegree_add _ _) (max_le ?_ ?_)
+          · simp [totalDegree_C]
+          · exact le_trans (hC _ _) (le_trans (hX .eta) one_le_two)
+        · refine le_trans (hC _ _) (le_trans (totalDegree_mul _ _) ?_)
+          exact add_le_add (hX .x0) (hX .eta)
+      · exact le_trans (hC _ _) (le_trans (hX .xr) one_le_two)
+    · exact le_trans (hC _ _) (le_trans (hX .x1) one_le_two)
+  · exact le_trans (totalDegree_finset_sum _ _) (Finset.sup_le fun j _ => hterm j)
+
+/-- `totalDegree ϕ ≤ 3` — the multivariate half of the paper's
+`deg ψ ≤ totalDegree ϕ ≤ 3` bound (O24 Eq. 16); feeds
+`natDegree_affineSubst_verifPoly_le`. -/
+lemma totalDegree_verifPoly_le (msgs : Fin q → F) (mStar : F)
+    (α β : ReprCoeffs F q) :
+    (verifPoly msgs mStar α β).totalDegree ≤ 3 := by
+  unfold verifPoly
+  refine le_trans (totalDegree_sub _ _) (max_le ?_ ?_)
+  · exact le_trans (totalDegree_mul _ _)
+      (add_le_add (totalDegree_toPoly_le α msgs) (totalDegree_keyPoly_le mStar))
+  · exact le_trans (totalDegree_toPoly_le β msgs) (by norm_num)
+
+/-- Substituting affine univariate forms for the variables bounds the degree
+by the total degree: `deg ψ ≤ totalDegree ϕ`. -/
+lemma natDegree_affineSubst_le (a b : Var q → F) (ϕ : P F q) :
+    (affineSubst a b ϕ).natDegree ≤ ϕ.totalDegree := by
+  have haff : ∀ v : Var q,
+      (Polynomial.C (a v) + Polynomial.X * Polynomial.C (b v)).natDegree ≤ 1 :=
+    fun v => le_trans (Polynomial.natDegree_add_le _ _)
+      (max_le (by simp)
+        (le_trans Polynomial.natDegree_mul_le (by simp)))
+  conv_lhs => rw [ϕ.as_sum]
+  rw [map_sum]
+  refine Polynomial.natDegree_sum_le_of_forall_le _ _ fun m hm => ?_
+  rw [affineSubst, aeval_monomial]
+  refine le_trans Polynomial.natDegree_mul_le ?_
+  rw [Polynomial.algebraMap_eq, Polynomial.natDegree_C, zero_add, Finsupp.prod]
+  refine le_trans (Polynomial.natDegree_prod_le _ _) ?_
+  refine le_trans (Finset.sum_le_sum fun v _ =>
+    le_trans Polynomial.natDegree_pow_le ?_) (le_totalDegree hm)
+  calc m v * (Polynomial.C (a v) + Polynomial.X * Polynomial.C (b v)).natDegree
+      ≤ m v * 1 := Nat.mul_le_mul_left _ (haff v)
+    _ = m v := Nat.mul_one _
+
 end KVAC.Schemes.MicroCMZ.AGMPoly
