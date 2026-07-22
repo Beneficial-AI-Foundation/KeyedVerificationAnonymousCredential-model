@@ -74,6 +74,38 @@ if (x, w) ∈ R" before answering. The check belongs to the oracle, not to the
 query interface, and a type-level restriction silently narrows the game's
 interface. The `none` answer encodes the paper's implicit ⊥.
 
+## Relation decidability scoped to the game
+
+**Decision.** `Decidable (relation crs x w)` is required only by the
+zero-knowledge game that runs the Proveᵦ guard, supplied as a game argument
+through `NIZKPSyntax.DecidableRelation`. `NIZKPSyntax.relation` stays a plain
+`Prop`-valued field with no decidability (PR #47, `Security.lean`).
+
+**Rejected alternative.** Making decidability intrinsic to the syntax, a
+`DecidableRel` field or instance on `NIZKPSyntax.relation`, so every scheme
+value carries a decision procedure.
+
+**Design argument.** A `Decidable` instance is data, a computable decision
+procedure, not a derivable property. `NIZKPSyntax.relation` is an abstract
+field, so over a generic scheme it is an arbitrary `Prop`-valued function with
+no decision procedure available; closing it classically is noncomputable and
+the `ProbComp` guard would not execute. A concrete scheme supplies both the
+relation and its decision procedure. The game that runs the guard is the only
+consumer that needs the procedure, so scoping the obligation there keeps a
+generic `NIZKPSyntax` from carrying a procedure it cannot provide, while
+concrete schemes over decidable-equality carriers supply it directly. The
+choice does not rest on decidability failing, since the NP relations O24's
+proof systems target are always decidable, and it differs from the extractor,
+which is externalized because it varies per protocol rather than because it is
+data unavailable over a generic scheme.
+
+The monad polymorphism of `NIZKPSyntax` realizes the computational layer on
+VCV-io's `ProbComp`, which is a free monad on a polynomial functor
+(`PFunctor.FreeM`). That realization touches only the `M`-valued operations
+`setup`, `prove`, and `verify`; `relation` stays `Prop`-valued and outside
+`M`. Decidability is therefore orthogonal to the monad choice and scoped to
+the game rather than the carrier.
+
 ## White-box knowledge-soundness extractor
 
 **Decision.** The knowledge-soundness and simulation-extractability extractors
