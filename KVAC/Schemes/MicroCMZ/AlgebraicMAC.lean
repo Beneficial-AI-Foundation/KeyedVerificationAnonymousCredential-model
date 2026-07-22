@@ -59,16 +59,6 @@ follows, `gen_ne_zero`). Bijectivity yields `glog : G → F` (the paper's `logG`
 
 variable (gen : G)
 
-/-- Scalar multiplication by a nonzero group element is injective over a field. -/
-theorem smul_left_injective_of_ne_zero {g : G} (hg : g ≠ 0) :
-    Function.Injective (fun x : F => x • g) := by
-  intro a b hab
-  simp only at hab
-  have : (a - b) • g = 0 := by rw [sub_smul, hab, sub_self]
-  rcases smul_eq_zero.mp this with h | h
-  · exact sub_eq_zero.mp h
-  · exact absurd h hg
-
 /- Carried as a `Fact` *instance* so it threads through the file's definitions via
 typeclass resolution; an explicit hypothesis would make the nonvanishing-mask
 `SampleableType` instance unresolvable. -/
@@ -92,6 +82,22 @@ theorem glog_smul (y : G) : (glog gen y : F) • gen = y :=
 
 theorem glog_smul_self (x : F) : glog gen (x • gen) = x :=
   Function.leftInverse_invFun hgen.out.injective x
+
+/-- `glog` is additive: the discrete log of a sum is the sum of the discrete
+logs. With `glog_smul_scalar`, makes `glog gen` `F`-linear — the form the
+reduction uses to push `glog` through `AGMRepr.eval` sums. -/
+theorem glog_add (y₁ y₂ : G) :
+    (glog gen (y₁ + y₂) : F) = glog gen y₁ + glog gen y₂ :=
+  hgen.out.injective (by
+    show glog gen (y₁ + y₂) • gen = (glog gen y₁ + glog gen y₂) • gen
+    rw [glog_smul, add_smul, glog_smul, glog_smul])
+
+/-- `glog` is homogeneous: scaling an element multiplies its discrete log. -/
+theorem glog_smul_scalar (c : F) (y : G) :
+    glog gen (c • y) = c * glog gen y :=
+  hgen.out.injective (by
+    show glog gen (c • y) • gen = (c * glog gen y) • gen
+    rw [glog_smul, mul_smul, glog_smul])
 
 /-! ## Algebraic representations -/
 
