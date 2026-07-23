@@ -129,6 +129,17 @@ representations. White-box access subsumes rewindable black-box access, since
 the extractor can re-run the adversary value. Issue #43 records the
 discussion; the paper-fidelity requirement decides it.
 
+## Conditioned sign masks.
+
+**Decision.** The reduction's sign masks are sampled conditioned on Uⱼ ≠ 0 
+(`SignMask.lean`, PR #48), giving exact coupling with the real oracle.
+
+**Rejected alternative.** The paper's unrestricted `a_{u,j}, b_{u,j} ←$ ℤ_p` (Eq. 14).
+
+**Fidelity argument.** The real experiment's U is uniform over `𝔾^×` and never zero, 
+so Eq. 14's "identically distributed" holds only under the conditioning. 
+The `(Uⱼ, bᵤ)` joint law stays independent uniform (`sign_U_bu_dist_eq`), 
+so the masks' hiding is unaffected.
 ## Structured hash domains
 
 **Decision.** `HashSpec.Dom` is an arbitrary type; each scheme picks a
