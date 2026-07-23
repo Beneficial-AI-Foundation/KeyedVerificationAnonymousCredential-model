@@ -467,23 +467,32 @@ def is_dimmed(e: PaperElement, dim: list[str]) -> bool:
 
 # --- equations (cite-driven) --------------------------------------------------
 
-# A right-aligned equation number `(N)` at the end of a display-math line.
+# A right-aligned equation number `(N)`, matched two ways. `_EQ_LINE_RE` catches
+# the label trailing a display line that carries content (`… =  (N)`).
+# `_EQ_LONE_RE` catches the label alone on its own line, for a display that spans
+# several lines with only the number on the last one (pdftotext lays such a label
+# out as heavy leading whitespace then `(N)`). The large indent floor is what
+# separates a right-aligned label from an inline or prose parenthetical like `(3)`;
+# every genuine label in this paper's extraction is indented past column 40.
 _EQ_LINE_RE = re.compile(r"\S.*?\s{2,}\((\d+)\)\s*$")
+_EQ_LONE_RE = re.compile(r"^\s{40,}\((\d+)\)\s*$")
 
 
 def locate_equations(text: str) -> dict[int, int]:
-    """Best-effort ``equation number -> 1-based page`` map, from the right-aligned
-    ``(N)`` marker at the end of a display line (first occurrence wins).
+    """Map ``equation number -> 1-based page`` from the right-aligned ``(N)``
+    label, first occurrence in reading order winning. Equations are numbered
+    sequentially, so the first ``(N)`` is the label at the definition, ahead of
+    any later back-reference to it.
 
-    This is a heuristic: it also matches some non-equation parenthesized numbers
-    and misses others, so it is used only *on demand* — to place the specific
-    equations a Lean docstring cites. A cited equation it cannot place is reported
-    by ``--check`` (never silently dropped); give its page in an
-    ``[equation_pages]`` table of the summaries file to override."""
+    Both forms of label are matched: trailing a content line (``_EQ_LINE_RE``)
+    and alone on a multi-line display's last line (``_EQ_LONE_RE``). A ``(N)``
+    neither pattern places is reported by ``--check`` (never silently dropped);
+    give its page in an ``[equation_pages]`` table of the summaries file to
+    override."""
     found: dict[int, int] = {}
     for pno, page in enumerate(text.split("\f"), start=1):
         for ln in page.splitlines():
-            m = _EQ_LINE_RE.search(ln)
+            m = _EQ_LINE_RE.search(ln) or _EQ_LONE_RE.match(ln)
             if m:
                 found.setdefault(int(m.group(1)), pno)
     return found
@@ -491,7 +500,7 @@ def locate_equations(text: str) -> dict[int, int]:
 
 def load_page_overrides(path: Path) -> dict[str, int]:
     """Curated ``key -> page`` overrides from an optional ``[equation_pages]``
-    table, for equations the locator heuristic cannot place."""
+    table, for equations the locator cannot place."""
     if not path.exists():
         return {}
     data = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -522,7 +531,7 @@ def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
 def equation_elements(text: str, cited: set[str], overrides: dict[str, int],
                       base_seq: int) -> list[PaperElement]:
     """Paper elements for the cited equations we can place (curated page, else the
-    heuristic). Equations we cannot place are omitted, so their citations stay
+    locator). Equations we cannot place are omitted, so their citations stay
     unresolved and surface in ``--check``."""
     if not cited:
         return []
@@ -613,10 +622,10 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     )
     out.append(
         "This is an approximate map, not an authoritative measurement. Both "
-        "sides are recovered heuristically — paper elements by text extraction "
-        "from the PDF, Lean declarations and their citations by source scanning, "
-        "equation locations by a best-effort locator — so it may miss or "
-        "misclassify. Read the counts below as indicative, and each "
+        "sides are recovered by pattern matching over the sources: paper elements "
+        "by text extraction from the PDF, Lean declarations and their citations by "
+        "source scanning, equation locations by a right-aligned-label locator. So "
+        "it may miss or misclassify. Read the counts below as indicative, and each "
         f"{ST_DONE} as a *claim* worth reviewing rather than a verified fact "
         "(see `docs/STYLE_GUIDE.md`).\n"
     )
@@ -820,7 +829,7 @@ def _algorithm_note() -> list[str]:
         r"| `TOC_SUB_RE`, `TOC_SEC_RE` | table-of-contents entries (`3.1 Title . . . 24` and `3 Title 24`), used to name sections |",
         r"| `HEAD_RE` | a numbered heading in the body, matched against the TOC to assign each element its enclosing section |",
         r"| `FIG_RE` | a figure caption of the form `Figure N: …` |",
-        r"| `_EQ_LINE_RE` | a right-aligned equation number `(N)` at the end of a display-math line |",
+        r"| `_EQ_LINE_RE`, `_EQ_LONE_RE` | a right-aligned equation number `(N)`: trailing a display-math line, or alone on a multi-line display's last line |",
         "",
         "Lean side (the `.lean` sources):\n",
         "| Pattern | Matches |",
