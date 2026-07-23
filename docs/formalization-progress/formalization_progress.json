@@ -294,6 +294,18 @@
       "summary": "Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p."
     },
     {
+      "key": "Equation 12",
+      "kind": "Equation",
+      "number": "12",
+      "label": "",
+      "statement": "",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 36,
+      "seq": 113,
+      "summary": "The AGM verification polynomial for μCMZ unforgeability at n = 1: a winning forgery would force this identity in the secret exponents (η, x₀, xᵣ, x₁, u₁…u_q), which Lemma 5.4 shows cannot hold over the polynomial ring, reducing to 3-DL."
+    },
+    {
       "key": "Lemma 5.5",
       "kind": "Lemma",
       "number": "5.5",
@@ -304,6 +316,18 @@
       "page": 38,
       "seq": 43,
       "summary": "Reduces n-attribute μCMZ security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p."
+    },
+    {
+      "key": "Equation 16",
+      "kind": "Equation",
+      "number": "16",
+      "label": "",
+      "statement": "",
+      "section": "",
+      "section_title": "",
+      "page": 38,
+      "seq": 117,
+      "summary": ""
     },
     {
       "key": "Claim 5.6",
@@ -1047,6 +1071,150 @@
       ]
     },
     {
+      "file": "KVAC/Core/NIZKP/Security.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": [
+        {
+          "name": "NIZKPSyntax.DecidableRelation",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 77,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKQuery",
+          "kind": "inductive",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 84,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKProveSpec",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 92,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKRO",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 101,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKAdvSpec",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 108,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKAdversary",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 115,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKSimulator",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 124,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkROImpl",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 133,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkProveReal",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 144,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkProveSim",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 157,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkRun",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 169,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkGameReal",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 179,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkGameSim",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 187,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 202,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
       "file": "KVAC/Core/NIZKP.lean",
       "module_refs": [
         "§3.3"
@@ -1169,6 +1337,426 @@
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
           "line": 107,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/ProofSystems/LinearRelation.lean",
+      "module_refs": [
+        "§9"
+      ],
+      "decls": [
+        {
+          "name": "it",
+          "kind": "instance",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 45,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "linComb",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 65,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "linComb_zero",
+          "kind": "lemma",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 67,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "linComb_sub",
+          "kind": "lemma",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 70,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "IsKernelVector",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 77,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "isKernelVector_sub",
+          "kind": "lemma",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 83,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "IsFinsetKernel",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 90,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Stmt",
+          "kind": "abbrev",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 98,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Witness",
+          "kind": "abbrev",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 101,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Constraints",
+          "kind": "abbrev",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 104,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rFRel",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 113,
+          "refs": [
+            "§9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "rFRel_iff",
+          "kind": "lemma",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 116,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "Uniq",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 129,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "mem_Uniq",
+          "kind": "lemma",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 132,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "KernelAdversary",
+          "kind": "abbrev",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 145,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "kernelFindingExp",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 153,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "kernelFindingAdv",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 161,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "FinsetKernelAdversary",
+          "kind": "abbrev",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 166,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "finsetKernelExp",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 172,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "finsetKernelFindingAdv",
+          "kind": "def",
+          "file": "KVAC/ProofSystems/LinearRelation.lean",
+          "line": 178,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+      "module_refs": [
+        "§5.3",
+        "Lemma 5.4",
+        "Equation 12"
+      ],
+      "decls": [
+        {
+          "name": "Var",
+          "kind": "inductive",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 77,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "P",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 88,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "η",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 91,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "x₀",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 93,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "xᵣ",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 95,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "x₁",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 97,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "u",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 99,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "keyPoly",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 110,
+          "refs": [
+            "§5.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ReprCoeffs",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 117,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ReprCoeffs.toPoly",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 138,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "spec",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 147,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_keyPoly",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 156,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_toPoly",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 162,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ReprCoeffs.eval_toPoly",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 178,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_toPoly_uZero",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 187,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_toPoly_uSingle",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 198,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "identity_case",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 222,
+          "refs": [
+            "Lemma 5.4"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "eval_eq_zero_of_toPoly_eq_zero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 357,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "affineSubst",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 375,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "eval_affineSubst",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 384,
+          "refs": [
+            "Equation 16"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "verifPoly",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 438,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "verifPoly_eq_zero_iff",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 442,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "verifPoly_eval",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 452,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "toPoly_eq_zero_of_verifPoly_eq_zero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 460,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "totalDegree_keyPoly_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 466,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "totalDegree_toPoly_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 475,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "totalDegree_verifPoly_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 506,
+          "refs": [
+            "Equation 16"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "natDegree_affineSubst_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 517,
           "refs": [],
           "has_sorry": false
         }
