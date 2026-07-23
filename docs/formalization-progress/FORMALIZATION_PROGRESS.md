@@ -10,10 +10,10 @@ Reference: Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*,
 
 These figures are approximate (see the note above).
 
-- Paper elements catalogued: roughly **59**
-- Paper elements *reported* formalized (a sorry-free Lean declaration of matching kind cites them): **9** (~15%)
-- Paper elements with some Lean association: **11**
-- Lean declarations scanned: **94** across **14** files; **0** detected to contain `sorry`
+- Paper elements catalogued: roughly **61**
+- Paper elements *reported* formalized (a sorry-free Lean declaration of matching kind cites them): **11** (~18%)
+- Paper elements with some Lean association: **14**
+- Lean declarations scanned: **156** across **17** files; **0** detected to contain `sorry`
 
 ### By paper element
 
@@ -24,12 +24,12 @@ These figures are approximate (see the note above).
 | Claim | [5.6](../Orru_2024.pdf#page=39), [5.7](../Orru_2024.pdf#page=39), [5.12](../Orru_2024.pdf#page=46), [5.13](../Orru_2024.pdf#page=47), [5.14](../Orru_2024.pdf#page=47) | 5 | 0 | 0% |
 | Corollary | <span style="color:#a0a0a0">[6.13](../Orru_2024.pdf#page=57)</span>, <span style="color:#a0a0a0">[7.7](../Orru_2024.pdf#page=63)</span>, <span style="color:#a0a0a0">[8.5](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[8.12](../Orru_2024.pdf#page=74)</span> | 4 | 0 | 0% |
 | Definition | [3.1](../Orru_2024.pdf#page=24), [4.1](../Orru_2024.pdf#page=28), [4.2](../Orru_2024.pdf#page=28), [4.3](../Orru_2024.pdf#page=29), [4.4](../Orru_2024.pdf#page=30), [4.5](../Orru_2024.pdf#page=31), <span style="color:#a0a0a0">[7.1](../Orru_2024.pdf#page=58)</span>, <span style="color:#a0a0a0">[7.4](../Orru_2024.pdf#page=61)</span>, <span style="color:#a0a0a0">[9.1](../Orru_2024.pdf#page=77)</span> | 9 | 1 | 11% |
-| Equation | [9](../Orru_2024.pdf#page=33), [10](../Orru_2024.pdf#page=33), [11](../Orru_2024.pdf#page=33) | 41 | 3 | 7% |
+| Equation | [9](../Orru_2024.pdf#page=33), [10](../Orru_2024.pdf#page=33), [11](../Orru_2024.pdf#page=33), [12](../Orru_2024.pdf#page=36), [16](../Orru_2024.pdf#page=38) | 41 | 4 | 9% |
 | Figure | [5](../Orru_2024.pdf#page=25), [6](../Orru_2024.pdf#page=26), [8](../Orru_2024.pdf#page=31), [9](../Orru_2024.pdf#page=34), <span style="color:#a0a0a0">[10](../Orru_2024.pdf#page=48)</span> | 14 | 2 | 14% |
-| Lemma | [5.4](../Orru_2024.pdf#page=36), [5.5](../Orru_2024.pdf#page=38), <span style="color:#a0a0a0">[6.8](../Orru_2024.pdf#page=51)</span>, <span style="color:#a0a0a0">[6.9](../Orru_2024.pdf#page=52)</span>, <span style="color:#a0a0a0">[6.12](../Orru_2024.pdf#page=56)</span>, <span style="color:#a0a0a0">[8.6](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[8.13](../Orru_2024.pdf#page=74)</span> | 7 | 0 | 0% |
+| Lemma | [5.4](../Orru_2024.pdf#page=36), [5.5](../Orru_2024.pdf#page=38), <span style="color:#a0a0a0">[6.8](../Orru_2024.pdf#page=51)</span>, <span style="color:#a0a0a0">[6.9](../Orru_2024.pdf#page=52)</span>, <span style="color:#a0a0a0">[6.12](../Orru_2024.pdf#page=56)</span>, <span style="color:#a0a0a0">[8.6](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[8.13](../Orru_2024.pdf#page=74)</span> | 7 | 1 | 14% |
 | Section | [3](../Orru_2024.pdf#page=24), [3.1](../Orru_2024.pdf#page=24), [3.3](../Orru_2024.pdf#page=25), [3.4](../Orru_2024.pdf#page=26) | 43 | 3 | 6% |
 | Theorem | [1](../Orru_2024.pdf#page=4), <span style="color:#a0a0a0">[2](../Orru_2024.pdf#page=4)</span>, <span style="color:#a0a0a0">[3](../Orru_2024.pdf#page=5)</span>, [5.1](../Orru_2024.pdf#page=35), [5.2](../Orru_2024.pdf#page=35), [5.3](../Orru_2024.pdf#page=35), [5.8](../Orru_2024.pdf#page=40), [5.10](../Orru_2024.pdf#page=42), [5.11](../Orru_2024.pdf#page=43), <span style="color:#a0a0a0">[6.1](../Orru_2024.pdf#page=49)</span>, <span style="color:#a0a0a0">[6.5](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[6.6](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[6.7](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[6.10](../Orru_2024.pdf#page=53)</span>, <span style="color:#a0a0a0">[6.11](../Orru_2024.pdf#page=55)</span>, <span style="color:#a0a0a0">[7.3](../Orru_2024.pdf#page=60)</span>, <span style="color:#a0a0a0">[7.5](../Orru_2024.pdf#page=62)</span>, <span style="color:#a0a0a0">[7.6](../Orru_2024.pdf#page=63)</span>, <span style="color:#a0a0a0">[8.2](../Orru_2024.pdf#page=67)</span>, <span style="color:#a0a0a0">[8.7](../Orru_2024.pdf#page=69)</span>, <span style="color:#a0a0a0">[8.9](../Orru_2024.pdf#page=73)</span>, <span style="color:#a0a0a0">[9.2](../Orru_2024.pdf#page=77)</span> | 22 | 0 | 0% |
-| **Total** | | **145** | **9** | **6%** |
+| **Total** | | **145** | **11** | **7%** |
 
 ### By paper section
 
@@ -38,31 +38,32 @@ These figures are approximate (see the note above).
 | §1 Introduction | [Theorem 1](../Orru_2024.pdf#page=4), <span style="color:#a0a0a0">[Theorem 2](../Orru_2024.pdf#page=4)</span>, <span style="color:#a0a0a0">[Theorem 3](../Orru_2024.pdf#page=5)</span> | 3 | 0 | 0% |
 | §3 Preliminaries | [§3](../Orru_2024.pdf#page=24), [§3.1](../Orru_2024.pdf#page=24), [Definition 3.1](../Orru_2024.pdf#page=24), [Figure 5](../Orru_2024.pdf#page=25), [§3.3](../Orru_2024.pdf#page=25), [Figure 6](../Orru_2024.pdf#page=26), [§3.4](../Orru_2024.pdf#page=26) | 7 | 5 | 71% |
 | §4 Keyed-verification credential systems | [Definition 4.1](../Orru_2024.pdf#page=28), [Definition 4.2](../Orru_2024.pdf#page=28), [Definition 4.3](../Orru_2024.pdf#page=29), [Definition 4.4](../Orru_2024.pdf#page=30), [Figure 8](../Orru_2024.pdf#page=31), [Definition 4.5](../Orru_2024.pdf#page=31) | 6 | 0 | 0% |
-| §5 Chase–Meiklejohn–Zaverucha credentials | [Equation 9](../Orru_2024.pdf#page=33), [Equation 10](../Orru_2024.pdf#page=33), [Equation 11](../Orru_2024.pdf#page=33), [Figure 9](../Orru_2024.pdf#page=34), [Theorem 5.1](../Orru_2024.pdf#page=35), [Theorem 5.2](../Orru_2024.pdf#page=35), [Theorem 5.3](../Orru_2024.pdf#page=35), [Lemma 5.4](../Orru_2024.pdf#page=36), [Lemma 5.5](../Orru_2024.pdf#page=38), [Claim 5.6](../Orru_2024.pdf#page=39), [Claim 5.7](../Orru_2024.pdf#page=39), [Theorem 5.8](../Orru_2024.pdf#page=40), [Theorem 5.10](../Orru_2024.pdf#page=42), [Theorem 5.11](../Orru_2024.pdf#page=43), [Claim 5.12](../Orru_2024.pdf#page=46), [Claim 5.13](../Orru_2024.pdf#page=47), [Claim 5.14](../Orru_2024.pdf#page=47) | 17 | 4 | 23% |
+| §5 Chase–Meiklejohn–Zaverucha credentials | [Equation 9](../Orru_2024.pdf#page=33), [Equation 10](../Orru_2024.pdf#page=33), [Equation 11](../Orru_2024.pdf#page=33), [Figure 9](../Orru_2024.pdf#page=34), [Theorem 5.1](../Orru_2024.pdf#page=35), [Theorem 5.2](../Orru_2024.pdf#page=35), [Theorem 5.3](../Orru_2024.pdf#page=35), [Lemma 5.4](../Orru_2024.pdf#page=36), [Equation 12](../Orru_2024.pdf#page=36), [Lemma 5.5](../Orru_2024.pdf#page=38), [Claim 5.6](../Orru_2024.pdf#page=39), [Claim 5.7](../Orru_2024.pdf#page=39), [Theorem 5.8](../Orru_2024.pdf#page=40), [Theorem 5.10](../Orru_2024.pdf#page=42), [Theorem 5.11](../Orru_2024.pdf#page=43), [Claim 5.12](../Orru_2024.pdf#page=46), [Claim 5.13](../Orru_2024.pdf#page=47), [Claim 5.14](../Orru_2024.pdf#page=47) | 18 | 6 | 33% |
 | <span style="color:#a0a0a0">§6 Boneh–Boyen–Shacham credentials</span> | <span style="color:#a0a0a0">[Figure 10](../Orru_2024.pdf#page=48)</span>, <span style="color:#a0a0a0">[Theorem 6.1](../Orru_2024.pdf#page=49)</span>, <span style="color:#a0a0a0">[Theorem 6.5](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[Theorem 6.6](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[Theorem 6.7](../Orru_2024.pdf#page=50)</span>, <span style="color:#a0a0a0">[Lemma 6.8](../Orru_2024.pdf#page=51)</span>, <span style="color:#a0a0a0">[Lemma 6.9](../Orru_2024.pdf#page=52)</span>, <span style="color:#a0a0a0">[Theorem 6.10](../Orru_2024.pdf#page=53)</span>, <span style="color:#a0a0a0">[Theorem 6.11](../Orru_2024.pdf#page=55)</span>, <span style="color:#a0a0a0">[Lemma 6.12](../Orru_2024.pdf#page=56)</span>, <span style="color:#a0a0a0">[Corollary 6.13](../Orru_2024.pdf#page=57)</span> | 11 | 0 | 0% |
 | <span style="color:#a0a0a0">§7 Designated-verifier fully-succinct SNARKs without pairings</span> | <span style="color:#a0a0a0">[Definition 7.1](../Orru_2024.pdf#page=58)</span>, <span style="color:#a0a0a0">[Theorem 7.3](../Orru_2024.pdf#page=60)</span>, <span style="color:#a0a0a0">[Definition 7.4](../Orru_2024.pdf#page=61)</span>, <span style="color:#a0a0a0">[Theorem 7.5](../Orru_2024.pdf#page=62)</span>, <span style="color:#a0a0a0">[Theorem 7.6](../Orru_2024.pdf#page=63)</span>, <span style="color:#a0a0a0">[Corollary 7.7](../Orru_2024.pdf#page=63)</span> | 6 | 0 | 0% |
 | <span style="color:#a0a0a0">§8 Building on keyed-verification credential systems</span> | <span style="color:#a0a0a0">[Theorem 8.2](../Orru_2024.pdf#page=67)</span>, <span style="color:#a0a0a0">[Corollary 8.5](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[Lemma 8.6](../Orru_2024.pdf#page=68)</span>, <span style="color:#a0a0a0">[Theorem 8.7](../Orru_2024.pdf#page=69)</span>, <span style="color:#a0a0a0">[Theorem 8.9](../Orru_2024.pdf#page=73)</span>, <span style="color:#a0a0a0">[Corollary 8.12](../Orru_2024.pdf#page=74)</span>, <span style="color:#a0a0a0">[Lemma 8.13](../Orru_2024.pdf#page=74)</span> | 7 | 0 | 0% |
 | <span style="color:#a0a0a0">§9 Straight-line extraction from Σ-protocols</span> | <span style="color:#a0a0a0">[Definition 9.1](../Orru_2024.pdf#page=77)</span>, <span style="color:#a0a0a0">[Theorem 9.2](../Orru_2024.pdf#page=77)</span> | 2 | 0 | 0% |
+| (unsectioned) | [Equation 16](../Orru_2024.pdf#page=38) | 1 | 0 | 0% |
 
 ### By Lean declaration
 
 | Declaration kind | Count | Cite the paper |
 |---|--:|--:|
-| abbrev | 25 | 10 |
+| abbrev | 36 | 15 |
 | class | 1 | 0 |
-| def | 39 | 14 |
-| inductive | 1 | 0 |
-| instance | 1 | 0 |
-| lemma | 3 | 0 |
-| structure | 8 | 5 |
-| theorem | 16 | 5 |
-| **Total** | **94** | **34** |
+| def | 65 | 25 |
+| inductive | 3 | 1 |
+| instance | 2 | 0 |
+| lemma | 20 | 2 |
+| structure | 10 | 6 |
+| theorem | 19 | 6 |
+| **Total** | **156** | **55** |
 
 Status legend (heuristic reads, each a claim to verify rather than a proof): 🟢 appears formalized — a sorry-free declaration of matching kind seems to cite it · 🌐 a matching declaration is cited but looks to contain `sorry` · 🌀 a declaration cites it but its kind looks non-matching · 🟡 only module-level coverage detected · ⚪ nothing detected yet
 
 ## Paper element → Lean declarations
 
-Each element name links to its page in the source PDF. Summaries are curated in `docs/formalization-progress/element_summaries.toml`.
+Each element name links to its page in the source PDF. Summaries are curated in `docs/formalization-progress/element_summaries.toml` (1 still pending).
 
 Rows in light gray: elements outside µCMZ and its prerequisites — µBBS (§6), designated-verifier SNARKs (§7), extensions (§8), straight-line Σ-protocol extraction (§9), and their contribution theorems.
 
@@ -75,7 +76,7 @@ Rows in light gray: elements outside µCMZ and its prerequisites — µBBS (§6)
 | [§3.1](../Orru_2024.pdf#page=24) | — | 24 | The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI. | `qdlogExp` (def) [Assumptions.lean:59](../../KVAC/Preliminaries/Assumptions.lean#L59) | 🟢 |
 | [Definition 3.1](../Orru_2024.pdf#page=24) | §3.2 Algebraic message authentication codes | 24 | Syntax of an algebraic message authentication code for n attributes over a prime-order group: the algorithms Setup, KeyGen, MAC, and Verify. | `AlgebraicMACSyntax` (structure) [Construction.lean:94](../../KVAC/Core/AlgebraicMAC/Construction.lean#L94)<br>`Correct` (def) [Correctness.lean:60](../../KVAC/Core/AlgebraicMAC/Correctness.lean#L60)<br>`AlgebraicMAC` (structure) [AlgebraicMAC.lean:62](../../KVAC/Core/AlgebraicMAC.lean#L62)<br>`μCMZBaseMAC` (def) [Construction.lean:257](../../KVAC/Schemes/MicroCMZ/Construction.lean#L257) | 🟢 |
 | [Figure 5](../Orru_2024.pdf#page=25) | §3.2 Algebraic message authentication codes | 25 | The unforgeability-under-chosen-message-and-verification (UF-CMVA) security game for an algebraic MAC. | `UF_CMVAGame` (def) [Security.lean:113](../../KVAC/Core/AlgebraicMAC/Security.lean#L113) | 🟢 |
-| [§3.3](../Orru_2024.pdf#page=25) | — | 25 | The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs. | `SimulationExtractable` (def) [Basic.lean:141](../../KVAC/Core/NIZKP/Basic.lean#L141)<br>`PerfectlyComplete` (def) [Completeness.lean:37](../../KVAC/Core/NIZKP/Completeness.lean#L37)<br>`NIZKPSyntax` (structure) [Construction.lean:85](../../KVAC/Core/NIZKP/Construction.lean#L85)<br>`NIZKP` (structure) [NIZKP.lean:33](../../KVAC/Core/NIZKP.lean#L33) | 🟢 |
+| [§3.3](../Orru_2024.pdf#page=25) | — | 25 | The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs. | `SimulationExtractable` (def) [Basic.lean:141](../../KVAC/Core/NIZKP/Basic.lean#L141)<br>`PerfectlyComplete` (def) [Completeness.lean:37](../../KVAC/Core/NIZKP/Completeness.lean#L37)<br>`NIZKPSyntax` (structure) [Construction.lean:85](../../KVAC/Core/NIZKP/Construction.lean#L85)<br>`NIZKPSyntax.DecidableRelation` (abbrev) [Security.lean:77](../../KVAC/Core/NIZKP/Security.lean#L77)<br>`ZKProveSpec` (def) [Security.lean:92](../../KVAC/Core/NIZKP/Security.lean#L92)<br>`ZKRO` (abbrev) [Security.lean:101](../../KVAC/Core/NIZKP/Security.lean#L101)<br>`ZKAdvSpec` (abbrev) [Security.lean:108](../../KVAC/Core/NIZKP/Security.lean#L108)<br>`ZKSimulator` (abbrev) [Security.lean:124](../../KVAC/Core/NIZKP/Security.lean#L124)<br>`zkROImpl` (def) [Security.lean:133](../../KVAC/Core/NIZKP/Security.lean#L133)<br>`zkProveReal` (def) [Security.lean:144](../../KVAC/Core/NIZKP/Security.lean#L144)<br>`zkProveSim` (def) [Security.lean:157](../../KVAC/Core/NIZKP/Security.lean#L157)<br>`zkRun` (def) [Security.lean:169](../../KVAC/Core/NIZKP/Security.lean#L169)<br>`zkGameReal` (def) [Security.lean:179](../../KVAC/Core/NIZKP/Security.lean#L179)<br>`zkGameSim` (def) [Security.lean:187](../../KVAC/Core/NIZKP/Security.lean#L187)<br>`ZKAdv` (abbrev) [Security.lean:202](../../KVAC/Core/NIZKP/Security.lean#L202)<br>`NIZKP` (structure) [NIZKP.lean:33](../../KVAC/Core/NIZKP.lean#L33) | 🟢 |
 | [Figure 6](../Orru_2024.pdf#page=26) | §3.3 Zero-knowledge arguments | 26 | The one-more unforgeability game for an anonymous token scheme with non-interactive issuance. | — | ⚪ |
 | [§3.4](../Orru_2024.pdf#page=26) | — | 26 | Syntax and security of anonymous token schemes with non-interactive issuance. | — | ⚪ |
 | [Definition 4.1](../Orru_2024.pdf#page=28) | §4.1 Syntax | 28 | A credential predicate: an efficiently-computable function on attributes that fixes what a presentation proves. | — | ⚪ |
@@ -91,8 +92,10 @@ Rows in light gray: elements outside µCMZ and its prerequisites — µBBS (§6)
 | [Theorem 5.1](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | In the algebraic group model, μCMZ is an n-attribute algebraic MAC (UF-CMVA secure) under 3-DL (and DL), with advantage Adv^{3-dl} + Adv^{dl} + 3/p. | `threeDlogAdv` (abbrev) [Assumptions.lean:69](../../KVAC/Preliminaries/Assumptions.lean#L69) — kind mismatch | 🌀 |
 | [Theorem 5.2](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | If ZKP proves the relation R ⊇ R_cmz, then μCMZ is an extractable keyed-verification credential. | — | ⚪ |
 | [Theorem 5.3](../Orru_2024.pdf#page=35) | §5.2 Theorems | 35 | If ZKP proves R ⊇ R_cmz.p ∪ R_cmz.is, then the variant μCMZ_AT is a one-more unforgeable anonymous token. | `twoDlogAdv` (abbrev) [Assumptions.lean:73](../../KVAC/Preliminaries/Assumptions.lean#L73) — kind mismatch | 🌀 |
-| [Lemma 5.4](../Orru_2024.pdf#page=36) | §5.3 Algebraic MAC | 36 | Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p. | — | ⚪ |
+| [Lemma 5.4](../Orru_2024.pdf#page=36) | §5.3 Algebraic MAC | 36 | Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p. | `identity_case` (theorem) [AGMPolynomial.lean:222](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L222) | 🟢 |
+| [Equation 12](../Orru_2024.pdf#page=36) | §5.3 Algebraic MAC | 36 | The AGM verification polynomial for μCMZ unforgeability at n = 1: a winning forgery would force this identity in the secret exponents (η, x₀, xᵣ, x₁, u₁…u_q), which Lemma 5.4 shows cannot hold over the polynomial ring, reducing to 3-DL. | `Var` (inductive) [AGMPolynomial.lean:77](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L77)<br>`ReprCoeffs` (structure) [AGMPolynomial.lean:117](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L117)<br>`ReprCoeffs.toPoly` (def) [AGMPolynomial.lean:138](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L138)<br>`verifPoly` (def) [AGMPolynomial.lean:438](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L438) | 🟢 |
 | [Lemma 5.5](../Orru_2024.pdf#page=38) | §5.3 Algebraic MAC | 38 | Reduces n-attribute μCMZ security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p. | — | ⚪ |
+| [Equation 16](../Orru_2024.pdf#page=38) | — | 38 | _(summary pending)_ | `eval_affineSubst` (lemma) [AGMPolynomial.lean:384](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L384) — kind mismatch<br>`totalDegree_verifPoly_le` (lemma) [AGMPolynomial.lean:506](../../KVAC/Schemes/MicroCMZ/AGMPolynomial.lean#L506) — kind mismatch | 🌀 |
 | [Claim 5.6](../Orru_2024.pdf#page=39) | §5.3 Algebraic MAC | 39 | In the μCMZ unforgeability proof, the first forgery case is bounded by the gap discrete-log advantage. | — | ⚪ |
 | [Claim 5.7](../Orru_2024.pdf#page=39) | §5.3 Algebraic MAC | 39 | In the μCMZ unforgeability proof, the second forgery case is bounded by the single-attribute MAC's UF-CMVA advantage. | — | ⚪ |
 | [Theorem 5.8](../Orru_2024.pdf#page=40) | §5.4 Anonymity | 40 | If ZKP proves R ⊇ R_cmz, then μCMZ is anonymous (issuance and presentation are simulatable). | — | ⚪ |

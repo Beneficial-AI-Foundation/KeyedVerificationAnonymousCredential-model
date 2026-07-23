@@ -100,6 +100,7 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 "Equation 9" = "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
 "Equation 10" = "R_is, the μCMZ issuance server-proof relation: knowledge of $(x_0, u)$ with X₀ = x₀·H, U' = u·G and V' = x₀·U' + u·C''."
 "Equation 11" = "R_p, the μCMZ presentation-proof relation: knowledge of $(r', \\vec{r}, \\vec{m})$ opening the commitments C⃗ over U' and Z = Σᵢ rᵢ·Xᵢ − r'·H, with policy φ($\\vec{m}$) satisfied."
+"Equation 12" = "The AGM verification polynomial for μCMZ unforgeability at n = 1: a winning forgery would force this identity in the secret exponents (η, x₀, xᵣ, x₁, u₁…u_q), which Lemma 5.4 shows cannot hold over the polynomial ring, reducing to 3-DL."
 
 # Corrections to the extractor's enclosing-section assignment, for elements
 # whose heading order in the text misleads the heuristic. Values are section
@@ -113,3 +114,13 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 "Equation 9" = "5.1"
 "Equation 10" = "5.1"
 "Equation 11" = "5.1"
+# Eq. 12 is the AGM verification polynomial in the proof of Lemma 5.4, §5.3.
+"Equation 12" = "5.3"
+
+# Curated page overrides for cited equations the right-aligned-`(N)` locator
+# heuristic cannot place. Values are 1-based PDF pages (form-feed pages of the
+# committed text extraction). Eq. 12's `(12)` label sits alone on a whitespace
+# line (the display spans several lines), so the locator misses it; it is on
+# page 36.
+[equation_pages]
+"Equation 12" = 36
