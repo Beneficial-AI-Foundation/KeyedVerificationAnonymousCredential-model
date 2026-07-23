@@ -9,13 +9,15 @@ import VCVio
 /-!
 # μCMZ sign-mask uniformity (O24 §5.3)
 
-The sign-arm distribution lemmas the AGM reduction consumes: the reduction's
-simulated `sign` oracle produces exactly the real oracle's tag distribution. Kept
-in their own `AGMPolynomial`-free module so `AGMReduction` (which imports
-`MvPolynomial`) can reuse them by name without re-elaborating the proofs in an
-`MvPolynomial`-heavy instance context, where the `$ᵗ`-subtype samples below would
-loop `SampleableType` / `Fintype` search. Imports only `AlgebraicMAC.lean` (for
-`glog` / `gen_ne_zero` / `glog_smul`) and `VCVio`.
+Per-query output-distribution lemmas for the sign arm: sampling the non-vanishing
+signing masks and forming the code tag has, per query, the same law as the real
+oracle's `U ←$ {g // g ≠ 0}`. These are distributional facts only; the downstream
+security use — a future `AGMPolynomial`-based reduction consuming them by name — is
+deferred (`AGMReduction` does not exist yet). Kept in their own `AGMPolynomial`-free
+module so that reduction (which imports `MvPolynomial`) can reuse them without
+re-elaborating the proofs in an `MvPolynomial`-heavy instance context, where the
+`$ᵗ`-subtype samples below would loop `SampleableType` / `Fintype` search. Imports
+only `AlgebraicMAC.lean` (for `glog` / `gen_ne_zero` / `glog_smul`) and `VCVio`.
 -/
 
 set_option autoImplicit false
@@ -30,48 +32,40 @@ variable {n : ℕ}
 variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
+/-- `uniformNonzero` is the value-projected subtype sample, in `map` form. -/
+private lemma uniformNonzero_eq_map :
+    uniformNonzero G
+      = Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0}) := by
+  rfl
+
 /-! ## Sign-mask uniformity
 
-These lemmas show the reduction's `sign` oracle samples `Uⱼ = aᵤ·gen + bᵤ·X`
-(non-vanishing masks, `X = x·gen`) uniformly over `G^×`, matching the real oracle's
-`U ←$ {g // g ≠ 0}` exactly (no per-query slack). `AGMReduction` reuses them by
-name. -/
+These lemmas establish a single-query output law: sampling `Uⱼ = aᵤ·gen + bᵤ·X`
+(non-vanishing masks, `X = x·gen`) is uniform over `G^×`, matching the real oracle's
+`U ←$ {g // g ≠ 0}`. They are facts about one query's output distribution; composing
+them into a full reduction / transcript coupling is deferred. -/
 
 /-- `SampleableType` for the signing masks `(aᵤ, bᵤ)` whose tag
 `Uⱼ = aᵤ·gen + bᵤ·X` is nonzero: a `Fintype` subtype, nonempty via `(1, 0)` since
-`gen ≠ 0`. Sampling masks here makes `Uⱼ` uniform over `G^×`; the `bᵤ`-marginal
-stays uniform (each `b` excludes one `a`), so Schwartz–Zippel is unaffected and the
-`+1/p` bound holds with `Correct` left perfect. -/
+`gen ≠ 0`. Sampling masks here makes `Uⱼ` uniform over `G^×`, and the `bᵤ`-marginal
+stays uniform (`sign_U_bu_dist_eq`). Conditioning on `Uⱼ ≠ 0` *correlates* `(aᵤ, bᵤ)`
+(each `b` excludes one `a`), so the Schwartz–Zippel `+1/p` argument under that
+conditioned law is *not* established here — it is deferred to the reduction. -/
 noncomputable instance instSampleableNonVanishingMasks (X : G) :
     SampleableType {p : F × F // p.1 • gen + p.2 • X ≠ 0} :=
   SampleableType.ofNonemptySubtype (fun p : F × F => p.1 • gen + p.2 • X ≠ 0)
     ⟨⟨(1, 0), by simp only [one_smul, zero_smul, add_zero]; exact gen_ne_zero (gen := gen)⟩⟩
 
-/-- **Opaque wrapper for the reduction's sign-mask sample,** definitionally
-`$ᵗ {(aᵤ,bᵤ) // Uⱼ ≠ 0}`. Kept named and `irreducible` so `AGMReduction` can reason
-about the `sign` branch through the `sign_*_dist_eq` characterizations below without
-elaborating the raw `$ᵗ` (whose `SampleableType` search loops in that module's
-import context); `irreducible` stops `whnf` from unfolding it back. -/
+/-- **Opaque wrapper for the sign-mask sample,** definitionally
+`$ᵗ {(aᵤ,bᵤ) // Uⱼ ≠ 0}`. Kept named and `irreducible` so a future reduction can
+reason about the `sign` branch through the `sign_*_dist_eq` characterizations below
+without elaborating the raw `$ᵗ` (whose `SampleableType` search loops in an
+`MvPolynomial`-heavy import context); `irreducible` stops `whnf` from unfolding it
+back. -/
 @[irreducible] noncomputable def reductionMaskSample (X : G) :
     ProbComp {p : F × F // p.1 • gen + p.2 • X ≠ 0} :=
   ($ᵗ {p : F × F // p.1 • gen + p.2 • X ≠ 0} :
     ProbComp {p : F × F // p.1 • gen + p.2 • X ≠ 0})
-
-/-- The first marginal of a uniform product sample is uniform:
-`Prod.fst <$> $ᵗ(α×β) ≡ $ᵗα`. Stated for abstract `α β` (so it does not trigger
-the concrete-subtype instance-search landmine); used by `sign_U_dist_eq`. -/
-lemma evalDist_fst_uniformProd {α β : Type} [Fintype α] [Inhabited α] [SampleableType α]
-    [Fintype β] [Inhabited β] [SampleableType β] :
-    evalDist (Prod.fst <$> ($ᵗ (α × β) : ProbComp (α × β)))
-      = evalDist ($ᵗ α : ProbComp α) := by
-  classical
-  refine evalDist_ext fun x => ?_
-  rw [probOutput_fst_map_eq_sum]
-  simp only [probOutput_uniformSample,
-    Fintype.card_prod, Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
-  rw [Nat.cast_mul, ENNReal.mul_inv (by simp) (by simp), ← mul_assoc, mul_right_comm,
-    ENNReal.mul_inv_cancel (Nat.cast_ne_zero.mpr Fintype.card_ne_zero)
-      (ENNReal.natCast_ne_top _), one_mul]
 
 /-- Forward map of the sign-mask bijection: `(aᵤ, bᵤ) ↦ (⟨Uⱼ, h⟩, bᵤ)` where
 `Uⱼ = aᵤ·gen + bᵤ·(x·gen)`. Kept as a bare function so its
@@ -132,23 +126,24 @@ noncomputable def signMaskEquiv (x : F) :
       ({g : G // g ≠ 0} × F) :=
   Equiv.ofBijective (signMaskFun (gen := gen) x) (signMaskFun_bijective (gen := gen) x)
 
-/-- **Sign-coupling core: masked tag `Uⱼ` is uniform over `G^×`.** The reduction's `sign` samples
-`Uⱼ = aᵤ·gen + bᵤ·X` (non-vanishing masks, `X = x·gen`) with exactly the real
-oracle's `U ←$ {g // g ≠ 0}` distribution: uniform over `G^×`. Via the bijection
-`signMaskEquiv : {(aᵤ,bᵤ) // Uⱼ≠0} ≃ {g // g ≠ 0} × F`, `(aᵤ, bᵤ) ↦ (⟨Uⱼ, h⟩, bᵤ)`,
-then marginalize `bᵤ` (`evalDist_fst_uniformProd`); the residual `Subtype.val` is
-the real oracle's embedding of `{g // g ≠ 0}` into `G`. -/
+/-- **Sign-coupling core: masked tag `Uⱼ` is uniform over `G^×`.** Sampling the
+non-vanishing masks and projecting `Uⱼ = aᵤ·gen + bᵤ·X` (`X = x·gen`) has exactly the
+real oracle's `U ←$ {g // g ≠ 0}` law: uniform over `G^×`. Proved by pointwise
+`probOutput` fiber-counting: for `y ≠ 0` the fiber `{(aᵤ,bᵤ) // Uⱼ = y}` has `|F|`
+elements via the bijection `signMaskEquiv : {(aᵤ,bᵤ) // Uⱼ≠0} ≃ {g // g ≠ 0} × F`
+(one `g = ⟨y, hy⟩`, times `|F|` choices of `bᵤ`), matching `1/|{g ≠ 0}|`; for `y = 0`
+both sides vanish. A per-query output law; the security use is deferred. -/
 lemma sign_U_dist_eq (x : F) :
     evalDist ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
         p.val.1 • gen + p.val.2 • (x • gen)) <$>
-        ($ᵗ {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} :
-          ProbComp {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0}))
-      = evalDist (Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})) := by
+        reductionMaskSample (gen := gen) (x • gen))
+      = evalDist (uniformNonzero G) := by
   -- Pointwise `probOutput` equality, avoiding the `$ᵗ ({g : G // g ≠ 0} × F)`
   -- product sample (whose `SampleableType` / `Fintype` search loops here).
+  rw [reductionMaskSample]
   apply evalDist_ext
   intro y
-  -- Both sides: `Pr[= y | U <$> $ᵗM]` and `Pr[= y | Subtype.val <$> $ᵗ{g≠0}]`.
+  -- Both sides: `Pr[= y | U <$> $ᵗM]` and `Pr[= y | uniformNonzero G]`.
   -- Case `y = 0`: `U` never hits `0` (the masks are non-vanishing) and
   -- `Subtype.val` never hits `0` (by `g ≠ 0`); both sides `0`.
   by_cases hy : y = 0
@@ -161,8 +156,8 @@ lemma sign_U_dist_eq (x : F) :
       rintro ⟨p, hp⟩
       exact absurd (hy ▸ hp) p.property
     -- RHS: `Subtype.val` of a nonzero `g` is nonzero.
-    have hR : Pr[= y | Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})] = 0 := by
-      rw [probOutput_eq_zero_iff, support_map, support_uniformSample,
+    have hR : Pr[= y | uniformNonzero G] = 0 := by
+      rw [uniformNonzero_eq_map, probOutput_eq_zero_iff, support_map, support_uniformSample,
         Set.image_univ, Set.mem_range]
       rintro ⟨g, hg⟩
       exact absurd (hy ▸ hg) g.property
@@ -211,11 +206,11 @@ lemma sign_U_dist_eq (x : F) :
         exact hcardFiber ▸ Fintype.card_congr
           (Equiv.subtypeEquiv (Equiv.refl _) (fun _ => eq_comm))
       rw [hcf, hcardM, div_eq_mul_inv, Nat.cast_mul]
-    -- RHS: `Pr[= y | Subtype.val <$> $ᵗ{g≠0}]` = `1 / |{g≠0}|`.
+    -- RHS: `Pr[= y | uniformNonzero G]` = `1 / |{g≠0}|`.
     -- For `y ≠ 0`, exactly one `g = ⟨y, hy⟩` maps to `y`; so the fiber has card `1`.
-    have hR : Pr[= y | Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})] =
+    have hR : Pr[= y | uniformNonzero G] =
         (Fintype.card {g : G // g ≠ 0} : ℝ≥0∞)⁻¹ := by
-      rw [probOutput_map_eq_sum_fintype_ite]
+      rw [uniformNonzero_eq_map, probOutput_map_eq_sum_fintype_ite]
       simp only [probOutput_uniformSample]
       rw [← Finset.sum_filter, Finset.sum_const]
       simp only [nsmul_eq_mul]
@@ -233,47 +228,45 @@ lemma sign_U_dist_eq (x : F) :
     exact hkey.trans (one_div _)
 
 /-- **Masked tag = honest tag (`AGMPolynomial`-free).** Sampling the non-vanishing
-masks and forming the honest tag `(U, key·U)` at `U = aᵤ·g + bᵤ·X` (`X = x·g`) gives
-exactly the distribution of `(U ←$ {g ≠ 0}; (U, key·U))`: both are
-`(fun g => (g, key·g)) <$> (uniform U)`, and the `U`-laws agree by `sign_U_dist_eq`.
-The mask sample is the opaque `reductionMaskSample`, so `AGMReduction` can rewrite
-its degree-2 tag `V` to `key·U` and apply this by name without surfacing the raw
-`$ᵗ`. -/
+masks and forming the honest pair `(U, key·U)` at `U = aᵤ·g + bᵤ·X` (`X = x·g`) has
+exactly the law of `(U ←$ {g ≠ 0}; (U, key·U))`: both are
+`(fun g => (g, key·g)) <$> uniformNonzero G`, and the `U`-laws agree by
+`sign_U_dist_eq`. This builds the honest pair *directly*; rewriting Eq. 14's degree-2
+tag `Vⱼ` (in the 3-DL challenge bases) to `key·U` — and hence the coupling to the
+paper's simulator — is the reduction's obligation and is deferred. The mask sample is
+the opaque `reductionMaskSample`, so a future reduction can apply this by name without
+surfacing the raw `$ᵗ`. -/
 lemma sign_masked_tag_dist_eq (x key : F) :
     evalDist ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
         ((p.val.1 • gen + p.val.2 • (x • gen),
           key • (p.val.1 • gen + p.val.2 • (x • gen))) : G × G)) <$>
         reductionMaskSample (gen := gen) (x • gen))
       = evalDist (do
-          let U ← ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})
-          pure ((U.val, key • U.val) : G × G)) := by
-  rw [reductionMaskSample]
+          let U ← uniformNonzero G
+          pure ((U, key • U) : G × G)) := by
   -- Both sides factor as `(fun g => (g, key·g)) <$> (U-distribution)`.
   have hLHS :
       ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
         ((p.val.1 • gen + p.val.2 • (x • gen),
           key • (p.val.1 • gen + p.val.2 • (x • gen))) : G × G)) <$>
-        ($ᵗ {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} :
-          ProbComp {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0}))
+        reductionMaskSample (gen := gen) (x • gen))
         = (fun g : G => (g, key • g)) <$>
             ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
               p.val.1 • gen + p.val.2 • (x • gen)) <$>
-              ($ᵗ {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} :
-                ProbComp _)) := by
+              reductionMaskSample (gen := gen) (x • gen)) := by
     rw [Functor.map_map]
   have hRHS :
       (do
-          let U ← ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})
-          pure ((U.val, key • U.val) : G × G))
-        = (fun g : G => (g, key • g)) <$>
-            (Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})) := by
-    rw [bind_pure_comp, Functor.map_map]
+          let U ← uniformNonzero G
+          pure ((U, key • U) : G × G))
+        = (fun g : G => (g, key • g)) <$> uniformNonzero G := by
+    rw [bind_pure_comp]
   rw [hLHS, hRHS,
     evalDist_map ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
       p.val.1 • gen + p.val.2 • (x • gen)) <$>
-      ($ᵗ {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} : ProbComp _))
+      reductionMaskSample (gen := gen) (x • gen))
       (fun g : G => (g, key • g)),
-    evalDist_map (Subtype.val <$> ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0}))
+    evalDist_map (uniformNonzero G)
       (fun g : G => (g, key • g)),
     sign_U_dist_eq (gen := gen) x]
 
@@ -281,17 +274,18 @@ lemma sign_masked_tag_dist_eq (x key : F) :
 `(aᵤ, bᵤ) ←$ {U ≠ 0}` have the same `(U, bᵤ)` joint law as a free pair
 `U ←$ {g ≠ 0}`, `bᵤ ←$ F`, via the shear `signMaskEquiv x : {U ≠ 0} ≃ {g ≠ 0} × F`
 with `bᵤ` the free second factor. The joint analogue of `sign_U_dist_eq` (which
-keeps only the `U` marginal); stated with separate `$ᵗ {g ≠ 0}` and `$ᵗ F` (never
-the product, which loops `SampleableType` search) and `glog`-free. Feeds the
-per-query sign step of the forthcoming Schwartz–Zippel argument in `AGMReduction`. -/
+keeps only the `U` marginal); stated with `uniformNonzero G` and a separate `$ᵗ F`
+(never the product, which loops `SampleableType` search) and `glog`-free. Gives the
+`(U, bᵤ)` independence the forthcoming Schwartz–Zippel argument needs — necessary but
+not sufficient for that bound; the SZ step itself is deferred to the reduction. -/
 lemma sign_U_bu_dist_eq (x : F) :
     evalDist ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
         (p.val.1 • gen + p.val.2 • (x • gen), p.val.2)) <$>
         reductionMaskSample (gen := gen) (x • gen))
       = evalDist (do
-          let U ← ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})
+          let U ← uniformNonzero G
           let bu ← ($ᵗ F : ProbComp F)
-          pure ((U.val, bu) : G × F)) := by
+          pure ((U, bu) : G × F)) := by
   rw [reductionMaskSample]
   apply evalDist_ext
   rintro ⟨y, bu₀⟩
@@ -306,16 +300,16 @@ lemma sign_U_bu_dist_eq (x : F) :
       rintro ⟨p, hp⟩
       rw [Prod.ext_iff] at hp
       exact absurd (hy ▸ hp.1) p.property
-    have hU0 : Pr[= (0 : G) | Subtype.val <$>
-          ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})] = 0 := by
-      rw [probOutput_eq_zero_iff, support_map, support_uniformSample, Set.image_univ,
-        Set.mem_range]
+    have hU0 : Pr[= (0 : G) | uniformNonzero G] = 0 := by
+      rw [uniformNonzero_eq_map, probOutput_eq_zero_iff, support_map, support_uniformSample,
+        Set.image_univ, Set.mem_range]
       rintro ⟨g, hg⟩
       exact absurd (hy ▸ hg) g.property
     have hR : Pr[= (y, bu₀) | do
-          let U ← ($ᵗ {g : G // g ≠ 0}); let bu ← ($ᵗ F); pure ((U.val, bu) : G × F)] = 0 := by
+          let U ← uniformNonzero G; let bu ← ($ᵗ F); pure ((U, bu) : G × F)] = 0 := by
       rw [hy]
-      simp only [probOutput_bind_bind_prod_mk_eq_mul', hU0, zero_mul]
+      simp only [probOutput_bind_bind_prod_mk_eq_mul', id_map']
+      rw [hU0, zero_mul]
     rw [hL, hR]
   · -- `y ≠ 0`: the fiber is a singleton; both sides `1/(|F|·|{g≠0}|)`.
     have hL : Pr[= (y, bu₀) | (fun p : M => (Uf p, p.val.2)) <$> ($ᵗ M : ProbComp M)] =
@@ -349,29 +343,20 @@ lemma sign_U_bu_dist_eq (x : F) :
         ← ENNReal.mul_inv (Or.inl (Nat.cast_ne_zero.mpr Fintype.card_ne_zero))
           (Or.inl (ENNReal.natCast_ne_top _))]
     have hR : Pr[= (y, bu₀) | do
-          let U ← ($ᵗ {g : G // g ≠ 0}); let bu ← ($ᵗ F); pure ((U.val, bu) : G × F)] =
+          let U ← uniformNonzero G; let bu ← ($ᵗ F); pure ((U, bu) : G × F)] =
         (Fintype.card F : ℝ≥0∞)⁻¹ * (Fintype.card {g : G // g ≠ 0} : ℝ≥0∞)⁻¹ := by
-      simp only [probOutput_bind_bind_prod_mk_eq_mul']
-      have hUy : Pr[= y | Subtype.val <$>
-            ($ᵗ {g : G // g ≠ 0} : ProbComp {g : G // g ≠ 0})] =
+      -- `id_map'` collapses the identity `<$>` the marginal split leaves on each factor.
+      simp only [probOutput_bind_bind_prod_mk_eq_mul', id_map']
+      have hUy : Pr[= y | uniformNonzero G] =
           (Fintype.card {g : G // g ≠ 0} : ℝ≥0∞)⁻¹ := by
-        rw [probOutput_map_eq_sum_fintype_ite]
+        rw [uniformNonzero_eq_map, probOutput_map_eq_sum_fintype_ite]
         simp only [probOutput_uniformSample]
         rw [← Finset.sum_filter, Finset.sum_const]
         simp only [nsmul_eq_mul]
         haveI : Unique {g : {g : G // g ≠ 0} // y = (g : G)} :=
           ⟨⟨⟨y, hy⟩, rfl⟩, fun ⟨g, h⟩ => Subtype.ext (Subtype.val_injective h.symm)⟩
         rw [← Fintype.card_subtype, Fintype.card_unique, Nat.cast_one, one_mul]
-      have hB : Pr[= bu₀ | (fun b : F => b) <$> ($ᵗ F : ProbComp F)] =
-          (Fintype.card F : ℝ≥0∞)⁻¹ := by
-        rw [probOutput_map_eq_sum_fintype_ite]
-        simp only [probOutput_uniformSample]
-        rw [← Finset.sum_filter, Finset.sum_const]
-        simp only [nsmul_eq_mul]
-        haveI : Unique {b : F // bu₀ = b} :=
-          ⟨⟨bu₀, rfl⟩, fun ⟨b, h⟩ => Subtype.ext h.symm⟩
-        rw [← Fintype.card_subtype, Fintype.card_unique, Nat.cast_one, one_mul]
-      simp only [hUy, hB, mul_comm]  --mul_comm flips to match RHS
+      rw [hUy, probOutput_uniformSample, mul_comm]  --mul_comm flips to match RHS
     rw [hL, hR]
 
 
