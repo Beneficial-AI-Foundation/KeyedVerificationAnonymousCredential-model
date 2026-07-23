@@ -13,7 +13,7 @@ These figures are approximate (see the note above).
 - Paper elements catalogued: roughly **61**
 - Paper elements *reported* formalized (a sorry-free Lean declaration of matching kind cites them): **11** (~18%)
 - Paper elements with some Lean association: **14**
-- Lean declarations scanned: **156** across **17** files; **0** detected to contain `sorry`
+- Lean declarations scanned: **136** across **16** files; **0** detected to contain `sorry`
 
 ### By paper element
 
@@ -49,15 +49,15 @@ These figures are approximate (see the note above).
 
 | Declaration kind | Count | Cite the paper |
 |---|--:|--:|
-| abbrev | 36 | 15 |
+| abbrev | 31 | 15 |
 | class | 1 | 0 |
-| def | 65 | 25 |
+| def | 56 | 24 |
 | inductive | 3 | 1 |
-| instance | 2 | 0 |
-| lemma | 20 | 2 |
+| instance | 1 | 0 |
+| lemma | 15 | 2 |
 | structure | 10 | 6 |
 | theorem | 19 | 6 |
-| **Total** | **156** | **55** |
+| **Total** | **136** | **54** |
 
 Status legend (heuristic reads, each a claim to verify rather than a proof): 🟢 appears formalized — a sorry-free declaration of matching kind seems to cite it · 🌐 a matching declaration is cited but looks to contain `sorry` · 🌀 a declaration cites it but its kind looks non-matching · 🟡 only module-level coverage detected · ⚪ nothing detected yet
 
