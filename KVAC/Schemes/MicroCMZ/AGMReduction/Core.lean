@@ -137,38 +137,69 @@ theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F
 
 /-! ## The reduction adversary -/
 
-/-- The affine-mask point `Var q → F` of the embedding: the fixed-variable masks
-`(cη, c0, cXr, cX1)` for `η, x₀, xᵣ, x₁`, together with the per-query `u`-masks
-`cu` accumulated in the oracle state. Instantiated once with the `a`-masks and
-once with the `b`-masks to give the two `affineSubst` arguments. -/
-def embedPoint {q : ℕ} (cη c0 cXr cX1 : F) (cu : Fin q → F) : AGMPoly.Var q → F
-  | .eta => cη
-  | .x0 => c0
-  | .xr => cXr
-  | .x1 => cX1
+/-- One side's fixed-variable masks of the challenge embedding (O24 Eq. 13): one
+coefficient per fixed `AGMPoly.Var` (`η, x₀, xᵣ, x₁`). The reduction carries an
+`a`-side (coefficients on `gen`) and a `b`-side (coefficients on `X`). -/
+structure FixedMasks (F : Type) where
+  /-- Mask of `η = log H`. -/
+  eta : F
+  /-- Mask of the key component `x₀`. -/
+  x0 : F
+  /-- Mask of the key component `xᵣ`. -/
+  xr : F
+  /-- Mask of the key component `x₁`. -/
+  x1 : F
+
+/-- The affine-mask point `Var q → F` of the embedding: this side's fixed-variable
+masks together with the per-query `u`-masks `cu` accumulated in the oracle state.
+Instantiated once with the `a`-side and once with the `b`-side to give the two
+`affineSubst` arguments. -/
+def FixedMasks.embed {F : Type} {q : ℕ} (c : FixedMasks F) (cu : Fin q → F) :
+    AGMPoly.Var q → F
+  | .eta => c.eta
+  | .x0 => c.x0
+  | .xr => c.xr
+  | .x1 => c.x1
   | .u j => cu j
 
-/-- The oracle state threaded through the reduction: one entry per Sign query
-carrying the message vector, the issued tag `(Uⱼ, Vⱼ)`, and the `u`-masks
-`(a uⱼ, b uⱼ)` used to build it (needed to assemble the `affineSubst` point on
-the forgery). -/
-abbrev RedLog (F G : Type) := List ((Fin 1 → F) × (G × G) × F × F)
+/-- This side's coefficient of the represented key at message `m`:
+`x₀ + xᵣ + m·x₁` (the `A`/`B` of the sign step and the `keyUniv` coefficients of
+the verify step). -/
+def FixedMasks.keyCoeff {F : Type} [Field F] (c : FixedMasks F) (m : F) : F :=
+  c.x0 + c.xr + m * c.x1
+
+/-- One Sign-query record: the message vector, the issued tag `(Uⱼ, Vⱼ)`, and the
+`u`-masks used to build it (needed to assemble the `affineSubst` point on the
+forgery). -/
+structure SignRecord (F G : Type) where
+  /-- The signed message vector, stored verbatim from the query. -/
+  msg : Fin 1 → F
+  /-- The issued tag `(Uⱼ, Vⱼ)`. -/
+  tag : G × G
+  /-- The `a`-side `u`-mask. -/
+  au : F
+  /-- The `b`-side `u`-mask. -/
+  bu : F
+
+/-- The oracle state threaded through the reduction: one `SignRecord` per Sign
+query, in query order. -/
+abbrev RedLog (F G : Type) := List (SignRecord F G)
 
 /-- The tags `(Uⱼ, Vⱼ)` issued so far, in query order. -/
 def RedLog.tags {F G : Type} (L : RedLog F G) : List (G × G) :=
-  L.map fun e => e.2.1
+  L.map (·.tag)
 
 /-- The `j`-th signed message (the single entry of its `Fin 1` vector). -/
 def RedLog.msg {F G : Type} (L : RedLog F G) (j : Fin L.length) : F :=
-  (L.get j).1 0
+  (L.get j).msg 0
 
 /-- The `a`-side `u`-mask of the `j`-th issued tag. -/
 def RedLog.aMask {F G : Type} (L : RedLog F G) (j : Fin L.length) : F :=
-  (L.get j).2.2.1
+  (L.get j).au
 
 /-- The `b`-side `u`-mask of the `j`-th issued tag. -/
 def RedLog.bMask {F G : Type} (L : RedLog F G) (j : Fin L.length) : F :=
-  (L.get j).2.2.2
+  (L.get j).bu
 
 /-! ## Exponent evaluation (oracle simulation via the 3-DL powers) -/
 
@@ -193,36 +224,35 @@ lemma exponentEval_eq (g : G) (x : F) (p : Polynomial F) (hp : p.natDegree ≤ 3
 
 /-- **Reduction `sign` step** (factored out of `reductionOracleImpl`; see its
 docstring for why). Samples the non-vanishing masks `(au, bu)`, builds the honest
-tag `(U, V)` with `U = au·gen + bu·X`, `V = key·U`, and appends
-`(m, (U,V), au, bu)` to the log. O24 Eq. 14 samples the masks unconditioned;
+tag `(U, V)` with `U = au·gen + bu·X`, `V = key·U`, and appends the `SignRecord`
+to the log. O24 Eq. 14 samples the masks unconditioned;
 conditioning on `U ≠ 0` matches Eq. 1's `U ←$ G×` (see `reductionMaskSample`). -/
-noncomputable def reductionSignStep (X X' : G) (a0 b0 aXr bXr aX1 bX1 : F) (m : Fin 1 → F) :
+noncomputable def reductionSignStep (X X' : G) (aM bM : FixedMasks F) (m : Fin 1 → F) :
     StateT (RedLog F G) ProbComp (G × G) :=
   StateT.mk fun L => do
       let aubu ← reductionMaskSample (gen := gen) X
       let au := aubu.val.1
       let bu := aubu.val.2
-      let A := a0 + aXr + m 0 * aX1
-      let B := b0 + bXr + m 0 * bX1
+      let A := aM.keyCoeff (m 0)
+      let B := bM.keyCoeff (m 0)
       let U := au • gen + bu • X
       -- dlog V = (A + B·x)(au + bu·x), expanded onto (gen, X, X'). O24 Eq. 14
       -- prints V's gen-coefficient as a_{u,j}(a_h·a₀ + a_h + a₁mⱼ); the correct
       -- factor, used here, is A = a₀ + aᵣ + a₁mⱼ (typo in the paper).
       let V := (A * au) • gen + (A * bu + B * au) • X + (B * bu) • X'
-      pure ((U, V), L ++ [(m, (U, V), au, bu)])
+      pure ((U, V), L ++ [⟨m, (U, V), au, bu⟩])
 
 /-- **Reduction `verify` step** (factored out; see `reductionSignStep`). -/
-noncomputable def reductionVerifyStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX1 bX1 : F)
+noncomputable def reductionVerifyStep (X X' X'' : G) (aM bM : FixedMasks F)
     (H X0 Xr X1 : G) (m : Fin 1 → F) (σ : G × G) (ρU ρV : AGMRepr F 1) :
     StateT (RedLog F G) ProbComp Bool :=
   StateT.mk fun L =>
       let tags := L.tags
-      let a := embedPoint aEta a0 aXr aX1 L.aMask
-      let b := embedPoint bEta b0 bXr bX1 L.bMask
+      let a := aM.embed L.aMask
+      let b := bM.embed L.bMask
       let pU := AGMPoly.affineSubst a b ((ρU.toReprCoeffs L.length).toPoly L.msg)
       let keyUniv : Polynomial F :=
-        Polynomial.C (a0 + aXr + m 0 * aX1) +
-          Polynomial.C (b0 + bXr + m 0 * bX1) * Polynomial.X
+        Polynomial.C (aM.keyCoeff (m 0)) + Polynomial.C (bM.keyCoeff (m 0)) * Polynomial.X
       let consistent :=
         ρU.eval gen H X0 Xr (fun _ => X1) tags = σ.1 ∧
         ρV.eval gen H X0 Xr (fun _ => X1) tags = σ.2
@@ -230,20 +260,20 @@ noncomputable def reductionVerifyStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX
         decide (σ.2 = exponentEval gen X X' X'' (keyUniv * pU)), L)
 
 /-- **Reduction `help` step** (factored out; see `reductionSignStep`). -/
-noncomputable def reductionHelpStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX1 bX1 : F)
+noncomputable def reductionHelpStep (X X' X'' : G) (aM bM : FixedMasks F)
     (H X0 Xr X1 : G) (A₀ : G) (Av : Fin 1 → G) (Z : G)
     (ρ₀ : AGMRepr F 1) (ρA : Fin 1 → AGMRepr F 1) (ρZ : AGMRepr F 1) :
     StateT (RedLog F G) ProbComp Bool :=
   StateT.mk fun L =>
       let tags := L.tags
-      let a := embedPoint aEta a0 aXr aX1 L.aMask
-      let b := embedPoint bEta b0 bXr bX1 L.bMask
+      let a := aM.embed L.aMask
+      let b := bM.embed L.bMask
       let p0 := AGMPoly.affineSubst a b ((ρ₀.toReprCoeffs L.length).toPoly L.msg)
       let p1 := AGMPoly.affineSubst a b (((ρA 0).toReprCoeffs L.length).toPoly L.msg)
       let keyUniv : Polynomial F :=
-        Polynomial.C (a0 + aXr) + Polynomial.C (b0 + bXr) * Polynomial.X
+        Polynomial.C (aM.x0 + aM.xr) + Polynomial.C (bM.x0 + bM.xr) * Polynomial.X
       let x1Univ : Polynomial F :=
-        Polynomial.C aX1 + Polynomial.C bX1 * Polynomial.X
+        Polynomial.C aM.x1 + Polynomial.C bM.x1 * Polynomial.X
       let consistent :=
         ρ₀.eval gen H X0 Xr (fun _ => X1) tags = A₀ ∧
         (∀ i, (ρA i).eval gen H X0 Xr (fun _ => X1) tags = Av i) ∧
@@ -259,14 +289,13 @@ factored `step` def: the `verify`/`help` arms carry `MvPolynomial`/`affineSubst`
 terms whose instance search loops in this import context, so splitting them keeps
 reduction on a `.sign` query from re-elaborating the others. -/
 noncomputable def reductionOracleImpl (X X' X'' : G)
-    (aEta bEta a0 b0 aXr bXr aX1 bX1 : F) (H X0 Xr X1 : G) :
+    (aM bM : FixedMasks F) (H X0 Xr X1 : G) :
     QueryImpl (AGMOracleSpec F G 1) (StateT (RedLog F G) ProbComp)
-  | .sign m => reductionSignStep (gen := gen) X X' a0 b0 aXr bXr aX1 bX1 m
+  | .sign m => reductionSignStep (gen := gen) X X' aM bM m
   | .verify m σ ρU ρV =>
-      reductionVerifyStep (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1 m σ ρU ρV
+      reductionVerifyStep (gen := gen) X X' X'' aM bM H X0 Xr X1 m σ ρU ρV
   | .help A₀ Av Z ρ₀ ρA ρZ =>
-      reductionHelpStep (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1
-        A₀ Av Z ρ₀ ρA ρZ
+      reductionHelpStep (gen := gen) X X' X'' aM bM H X0 Xr X1 A₀ Av Z ρ₀ ρA ρZ
 
 /-! ## Root recovery (the reduction's discrete-log extraction step) -/
 
@@ -348,20 +377,22 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     let a0 ← $ᵗ F; let b0 ← $ᵗ F
     let aXr ← $ᵗ F; let bXr ← $ᵗ F
     let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
-    let H := aEta • gen + bEta • X
+    let aM : FixedMasks F := ⟨aEta, a0, aXr, aX1⟩
+    let bM : FixedMasks F := ⟨bEta, b0, bXr, bX1⟩
+    let H := aM.eta • gen + bM.eta • X
     -- dlog X₀ = (a₀ + b₀·x)(aη + bη·x), expanded onto (gen, X, X'). O24 Eq. 13
     -- prints X₀'s X-coefficient as (a_h·b₀ + b_h), dropping the a₀ factor; the
     -- correct coefficient, used here, is a₀·bη + b₀·aη (typo in the paper).
-    let X0 := (a0 * aEta) • gen + (a0 * bEta + b0 * aEta) • X + (b0 * bEta) • X'
-    let Xr := aXr • gen + bXr • X
-    let X1 := aX1 • gen + bX1 • X
+    let X0 := (aM.x0 * aM.eta) • gen + (aM.x0 * bM.eta + bM.x0 * aM.eta) • X +
+      (bM.x0 * bM.eta) • X'
+    let Xr := aM.xr • gen + bM.xr • X
+    let X1 := aM.x1 • gen + bM.x1 • X
     let pp : G × G × (Fin 1 → G) := (X0, Xr, fun _ => X1)
     let ((mStar, _σStar, ρU, ρV), L) ←
-      (simulateQ
-        (reductionOracleImpl (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1)
+      (simulateQ (reductionOracleImpl (gen := gen) X X' X'' aM bM H X0 Xr X1)
         (A.run H pp)).run []
-    let a := embedPoint aEta a0 aXr aX1 L.aMask
-    let b := embedPoint bEta b0 bXr bX1 L.bMask
+    let a := aM.embed L.aMask
+    let b := bM.embed L.bMask
     let ψ := AGMPoly.affineSubst a b
       (AGMPoly.verifPoly L.msg (mStar 0)
         (ρU.toReprCoeffs L.length) (ρV.toReprCoeffs L.length))
