@@ -280,13 +280,14 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 
 /-! ## Security statements (O24 §5.3)
 
-The `n = 1` reduction scaffold (the `AGMRepr ↔ ReprCoeffs` eval bridge, the
-mechanized identity-branch contradiction, and the restructured security
-theorems `agm_ufcmva_le_n1` / `agm_ufcmva_le`) is delivered in a separate,
-forthcoming module `KVAC.Schemes.MicroCMZ.AGMReduction` (not part of this
-branch). It is split into its own file because it imports `AGMPolynomial` — see
-the order-instance hazard note at `glog` above (the bridge needs `glog`, but
-`glog`'s *proof* must elaborate without those instances in scope).
+The `n = 1` reduction's core (the `AGMRepr ↔ ReprCoeffs` eval bridge, the
+mechanized identity-branch contradiction, the reduction adversary, and root
+recovery) lives in `KVAC.Schemes.MicroCMZ.AGMReduction.Core`; the probability
+bound and the security theorems `agm_ufcmva_le_n1` / `agm_ufcmva_le` are still
+forthcoming. The reduction is split into its own file because it imports
+`AGMPolynomial` — see the order-instance hazard note at `glog` above (the bridge
+needs `glog`, but `glog`'s *proof* must elaborate without those instances in
+scope).
 
 The bridging lemma to the plain `UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security`
 is also deferred: it needs a runtime `WellBehaved` predicate and a

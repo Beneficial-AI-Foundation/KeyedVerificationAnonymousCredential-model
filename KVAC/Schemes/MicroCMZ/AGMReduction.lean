@@ -6,7 +6,7 @@ Authors: Semar Augusto
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
 
 /-!
-# μCMZ AGM unforgeability — the `n = 1` reduction (O24 §5.3, Lemma 5.4)
+# μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
 
 Connects the game (`AlgebraicMAC`) to the polynomial backbone (`AGMPolynomial`).
 The `Core` part here provides:
@@ -25,7 +25,8 @@ The `Core` part here provides:
   simulated oracle: runs `A` with no `sk`, then extracts `x` from `ψ`'s roots.
 
 The probability bound (3-DL + Schwartz–Zippel) and the security theorems are
-assembled downstream.
+assembled in the forthcoming parts (see the aggregator note below); Lemma 5.4
+is untagged here until that bound lands.
 
 The module is separate from `AlgebraicMAC` because importing `AGMPolynomial` arms
 the order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
@@ -34,7 +35,8 @@ only *use* the sealed `glog`. The bad-event bound is `deg ψ / p = 3/p`
 -/
 
 /-!
-Aggregator: the reduction lives in the `AGMReduction/` subdirectory (Core,
-Coupling, DeterministicCore, Assembly, Shear, ShearShift, Security). Importing
-this file brings the whole reduction into scope.
+Aggregator: the reduction lives in the `AGMReduction/` subdirectory. `Core` is
+the only part so far; the planned parts (Coupling, DeterministicCore, Assembly,
+Shear, ShearShift, Security) will be added to the import list above as they
+land.
 -/
