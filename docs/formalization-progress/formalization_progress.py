@@ -622,10 +622,10 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     )
     out.append(
         "This is an approximate map, not an authoritative measurement. Both "
-        "sides are recovered heuristically — paper elements by text extraction "
-        "from the PDF, Lean declarations and their citations by source scanning, "
-        "equation locations by a best-effort locator — so it may miss or "
-        "misclassify. Read the counts below as indicative, and each "
+        "sides are recovered by pattern matching over the sources: paper elements "
+        "by text extraction from the PDF, Lean declarations and their citations by "
+        "source scanning, equation locations by a right-aligned-label locator. So "
+        "it may miss or misclassify. Read the counts below as indicative, and each "
         f"{ST_DONE} as a *claim* worth reviewing rather than a verified fact "
         "(see `docs/STYLE_GUIDE.md`).\n"
     )
@@ -829,7 +829,7 @@ def _algorithm_note() -> list[str]:
         r"| `TOC_SUB_RE`, `TOC_SEC_RE` | table-of-contents entries (`3.1 Title . . . 24` and `3 Title 24`), used to name sections |",
         r"| `HEAD_RE` | a numbered heading in the body, matched against the TOC to assign each element its enclosing section |",
         r"| `FIG_RE` | a figure caption of the form `Figure N: …` |",
-        r"| `_EQ_LINE_RE` | a right-aligned equation number `(N)` at the end of a display-math line |",
+        r"| `_EQ_LINE_RE`, `_EQ_LONE_RE` | a right-aligned equation number `(N)`: trailing a display-math line, or alone on a multi-line display's last line |",
         "",
         "Lean side (the `.lean` sources):\n",
         "| Pattern | Matches |",
