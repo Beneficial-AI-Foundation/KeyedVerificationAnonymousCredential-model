@@ -11,12 +11,20 @@ import VCVio
 /-!
 # μCMZ as an algebraic MAC: AGM game scaffolding (O24 §5.3)
 
-The algebraic group model (AGM) UF-CMVA(+Help) game for the μCMZ base MAC
-(`μCMZBaseMAC`), following Orrù, *Revisiting Keyed-Verification Anonymous
-Credentials*, IACR ePrint 2024/1552, §5.3. This is the `AGMPolynomial`-free
-foundation: the game definitions the Lemma 5.4 reduction consumes, but not the
-reduction itself (that lands in `AGMReduction`), and not the sign-arm distribution
-lemmas (those live in the sibling module `SignMask`).
+Instrumented scaffolding for the algebraic group model (AGM) UF-CMVA(+Help) game
+of the μCMZ base MAC (`μCMZBaseMAC`), following Orrù, *Revisiting
+Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, §5.3. This is
+the `AGMPolynomial`-free foundation: the game definitions the Lemma 5.4 reduction
+consumes, but not the reduction itself (that lands in `AGMReduction`), and not the
+sign-arm distribution lemmas (those live in the sibling module `SignMask`).
+
+A word of caution on naming: this is scaffolding, not the honest game. The
+oracles here are *gated* — they answer honestly only when the submitted
+representation is consistent, and return `false` otherwise. So the game matches
+the honest UF-CMVA game only for *well-behaved* adversaries, the ones that never
+submit an inconsistent representation. Closing that gap is the job of the
+`WellBehaved` bridging lemma; that equivalence is deferred and is not proved in
+this file.
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 `AGMRepr` / `AGMRepr.eval`; and the instrumented game (`AGMOracleSpec`,
@@ -25,13 +33,15 @@ Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 The AGM is a restriction on the adversary class: every group element the adversary
 submits (in `Verify`/`Help` queries and in the forgery) carries an *algebraic
 representation*, coefficients over the transcript basis received so far
-(`G₀, H, X₀, Xᵣ, X⃗`, and `(Uⱼ, Vⱼ)` per Sign query). The instrumented oracles
-answer honestly iff the representation is transcript-consistent (else `false`), as
-does the win condition. This is the interface the Lemma 5.4 reduction needs: it
-answers `Verify`/`Help` by evaluating the represented degree-≤3 polynomial at the
-embedded 3-DL instance. Tag coefficients are stored as a *list* (one `(αᵤ, αᵥ)` per
-Sign query, `zipWith`-evaluated against issued tags), keeping the type independent
-of the dynamic query count.
+(`G₀, H, X₀, Xᵣ, X⃗`, and `(Uⱼ, Vⱼ)` per Sign query). Each oracle answers honestly
+iff the representation is transcript-consistent (else `false`), as does the win
+condition — this is the gate. It is exactly the interface the Lemma 5.4 reduction
+wants: it answers `Verify`/`Help` by evaluating the represented degree-≤3
+polynomial at the embedded 3-DL instance. Gating the *answers* like this, rather
+than restricting the adversary *type*, is a deliberate choice; see
+`DESIGN_ALTERNATIVES.md` for the alternative we passed over. Tag coefficients are
+stored as a *list* (one `(αᵤ, αᵥ)` per Sign query, `zipWith`-evaluated against
+issued tags), keeping the type independent of the dynamic query count.
 
 The `Help(A₀, A⃗, Z)` arm (O24 §5.2/§5.3) answers whether
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`, the stronger notion the credential-level
@@ -59,16 +69,6 @@ follows, `gen_ne_zero`). Bijectivity yields `glog : G → F` (the paper's `logG`
 
 variable (gen : G)
 
-/-- Scalar multiplication by a nonzero group element is injective over a field. -/
-theorem smul_left_injective_of_ne_zero {g : G} (hg : g ≠ 0) :
-    Function.Injective (fun x : F => x • g) := by
-  intro a b hab
-  simp only at hab
-  have : (a - b) • g = 0 := by rw [sub_smul, hab, sub_self]
-  rcases smul_eq_zero.mp this with h | h
-  · exact sub_eq_zero.mp h
-  · exact absurd h hg
-
 /- Carried as a `Fact` *instance* so it threads through the file's definitions via
 typeclass resolution; an explicit hypothesis would make the nonvanishing-mask
 `SampleableType` instance unresolvable. -/
@@ -92,6 +92,22 @@ theorem glog_smul (y : G) : (glog gen y : F) • gen = y :=
 
 theorem glog_smul_self (x : F) : glog gen (x • gen) = x :=
   Function.leftInverse_invFun hgen.out.injective x
+
+/-- `glog` is additive: the discrete log of a sum is the sum of the discrete
+logs. With `glog_smul_scalar`, makes `glog gen` `F`-linear — the form the
+reduction uses to push `glog` through `AGMRepr.eval` sums. -/
+theorem glog_add (y₁ y₂ : G) :
+    (glog gen (y₁ + y₂) : F) = glog gen y₁ + glog gen y₂ :=
+  hgen.out.injective (by
+    show glog gen (y₁ + y₂) • gen = (glog gen y₁ + glog gen y₂) • gen
+    rw [glog_smul, add_smul, glog_smul, glog_smul])
+
+/-- `glog` is homogeneous: scaling an element multiplies its discrete log. -/
+theorem glog_smul_scalar (c : F) (y : G) :
+    glog gen (c • y) = c * glog gen y :=
+  hgen.out.injective (by
+    show glog gen (c • y) • gen = (c * glog gen y) • gen
+    rw [glog_smul, mul_smul, glog_smul])
 
 /-! ## Algebraic representations -/
 

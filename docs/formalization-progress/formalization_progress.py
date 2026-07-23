@@ -467,23 +467,32 @@ def is_dimmed(e: PaperElement, dim: list[str]) -> bool:
 
 # --- equations (cite-driven) --------------------------------------------------
 
-# A right-aligned equation number `(N)` at the end of a display-math line.
+# A right-aligned equation number `(N)`, matched two ways. `_EQ_LINE_RE` catches
+# the label trailing a display line that carries content (`… =  (N)`).
+# `_EQ_LONE_RE` catches the label alone on its own line, for a display that spans
+# several lines with only the number on the last one (pdftotext lays such a label
+# out as heavy leading whitespace then `(N)`). The large indent floor is what
+# separates a right-aligned label from an inline or prose parenthetical like `(3)`;
+# every genuine label in this paper's extraction is indented past column 40.
 _EQ_LINE_RE = re.compile(r"\S.*?\s{2,}\((\d+)\)\s*$")
+_EQ_LONE_RE = re.compile(r"^\s{40,}\((\d+)\)\s*$")
 
 
 def locate_equations(text: str) -> dict[int, int]:
-    """Best-effort ``equation number -> 1-based page`` map, from the right-aligned
-    ``(N)`` marker at the end of a display line (first occurrence wins).
+    """Map ``equation number -> 1-based page`` from the right-aligned ``(N)``
+    label, first occurrence in reading order winning. Equations are numbered
+    sequentially, so the first ``(N)`` is the label at the definition, ahead of
+    any later back-reference to it.
 
-    This is a heuristic: it also matches some non-equation parenthesized numbers
-    and misses others, so it is used only *on demand* — to place the specific
-    equations a Lean docstring cites. A cited equation it cannot place is reported
-    by ``--check`` (never silently dropped); give its page in an
-    ``[equation_pages]`` table of the summaries file to override."""
+    Both forms of label are matched: trailing a content line (``_EQ_LINE_RE``)
+    and alone on a multi-line display's last line (``_EQ_LONE_RE``). A ``(N)``
+    neither pattern places is reported by ``--check`` (never silently dropped);
+    give its page in an ``[equation_pages]`` table of the summaries file to
+    override."""
     found: dict[int, int] = {}
     for pno, page in enumerate(text.split("\f"), start=1):
         for ln in page.splitlines():
-            m = _EQ_LINE_RE.search(ln)
+            m = _EQ_LINE_RE.search(ln) or _EQ_LONE_RE.match(ln)
             if m:
                 found.setdefault(int(m.group(1)), pno)
     return found
@@ -491,7 +500,7 @@ def locate_equations(text: str) -> dict[int, int]:
 
 def load_page_overrides(path: Path) -> dict[str, int]:
     """Curated ``key -> page`` overrides from an optional ``[equation_pages]``
-    table, for equations the locator heuristic cannot place."""
+    table, for equations the locator cannot place."""
     if not path.exists():
         return {}
     data = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -522,7 +531,7 @@ def cited_equation_keys(lean: list[LeanFile]) -> set[str]:
 def equation_elements(text: str, cited: set[str], overrides: dict[str, int],
                       base_seq: int) -> list[PaperElement]:
     """Paper elements for the cited equations we can place (curated page, else the
-    heuristic). Equations we cannot place are omitted, so their citations stay
+    locator). Equations we cannot place are omitted, so their citations stay
     unresolved and surface in ``--check``."""
     if not cited:
         return []
@@ -554,7 +563,7 @@ def signature_matches(paper_kind: str, lean_kind: str) -> bool:
 
 
 # Status marks, a consistent set of circles.
-# These marks are heuristic reads of the scan, not verified facts: each is a
+# These marks are approximate reads of the scan, not verified facts: each is a
 # claim worth reviewing, since both the paper extraction and the Lean/citation
 # scan are approximate and can miss or misclassify.
 ST_DONE = "🟢"      # appears formalized: a sorry-free matching-kind decl seems to cite it
@@ -565,7 +574,7 @@ ST_NONE = "⚪"      # nothing detected yet
 
 
 def element_status(e: PaperElement, by_key: dict) -> tuple[str, list]:
-    """Return a heuristic ``(status, matching_decls)`` for a paper element. Each
+    """Return an approximate ``(status, matching_decls)`` for a paper element. Each
     mark is an approximate read to review, not a proof:
 
     🟢 a sorry-free Lean declaration seems to match the paper object's kind;
@@ -613,10 +622,10 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     )
     out.append(
         "This is an approximate map, not an authoritative measurement. Both "
-        "sides are recovered heuristically — paper elements by text extraction "
-        "from the PDF, Lean declarations and their citations by source scanning, "
-        "equation locations by a best-effort locator — so it may miss or "
-        "misclassify. Read the counts below as indicative, and each "
+        "sides are recovered by pattern matching over the sources: paper elements "
+        "by text extraction from the PDF, Lean declarations and their citations by "
+        "source scanning, equation locations by a right-aligned-label locator. So "
+        "it may miss or misclassify. Read the counts below as indicative, and each "
         f"{ST_DONE} as a *claim* worth reviewing rather than a verified fact "
         "(see `docs/STYLE_GUIDE.md`).\n"
     )
@@ -725,7 +734,7 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     out.append(f"| **Total** | **{n_decls}** | **{cited}** |\n")
 
     out.append(
-        "Status legend (heuristic reads, each a claim to verify rather than a "
+        "Status legend (approximate reads, each a claim to verify rather than a "
         f"proof): {ST_DONE} appears formalized — a sorry-free declaration of "
         f"matching kind seems to cite it · "
         f"{ST_SORRY} a matching declaration is cited but looks to contain "
@@ -790,7 +799,46 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
         out.append("| " + " | ".join(cells) + " |")
 
     out.append("")
+    out.extend(_algorithm_note())
     return "\n".join(out)
+
+
+def _algorithm_note() -> list[str]:
+    """Prose appended to the report explaining how it is generated and which
+    regular-expression patterns the script matches. Kept here so the generated
+    file, which must not be edited by hand, always carries the explanation."""
+    return [
+        "## How this file is generated\n",
+        f"This file is built by `{SCRIPT_REL}` by a deterministic, three-step "
+        "algorithm: extract the paper's elements, extract the Lean declarations "
+        "and their citations, then join the two on a canonical key such as "
+        "`Definition 3.1`, `Figure 5`, or `§3.1`. The status of each element "
+        f"({ST_DONE}/{ST_SORRY}/{ST_MISMATCH}/{ST_MODULE}/{ST_NONE}) follows "
+        "from whether a citing Lean declaration of the matching kind exists and "
+        "whether its body contains `sorry`. All extraction is regular-expression "
+        "pattern matching over text, the committed `pdftotext -layout` extraction "
+        "of the paper on one side and the `.lean` sources on the other. The result "
+        "is fully determined by the inputs; what can be imperfect is the coverage "
+        "of the patterns, whether a pattern matches exactly the intended set of "
+        "elements, not any runtime guessing.\n",
+        "### Patterns the script matches\n",
+        "Paper side (the committed text extraction):\n",
+        "| Pattern | Matches |",
+        "|---|---|",
+        r"| `ENV_RE` | a numbered environment heading: one of `Theorem\|Lemma\|Definition\|Claim\|Corollary\|Proposition\|Construction`, a number `N` or `N.N`, an optional `(name)`, a period, then a statement of at least 15 characters on the same line (the length requirement rejects cross-references like `Theorem 6.12).`) |",
+        r"| `TOC_SUB_RE`, `TOC_SEC_RE` | table-of-contents entries (`3.1 Title . . . 24` and `3 Title 24`), used to name sections |",
+        r"| `HEAD_RE` | a numbered heading in the body, matched against the TOC to assign each element its enclosing section |",
+        r"| `FIG_RE` | a figure caption of the form `Figure N: …` |",
+        r"| `_EQ_LINE_RE`, `_EQ_LONE_RE` | a right-aligned equation number `(N)`: trailing a display-math line, or alone on a multi-line display's last line |",
+        "",
+        "Lean side (the `.lean` sources):\n",
+        "| Pattern | Matches |",
+        "|---|---|",
+        r"| `DECL_RE` | a top-level declaration: `def\|structure\|abbrev\|class abbrev\|class\|instance\|lemma\|theorem\|inductive` followed by a Unicode-aware name |",
+        r"| `make_ref_re` | a citation governed by the mandatory tag, followed by one or more element tokens: a numbered environment, `§N.N`, or `Equation\|Eq\|Fig N`. The tag is required, so a bare prose mention or a citation of another paper is not counted |",
+        r"| `SORRY_RE` | the tokens `sorry`, `sorryAx`, or `admit` in a declaration body |",
+        "",
+    ]
 
 
 # --- source resolution + main -------------------------------------------------

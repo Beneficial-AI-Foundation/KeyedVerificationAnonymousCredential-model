@@ -42,6 +42,18 @@
       "summary": "Compiling a polynomial interactive oracle proof with a designated-verifier polynomial commitment yields a designated-verifier fully-succinct SNARK without pairings."
     },
     {
+      "key": "§3",
+      "kind": "Section",
+      "number": "3",
+      "label": "",
+      "statement": "Preliminaries",
+      "section": "3",
+      "section_title": "Preliminaries",
+      "page": 24,
+      "seq": 14,
+      "summary": "The Notation paragraph opening §3 (only): the random-oracle hashes H_p : {0,1}* → ℤ_p (Fiat–Shamir transcripts) and H_𝔾 : {0,1}* → 𝔾 (hash-to-curve). The numbered subsections §3.1–§3.4 are tracked as their own rows."
+    },
+    {
       "key": "§3.1",
       "kind": "Section",
       "number": "3.1",
@@ -198,6 +210,30 @@
       "summary": "R_iu, the μCMZ issuance user-proof relation: knowledge of $(\\vec{m}, s)$ with C' = Σᵢ mᵢ·Xᵢ + s·G and policy φ($\\vec{m}$) satisfied."
     },
     {
+      "key": "Equation 10",
+      "kind": "Equation",
+      "number": "10",
+      "label": "",
+      "statement": "",
+      "section": "5.1",
+      "section_title": "Protocol description",
+      "page": 33,
+      "seq": 111,
+      "summary": "R_is, the μCMZ issuance server-proof relation: knowledge of $(x_0, u)$ with X₀ = x₀·H, U' = u·G and V' = x₀·U' + u·C''."
+    },
+    {
+      "key": "Equation 11",
+      "kind": "Equation",
+      "number": "11",
+      "label": "",
+      "statement": "",
+      "section": "5.1",
+      "section_title": "Protocol description",
+      "page": 33,
+      "seq": 112,
+      "summary": "R_p, the μCMZ presentation-proof relation: knowledge of $(r', \\vec{r}, \\vec{m})$ opening the commitments C⃗ over U' and Z = Σᵢ rᵢ·Xᵢ − r'·H, with policy φ($\\vec{m}$) satisfied."
+    },
+    {
       "key": "Figure 9",
       "kind": "Figure",
       "number": "9",
@@ -258,6 +294,18 @@
       "summary": "Base case of Theorem 5.1: in the algebraic group model, single-attribute μCMZ is an algebraic MAC over ℤ_p."
     },
     {
+      "key": "Equation 12",
+      "kind": "Equation",
+      "number": "12",
+      "label": "",
+      "statement": "",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 36,
+      "seq": 113,
+      "summary": "The AGM verification polynomial for μCMZ unforgeability at n = 1: a winning forgery would force this identity in the secret exponents (η, x₀, xᵣ, x₁, u₁…u_q), which Lemma 5.4 shows cannot hold over the polynomial ring, reducing to 3-DL."
+    },
+    {
       "key": "Lemma 5.5",
       "kind": "Lemma",
       "number": "5.5",
@@ -268,6 +316,18 @@
       "page": 38,
       "seq": 43,
       "summary": "Reduces n-attribute μCMZ security to the single-attribute case, giving its algebraic-MAC advantage over ℤ_p."
+    },
+    {
+      "key": "Equation 16",
+      "kind": "Equation",
+      "number": "16",
+      "label": "",
+      "statement": "",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 38,
+      "seq": 117,
+      "summary": "The partial evaluation ψ(χ) of the μCMZ verification polynomial in Lemma 5.4: collapsing the perfectly-hidden mask pairs onto one fresh variable χ leaves a nonzero polynomial of degree ≤ 3 that vanishes at the challenge's discrete logarithm, so finding its roots recovers that logarithm."
     },
     {
       "key": "Claim 5.6",
@@ -842,8 +902,57 @@
     },
     {
       "file": "KVAC/Core/Hash.lean",
-      "module_refs": [],
-      "decls": []
+      "module_refs": [
+        "§3"
+      ],
+      "decls": [
+        {
+          "name": "HashSpec",
+          "kind": "structure",
+          "file": "KVAC/Core/Hash.lean",
+          "line": 77,
+          "refs": [
+            "§3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "spec",
+          "kind": "abbrev",
+          "file": "KVAC/Core/Hash.lean",
+          "line": 101,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "roImpl",
+          "kind": "def",
+          "file": "KVAC/Core/Hash.lean",
+          "line": 113,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "transcriptHashSpec",
+          "kind": "def",
+          "file": "KVAC/Core/Hash.lean",
+          "line": 124,
+          "refs": [
+            "§3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "curveHashSpec",
+          "kind": "def",
+          "file": "KVAC/Core/Hash.lean",
+          "line": 134,
+          "refs": [
+            "§3"
+          ],
+          "has_sorry": false
+        }
+      ]
     },
     {
       "file": "KVAC/Core/NIZKP/Basic.lean",
@@ -954,6 +1063,150 @@
           "kind": "structure",
           "file": "KVAC/Core/NIZKP/Construction.lean",
           "line": 85,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/NIZKP/Security.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": [
+        {
+          "name": "NIZKPSyntax.DecidableRelation",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 77,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKQuery",
+          "kind": "inductive",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 84,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKProveSpec",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 92,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKRO",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 101,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKAdvSpec",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 108,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKAdversary",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 115,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKSimulator",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 124,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkROImpl",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 133,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkProveReal",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 144,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkProveSim",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 157,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkRun",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 169,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkGameReal",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 179,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkGameSim",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 187,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 202,
           "refs": [
             "§3.3"
           ],
@@ -1084,6 +1337,256 @@
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
           "line": 107,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+      "module_refs": [
+        "§5.3",
+        "Lemma 5.4",
+        "Equation 12"
+      ],
+      "decls": [
+        {
+          "name": "Var",
+          "kind": "inductive",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 77,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "P",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 88,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "η",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 91,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "x₀",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 93,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "xᵣ",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 95,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "x₁",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 97,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "u",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 99,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "keyPoly",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 110,
+          "refs": [
+            "§5.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ReprCoeffs",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 117,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ReprCoeffs.toPoly",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 138,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "spec",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 147,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_keyPoly",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 156,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_toPoly",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 162,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ReprCoeffs.eval_toPoly",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 178,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_toPoly_uZero",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 187,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "spec_toPoly_uSingle",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 198,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "identity_case",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 222,
+          "refs": [
+            "Lemma 5.4"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "eval_eq_zero_of_toPoly_eq_zero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 357,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "affineSubst",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 375,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "eval_affineSubst",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 384,
+          "refs": [
+            "Equation 16"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "verifPoly",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 438,
+          "refs": [
+            "Equation 12"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "verifPoly_eq_zero_iff",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 442,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "verifPoly_eval",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 452,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "toPoly_eq_zero_of_verifPoly_eq_zero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 460,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "totalDegree_keyPoly_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 466,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "totalDegree_toPoly_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 475,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "totalDegree_verifPoly_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 506,
+          "refs": [
+            "Equation 16"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "natDegree_affineSubst_le",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMPolynomial.lean",
+          "line": 517,
           "refs": [],
           "has_sorry": false
         }
@@ -1228,7 +1731,7 @@
           "name": "probOutput_decide_bind₃",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 84,
+          "line": 86,
           "refs": [],
           "has_sorry": false
         },
@@ -1236,7 +1739,7 @@
           "name": "probOutput_decide_bind₄",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 109,
+          "line": 111,
           "refs": [],
           "has_sorry": false
         },
@@ -1244,38 +1747,27 @@
           "name": "probOutput_bind_uniform_congr",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 137,
+          "line": 139,
           "refs": [],
           "has_sorry": false
         },
         {
-          "name": "RiuBases",
-          "kind": "abbrev",
-          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 146,
-          "refs": [
-            "Equation 9"
-          ],
-          "has_sorry": false
-        },
-        {
-          "name": "RiuPolicy",
-          "kind": "abbrev",
-          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 149,
-          "refs": [
-            "Equation 9"
-          ],
-          "has_sorry": false
-        },
-        {
-          "name": "RiuStmt",
+          "name": "PublicBases",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
           "line": 154,
           "refs": [
-            "Figure 9",
-            "Equation 9"
+            "§5.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "Policy",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 158,
+          "refs": [
+            "§5.1"
           ],
           "has_sorry": false
         },
@@ -1283,15 +1775,36 @@
           "name": "trivialPolicy",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 158,
+          "line": 161,
           "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuStmt",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 168,
+          "refs": [
+            "Figure 9",
+            "Equation 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RiuWitness",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 173,
+          "refs": [
+            "Equation 9"
+          ],
           "has_sorry": false
         },
         {
           "name": "riuRel",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 163,
+          "line": 178,
           "refs": [
             "Figure 9",
             "Equation 9"
@@ -1302,7 +1815,7 @@
           "name": "riuSigma",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 170,
+          "line": 185,
           "refs": [
             "Figure 9"
           ],
@@ -1312,7 +1825,7 @@
           "name": "riuSigma_complete",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 187,
+          "line": 202,
           "refs": [
             "Figure 9"
           ],
@@ -1322,15 +1835,15 @@
           "name": "Enforces",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 210,
+          "line": 225,
           "refs": [],
           "has_sorry": false
         },
         {
-          "name": "enforces_trivialPolicy",
+          "name": "riu_enforces_trivialPolicy",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 218,
+          "line": 233,
           "refs": [],
           "has_sorry": false
         },
@@ -1338,7 +1851,7 @@
           "name": "riuSigma_speciallySoundAt",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 228,
+          "line": 243,
           "refs": [
             "Figure 9"
           ],
@@ -1348,15 +1861,15 @@
           "name": "riuSigma_speciallySoundAt_trivial",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 260,
+          "line": 275,
           "refs": [],
           "has_sorry": false
         },
         {
-          "name": "simTranscriptValue",
+          "name": "riuSimTranscriptValue",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 267,
+          "line": 282,
           "refs": [],
           "has_sorry": false
         },
@@ -1364,7 +1877,7 @@
           "name": "riuSimTranscript",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 273,
+          "line": 288,
           "refs": [
             "Figure 9"
           ],
@@ -1374,9 +1887,187 @@
           "name": "riuSigma_hvzk",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
-          "line": 281,
+          "line": 297,
           "refs": [
             "Equation 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RisStmt",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 339,
+          "refs": [
+            "Figure 9",
+            "Equation 10"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RisWitness",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 343,
+          "refs": [
+            "Equation 10"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "risRel",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 348,
+          "refs": [
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "risSigma",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 357,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "risSigma_complete",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 377,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "risSigma_speciallySound",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 399,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "risSimTranscriptValue",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 452,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "risSimTranscript",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 459,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "risSigma_hvzk",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 472,
+          "refs": [
+            "Equation 10"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RpStmt",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 510,
+          "refs": [
+            "Figure 9",
+            "Equation 11"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "RpWitness",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 516,
+          "refs": [
+            "Equation 11"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "rpRel",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 524,
+          "refs": [
+            "Figure 9"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSigma",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 533,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSigma_complete",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 561,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rp_enforces_trivialPolicy",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 589,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSigma_speciallySoundAt",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 601,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSigma_speciallySoundAt_trivial",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 657,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSimTranscriptValue",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 667,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSimTranscript",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 676,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "rpSigma_hvzk",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/Relations.lean",
+          "line": 690,
+          "refs": [
+            "Equation 11"
           ],
           "has_sorry": false
         }

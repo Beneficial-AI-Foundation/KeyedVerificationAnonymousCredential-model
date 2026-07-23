@@ -74,6 +74,38 @@ if (x, w) ∈ R" before answering. The check belongs to the oracle, not to the
 query interface, and a type-level restriction silently narrows the game's
 interface. The `none` answer encodes the paper's implicit ⊥.
 
+## Relation decidability scoped to the game
+
+**Decision.** `Decidable (relation crs x w)` is required only by the
+zero-knowledge game that runs the Proveᵦ guard, supplied as a game argument
+through `NIZKPSyntax.DecidableRelation`. `NIZKPSyntax.relation` stays a plain
+`Prop`-valued field with no decidability (PR #47, `Security.lean`).
+
+**Rejected alternative.** Making decidability intrinsic to the syntax, a
+`DecidableRel` field or instance on `NIZKPSyntax.relation`, so every scheme
+value carries a decision procedure.
+
+**Design argument.** A `Decidable` instance is data, a computable decision
+procedure, not a derivable property. `NIZKPSyntax.relation` is an abstract
+field, so over a generic scheme it is an arbitrary `Prop`-valued function with
+no decision procedure available; closing it classically is noncomputable and
+the `ProbComp` guard would not execute. A concrete scheme supplies both the
+relation and its decision procedure. The game that runs the guard is the only
+consumer that needs the procedure, so scoping the obligation there keeps a
+generic `NIZKPSyntax` from carrying a procedure it cannot provide, while
+concrete schemes over decidable-equality carriers supply it directly. The
+choice does not rest on decidability failing, since the NP relations O24's
+proof systems target are always decidable, and it differs from the extractor,
+which is externalized because it varies per protocol rather than because it is
+data unavailable over a generic scheme.
+
+The monad polymorphism of `NIZKPSyntax` realizes the computational layer on
+VCV-io's `ProbComp`, which is a free monad on a polynomial functor
+(`PFunctor.FreeM`). That realization touches only the `M`-valued operations
+`setup`, `prove`, and `verify`; `relation` stays `Prop`-valued and outside
+`M`. Decidability is therefore orthogonal to the monad choice and scoped to
+the game rather than the carrier.
+
 ## White-box knowledge-soundness extractor
 
 **Decision.** The knowledge-soundness and simulation-extractability extractors
@@ -108,6 +140,48 @@ discussion; the paper-fidelity requirement decides it.
 so Eq. 14's "identically distributed" holds only under the conditioning. 
 The `(Uⱼ, bᵤ)` joint law stays independent uniform (`sign_U_bu_dist_eq`), 
 so the masks' hiding is unaffected.
+## Structured hash domains
+
+**Decision.** `HashSpec.Dom` is an arbitrary type; each scheme picks a
+structured domain type for what it hashes (PR #57, `Core/Hash.lean`).
+
+**Rejected alternative.** Fixing `Dom := List Bool` to match the paper's
+`{0,1}*` literally.
+
+**Fidelity argument.** A typed-domain random oracle is a *stronger* model
+than the paper's: distinct Lean values answer independently, where their
+bitstring serializations could collide. The divergence is deliberate and
+documented in `Core/Hash.lean`: a concrete instantiation owes an injective
+canonical encoding of its domain type and domain-separation tags wherever
+two uses share one oracle. A literal bitstring domain would push encoding
+boilerplate into every caller without strengthening any theorem.
+
+## Schwartz–Zippel bound `3/p`, not the paper's `1/p`
+
+**Decision.** The Eq. 16 root bound for the non-identity case of Lemma 5.4 is
+`3/p`. The degree tower gives `deg ψ ≤ totalDegree ϕ ≤ 3`
+(`totalDegree_verifPoly_le`, `natDegree_affineSubst_le`), and a nonzero `ψ`
+has at most 3 roots in `F` (`card_roots_affineSubst_verifPoly_le`), so the bad
+event `ψ ≡ 0` over the uniform masks is bounded by `3/p`
+(`AGMPolynomial.lean`, branch `microCMZ-agm-polynomial`). Unlike the other
+entries, the rejected alternative here is the paper's own value, dropped on
+correctness grounds rather than fidelity.
+
+**Rejected alternative.** O24 Eq. 16 states the bound as `1/p`.
+
+**Fidelity argument.** The paper invokes Schwartz–Zippel to bound `ψ ≡ 0`, and
+for a degree-`d` polynomial that bound is `d/p`, not `1/p`. Writing
+`ψ(χ) = ϕ(a + χ·b)`, the coefficient of `χ^d` in `ψ` (with `d = totalDegree ϕ
+≤ 3`) is exactly `ϕ_d(b)`, the top-degree homogeneous part of `ϕ` evaluated at
+the mask vector `b`: only the degree-`d` monomials of `ϕ` can reach `χ^d`, and
+each contributes the product of its `b`-masks. Since `ϕ ≠ 0` we have `ϕ_d ≠ 0`,
+so `ψ ≡ 0 ⟹ ϕ_d(b) = 0`, and Schwartz–Zippel on the nonzero degree-`d` form
+`ϕ_d` in the uniform independent masks gives `Pr_b[ϕ_d(b) = 0] ≤ d/p ≤ 3/p`.
+The `1/p` would be correct only for a degree-1 form; the degree-3 verification
+polynomial needs `3/p`. The deviation loosens the concrete additive term
+(`1/p → 3/p`) but leaves the asymptotic bound, and hence the security
+statement, unchanged. The full derivation is documented at the head of the
+Eq. 16 section in `AGMPolynomial.lean`.
 
 ## Open alternatives
 
