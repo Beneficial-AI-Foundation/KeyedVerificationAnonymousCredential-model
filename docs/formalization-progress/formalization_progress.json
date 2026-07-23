@@ -2217,6 +2217,86 @@
           "has_sorry": false
         }
       ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+      "module_refs": [
+        "§5.3"
+      ],
+      "decls": [
+        {
+          "name": "uniformNonzero_eq_map",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 36,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "instSampleableNonVanishingMasks",
+          "kind": "instance",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 54,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "reductionMaskSample",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 65,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "signMaskFun",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 73,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "signMaskFun_bijective",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 84,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "signMaskEquiv",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 124,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "sign_U_dist_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 136,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "sign_masked_tag_dist_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 239,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "sign_U_bu_dist_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
+          "line": 281,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
     }
   ]
 }
