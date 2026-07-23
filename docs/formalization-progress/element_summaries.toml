@@ -101,6 +101,7 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 "Equation 10" = "R_is, the μCMZ issuance server-proof relation: knowledge of $(x_0, u)$ with X₀ = x₀·H, U' = u·G and V' = x₀·U' + u·C''."
 "Equation 11" = "R_p, the μCMZ presentation-proof relation: knowledge of $(r', \\vec{r}, \\vec{m})$ opening the commitments C⃗ over U' and Z = Σᵢ rᵢ·Xᵢ − r'·H, with policy φ($\\vec{m}$) satisfied."
 "Equation 12" = "The AGM verification polynomial for μCMZ unforgeability at n = 1: a winning forgery would force this identity in the secret exponents (η, x₀, xᵣ, x₁, u₁…u_q), which Lemma 5.4 shows cannot hold over the polynomial ring, reducing to 3-DL."
+"Equation 16" = "The partial evaluation ψ(χ) of the μCMZ verification polynomial in Lemma 5.4: collapsing the perfectly-hidden mask pairs onto one fresh variable χ leaves a nonzero polynomial of degree ≤ 3 that vanishes at the challenge's discrete logarithm, so finding its roots recovers that logarithm."
 
 # Corrections to the extractor's enclosing-section assignment, for elements
 # whose heading order in the text misleads the heuristic. Values are section
@@ -114,5 +115,7 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 "Equation 9" = "5.1"
 "Equation 10" = "5.1"
 "Equation 11" = "5.1"
-# Eq. 12 is the AGM verification polynomial in the proof of Lemma 5.4, §5.3.
+# Eqs. 12 and 16 are the AGM verification polynomial and its partial
+# evaluation in the proof of Lemma 5.4, §5.3.
 "Equation 12" = "5.3"
+"Equation 16" = "5.3"

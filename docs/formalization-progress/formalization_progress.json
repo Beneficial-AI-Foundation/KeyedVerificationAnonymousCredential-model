@@ -323,11 +323,11 @@
       "number": "16",
       "label": "",
       "statement": "",
-      "section": "",
-      "section_title": "",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
       "page": 38,
       "seq": 117,
-      "summary": ""
+      "summary": "The partial evaluation ψ(χ) of the μCMZ verification polynomial in Lemma 5.4: collapsing the perfectly-hidden mask pairs onto one fresh variable χ leaves a nonzero polynomial of degree ≤ 3 that vanishes at the challenge's discrete logarithm, so finding its roots recovers that logarithm."
     },
     {
       "key": "Claim 5.6",
