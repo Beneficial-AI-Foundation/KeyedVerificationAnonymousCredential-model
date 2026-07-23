@@ -116,11 +116,3 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 "Equation 11" = "5.1"
 # Eq. 12 is the AGM verification polynomial in the proof of Lemma 5.4, §5.3.
 "Equation 12" = "5.3"
-
-# Curated page overrides for cited equations the right-aligned-`(N)` locator
-# heuristic cannot place. Values are 1-based PDF pages (form-feed pages of the
-# committed text extraction). Eq. 12's `(12)` label sits alone on a whitespace
-# line (the display spans several lines), so the locator misses it; it is on
-# page 36.
-[equation_pages]
-"Equation 12" = 36
