@@ -897,6 +897,14 @@
           "line": 125,
           "refs": [],
           "has_sorry": false
+        },
+        {
+          "name": "SampleableType.ofNonemptySubtype",
+          "kind": "def",
+          "file": "KVAC/Core/Group.lean",
+          "line": 142,
+          "refs": [],
+          "has_sorry": false
         }
       ]
     },
@@ -1593,6 +1601,143 @@
       ]
     },
     {
+      "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+      "module_refs": [
+        "§5.3",
+        "§5.2"
+      ],
+      "decls": [
+        {
+          "name": "gen_ne_zero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 79,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "glog",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 87,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "glog_smul",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 90,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "glog_smul_self",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 93,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "glog_add",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 99,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "glog_smul_scalar",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 106,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMRepr",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 121,
+          "refs": [
+            "§5.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMRepr.eval",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 140,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMQuery",
+          "kind": "inductive",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 160,
+          "refs": [
+            "Figure 5"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMOracleSpec",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 168,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMLog",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 179,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "agmOracleImpl",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 192,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMUFAdversary",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 222,
+          "refs": [
+            "§5.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "AGM_UF_CMVAGame",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 233,
+          "refs": [
+            "Figure 5"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "AGM_UF_CMVAAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
+          "line": 252,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
       "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
       "module_refs": [
         "§5.1",
@@ -1612,7 +1757,7 @@
           "name": "uniformNonzero",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 128,
+          "line": 127,
           "refs": [],
           "has_sorry": false
         },
@@ -1620,7 +1765,7 @@
           "name": "mem_support_uniformNonzero",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 136,
+          "line": 135,
           "refs": [],
           "has_sorry": false
         },
@@ -1628,7 +1773,7 @@
           "name": "Key",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 148,
+          "line": 147,
           "refs": [],
           "has_sorry": false
         },
@@ -1636,7 +1781,7 @@
           "name": "Params",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 149,
+          "line": 148,
           "refs": [],
           "has_sorry": false
         },
@@ -1644,7 +1789,7 @@
           "name": "Code",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 150,
+          "line": 149,
           "refs": [],
           "has_sorry": false
         },
@@ -1652,7 +1797,7 @@
           "name": "macScalar",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 164,
+          "line": 163,
           "refs": [],
           "has_sorry": false
         },
@@ -1660,7 +1805,7 @@
           "name": "setup",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 169,
+          "line": 168,
           "refs": [],
           "has_sorry": false
         },
@@ -1668,7 +1813,7 @@
           "name": "keygen",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 172,
+          "line": 171,
           "refs": [],
           "has_sorry": false
         },
@@ -1676,7 +1821,7 @@
           "name": "mac",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 184,
+          "line": 183,
           "refs": [],
           "has_sorry": false
         },
@@ -1684,7 +1829,7 @@
           "name": "verify",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 189,
+          "line": 188,
           "refs": [],
           "has_sorry": false
         },
@@ -1692,7 +1837,7 @@
           "name": "μCMZBaseMACSyntax",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 223,
+          "line": 222,
           "refs": [
             "§5.1",
             "Figure 9"
@@ -1703,7 +1848,7 @@
           "name": "μCMZBaseMAC_correct",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 243,
+          "line": 242,
           "refs": [],
           "has_sorry": false
         },
@@ -1711,7 +1856,7 @@
           "name": "μCMZBaseMAC",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 257,
+          "line": 256,
           "refs": [
             "Definition 3.1"
           ],
