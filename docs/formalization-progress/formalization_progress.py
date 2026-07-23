@@ -563,7 +563,7 @@ def signature_matches(paper_kind: str, lean_kind: str) -> bool:
 
 
 # Status marks, a consistent set of circles.
-# These marks are heuristic reads of the scan, not verified facts: each is a
+# These marks are approximate reads of the scan, not verified facts: each is a
 # claim worth reviewing, since both the paper extraction and the Lean/citation
 # scan are approximate and can miss or misclassify.
 ST_DONE = "🟢"      # appears formalized: a sorry-free matching-kind decl seems to cite it
@@ -574,7 +574,7 @@ ST_NONE = "⚪"      # nothing detected yet
 
 
 def element_status(e: PaperElement, by_key: dict) -> tuple[str, list]:
-    """Return a heuristic ``(status, matching_decls)`` for a paper element. Each
+    """Return an approximate ``(status, matching_decls)`` for a paper element. Each
     mark is an approximate read to review, not a proof:
 
     🟢 a sorry-free Lean declaration seems to match the paper object's kind;
@@ -734,7 +734,7 @@ def render_markdown(source: Source, paper: list[PaperElement], by_key: dict,
     out.append(f"| **Total** | **{n_decls}** | **{cited}** |\n")
 
     out.append(
-        "Status legend (heuristic reads, each a claim to verify rather than a "
+        "Status legend (approximate reads, each a claim to verify rather than a "
         f"proof): {ST_DONE} appears formalized — a sorry-free declaration of "
         f"matching kind seems to cite it · "
         f"{ST_SORRY} a matching declaration is cited but looks to contain "
