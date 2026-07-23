@@ -49,8 +49,9 @@ noncomputable def gamePoint (H : G) (x0 xr x1 : F) (tags : List (G × G)) :
 /-- A `zipWith`-sum over two lists equals a `Fin`-indexed sum over the second
 list's length, reading the first list with `getD` (default `da`, which `f` sends
 to `0`) — this reconciles `AGMRepr.eval`'s `zipWith` tag fold with
-`ReprCoeffs.toPoly`'s `∑ : Fin q` over the issued tags. -/
-theorem zipWith_smul_sum {α β M : Type*} [AddCommMonoid M] (f : α → β → M)
+`ReprCoeffs.toPoly`'s `∑ : Fin q` over the issued tags. Scheme-agnostic (any
+`f : α → β → M`); stated here for want of a more general home. -/
+theorem sum_zipWith_eq_fin_sum_getD {α β M : Type*} [AddCommMonoid M] (f : α → β → M)
     (da : α) (db : β) (hf0 : ∀ b, f da b = 0) (la : List α) (lb : List β) :
     (List.zipWith f la lb).sum
       = ∑ j : Fin lb.length, f (la.getD (j : ℕ) da) (lb.get j) := by
@@ -59,7 +60,9 @@ theorem zipWith_smul_sum {α β M : Type*} [AddCommMonoid M] (f : α → β → 
         = ∑ k ∈ Finset.range lb.length, f (la.getD k da) (lb.getD k db) := by
     intro la lb
     induction lb generalizing la with
-    | nil => simp
+    | nil =>
+      simp only [List.zipWith_nil_right, List.sum_nil, List.length_nil,
+        Finset.range_zero, Finset.sum_empty]
     | cons b bs ih =>
       cases la with
       | nil =>
@@ -95,8 +98,9 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
           ((ρ.toReprCoeffs tags.length).toPoly msgs) • gen := by
   obtain ⟨η, rfl⟩ := hgen.out.surjective H
   rw [AGMRepr.eval, AGMPoly.ReprCoeffs.eval_toPoly,
-    zipWith_smul_sum (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
-      ((0, 0) : F × F) ((0, 0) : G × G) (by intro t; simp) ρ.uv tags]
+    sum_zipWith_eq_fin_sum_getD (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
+      ((0, 0) : F × F) ((0, 0) : G × G)
+      (by intro t; simp only [zero_smul, add_zero]) ρ.uv tags]
   simp only [AGMRepr.toReprCoeffs, gamePoint, glog_smul_self, Fin.sum_univ_one]
   rw [add_smul, Finset.sum_smul]
   congr 1
@@ -110,7 +114,7 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
 /-! ## The identity branch -/
 
 /--
-**Identity branch of O24 Lemma 5.4.** If a consistent forgery for a *fresh*
+**Identity branch of Lemma 5.4** (O24 §5.3). If a consistent forgery for a *fresh*
 message has an identically-vanishing verification polynomial, then `U* = 0`. With
 the `U* ≠ 0` check in `microCMZVerify`, the identity case contributes nothing to
 the win probability — O24's coefficient-matching contradiction, here via
@@ -129,7 +133,7 @@ theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F
   rw [← hconsistent, agmRepr_eval_eq_eval_toPoly gen ρU H x0 xr x tags msgs htag,
     AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero msgs mStar hfresh
       (ρU.toReprCoeffs tags.length) (ρV.toReprCoeffs tags.length) hverif]
-  simp
+  simp only [map_zero, zero_smul]
 
 /-! ## The reduction adversary -/
 
@@ -150,13 +154,32 @@ carrying the message vector, the issued tag `(Uⱼ, Vⱼ)`, and the `u`-masks
 the forgery). -/
 abbrev RedLog (F G : Type) := List ((Fin 1 → F) × (G × G) × F × F)
 
+/-- The tags `(Uⱼ, Vⱼ)` issued so far, in query order. -/
+def RedLog.tags {F G : Type} (L : RedLog F G) : List (G × G) :=
+  L.map fun e => e.2.1
+
+/-- The `j`-th signed message (the single entry of its `Fin 1` vector). -/
+def RedLog.msg {F G : Type} (L : RedLog F G) (j : Fin L.length) : F :=
+  (L.get j).1 0
+
+/-- The `a`-side `u`-mask of the `j`-th issued tag. -/
+def RedLog.aMask {F G : Type} (L : RedLog F G) (j : Fin L.length) : F :=
+  (L.get j).2.2.1
+
+/-- The `b`-side `u`-mask of the `j`-th issued tag. -/
+def RedLog.bMask {F G : Type} (L : RedLog F G) (j : Fin L.length) : F :=
+  (L.get j).2.2.2
+
 /-! ## Exponent evaluation (oracle simulation via the 3-DL powers) -/
 
 /-- Evaluate a univariate polynomial of degree `≤ 3` "in the exponent" against
 the 3-DL powers `g, X = x·g, X' = x²·g, X'' = x³·g`: returns `(p.eval x) · g`
 *without knowing* `x` (see `exponentEval_eq`). The reduction answers
 `Verify`/`Help` with this — the represented verification/help equation is a
-degree-`≤ 3` polynomial in the challenge exponent. -/
+degree-`≤ 3` polynomial in the challenge exponent. (O24 p. 37 says Verify needs
+only `(X, X')` because "the maximum degree of the resulting polynomial is 2",
+but the represented check is degree-1 key × degree-≤2 representation = degree
+`≤ 3`, so both branches use `X''` here.) -/
 def exponentEval (g X X' X'' : G) (p : Polynomial F) : G :=
   p.coeff 0 • g + p.coeff 1 • X + p.coeff 2 • X' + p.coeff 3 • X''
 
@@ -171,8 +194,9 @@ lemma exponentEval_eq (g : G) (x : F) (p : Polynomial F) (hp : p.natDegree ≤ 3
 /-- **Reduction `sign` step** (factored out of `reductionOracleImpl`; see its
 docstring for why). Samples the non-vanishing masks `(au, bu)`, builds the honest
 tag `(U, V)` with `U = au·gen + bu·X`, `V = key·U`, and appends
-`(m, (U,V), au, bu)` to the log. -/
-noncomputable def reductionSignStep (X X' : G) (a0 aXr aX1 b0 bXr bX1 : F) (m : Fin 1 → F) :
+`(m, (U,V), au, bu)` to the log. O24 Eq. 14 samples the masks unconditioned;
+conditioning on `U ≠ 0` matches Eq. 1's `U ←$ G×` (see `reductionMaskSample`). -/
+noncomputable def reductionSignStep (X X' : G) (a0 b0 aXr bXr aX1 bX1 : F) (m : Fin 1 → F) :
     StateT (RedLog F G) ProbComp (G × G) :=
   StateT.mk fun L => do
       let aubu ← reductionMaskSample (gen := gen) X
@@ -181,6 +205,9 @@ noncomputable def reductionSignStep (X X' : G) (a0 aXr aX1 b0 bXr bX1 : F) (m : 
       let A := a0 + aXr + m 0 * aX1
       let B := b0 + bXr + m 0 * bX1
       let U := au • gen + bu • X
+      -- dlog V = (A + B·x)(au + bu·x), expanded onto (gen, X, X'). O24 Eq. 14
+      -- prints V's gen-coefficient as a_{u,j}(a_h·a₀ + a_h + a₁mⱼ); the correct
+      -- factor, used here, is A = a₀ + aᵣ + a₁mⱼ (typo in the paper).
       let V := (A * au) • gen + (A * bu + B * au) • X + (B * bu) • X'
       pure ((U, V), L ++ [(m, (U, V), au, bu)])
 
@@ -189,11 +216,10 @@ noncomputable def reductionVerifyStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX
     (H X0 Xr X1 : G) (m : Fin 1 → F) (σ : G × G) (ρU ρV : AGMRepr F 1) :
     StateT (RedLog F G) ProbComp Bool :=
   StateT.mk fun L =>
-      let tags := L.map (fun e => e.2.1)
-      let a := embedPoint aEta a0 aXr aX1 (fun j : Fin L.length => (L.get j).2.2.1)
-      let b := embedPoint bEta b0 bXr bX1 (fun j : Fin L.length => (L.get j).2.2.2)
-      let msgs := fun j : Fin L.length => (L.get j).1 0
-      let pU := AGMPoly.affineSubst a b ((ρU.toReprCoeffs L.length).toPoly msgs)
+      let tags := L.tags
+      let a := embedPoint aEta a0 aXr aX1 L.aMask
+      let b := embedPoint bEta b0 bXr bX1 L.bMask
+      let pU := AGMPoly.affineSubst a b ((ρU.toReprCoeffs L.length).toPoly L.msg)
       let keyUniv : Polynomial F :=
         Polynomial.C (a0 + aXr + m 0 * aX1) +
           Polynomial.C (b0 + bXr + m 0 * bX1) * Polynomial.X
@@ -209,12 +235,11 @@ noncomputable def reductionHelpStep (X X' X'' : G) (aEta bEta a0 b0 aXr bXr aX1 
     (ρ₀ : AGMRepr F 1) (ρA : Fin 1 → AGMRepr F 1) (ρZ : AGMRepr F 1) :
     StateT (RedLog F G) ProbComp Bool :=
   StateT.mk fun L =>
-      let tags := L.map (fun e => e.2.1)
-      let a := embedPoint aEta a0 aXr aX1 (fun j : Fin L.length => (L.get j).2.2.1)
-      let b := embedPoint bEta b0 bXr bX1 (fun j : Fin L.length => (L.get j).2.2.2)
-      let msgs := fun j : Fin L.length => (L.get j).1 0
-      let p0 := AGMPoly.affineSubst a b ((ρ₀.toReprCoeffs L.length).toPoly msgs)
-      let p1 := AGMPoly.affineSubst a b (((ρA 0).toReprCoeffs L.length).toPoly msgs)
+      let tags := L.tags
+      let a := embedPoint aEta a0 aXr aX1 L.aMask
+      let b := embedPoint bEta b0 bXr bX1 L.bMask
+      let p0 := AGMPoly.affineSubst a b ((ρ₀.toReprCoeffs L.length).toPoly L.msg)
+      let p1 := AGMPoly.affineSubst a b (((ρA 0).toReprCoeffs L.length).toPoly L.msg)
       let keyUniv : Polynomial F :=
         Polynomial.C (a0 + aXr) + Polynomial.C (b0 + bXr) * Polynomial.X
       let x1Univ : Polynomial F :=
@@ -236,7 +261,7 @@ reduction on a `.sign` query from re-elaborating the others. -/
 noncomputable def reductionOracleImpl (X X' X'' : G)
     (aEta bEta a0 b0 aXr bXr aX1 bX1 : F) (H X0 Xr X1 : G) :
     QueryImpl (AGMOracleSpec F G 1) (StateT (RedLog F G) ProbComp)
-  | .sign m => reductionSignStep (gen := gen) X X' a0 aXr aX1 b0 bXr bX1 m
+  | .sign m => reductionSignStep (gen := gen) X X' a0 b0 aXr bXr aX1 bX1 m
   | .verify m σ ρU ρV =>
       reductionVerifyStep (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1 m σ ρU ρV
   | .help A₀ Av Z ρ₀ ρA ρZ =>
@@ -267,7 +292,7 @@ lemma recoverDlog_eq {g : G} (hg : g ≠ 0) {x : F} {ψ : Polynomial F}
     rw [Multiset.mem_toList]; exact (Polynomial.mem_roots hψ).mpr hroot
   have hnone : (ψ.roots.toList).find? (fun r => decide (r • g = x • g)) ≠ none := by
     rw [Ne, List.find?_eq_none]; push_neg
-    exact ⟨x, hxmem, by simp⟩
+    exact ⟨x, hxmem, by simp only [decide_eq_true_eq]⟩
   obtain ⟨y, hy⟩ := Option.ne_none_iff_exists'.mp hnone
   rw [hy, Option.getD_some]
   have hpy := List.find?_some hy
@@ -293,7 +318,8 @@ lemma recoverDlog_verifPoly_eq {q : ℕ} {a b : AGMPoly.Var q → F} {x : F}
   exact hroot
 
 /--
-The **3-DL reduction adversary** for the non-identity branch of O24 Lemma 5.4.
+The **3-DL reduction adversary** for the non-identity branch of Lemma 5.4
+(O24 §5.3).
 Given the challenge `(g, X = x·g, X' = x²·g, X'' = x³·g)`, it:
 
 1. samples the fixed-variable masks and builds the embedded public parameters
@@ -317,11 +343,15 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     let X := pows 0
     let X' := pows 1
     let X'' := pows 2
+    -- the fixed-variable masks and embedded public parameters (O24 Eq. 13)
     let aEta ← $ᵗ F; let bEta ← $ᵗ F
     let a0 ← $ᵗ F; let b0 ← $ᵗ F
     let aXr ← $ᵗ F; let bXr ← $ᵗ F
     let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
     let H := aEta • gen + bEta • X
+    -- dlog X₀ = (a₀ + b₀·x)(aη + bη·x), expanded onto (gen, X, X'). O24 Eq. 13
+    -- prints X₀'s X-coefficient as (a_h·b₀ + b_h), dropping the a₀ factor; the
+    -- correct coefficient, used here, is a₀·bη + b₀·aη (typo in the paper).
     let X0 := (a0 * aEta) • gen + (a0 * bEta + b0 * aEta) • X + (b0 * bEta) • X'
     let Xr := aXr • gen + bXr • X
     let X1 := aX1 • gen + bX1 • X
@@ -330,11 +360,10 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
       (simulateQ
         (reductionOracleImpl (gen := gen) X X' X'' aEta bEta a0 b0 aXr bXr aX1 bX1 H X0 Xr X1)
         (A.run H pp)).run []
-    let a := embedPoint aEta a0 aXr aX1 (fun j : Fin L.length => (L.get j).2.2.1)
-    let b := embedPoint bEta b0 bXr bX1 (fun j : Fin L.length => (L.get j).2.2.2)
-    let msgs := fun j : Fin L.length => (L.get j).1 0
+    let a := embedPoint aEta a0 aXr aX1 L.aMask
+    let b := embedPoint bEta b0 bXr bX1 L.bMask
     let ψ := AGMPoly.affineSubst a b
-      (AGMPoly.verifPoly msgs (mStar 0)
+      (AGMPoly.verifPoly L.msg (mStar 0)
         (ρU.toReprCoeffs L.length) (ρV.toReprCoeffs L.length))
     pure (recoverDlog gen X ψ)
 
@@ -348,7 +377,7 @@ noncomputable def microCMZ3DLReductionExp (A : AGMUFAdversary F G 1) : ProbComp 
   qdlogExp 3 gen (microCMZ3DLReduction gen A)
 
 /-- The 3-DL advantage of the reduction at base `gen`, as `Pr[= true | …]` over
-`microCMZ3DLReductionExp`. The 3-DL term of O24 Lemma 5.4's bound. -/
+`microCMZ3DLReductionExp`. The 3-DL term of Lemma 5.4's bound (O24 §5.3). -/
 noncomputable abbrev microCMZ3DLReductionAdv (A : AGMUFAdversary F G 1) : ℝ≥0∞ :=
   Pr[= true | microCMZ3DLReductionExp gen A]
 
