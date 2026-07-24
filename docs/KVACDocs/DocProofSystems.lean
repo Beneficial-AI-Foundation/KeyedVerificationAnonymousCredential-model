@@ -36,9 +36,15 @@ properties are completeness, special soundness, and honest-verifier
 zero-knowledge.
 :::
 
-*TODO (Track Σ).* Define the Σ-protocol typeclass and the three security
-predicates. Provide combinators for AND / OR / equality-of-discrete-log
-compositions as needed by the schemes' presentation proofs.
+The three μCMZ instances are merged on VCV-io's upstream
+`SigmaProtocol` structure — completeness, honest-verifier
+zero-knowledge, and special soundness for `R_iu`, `R_is`, and `R_p` (see
+{bpref "mucmz_sigma_protocols"}[] in the *μCMZ* chapter). No
+project-local Σ-protocol typeclass proved necessary.
+
+*TODO (Track Σ).* Provide combinators for AND / OR /
+equality-of-discrete-log compositions as needed by the schemes'
+presentation proofs.
 
 # Fiat–Shamir transformation
 
