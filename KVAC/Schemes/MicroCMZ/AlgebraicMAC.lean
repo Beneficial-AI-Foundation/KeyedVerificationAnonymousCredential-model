@@ -109,6 +109,32 @@ theorem glog_smul_scalar (c : F) (y : G) :
     show glog gen (c • y) • gen = (c * glog gen y) • gen
     rw [glog_smul, mul_smul, glog_smul])
 
+/-
+**Order-instance hazard — canonical note (the sealed `glog` interface).**
+Downstream modules (`SignMask`, `AGMReduction.Core`) import `AGMPolynomial`, whose
+`MvPolynomial`/`Polynomial` order instances put an `F`-module `G` in scope. In that
+context, forcing `glog` to unfold to `Function.invFun (· • gen)` re-triggers the
+`Module F` / `hgen`-bijectivity instance search, which does not terminate. `glog`'s
+definition and both laws therefore live in this `AGMPolynomial`-free layer, and
+downstream code must only *use* the laws (`glog_smul` / `glog_smul_self`), never
+unfold `glog`.
+
+This is the `glog`-unfold half of the hazard. Its sibling — the `$ᵗ {subtype}`
+samplers, whose `SampleableType` / `Fintype` instance search loops in the same
+`MvPolynomial` context — is sealed separately by `reductionMaskSample`'s
+`@[irreducible]` in `SignMask`. Both seals share this note as their reference.
+
+The `attribute [irreducible]` below enforces the `glog` invariant rather than
+leaving it to convention. Note the scope: it stops the *elaborator* from unfolding
+`glog`, so the elaboration-time search cannot be re-armed accidentally. It does
+*not* bind the kernel — a `glog ↑U` term inside a kernel-checked (e.g. quantified)
+goal can still loop the kernel, which needs the separate generalize-`glog ↑U`-to-an-
+opaque-variable fix where it bites. The laws above are proved first, while `glog` is
+still reducible; sealing after them keeps the interface — the function plus its two
+rewrite laws — intact. Other sites that used to re-explain this hazard point here.
+-/
+attribute [irreducible] glog
+
 /-! ## Algebraic representations -/
 
 /--
@@ -254,11 +280,14 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 
 /-! ## Security statements (O24 §5.3)
 
-The `n = 1` reduction (the `AGMRepr ↔ ReprCoeffs` eval bridge, the identity-branch
-contradiction, and the theorems `agm_ufcmva_le_n1` / `agm_ufcmva_le`) lands in the
-forthcoming module `KVAC.Schemes.MicroCMZ.AGMReduction`. It is a separate file
-because it imports `AGMPolynomial`, whose polynomial-order instances would derail
-the `Module F` instance search behind `glog`'s inverse laws above.
+The `n = 1` reduction's core (the `AGMRepr ↔ ReprCoeffs` eval bridge, the
+mechanized identity-branch contradiction, the reduction adversary, and root
+recovery) lives in `KVAC.Schemes.MicroCMZ.AGMReduction.Core`; the probability
+bound and the security theorems `agm_ufcmva_le_n1` / `agm_ufcmva_le` are still
+forthcoming. The reduction is split into its own file because it imports
+`AGMPolynomial` — see the order-instance hazard note at `glog` above (the bridge
+needs `glog`, but `glog`'s *proof* must elaborate without those instances in
+scope).
 
 The bridging lemma to the plain `UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security`
 is also deferred: it needs a runtime `WellBehaved` predicate and a
