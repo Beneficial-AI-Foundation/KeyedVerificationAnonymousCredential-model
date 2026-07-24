@@ -1,0 +1,70 @@
+name: Docs CI
+
+# PR-time verification of the Verso blueprint docs: the site must build, every
+# `(lean := ...)` anchor must resolve (strictResolve makes unresolved anchors
+# errors), and every public declaration of the root library must be covered by
+# exactly one blueprint anchor. Closes the gap where docs breakage could only
+# surface in the post-merge Pages deploy.
+
+on:
+  pull_request:
+    paths:
+      - "KVAC/**"
+      - "KVAC.lean"
+      - "docs/**"
+      - "scripts/blueprint_decl_manifest.lean"
+      - "scripts/blueprint_coverage_check.py"
+      - ".github/workflows/docs-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-check:
+    name: Build docs and check declaration coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - name: Cache Lake packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            .lake
+            docs/.lake
+          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}-
+            ${{ runner.os }}-lake-docs-
+
+      - name: Resolve docs dependencies
+        run: lake -d docs update
+
+      - name: Download Mathlib cache (docs)
+        run: lake -d docs exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
+
+      - name: Download Mathlib cache (root)
+        run: lake exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
+
+      - name: Build root library
+        run: lake build
+
+      - name: Build Verso docs
+        run: lake -d docs build KVACDocs
+
+      - name: Generate documentation site
+        working-directory: docs
+        run: lake env lean --run Main.lean --output "$RUNNER_TEMP/site"
+
+      - name: Declaration manifest
+        run: lake env lean --run scripts/blueprint_decl_manifest.lean > "$RUNNER_TEMP/decl-manifest.tsv"
+
+      - name: Blueprint coverage check
+        run: python3 scripts/blueprint_coverage_check.py "$RUNNER_TEMP/decl-manifest.tsv"

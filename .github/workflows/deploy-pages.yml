@@ -33,15 +33,19 @@ jobs:
           path: |
             .lake
             docs/.lake
-          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}
+          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}-
             ${{ runner.os }}-lake-docs-
 
       - name: Resolve docs dependencies
         run: lake -d docs update
 
-      - name: Download Mathlib cache
+      - name: Download Mathlib cache (docs)
         run: lake -d docs exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
+
+      - name: Download Mathlib cache (root)
+        run: lake exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
 
       # Build only the KVACDocs library. The `docs` executable is no longer
       # defined; linking it would pull in VCV-io's post-quantum C/FFI sources,
@@ -81,6 +85,14 @@ jobs:
               <li>
                 <a href="html-multi/">Documentation</a>
                 <span class="desc">Framework, μCMZ, and μBBS specifications, chapter by chapter</span>
+              </li>
+              <li>
+                <a href="html-multi/Dependency-Graph/">Dependency graph</a>
+                <span class="desc">The paper's elements and their dependencies, with live formalization status</span>
+              </li>
+              <li>
+                <a href="html-multi/Blueprint-Summary/">Blueprint summary</a>
+                <span class="desc">Progress counts, blockers, and the next ready work items</span>
               </li>
             </ul>
             <p><a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model">Source on GitHub</a></p>

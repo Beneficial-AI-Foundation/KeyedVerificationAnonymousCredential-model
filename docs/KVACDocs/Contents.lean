@@ -4,6 +4,8 @@ Released under MIT license as described in the file LICENSE.
 -/
 
 import VersoManual
+import VersoBlueprint.Commands.Graph
+import VersoBlueprint.Commands.Summary
 
 import KVACDocs.DocCore
 import KVACDocs.DocPreliminaries
@@ -22,6 +24,7 @@ set_option pp.rawOnError true
 
 #doc (Manual) "Keyed-Verification Anonymous Credentials in Lean" =>
 %%%
+authors := ["The Beneficial AI Foundation"]
 shortTitle := "KVAC in Lean"
 %%%
 
@@ -58,17 +61,22 @@ defined from an algebraic MAC, and the two concrete schemes are then
 proven to realise it. This documentation mirrors that flow chapter by
 chapter:
 
-1. *Core* — the algebraic typeclass API (prime-order group, hash, NIZK,
+- *Core* — the algebraic typeclass API (prime-order group, hash, NIZK,
    algebraic MAC) shared by every higher layer.
-2. *Preliminaries* — cryptographic background (Section 3 of O24):
+- *Preliminaries* — cryptographic background (Section 3 of O24):
    hardness assumptions, ZK argument syntax, anonymous-token syntax.
-3. *Proof systems* — Σ-protocol meta-theory and the straight-line
+- *Proof systems* — Σ-protocol meta-theory and the straight-line
    extraction infrastructure (Section 9 of O24).
-4. *Framework* — the abstract KVAC scheme: syntax, correctness,
+- *Framework* — the abstract KVAC scheme: syntax, correctness,
    anonymity, extractability (Section 4 of O24).
-5. *μCMZ* — first concrete scheme plus its security proofs (Section 5).
-6. *μBBS* — second concrete scheme plus its security proofs (Section 6).
-7. *Concrete run* — a μCMZ end-to-end example over Ristretto255.
+- *μCMZ* — first concrete scheme plus its security proofs (Section 5).
+- *μBBS* — second concrete scheme plus its security proofs (Section 6).
+- *Concrete run* — a μCMZ end-to-end example over Ristretto255.
+
+Two status pages sit outside the chapter flow: the *Dependency graph*
+(the paper's elements and their dependencies, with live formalization
+status) and the *Blueprint summary* (progress counts, blockers, and the
+next ready work items).
 
 {include 1 KVACDocs.DocCore}
 {include 1 KVACDocs.DocPreliminaries}
@@ -77,3 +85,6 @@ chapter:
 {include 1 KVACDocs.DocMicroCMZ}
 {include 1 KVACDocs.DocMicroBBS}
 {include 1 KVACDocs.DocConcreteRun}
+
+{blueprint_graph (direction := LR)}
+{blueprint_summary}
