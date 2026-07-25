@@ -243,9 +243,10 @@ since `MAC` builds `V` with exactly that scalar.
 theorem μCMZBaseMAC_correct (gen : G) : Correct (μCMZBaseMACSyntax F gen) := by
   intro _secParam n crs _hcrs keys _hkeys m sig hsig
   obtain ⟨sk, _pp⟩ := keys
-  simp only [μCMZBaseMACSyntax, mac, support_bind, mem_support_uniformNonzero, support_pure,
-    Set.mem_iUnion, Set.mem_singleton_iff] at hsig
-  obtain ⟨U, hU, rfl⟩ := hsig
+  simp only [μCMZBaseMACSyntax, mac, support_bind, mem_support_uniformNonzero, support_pure] at hsig
+  obtain ⟨U, hU, hmem⟩ := Set.mem_iUnion₂.mp hsig
+  rw [Set.mem_singleton_iff] at hmem
+  subst hmem
   simp only [μCMZBaseMACSyntax, verify, Bool.and_eq_true, decide_eq_true_eq, ne_eq]
   exact ⟨hU, trivial⟩
 

@@ -16,7 +16,7 @@ maxSynthPendingDepth = 3
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.28.0"
+rev = "v4.30.0"
 
 # VCV-io provides the `SampleableType` typeclass used by `KVAC/Core/Group.lean`
 # and, in later tracks, the `OracleComp` / `OracleSpec` infrastructure for
@@ -26,7 +26,7 @@ rev = "v4.28.0"
 [[require]]
 name = "VCVio"
 git = "https://github.com/Verified-zkEVM/VCV-io.git"
-rev = "ebea2fa"
+rev = "bump-lean-mathlib-v4.30.0"
 
 # curve25519-dalek-lean-verify is intentionally NOT a dependency at this stage.
 # The 2024 paper formalisation does not require any Ristretto-specific
