@@ -52,8 +52,22 @@ def b64(path):
         return base64.b64encode(f.read()).decode()
 
 
+# All figure crops come from the same 200 dpi page render, so equal
+# legibility means equal on-screen scale: width proportional to the PNG's
+# intrinsic pixel width. Anchor: the Base MAC panel (1160 px) at 40vw.
+FIG_SCALE = 40 / 1160  # vw per source pixel
+FIG_MULT = 1.0  # global multiplier, set by the md's figscale directive
+
+
+def png_width(path):
+    import struct
+    with open(os.path.join(HERE, path), 'rb') as f:
+        head = f.read(24)
+    return struct.unpack('>I', head[16:20])[0]
+
+
 def parse_slides(text):
-    text = re.sub(r'<!--(?!\s*(figwidth|codesize)).*?-->', '', text, flags=re.S)
+    text = re.sub(r'<!--(?!\s*(figwidth|codesize|figzoom)).*?-->', '', text, flags=re.S)
     return [s.strip() for s in re.split(r'\n---\n', text) if s.strip()]
 
 
@@ -83,8 +97,9 @@ def title_slide(block):
 
 def content_slide(block):
     lines = block.splitlines()
-    title, img, alt, figwidth = '', None, '', '38%'
+    title, img, alt, figwidth = '', None, '', 'max-content'
     codesize = None
+    figzoom = 1.0
     blocks, bullets = [], []
     caption = None
     i = 0
@@ -97,6 +112,9 @@ def content_slide(block):
         m2 = re.match(r'<!--\s*codesize:\s*([0-9.]+vh)\s*-->', s)
         if m2:
             codesize = m2.group(1)
+        m3 = re.match(r'<!--\s*figzoom:\s*([0-9.]+)\s*-->', s)
+        if m3:
+            figzoom = float(m3.group(1))
         elif s.startswith('## '):
             title = s[3:]
         elif s.startswith('!['):
@@ -175,7 +193,9 @@ def content_slide(block):
     notes = notes.replace('@@ENDTIP@@', '</span>')
     fig = ''
     if img:
-        fig = f'<div class="figpane"><img src="data:image/png;base64,{b64(img)}" alt="{esc(alt)}"></div>'
+        w = png_width(img) * FIG_SCALE * FIG_MULT * figzoom
+        fig = (f'<div class="figpane"><img style="width:{w:.2f}vw" '
+               f'src="data:image/png;base64,{b64(img)}" alt="{esc(alt)}"></div>')
     csvar = f' --codesize:{codesize};' if codesize else ''
     return f'''
 <section class="slide">
@@ -188,7 +208,11 @@ def content_slide(block):
 
 
 def main():
+    global FIG_MULT
     text = open(MD).read()
+    m = re.search(r'<!--\s*figscale:\s*([0-9.]+)\s*-->', text)
+    if m:
+        FIG_MULT = float(m.group(1))
     slides = parse_slides(text)
     body = title_slide(slides[0]) + ''.join(content_slide(s) for s in slides[1:])
     body = body.replace('<section class="slide">', '<section class="slide active">', 1)
@@ -203,7 +227,7 @@ def main():
   h2 {{ font-size:3.8vh; margin:0 0 1.4vh 0; }}
   .cols {{ display:grid; gap:2%; flex:1; min-height:0; align-items:center; }}
   .figpane {{ min-width:0; }}
-  .figpane img {{ width:100%; height:auto; display:block; border:1px solid #e5e7eb; border-radius:6px; }}
+  .figpane img {{ max-width:100%; height:auto; display:block; margin:0 auto; border:1px solid #e5e7eb; border-radius:6px; }}
   .code {{ min-width:0; max-height:100%; overflow:auto; align-self:stretch; display:flex; flex-direction:column; justify-content:center; gap:1.4vh; }}
   .proc .cap {{ font-size:1.9vh; color:#6b7280; margin:1.8vh 0 .25vh 0; }}
   .proc:first-child .cap {{ margin-top:0; }}

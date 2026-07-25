@@ -13,6 +13,10 @@ Conventions the builder understands:
     become the explanatory bullets.
   - `figwidth: NN%` sets the width of the image pane (default 38%).
   - `codesize: N.Nvh` shrinks the slide's code font (default 1.5vh).
+  - `figscale: X` (one global directive) multiplies every figure's size by
+    X; figures keep the same relative scale, so legibility stays uniform.
+  - `figzoom: X` (per slide) additionally zooms that slide's figure,
+    deliberately departing from the uniform scale.
   - A bullet that BEGINS with a `backticked` fragment does not render as a
     bullet: it becomes a hover tooltip attached to that fragment's
     occurrences in the slide's code (dotted underline). If the fragment
@@ -20,6 +24,8 @@ Conventions the builder understands:
   - Inline `backticks` become code; raw HTML such as <sup>λ</sup> passes
     through.
 -->
+
+<!-- figscale: 1.15 -->
 
 # Formalizing KVAC in Lean
 
@@ -33,7 +39,7 @@ July 30th, 2026
 ## Base MAC · the structure
 
 <!-- figwidth: 50% -->
-<!-- codesize: 1.35vh -->
+<!-- codesize: 1.2vh -->
 ![Base MAC panel](assets/basemac.png)
 
 ### Ambient context: the fixed group
@@ -87,8 +93,10 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 
 ## Base MAC · µCMZ.S (setup)
 
+<!-- figzoom: 1.4 -->
+
 <!-- figwidth: 25% -->
-<!-- codesize: 1.35vh -->
+<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.S](assets/cell_s.png)
 
 ### µCMZ.S · setup
@@ -111,8 +119,10 @@ noncomputable def setup {G : Type}
 
 ## Base MAC · µCMZ.K (keygen)
 
+<!-- figzoom: 1.4 -->
+
 <!-- figwidth: 25% -->
-<!-- codesize: 1.35vh -->
+<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.K](assets/cell_k.png)
 
 ### µCMZ.K · keygen
@@ -143,8 +153,10 @@ noncomputable def keygen {n : ℕ}
 
 ## Base MAC · µCMZ.M (mac)
 
+<!-- figzoom: 1.75 -->
+
 <!-- figwidth: 25% -->
-<!-- codesize: 1.35vh -->
+<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.M](assets/cell_m.png)
 
 ### µCMZ.M · mac
@@ -173,8 +185,10 @@ def macScalar {n : ℕ} (sk : Key F n)
 
 ## Base MAC · µCMZ.V (verify)
 
+<!-- figzoom: 1.75 -->
+
 <!-- figwidth: 25% -->
-<!-- codesize: 1.35vh -->
+<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.V](assets/cell_v.png)
 
 ### µCMZ.V · verify
