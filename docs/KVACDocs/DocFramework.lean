@@ -51,7 +51,7 @@ attributes the holder reveals or proves about.
 *TODO (Track F1).* Define the KVAC typeclass or structure mirroring
 Definition 4.2. The predicate family should be a parameter so that
 extensions (rate-limiting, pseudonyms, time-based policies) can be
-instantiated by plugging in a predicate.
+instantiated by plugging in a predicate. Under review in **PR #77**.
 
 :::definition "credential_predicate" (parent := "framework_syntax") (tags := "paper, O24 Def 4.1") (effort := "small") (priority := "high")
 *O24 Definition 4.1.* A credential predicate: an efficiently-computable
@@ -76,7 +76,7 @@ this a correctness rather than an unforgeability statement.
 
 *TODO (Track F1).* State correctness as a probability bound (or
 deterministic equation, if applicable) on the joint output of issuance
-and presentation. Definition 4.3.
+and presentation. Definition 4.3. Under review in **PR #77**.
 
 :::definition "kvac_correctness" (parent := "framework_correctness") (tags := "paper, O24 Def 4.3") (effort := "medium") (priority := "high")
 *O24 Definition 4.3.* Correctness for a KVAC scheme {uses "kvac_syntax"}[]:
