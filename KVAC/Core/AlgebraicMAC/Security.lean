@@ -4,7 +4,8 @@ Released under MIT license as described in the file LICENSE.
 Authors: Jin Xing Lim
 -/
 import KVAC.Core.AlgebraicMAC.Construction
-import VCVio
+import VCVio.CryptoFoundations.SecExp
+import VCVio.OracleComp.SimSemantics.Append
 
 /-!
 # UF-CMVA security predicate for an algebraic MAC (O24 Figure 5)

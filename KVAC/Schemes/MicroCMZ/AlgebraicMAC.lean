@@ -6,7 +6,8 @@ Authors: Semar Augusto
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.Construction
 import Mathlib.Tactic.Module
-import VCVio
+import VCVio.CryptoFoundations.SecExp
+import VCVio.OracleComp.SimSemantics.Append
 
 /-!
 # μCMZ as an algebraic MAC: AGM game scaffolding (O24 §5.3)

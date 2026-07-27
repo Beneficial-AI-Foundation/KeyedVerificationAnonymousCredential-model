@@ -4,7 +4,9 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Core.Group
-import VCVio
+import VCVio.CryptoFoundations.SecExp
+import VCVio.CryptoFoundations.HardnessAssumptions.DiffieHellman
+import VCVio.OracleComp.SimSemantics.Append
 
 /-!
 # Cryptographic hardness assumptions (O24 §3.1)
