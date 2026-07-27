@@ -37,19 +37,18 @@ jobs:
           path: |
             .lake
             docs/.lake
-          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}-${{ github.sha }}
+          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json', 'docs/lean-toolchain') }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}-
+            ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json', 'docs/lean-toolchain') }}-
             ${{ runner.os }}-lake-docs-
 
-      - name: Resolve docs dependencies
-        run: lake -d docs update
-
       - name: Download Mathlib cache (docs)
-        run: lake -d docs exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
+        continue-on-error: true
+        run: lake -d docs exe cache get
 
       - name: Download Mathlib cache (root)
-        run: lake exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
+        continue-on-error: true
+        run: lake exe cache get
 
       # Build only the KVACDocs library. The `docs` executable is no longer
       # defined; linking it would pull in VCV-io's post-quantum C/FFI sources,
