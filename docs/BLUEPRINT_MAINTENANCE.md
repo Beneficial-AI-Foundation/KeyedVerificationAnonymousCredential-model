@@ -71,7 +71,8 @@ behind them.
 ## Decision records
 
 - **§3.1 assumptions anchored despite deferred q-DDHI** (2026-07). q-DDHI is
-  needed only for μBBS/HashDY and is deferred with that scheme; DDH is
+  needed only by the §8.2 rate-limiting extension (HashDY PRF, Theorem 8.7)
+  and is deferred with that extension; DDH is
   consumed from VCV-io upstream. The node body states both. Alternative
   (milestone + unanchored element) rejected as noise.
 - **Σ-protocol instances live in the μCMZ chapter** (2026-07). The merged
@@ -89,9 +90,12 @@ behind them.
   `ksnd_game` and `se_game` milestone nodes under `core_zkproof`, update the
   `zk_arguments` element (then complete), and drop the two "#54 in review"
   TODO notes (Core and Preliminaries).
-- **`AGMReduction`** (branch exists): on merge, anchor `single_attribute_mac`
-  (Lemma 5.4), extend `partial_evaluation_psi` with the restored ≤3-roots
-  bound, and update the CMZ-M TODO.
+- **`AGMReduction`** (PR #88, issue #89, in review): delivers the Lemma 5.4
+  reduction core only (the probability bound and the security theorems come
+  later, #80/#81). On merge, add a reduction-core `milestone` node, extend
+  `partial_evaluation_psi` with the restored ≤3-roots bound, and update the
+  CMZ-M TODO; `single_attribute_mac` stays unanchored until the full lemma
+  lands (anchoring honesty rule).
 - **Upstream nits found by the docs build**: stale docstring at
   `AGMPolynomial.lean:412` citing the removed
   `card_roots_affineSubst_verifPoly_le`; anchored structure fields and

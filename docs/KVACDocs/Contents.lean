@@ -44,9 +44,10 @@ The formalisation is *paper-driven*: the `KVAC/` source tree mirrors the
 paper's section structure, and the abstract framework `KVAC/Framework/`
 is stated against the paper-level definitions of Section 4 without
 committing to any concrete curve, hash function, or deployment.
-Concrete bindings — currently a verified Ristretto255 instance from
-[curve25519-dalek-lean-verify](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify) —
-are isolated under `KVAC/Instances/` and only reached from
+Concrete bindings — a planned Ristretto255 instance from
+[curve25519-dalek-lean-verify](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify),
+not yet landed (Track Ex) —
+will be isolated under `KVAC/Instances/` and only reached from
 `KVAC/Examples/`.
 
 The source code is available on
@@ -71,7 +72,7 @@ chapter:
    anonymity, extractability (Section 4 of O24).
 - *μCMZ* — first concrete scheme plus its security proofs (Section 5).
 - *μBBS* — second concrete scheme plus its security proofs (Section 6).
-- *Concrete run* — a μCMZ end-to-end example over Ristretto255.
+- *Concrete run* — a planned μCMZ end-to-end example over Ristretto255.
 
 Two status pages sit outside the chapter flow: the *Dependency graph*
 (the paper's elements and their dependencies, with live formalization

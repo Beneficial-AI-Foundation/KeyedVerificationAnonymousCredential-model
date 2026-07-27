@@ -49,19 +49,22 @@ AGM and GGM are proof-theoretic *adversary models*, not assumptions
 about the group; they live in the security-track files where reductions
 are stated, not here.
 
-DL, q-DL (with the 2-DL and 3-DL specialisations Theorem 5.1 quotes),
-and gap-DL with its DDH oracle are merged as `OracleComp`-based
-advantage bounds.
+DL, q-DL (with the 3-DL instance Theorem 5.1 quotes and the 2-DL
+instance Theorem 5.3 quotes), and gap-DL with its DDH oracle are merged
+as `OracleComp`-based advantage bounds.
 
-*TODO (Track Pre).* q-DDHI is deferred together with μBBS; DDH is
-consumed from VCV-io upstream when a track first needs it.
+*TODO (Track Pre).* q-DDHI is needed only by the §8.2 rate-limiting
+extension (the HashDY PRF of Theorem 8.7) and is deferred with it; DDH
+is consumed from VCV-io upstream when a track first needs it.
 
 :::definition "hardness_assumptions" (lean := "KVAC.Preliminaries.dlogAdv, KVAC.Preliminaries.QDLogAdversary, KVAC.Preliminaries.qdlogExp, KVAC.Preliminaries.qdlogAdv, KVAC.Preliminaries.twoDlogAdv, KVAC.Preliminaries.threeDlogAdv, KVAC.Preliminaries.GapDLogAdversary, KVAC.Preliminaries.GapDLogOracleSpec, KVAC.Preliminaries.gapDdhOracleImpl, KVAC.Preliminaries.gapDlogExp, KVAC.Preliminaries.gapDlogAdv") (parent := "pre_assumptions") (tags := "paper, O24 §3.1")
 *O24 Section 3.1.* The hardness assumptions over a prime-order group
-generator used throughout: discrete log and its gap variant, the
-q-strong and 2-power variants, and q-DDHI. Merged in full except q-DDHI,
-which O24 needs only for μBBS/HashDY and is deferred with that scheme;
-DDH itself is consumed from VCV-io upstream.
+generator used throughout: discrete log and its gap variant, the q-DL
+family (with its 2-DL and 3-DL instances), and q-DDHI. Merged in full
+except q-DDHI,
+which O24 needs only for the §8.2 rate-limiting extension's HashDY PRF
+and is deferred with that extension; DDH itself is consumed from VCV-io
+upstream.
 :::
 
 # Zero-knowledge arguments
