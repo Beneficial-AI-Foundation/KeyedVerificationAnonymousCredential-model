@@ -18,6 +18,10 @@ jobs:
   build-docs:
     name: Build Verso Documentation
     runs-on: ubuntu-latest
+    # Library build + site generation take a few minutes with a warm cache;
+    # cap well above that so a stalled `lean` process fails fast instead of
+    # burning the 6h GitHub default.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -111,6 +115,7 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build-docs
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     environment:
       name: github-pages
