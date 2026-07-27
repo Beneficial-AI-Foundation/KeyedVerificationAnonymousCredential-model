@@ -21,23 +21,29 @@ Conventions the builder understands:
     X; figures keep the same relative scale, so legibility stays uniform.
   - `figzoom: X` (per slide) additionally zooms that slide's figure,
     deliberately departing from the uniform scale.
+  - An indented `  - ` line renders as a subbullet of the preceding bullet.
   - A `> ` line renders as a fine-print note (smaller font) in the bullet
     list.
+  - Plain prose lines (matching none of the above) render in-flow in the
+    code column as a text block, line breaks preserved (used for
+    mathematical statements).
   - A bullet that BEGINS with a `backticked` fragment does not render as a
     bullet: it becomes a hover tooltip attached to that fragment's
-    occurrences in the slide's code (dotted underline). If the fragment
-    occurs nowhere in the code, the bullet stays visible.
+    occurrences in the slide's code and text blocks (dotted underline);
+    failing that, in the visible bullets. If the fragment occurs nowhere,
+    the bullet stays visible.
   - Inline `backticks` become code; raw HTML such as <sup>λ</sup> passes
     through.
 -->
 
 <!-- figscale: 1.15 -->
+<!-- figwidth: 200% -->
+![Beneficial AI Foundation](assets/team-lockup/png/baif-agent-team-black.png)
 
 # Formalizing Keyed-Verification Anonymous Credentials in Lean
 
 ## The μCMZ credential system
 
-Beneficial AI Foundation
 July 30th, 2026
 
 ---
@@ -222,7 +228,7 @@ def verify {n : ℕ} (sk : Key F n)
 
 ---
 
-## Credential Issuance · the relation R<sub>iu</sub>
+## Credential Issuance · R<sub>iu</sub> relation
 
 <!-- figzoom: 0.85 -->
 ![Credential Issuance panel, πᵢᵤ sites marked](assets/cell_iss_iu.png)
@@ -236,11 +242,14 @@ def riuRel (gen : G) : RiuStmt G F n → RiuWitness F n → Bool :=
   fun ⟨Cp, X, φ⟩ ⟨m, s⟩ => decide (Cp = (∑ i, m i • X i) + s • gen) && φ m
 ```
 
-- **R<sub>iu</sub> in the box.** The boxed π<sub>iu</sub> of the panel: the user proves R<sub>iu</sub> with witness (m, s) when sending the commitment C′; the server checks it before issuing. The box marks it removable for the anonymous-token variant (Theorem 5.3).
+- `witness (m, s)`: the secret data whose knowledge the proof demonstrates: the attribute vector m and the blinding scalar s of the commitment C′ = Σᵢ mᵢ•Xᵢ + s•gen. In Lean, `RiuWitness F n` = (Fin n → F) × F. The statement (C′, X, φ) is public; the witness stays with the user, and HVZK guarantees the proof reveals nothing about it.
+- `commitment C′`: a Pedersen commitment to the attributes, C′ = Σᵢ mᵢ•Xᵢ + s•gen: perfectly hiding (the uniform s masks m) and computationally binding under discrete log. (m, s) is its opening; R<sub>iu</sub> proves knowledge of an opening that satisfies φ, and the server later shifts it homomorphically to C″ = C′ + Xᵣ.
+- **R<sub>iu</sub> in the box.** The boxed π<sub>iu</sub> of the panel: the user proves R<sub>iu</sub> (ZKP<sub>cmz.iu</sub>.P) with witness (m, s) when sending the commitment C′; the server checks it before issuing.
+  - The frame around π<sub>iu</sub> marks the lines deleted in the anonymous-token variant µCMZ<sub>AT</sub> (one-more unforgeability, Theorem 5.3 — to be presented at a later time).
 
 ---
 
-## Credential Issuance · the relation R<sub>is</sub>
+## Credential Issuance · R<sub>is</sub> relation
 
 <!-- figzoom: 0.85 -->
 ![Credential Issuance panel, πᵢₛ sites marked](assets/cell_iss_is.png)
@@ -260,7 +269,7 @@ def risRel (gen H : G) : RisStmt G → RisWitness F → Bool :=
 
 ---
 
-## Credential Issuance · the main result so far
+## Credential Issuance · Special Soundness
 
 <!-- figzoom: 0.6 -->
 ![Credential Issuance panel](assets/cell_iss.png)
@@ -273,7 +282,16 @@ extract c₁ z₁ c₂ z₂ :=
     (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
 ```
 
-### Special soundness, with policy enforcement
+### VCV-io's perfect special soundness (`SigmaProtocol.lean`)
+
+```lean
+def SpeciallySoundAt (σ : SigmaProtocol S W PC SC Ω P p) (x : S) : Prop :=
+  ∀ pc ω₁ ω₂ p₁ p₂, ω₁ ≠ ω₂ →
+    σ.verify x pc ω₁ p₁ = true → σ.verify x pc ω₂ p₂ = true →
+    ∀ w ∈ support (σ.extract ω₁ p₁ ω₂ p₂), p x w = true
+```
+
+### Our theorem: special soundness with policy enforcement
 
 ```lean
 theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
@@ -283,9 +301,13 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
     SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, φ)
 ```
 
-- From two accepting transcripts with the same announcement and distinct challenges, the extractor returns an actual witness: an opening (m, s) of the commitment C′ satisfying φ. Dually, `risSigma_speciallySound` recovers (x₀, u), so a server cannot convince the user with a malformed (U′, V′).
-- This is the knowledge-soundness seed of the box: Theorem 5.2's extractability bound rests on extracting exactly these witnesses.
+- VCV-io's `SpeciallySoundAt` implements the textbook definition of perfect special soundness: two accepting transcripts with the same announcement and distinct challenges yield, through the extractor, a witness for the relation. 
+- At R<sub>iu</sub> the witness is an opening (m, s) of C′ satisfying φ; dually, `risSigma_speciallySound` recovers (x₀, u).
+- Why perfect: the <a href="#4">per-group</a> formalization has no λ, so the computational notion (extraction fails with probability negligible in λ; DG23, Definition 4.6) is not expressible. The perfect notion holds by pure algebra: the extractor computes the witness by field arithmetic from any two such transcripts, with no hardness assumption.
+<!-- - This is the knowledge-soundness seed of the box: Theorem 5.2's extractability bound rests on extracting exactly these witnesses. -->
 - `Enforces`: φ-enforcement is a hypothesis, discharged today for `trivialPolicy` (`riu_enforces_trivialPolicy`); a verifier that checks φ in zero knowledge discharges it for a proper φ.
+- `announcement`: the Σ-protocol's first message, sent by the prover before the challenge is drawn. Classically called the commitment; renamed here to avoid a clash with the commitment C′. In `SpeciallySoundAt` it is the variable pc, shared by both transcripts.
+- `challenges`: the challenge is the verifier's message, a scalar drawn uniformly from F after the announcement is fixed. Two accepting responses to distinct challenges ω₁ ≠ ω₂ make (c₁ − c₂)⁻¹ in the extractor well defined.
 
 ---
 
@@ -295,5 +317,5 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
 ![Credential Issuance panel, both proof sites marked](assets/cell_iss_annot.png)
 
 - **Formalized (merged).** Both proof relations of the box and their interactive Σ-protocols (`riuSigma`, `risSigma`): perfect completeness, special soundness, and HVZK via explicit simulated transcripts; the policy layer (`Policy`, `trivialPolicy`).
-- `HVZK`: honest-verifier zero-knowledge: a simulator given only the statement produces transcripts distributed identically to real interactions with the honest verifier, so the proof reveals nothing beyond the statement's validity. Proved by explicit simulated transcripts (`riuSimTranscript`, `risSimTranscript`) that sample the response first and solve for the announcement.
+- `HVZK`: honest-verifier zero-knowledge: a simulator given only the statement produces transcripts distributed identically to real interactions with the honest verifier, so the proof reveals nothing beyond the statement's validity. The Prop is VCV-io's `HVZK`, reused like `SpeciallySoundAt`; our simulators (`riuSimTranscript`, `risSimTranscript`) sample the response first and solve for the announcement.
 - **Missing.** The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, in review (PR #77); Fiat–Shamir compilation of the Σ-protocols into the non-interactive π<sub>iu</sub>, π<sub>is</sub>; credential-level correctness (Definition 4.3).

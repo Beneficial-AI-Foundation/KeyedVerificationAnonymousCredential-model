@@ -75,6 +75,7 @@ def parse_slides(text):
 def title_slide(block):
     title = subtitle = ''
     footer = []
+    logo = ''
     for line in block.splitlines():
         line = line.strip()
         if not line:
@@ -83,12 +84,19 @@ def title_slide(block):
             subtitle = line[3:]
         elif line.startswith('# '):
             title = line[2:]
+        elif line.startswith('!['):
+            m = re.match(r'!\[([^\]]*)\]\(([^)]+)\)', line)
+            if m:
+                logo = (f'<img src="data:image/png;base64,{b64(m.group(2))}" '
+                        f'alt="{esc(m.group(1))}" '
+                        'style="height:13vh;margin-bottom:4vh">')
         else:
             footer.append(line)
     foot = '<br>'.join(inline(l) for l in footer)
     return f'''
 <section class="slide">
   <div style="margin:auto;text-align:center">
+    {logo}
     <h1>{inline(title)}</h1>
     <p style="font-size:3.4vh;color:#374151;margin:.3em 0">{inline(subtitle)}</p>
     <p style="font-size:2.3vh;color:#6b7280">{foot}</p>
@@ -103,6 +111,17 @@ def content_slide(block, nav=''):
     figzoom = 1.0
     blocks, bullets = [], []
     caption = None
+    prose = []
+
+    def flush_prose():
+        nonlocal caption
+        while prose and not prose[-1].strip():
+            prose.pop()
+        if prose:
+            blocks.append(('text', caption or '', '\n'.join(prose), None))
+            caption = None
+            prose.clear()
+
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -117,8 +136,10 @@ def content_slide(block, nav=''):
         if m3:
             figzoom = float(m3.group(1))
         elif s.startswith('## '):
+            flush_prose()
             title = s[3:]
         elif s.startswith('!['):
+            flush_prose()
             m = re.match(r'!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)', s)
             if m and img is None:
                 alt, img = m.group(1), m.group(2)
@@ -129,10 +150,13 @@ def content_slide(block, nav=''):
                                (m.group(1), m.group(3))))
                 caption = None
         elif s.startswith('### '):
+            flush_prose()
             caption = s[4:]
         elif s.startswith('**') and s.endswith('**'):
+            flush_prose()
             caption = s[2:-2]
         elif s.startswith('```'):
+            flush_prose()
             code = []
             i += 1
             while i < len(lines) and not lines[i].strip().startswith('```'):
@@ -141,21 +165,33 @@ def content_slide(block, nav=''):
             blocks.append(('code', caption or '', '\n'.join(code), None))
             caption = None
         elif s.startswith('- '):
-            bullets.append((s[2:], False))
+            flush_prose()
+            sub = line.startswith('  ')
+            bullets.append((s[2:], False, sub))
         elif s.startswith('> '):
-            bullets.append((s[2:], True))
+            flush_prose()
+            bullets.append((s[2:], True, False))
+        elif s.startswith('<!--'):
+            pass
+        elif s:
+            # Plain prose (e.g. a mathematical statement): renders in-flow
+            # in the code column with line structure preserved.
+            prose.append(line.rstrip())
+        elif prose:
+            prose.append('')
         i += 1
+    flush_prose()
 
     # Bullets that BEGIN with a `backticked` fragment become hover tooltips
     # anchored at that fragment's occurrences in the slide's code; the rest
     # stay visible bullets. Anchors that match nothing fall back to bullets.
     tips, visible = [], []
-    for b, small in bullets:
+    for b, small, sub in bullets:
         m = re.match(r'`([^`]+)`', b)
-        if m:
+        if m and not sub:
             tips.append((m.group(1), b))
         else:
-            visible.append((b, small))
+            visible.append((b, small, sub))
 
     # Anchor tips on the RAW code (before highlighting), so multi-token
     # anchors like `ProbComp (Key F n × Params G n)` match.
@@ -165,7 +201,7 @@ def content_slide(block, nav=''):
         hit = False
         marked = []
         for kind, cap, code, extra in blocks:
-            if kind != 'code':
+            if kind not in ('code', 'text'):
                 marked.append((kind, cap, code, extra))
                 continue
             code2 = pat.sub(
@@ -178,16 +214,16 @@ def content_slide(block, nav=''):
             continue
         # No code hit: try anchoring inside the visible bullets' text.
         vhit = False
-        for k, (vb, small) in enumerate(visible):
+        for k, (vb, small, sub) in enumerate(visible):
             vb2 = pat.sub(
                 lambda m: f'@@TIP{idx}@@{m.group()}@@ENDTIP@@', vb)
             if vb2 != vb:
-                visible[k] = (vb2, small)
+                visible[k] = (vb2, small, sub)
                 vhit = True
         if vhit:
             tip_attrs[idx] = inline(text).replace('"', '&quot;')
         else:
-            visible.append((text, False))
+            visible.append((text, False, False))
 
     def render_block(kind, cap, code, extra):
         capdiv = f'<div class="cap">{inline(cap)}</div>' if cap else ''
@@ -200,15 +236,27 @@ def content_slide(block, nav=''):
                     f'<div class="inlinefig" style="{astyle}">'
                     f'<img style="width:{w:.2f}vw" '
                     f'src="data:image/png;base64,{b64(code)}" alt="{esc(alt2)}"></div></div>')
+        if kind == 'text':
+            return (f'<div class="proc">{capdiv}'
+                    f'<div class="mathtext">{inline(code)}</div></div>')
         return f'<div class="proc">{capdiv}<pre>{hilean(code)}</pre></div>'
 
     code_html = ''.join(render_block(*b) for b in blocks)
     notes = ''
     if visible:
-        lis = ''.join(
-            f'<li class="fine">{inline(b)}</li>' if small else f'<li>{inline(b)}</li>'
-            for b, small in visible)
-        notes = f'<ul class="notes">{lis}</ul>'
+        items = []
+        for b, small, sub in visible:
+            li = (f'<li class="fine">{inline(b)}</li>' if small
+                  else f'<li>{inline(b)}</li>')
+            if sub and items:
+                prev = items[-1]
+                if prev.endswith('</ul></li>'):
+                    items[-1] = prev[:-len('</ul></li>')] + li + '</ul></li>'
+                else:
+                    items[-1] = prev[:-len('</li>')] + '<ul class="subnotes">' + li + '</ul></li>'
+            else:
+                items.append(li)
+        notes = f'<ul class="notes">{"".join(items)}</ul>'
 
     for idx, attr in tip_attrs.items():
         start = f'<span class="tip" data-tip="{attr}">'
@@ -293,8 +341,12 @@ def main():
   .proc pre .ty {{ color:#0f766e; }}
   .proc pre .op {{ color:#b45309; }}
   .proc pre .cm {{ color:#6b7280; font-style:italic; }}
+  .proc .mathtext {{ white-space:pre-wrap; font-size:2.0vh; line-height:1.5; color:#1f2937;
+                     background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:.9vh 1vw; }}
   ul.notes {{ margin:.4vh 0 0 0; padding-left:1.3em; font-size:2.15vh; line-height:1.45; color:#1f2937; }}
   ul.notes li {{ margin-bottom:.7vh; }}
+  ul.subnotes {{ margin:.5vh 0 0 0; padding-left:1.2em; }}
+  ul.subnotes li {{ font-size:1.85vh; color:#374151; margin-bottom:.3vh; }}
   ul.notes li.fine {{ font-size:1.25vh; color:#4b5563; line-height:1.4; list-style:none; margin-left:-1.3em; }}
   ul.notes li + li.fine:not(li.fine + li.fine) {{ margin-top:2.2vh; }}
   ul.notes li.fine code {{ font-size:1.15vh; }}
@@ -310,6 +362,7 @@ def main():
   .slidenav a {{ color:#6b7280; text-decoration:none; border-bottom:1px dotted #9ca3af; margin-left:1.2vw; }}
   .slidenav a:hover {{ color:#111827; }}
   .footer {{ position:fixed; bottom:1.2vh; right:1.4vw; color:#9ca3af; font-size:1.8vh; }}
+  .marklogo {{ position:fixed; bottom:1.2vh; left:1.4vw; height:4.5vh; z-index:5; }}
   .footer a {{ cursor:pointer; color:#6b7280; }}
   .footer a:hover {{ color:#111827; }}
   .tip {{ text-decoration: underline dotted 2px #b45309; text-underline-offset: 3px; cursor: help; }}
@@ -319,10 +372,11 @@ def main():
   #tipbox code {{ background:#374151; color:#f9fafb; padding:.05em .3em; border-radius:4px; }}
 </style></head><body>
 {body}
+<img class="marklogo" src="data:image/png;base64,{b64('assets/mark/png/baif-agent-mark-black.png')}" alt="Beneficial AI Foundation agent mark">
 <div class="footer"><span id="pg"></span> · <a id="prevA" title="previous slide">←</a>/<a id="nextA" title="next slide">→</a></div>
 <script>
   const s=[...document.querySelectorAll('.slide')];let i=0;
-  const show=n=>{{i=Math.max(0,Math.min(s.length-1,n));s.forEach((e,j)=>e.classList.toggle('active',j===i));document.getElementById('pg').textContent=(i+1)+' / '+s.length;}};
+  const show=n=>{{i=Math.max(0,Math.min(s.length-1,n));s.forEach((e,j)=>e.classList.toggle('active',j===i));document.getElementById('pg').textContent=(i+1)+' / '+s.length;const ml=document.querySelector('.marklogo');if(ml)ml.style.display=i===0?'none':'block';history.replaceState(null,'','#'+(i+1));}};
   addEventListener('keydown',e=>{{if(e.key==='ArrowRight'||e.key===' ')show(i+1);if(e.key==='ArrowLeft')show(i-1);}});
   document.getElementById('prevA').addEventListener('click',()=>show(i-1));
   document.getElementById('nextA').addEventListener('click',()=>show(i+1));
