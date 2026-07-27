@@ -25,22 +25,39 @@ tag := "microcmz"
 The first concrete instantiation of the abstract framework, corresponding
 to O24, Section 5. μCMZ improves on Chase–Meiklejohn–Zaverucha (2014):
 O(1) issuance cost (down from O(n)), statistical anonymity, and security
-in the algebraic group model under 3-DL. Deployed by Signal, Tor, and
-NYM.
+in the algebraic group model under 3-DL. The CMZ family it improves is
+deployed at scale (Signal private groups, Tor's Lox).
 
-Five files under `KVAC/Schemes/MicroCMZ/`:
+Five files landed under `KVAC/Schemes/MicroCMZ/`:
 
-- `Construction.lean` — Section 5.1 — Track CMZ-C.
-- `AlgebraicMAC.lean` — Section 5.3 — Track CMZ-M.
+- `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
+- `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
+- `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
+- `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
+- `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
+
+One is in review:
+
+- `AGMReduction.lean` (with `AGMReduction/Core.lean`) — Section 5.3,
+  Lemma 5.4 reduction core — Track CMZ-M (PR #88).
+
+Three more are planned:
+
 - `Anonymity.lean` — Section 5.4 — Track CMZ-A.
 - `Extractability.lean` — Section 5.5 — Track CMZ-E.
 - `OneMoreUnforgeability.lean` — Section 5.6 — Track CMZ-OMUF.
 
 :::theorem "mucmz_is_kvac" (tags := "paper, O24 Thm 1") (effort := "small") (priority := "medium")
 *O24 Theorem 1.* μCMZ is a keyed-verification anonymous credential
-system: extractable ({uses "mucmz_extractable_kvac"}[]) and one-more unforgeable as an
-anonymous token ({uses "mucmz_at_omuf"}[]) in the algebraic group model, with
-the stated advantage bounds.
+system: extractable (in the algebraic group model) and anonymous, and
+its variant `μCMZ_AT` is one-more unforgeable, each with the stated
+advantage bound.
+:::
+
+:::proof "mucmz_is_kvac"
+The credential claims are {uses "mucmz_extractable_kvac"}[] (whose proof
+already combines anonymity and extractability); the variant claim is
+{uses "mucmz_at_omuf"}[].
 :::
 
 # Construction (Section 5.1)
@@ -50,8 +67,9 @@ the stated advantage bounds.
 :::
 
 The four protocol algorithms: `KeyGen`, `Setup`, `Issue` (with predicate
-`φ`), and `Present`. Stated over the abstract `PrimeOrderGroup F G` —
-no curve, hash function, or deployment is committed to here.
+`φ`), and `Present`. Stated over the abstract `SampleableGroup F G`
+(setup and the MAC's tag base sample group elements) — no curve, hash
+function, or deployment is committed to here.
 
 The base MAC of the construction is merged; the credential protocol
 around it (Issue and Present, the predicate flow) remains open, per the
@@ -131,9 +149,10 @@ algebraic-MAC interface, is UF-CMVA in the algebraic group model under
 - *Lemma 5.4* — the `n = 1` attribute case,
 - *Lemma 5.5* — the general `n`-attribute case, lifted from Lemma 5.4.
 
-This is the load-bearing security result for μCMZ; both extractability
-(Section 5.5) and the anonymous-token one-more unforgeability (Section
-5.6) factor through it.
+This is the load-bearing security result for μCMZ; extractability
+(Section 5.5) factors through it. The anonymous-token one-more
+unforgeability (Section 5.6) is a separate direct AGM analysis and does
+not route through this theorem.
 
 The Lemma 5.4 workshop is merged: the AGM game, the verification
 polynomial with its identity case, and the sign-mask distribution
@@ -311,19 +330,21 @@ candidate instance `Z` checked through the auxiliary Help oracle.
 μCMZ one-more unforgeability
 :::
 
-*Theorem 5.3.* The anonymous-token variant `μCMZ_AT` is one-more
-unforgeable in the algebraic group model under 2-DL. `μCMZ_AT` is the
-zero-attribute specialisation of μCMZ, providing only an
-anonymous-token binding.
+*Theorem 5.3.* The anonymous-token variant `μCMZ_AT` is anonymous and
+one-more unforgeable, the latter in the algebraic group model under DL
+and 2-DL. `μCMZ_AT` is the variant of μCMZ with the boxed issuance-proof
+part of Figure 9 removed, keeping all `n` attributes and yielding the
+anonymous-token variant of the scheme.
 
 *TODO (Track CMZ-OMUF).* State and prove Theorem 5.3 against the OMUF
 game from the *Preliminaries* chapter.
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
-({uses "zk_arguments"}[]), the variant `μCMZ_AT` of {uses "mucmz_construction"}[] is a
-one-more unforgeable anonymous token ({uses "anonymous_tokens"}[]) in the game of
-{uses "omuf_game"}[].
+({uses "zk_arguments"}[]), the variant `μCMZ_AT` of {uses "mucmz_construction"}[] is an
+anonymous token ({uses "anonymous_tokens"}[]) with both an anonymity
+advantage and, in the algebraic group model, a one-more unforgeability
+advantage in the game of {uses "omuf_game"}[].
 :::
 
 :::proof "mucmz_at_omuf"
