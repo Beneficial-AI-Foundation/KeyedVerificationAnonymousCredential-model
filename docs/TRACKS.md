@@ -2,7 +2,7 @@
 
 Status board for parallel work tracks. For the rationale and overall design, see [`PLAN.md`](PLAN.md).
 
-Each track corresponds to one open issue (`track-0`, `track-A`, `track-pre`, …) and one or more `.lean` files under `KVAC/`. To claim a track, comment on its issue.
+Each track corresponds to one tracking issue (`track-0`, `track-A`, `track-pre`, …) and one or more `.lean` files under `KVAC/`. To claim a track, comment on its issue. Some umbrella issues (#1, #2, #6) are closed while their tracks still list remaining work; the per-track status bullets below are authoritative.
 
 > **Status:** The tracks and their dependencies below are a tentative suggestion for parallelizing the work, derived from the current state of [`PLAN.md`](PLAN.md). Track boundaries, the dependency graph, and even whether some tracks survive in their current form may change as we discover new dependencies, refactor the shared API, or reshape the plan. Coordinate any structural changes (splitting, merging, removing tracks) via the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot).
 
@@ -84,10 +84,11 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
   - Modules: `KVAC/Core/Group.lean`, `KVAC/Core/Hash.lean`, `KVAC/Core/ZKProof.lean`, `KVAC/Core/AlgebraicMAC.lean`
   - Depends on: nothing
   - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
-  - **Status** (split into sub-issues #18–#21):
+  - **Status** (split into sub-issues #18–#21; the umbrella issue #1 was closed on 2026-07-23, remaining work is tracked by PR #54 and #60):
     - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
-    - [x] `Hash.lean` — landed (#19): `HashSpec` (taken over from PR #47) + the lazy `randomOracle` binding, with `transcriptHashSpec` (`H_p`) and `curveHashSpec` (`H_𝔾`).
-    - [ ] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 (externalized extractor + completeness) in review.
+    - [x] `Hash.lean` — landed (#19; PR #57): `HashSpec` (taken over from PR #47) + the `roImpl` random-oracle binding, with `transcriptHashSpec` (`H_p`) and `curveHashSpec` (`H_𝔾`). Refinement #60 (`HashSpec.programFresh`) is open.
+    - [x] `ZKProof.lean` / `NIZKP/` — layered NIZKP landed (#20): syntax `NIZKPSyntax` (PR #45), perfect completeness + paper-level `NIZKP` bundle (PR #46), two-world zero-knowledge game (PR #47).
+    - [ ] NIZKP knowledge soundness + simulation extractability — in review (PR #54). The earlier model-agnostic spec `NIZKP/Basic.lean` (#20; PR #26) is set aside as research under #43; its refinement PR #34 was closed unmerged.
     - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
 
 ## Wave 1 — start once Track 0 lands
@@ -100,16 +101,17 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
   - **Status** (partial):
     - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30).
-    - [ ] Remaining with #2: `ZKArguments.lean`, `AnonymousTokens.lean`, and q-DDHI (only needed by the §8.2 rate-limiting extension, Track Ext-RL).
+    - [ ] Remaining: `ZKArguments.lean`, `AnonymousTokens.lean`, and q-DDHI (only needed by the §8.2 rate-limiting extension, Track Ext-RL). The umbrella issue #2 was closed on 2026-07-21; file a new sub-issue when this work is scheduled.
 - [ ] **Track Σ** — Proof systems
   - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
   - Depends on: Track 0
   - Σ-protocol meta-theory (completeness, special soundness, HVZK), the Fiat–Shamir transformation in the random oracle model, and straight-line extraction in the AGM (Sec. 9 of O24). Critical infrastructure for both schemes' security proofs.
-  - **Status:** not started as a generic layer. Concrete per-relation Σ-protocol instances for μCMZ (Eqs. 9–11) are being delivered under Track CMZ-C (#40, #41) directly on VCV-io's `SigmaProtocol`; this track remains the home for the generic meta-theory (Fiat–Shamir, straight-line extraction).
+  - **Status:** claimed (#3 assigned to @ChristianoBraga); not started as a generic layer. Concrete per-relation Σ-protocol instances for μCMZ (Eqs. 9–11) landed under Track CMZ-C (#40, #41; PRs #32/#33) directly on VCV-io's `SigmaProtocol`; this track remains the home for the generic meta-theory (Fiat–Shamir, straight-line extraction).
 - [ ] **Track F1** — Framework: syntax and correctness
   - Modules: `KVAC/Framework/Syntax.lean`, `KVAC/Framework/Correctness.lean`
   - Depends on: Track 0, Track Pre
   - Definitions 4.2 and 4.3 of O24. Scheme-agnostic by construction — both μCMZ and μBBS will instantiate this same surface.
+  - **Status:** syntax + correctness in review (#4; PR #77).
 
 ## Wave 2 — Framework security and scheme constructions
 
@@ -123,9 +125,9 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
   - **Status** (split into sub-issues #39–#41 under #6):
     - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
-    - [ ] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — in review (#40; PR #32).
-    - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32).
-    - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
+    - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40; PR #32).
+    - [x] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — landed (#41; PR #33).
+    - [ ] Credential Issuance / Presentation — not started; needs Track F1's KVAC syntax and the relations above. The umbrella issue #6 was closed on 2026-07-21; file a new sub-issue when this work is scheduled.
 - [ ] **Track BBS-C** — μBBS construction
   - Modules: `KVAC/Schemes/MicroBBS/Construction.lean`
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
@@ -136,13 +138,21 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
 The security tracks for each scheme are mostly independent of the other scheme. They depend on their own `Construction.lean` and on Track F2's framework definitions; game-based reductions use VCV-io's `OracleComp` / `OracleSpec` machinery directly (VCV-io is a Wave-0 Lake dep, no separate binding track needed).
 
 - [ ] **Track CMZ-M** — μCMZ as algebraic MAC (§5.3)
-  - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`
+  - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`, `KVAC/Schemes/MicroCMZ/AGMPolynomial.lean`, `KVAC/Schemes/MicroCMZ/SignMask.lean`
   - Depends on: Track CMZ-C
   - Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n). Uses straight-line extraction from Track Σ.
+  - **Status** (partial; split into sub-issues under #8):
+    - [x] AGM UF-CMVA(+Help) game (`AlgebraicMAC.lean`) — landed (#74; PR #73).
+    - [x] Lemma 5.4 polynomial layer (`AGMPolynomial.lean`) — landed: Eq. (12) encoding (#64; PR #61), identity case (#65; PR #62), affine substitution (#66; PR #63), non-identity degree and root skeleton (#68; PR #44).
+    - [x] Sign-oracle distribution lemmas (`SignMask.lean`) — landed (#75; PR #48).
+    - [ ] AGM reduction core for Lemma 5.4 (n = 1) — in review (#89; PR #88).
+    - [ ] 3-DL/gap-DL embedding and advantage bound — in progress (#80).
+    - [ ] Bridge to the plain `UF_CMVAGame` with the `WellBehaved` predicate (#81); then Lemma 5.5 and Theorem 5.1.
 - [ ] **Track CMZ-A** — μCMZ anonymity (§5.4)
   - Modules: `KVAC/Schemes/MicroCMZ/Anonymity.lean`
   - Depends on: Track CMZ-C, Track F2
   - Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZKP. Statistical anonymity result.
+  - **Status:** claimed (#10 assigned to @semaraugusto); marked in progress on the project board, nothing landed yet.
 - [ ] **Track CMZ-E** — μCMZ extractability (§5.5)
   - Modules: `KVAC/Schemes/MicroCMZ/Extractability.lean`
   - Depends on: Track CMZ-C, Track F2, Track CMZ-M

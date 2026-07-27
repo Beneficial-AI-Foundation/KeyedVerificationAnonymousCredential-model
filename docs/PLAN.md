@@ -82,7 +82,13 @@ KVAC/
 ├── Core/                                  [shared abstract algebra]
 │   ├── Group.lean                         [prime-order group typeclass]
 │   ├── Hash.lean                          [random-oracle / hash interfaces]
-│   ├── ZKProof.lean                       [generic NIZK / proof-of-knowledge typeclass]
+│   ├── ZKProof.lean                       [umbrella — re-exports Core/NIZKP]
+│   ├── NIZKP.lean                         [§3.3 — umbrella + bundled NIZKP]
+│   ├── NIZKP/                             [submodules of NIZKP]
+│   │   ├── Construction.lean              [§3.3 — NIZKPSyntax (setup, prover, verifier)]
+│   │   ├── Completeness.lean              [§3.3 — PerfectlyComplete predicate]
+│   │   ├── Security.lean                  [§3.3 — two-world zero-knowledge game + advantage]
+│   │   └── Basic.lean                     [set aside — model-agnostic spec, research issue #43]
 │   ├── AlgebraicMAC.lean                  [Sec. 3.2 — umbrella + bundled AlgebraicMAC]
 │   └── AlgebraicMAC/                      [submodules of AlgebraicMAC]
 │       ├── Construction.lean              [§3.2 Def 3.1 — AlgebraicMACSyntax M]
@@ -104,7 +110,10 @@ KVAC/
 ├── Schemes/                               [concrete instantiations of Framework/]
 │   ├── MicroCMZ/                          [Sec. 5]
 │   │   ├── Construction.lean              [§5.1 — protocol]
+│   │   ├── Relations.lean                 [§5.1 Eqs. 9–11 — R_iu, R_is, R_p Σ-protocols]
 │   │   ├── AlgebraicMAC.lean              [§5.3 — μCMZ as algebraic MAC]
+│   │   ├── AGMPolynomial.lean             [§5.3 Eq. 12 — Lemma 5.4 polynomial layer]
+│   │   ├── SignMask.lean                  [§5.3 — sign-mask distribution lemmas]
 │   │   ├── Anonymity.lean                 [§5.4]
 │   │   ├── Extractability.lean            [§5.5]
 │   │   └── OneMoreUnforgeability.lean     [§5.6 — for anonymous-token variant]
@@ -137,7 +146,7 @@ graph TD
 
   FW["Framework/<br/>Syntax, Correctness, Anonymity, Extractability"]:::fw
 
-  CMZ["Schemes/MicroCMZ/<br/>Construction, AlgebraicMAC,<br/>Anonymity, Extractability, OMUF"]:::scheme
+  CMZ["Schemes/MicroCMZ/<br/>Construction, Relations,<br/>AlgebraicMAC, AGMPolynomial, SignMask,<br/>Anonymity, Extractability, OMUF"]:::scheme
   BBS["Schemes/MicroBBS/<br/>Construction, AlgebraicMAC,<br/>Anonymity, Extractability, OMUF"]:::scheme
 
   RTto["Instances/Ristretto"]:::inst
@@ -198,7 +207,7 @@ The shared API contract that every higher layer imports. These typeclasses are d
 
 - **`Core/Group.lean`** — the project-wide algebraic convention, exposed as two `class abbrev`s: `PrimeOrderGroup F G` (abelian + finite + cyclic + simple + `Module F G`, sufficient for abstract syntax / correctness files) and `SampleableGroup F G` (extends `PrimeOrderGroup` with `SampleableType G` for VCV-io game construction). See `docs/STYLE_GUIDE.md`, section *Prime-order group convention*, for the binder block to copy into each file. Concrete instances live in `Instances/`.
 - **`Core/Hash.lean`** — random-oracle interfaces for the paper's hash functions ($\mathsf{H}_p : \{0,1\}^* \to \mathbb{Z}_p$ and $\mathsf{H}_\mathbb{G} : \{0,1\}^* \to \mathbb{G}$). May be stated abstractly or directly against VCV-io's `OracleSpec` types now that VCV-io is a Wave-0 dependency.
-- **`Core/ZKProof.lean`** — generic NIZK / proof-of-knowledge typeclass following the syntax of Sec. 3.3 (setup, prover, verifier; properties: completeness, knowledge soundness, zero-knowledge, simulation-extractability).
+- **`Core/ZKProof.lean`** + **`Core/NIZKP.lean`** + **`Core/NIZKP/`** submodules — generic NIZK / proof-of-knowledge layer following the syntax of Sec. 3.3. `ZKProof.lean` is an umbrella that re-exports `Core/NIZKP`. The submodule layout mirrors `AlgebraicMAC/`: `Construction.lean` (the monad-polymorphic `NIZKPSyntax` structure: setup, prover, verifier, crs-indexed relation), `Completeness.lean` (the `PerfectlyComplete` predicate), and `Security.lean` (the two-world zero-knowledge game + advantage); `NIZKP.lean` defines the bundled paper-level object `NIZKP`. Knowledge soundness and simulation extractability are delivered by PR #54. An earlier security-model-agnostic spec, `NIZKP/Basic.lean`, is set aside as research (issue #43) and is not imported from the root.
 - **`Core/AlgebraicMAC.lean`** + **`Core/AlgebraicMAC/`** submodules — algebraic MAC following Sec. 3.2 (O24 Definition 3.1). The submodule layout is `Construction.lean` (the monad-polymorphic `AlgebraicMACSyntax M` structure with intrinsic typing of the carrier families), `Correctness.lean` (the support-based `Correct` predicate on `AlgebraicMACSyntax ProbComp`), and `Security.lean` (the UF-CMVA game + advantage per Figure 5 of O24). The umbrella file `AlgebraicMAC.lean` defines the bundled paper-level object `AlgebraicMAC = AlgebraicMACSyntax ProbComp + Correct`, and re-exports `Construction` and `Correctness`; `Security` is opt-in.
 
 ### `KVAC/Preliminaries/` — Sec. 3 (Track Pre)
@@ -231,7 +240,10 @@ The four files mirror Definitions 4.2–4.5 of O24 directly. These definitions a
 The first concrete instantiation of the abstract framework. Improvements over CMZ14: O(1) issuance cost, statistical anonymity, security in AGM under 3-DL.
 
 - **`Schemes/MicroCMZ/Construction.lean`** (§5.1) — protocol description: KeyGen, Setup, Issue (with predicate $\phi$), Present.
+- **`Schemes/MicroCMZ/Relations.lean`** (§5.1, Eqs. 9–11) — the R_iu, R_is, and R_p relations behind issuance and presentation, as Σ-protocols on VCV-io's `SigmaProtocol` with completeness, special soundness, and honest-verifier zero-knowledge.
 - **`Schemes/MicroCMZ/AlgebraicMAC.lean`** (§5.3) — Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n).
+- **`Schemes/MicroCMZ/AGMPolynomial.lean`** (§5.3, Eq. 12) — the pure-algebra layer of Lemma 5.4: the verification polynomial, its identity case, affine substitution, and degree bounds.
+- **`Schemes/MicroCMZ/SignMask.lean`** (§5.3) — sign-mask distribution lemmas: the masked tag is uniform over the nonzero elements of the group.
 - **`Schemes/MicroCMZ/Anonymity.lean`** (§5.4) — Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZK proof system.
 - **`Schemes/MicroCMZ/Extractability.lean`** (§5.5) — Theorem 5.2: μCMZ is extractable in AGM.
 - **`Schemes/MicroCMZ/OneMoreUnforgeability.lean`** (§5.6) — Theorem 5.3: the anonymous-token variant μCMZ$_{AT}$ is one-more unforgeable in AGM under 2-DL.
@@ -264,7 +276,7 @@ No theorem in the formalization plan strictly requires `Examples/`. It can be cu
 
 The theorems and lemmas below are the formal statements we aim to either prove or state-with-`sorry` in v1. Numbering follows O24.
 
-| Result | Statement | Assumption | v1 status |
+| Result | Statement | Assumption | v1 target |
 |---|---|---|---|
 | Sec. 3.2 | Algebraic MAC syntax + correctness + UF-CMVA game (definitions) | — | proved (game + advantage defined; per-scheme advantage bounds delivered by Tracks CMZ-M, BBS-M) |
 | Sec. 3.3 | NIZK simulation-extractability (definition) | — | proved syntax |

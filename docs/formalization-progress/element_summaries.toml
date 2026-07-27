@@ -1,5 +1,5 @@
 # Curated one-line summaries of the paper's elements, consumed by
-# scripts/formalization_progress.py to fill the "Summary" column. Keys are the
+# docs/formalization-progress/formalization_progress.py to fill the "Summary" column. Keys are the
 # element identifiers ("Theorem 5.1", "Definition 3.1", "Figure 5", "§3.1", ...)
 # exactly as the script extracts them from the PDF. Edit these by hand; they are
 # descriptions, not the paper's verbatim prose.
@@ -86,6 +86,9 @@ dim_note = "elements outside µCMZ and its prerequisites — µBBS (§6), design
 "§3.1" = "The hardness assumptions over a prime-order group generator used throughout: discrete log and its gap, q-strong and 2-power variants, and q-DDHI."
 "§3.3" = "The zero-knowledge argument interface (prover, verifier, simulator) and its simulation-extractability, as used by the credential presentation proofs."
 "§3.4" = "Syntax and security of anonymous token schemes with non-interactive issuance."
+"§5.1" = "Protocol description of μCMZ: the base MAC algorithms (Figure 9) and the Σ-protocol relations R_iu, R_is, R_p (Equations 9–11) behind issuance and presentation."
+"§5.2" = "Statements of the μCMZ security theorems proved in the rest of the section."
+"§5.3" = "Algebraic MAC security of μCMZ in the AGM: the instrumented UF-CMVA(+Help) game, the verification polynomial of Lemma 5.4, and the sign-mask distribution lemmas."
 
 # Figures that are security games or constructions, i.e. core contributions.
 "Figure 5" = "The unforgeability-under-chosen-message-and-verification (UF-CMVA) security game for an algebraic MAC."

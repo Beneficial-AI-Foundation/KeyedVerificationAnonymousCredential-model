@@ -37,19 +37,19 @@ When a track is split into sub-issues, list them as nested bullets under the tra
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
   - [X] `Core/Group.lean` ([#18])
   - [X] `Core/Hash.lean` ([#19])
-  - [X] `Core/ZKProof.lean` ([#20])
-  - [X] `Core/NIZKP/Basic.lean` ([#20])
+  - [X] `Core/ZKProof.lean` / `Core/NIZKP/` — syntax, completeness, zero-knowledge game ([#20])
+  - [ ] NIZKP knowledge soundness + simulation extractability — in review (PR #54)
   - [X] `Core/AlgebraicMAC.lean` ([#21])
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
-  - [ ] Track Pre — Preliminaries ([#2])
+  - [ ] Track Pre — Preliminaries ([#2]) 🚧 `Assumptions.lean` landed
   - [ ] Track Σ — ProofSystems ([#3])
-  - [ ] Track F1 — Framework syntax and correctness ([#4])
+  - [ ] Track F1 — Framework syntax and correctness ([#4]) 🚧 in review (PR #77)
 - [ ] **Wave 2** — framework anonymity/extractability, scheme constructions
   - [ ] Track F2 — Framework anonymity and extractability ([#5])
-  - [ ] Track CMZ-C — μCMZ construction ([#6])
+  - [ ] Track CMZ-C — μCMZ construction ([#6]) 🚧 base MAC + R_iu/R_is/R_p relations landed; Issuance/Presentation pending
   - [ ] Track BBS-C — μBBS construction ([#7])
 - [ ] **Wave 3** — security tracks (μCMZ and μBBS)
-  - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
+  - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8]) 🚧 AGM game, Lemma 5.4 polynomial layer, sign masks landed
   - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
   - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
   - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
