@@ -21,12 +21,13 @@ rev = "v4.30.0"
 # VCV-io provides the `SampleableType` typeclass used by `KVAC/Core/Group.lean`
 # and, in later tracks, the `OracleComp` / `OracleSpec` infrastructure for
 # game-based security definitions and the hardness-assumption library under
-# `VCVio/CryptoFoundations/HardnessAssumptions/`. Pinned to `ebea2fa` to match
-# the revision used by the PQXDH formalisation, for cross-project consistency.
+# `VCVio/CryptoFoundations/HardnessAssumptions/`. Pinned to the exact commit of
+# the upstream `bump-lean-mathlib-v4.30.0` branch that this port was built and
+# tested against; a branch name here would let `lake update` move the pin.
 [[require]]
 name = "VCVio"
 git = "https://github.com/Verified-zkEVM/VCV-io.git"
-rev = "bump-lean-mathlib-v4.30.0"
+rev = "5ed119b1f0fa8b69975ad2b45bd9e7680056f404"
 
 # curve25519-dalek-lean-verify is intentionally NOT a dependency at this stage.
 # The 2024 paper formalisation does not require any Ristretto-specific
