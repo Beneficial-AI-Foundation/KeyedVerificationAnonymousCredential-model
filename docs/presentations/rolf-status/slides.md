@@ -7,8 +7,12 @@ Conventions the builder understands:
   - Slides are separated by a line containing only `---`.
   - The first slide is the title slide: `#` is the title, `##` the subtitle,
     the remaining lines the footer (presenter, date).
-  - On the other slides: `##` is the slide title; an image line
-    `![alt](assets/x.png)` fills the left pane; a `**bold**` line
+  - On the other slides: `##` is the slide title; the first image line
+    `![alt](assets/x.png)` fills the left pane; later image lines render
+    in-flow in the code column (e.g. paper equations above their Lean); an
+    optional "title" on an in-column image, `![alt](path "#0d9488")`, draws
+    an accent bar in that color (to visually pair the equation with its
+    marked site in the panel figure); a `**bold**` line
     immediately before a ```lean fence is that block's caption; `- ` lines
     become the explanatory bullets.
   - `figwidth: NN%` sets the width of the image pane (default 38%).
@@ -17,6 +21,8 @@ Conventions the builder understands:
     X; figures keep the same relative scale, so legibility stays uniform.
   - `figzoom: X` (per slide) additionally zooms that slide's figure,
     deliberately departing from the uniform scale.
+  - A `> ` line renders as a fine-print note (smaller font) in the bullet
+    list.
   - A bullet that BEGINS with a `backticked` fragment does not render as a
     bullet: it becomes a hover tooltip attached to that fragment's
     occurrences in the slide's code (dotted underline). If the fragment
@@ -27,19 +33,28 @@ Conventions the builder understands:
 
 <!-- figscale: 1.15 -->
 
-# Formalizing KVAC in Lean
+# Formalizing Keyed-Verification Anonymous Credentials in Lean
 
-## The μCMZ case
+## The μCMZ credential system
 
 Beneficial AI Foundation
 July 30th, 2026
 
 ---
 
+## The μCMZ credential system
+
+![The μCMZ protocol, three boxes](assets/fig9.png)
+
+- <a href="#3">**Base MAC**</a> — the algebraic MAC underneath (slides 3–7). Construction and perfect correctness machine-checked.
+- <a href="#8">**Credential Issuance**</a> — blind issuance of a tag on committed attributes (slides 8–11). The box's proof relations and Σ-protocols machine-checked; the protocol flow in progress.
+- **Credential Presentation** — anonymous showing under a policy φ. Its proof relation R<sub>p</sub> (Eq. 11) is machine-checked; the rest is sequenced after Issuance.
+
+---
+
 ## Base MAC · the structure
 
 <!-- figwidth: 50% -->
-<!-- codesize: 1.2vh -->
 ![Base MAC panel](assets/basemac.png)
 
 ### Ambient context: the fixed group
@@ -62,21 +77,16 @@ abbrev Code   (G : Type)         : Type := G × G
 ```lean
 noncomputable def μCMZBaseMACSyntax (gen : G) :
     AlgebraicMACSyntax ProbComp where
-  Crs := fun _ _ => G                                    -- Crs : Nat → Nat → Type
-  Msg := fun _ => F                                      -- Msg : {secParam n : Nat} → Crs secParam n → Type
-  Sk  := fun {_secParam n} _ => Key F n                  -- Sk : {secParam n : Nat} → Crs secParam n → Type
-  Pp  := fun {_secParam n} _ => Params G n               -- Pp : {secParam n : Nat} → Crs secParam n → Type
-  Tag := fun _ => Code G                                 -- Tag : {secParam n : Nat} → Crs secParam n → Type
-  DecidableEqMsg := fun _ => inferInstance               -- DecidableEqMsg : {secParam n : Nat} → 
-                                                         --     (crs : Crs secParam n) → DecidableEq (Msg crs)
-  setup  := setup                                        -- setup : (secParam n : Nat) → M (Crs secParam n)
-  keygen := fun {_secParam _} crs => keygen crs gen      -- keygen : {secParam n : Nat} → 
-                                                         --     (crs : Crs secParam n) → M (Sk crs × Pp crs)
-  MAC    := fun {_secParam _} _ sk m => mac sk m         -- MAC : {secParam n : Nat} → 
-                                                         --     (crs : Crs secParam n) → Sk crs → (Fin n → Msg crs) → 
-                                                         --     M (Tag crs)
-  verify := fun {_secParam _} _ sk m t => verify sk m t  -- verify : {secParam n : Nat} → (crs : Crs secParam n) → Sk crs →
-                                                         --     (Fin n → Msg crs) → Tag crs → Bool
+  Crs := fun _ _ => G
+  Msg := fun _ => F
+  Sk  := fun {_secParam n} _ => Key F n
+  Pp  := fun {_secParam n} _ => Params G n
+  Tag := fun _ => Code G
+  DecidableEqMsg := fun _ => inferInstance
+  setup  := setup
+  keygen := fun {_secParam _} crs => keygen crs gen
+  MAC    := fun {_secParam _} _ sk m => mac sk m
+  verify := fun {_secParam _} _ sk m t => verify sk m t
 ```
 ### The μCMZ MAC: an instance of the `AlgebraicMAC` structure (O24 Def 3.1)
 
@@ -85,6 +95,16 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
   ⟨μCMZBaseMACSyntax F gen, μCMZBaseMAC_correct F gen⟩
 ```
 
+- `Crs`: interface type `Crs : Nat → Nat → Type` — the crs family, indexed by secParam and n.
+- `Msg`: interface type `Msg : {secParam n : Nat} → Crs secParam n → Type` — the attribute space, selected by the crs.
+- `Sk`: interface type `Sk : {secParam n : Nat} → Crs secParam n → Type` — the secret-key space.
+- `Pp`: interface type `Pp : {secParam n : Nat} → Crs secParam n → Type` — the public-parameter space.
+- `Tag`: interface type `Tag : {secParam n : Nat} → Crs secParam n → Type` — the tag space.
+- `DecidableEqMsg`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → DecidableEq (Msg crs)` — the UF-CMVA challenger computes the freshness check, so message equality must be decidable.
+- `setup`: interface type `(secParam n : Nat) → M (Crs secParam n)`.
+- `keygen`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → M (Sk crs × Pp crs)`.
+- `MAC`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → Sk crs → (Fin n → Msg crs) → M (Tag crs)`.
+- `verify`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → Sk crs → (Fin n → Msg crs) → Tag crs → Bool`.
 - `noncomputable`: we verify the output distribution, not run code. The flag itself comes from choice inside the generic sampler (`Fintype.equivFin`).
 - `fun`: each carrier field is a type family indexed by secParam, n, and the crs (types in the comments). μCMZ's spaces depend only on n, so the lambdas bind n where needed and discard the rest.
 - `μCMZBaseMAC`: Definition 3.1 admits a scheme only together with correctness, so the pair syntax + `μCMZBaseMAC_correct` is the certified scheme. μCMZ's correctness is perfect (support-based).
@@ -96,7 +116,6 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 <!-- figzoom: 1.4 -->
 
 <!-- figwidth: 25% -->
-<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.S](assets/cell_s.png)
 
 ### µCMZ.S · setup
@@ -122,7 +141,6 @@ noncomputable def setup {G : Type}
 <!-- figzoom: 1.4 -->
 
 <!-- figwidth: 25% -->
-<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.K](assets/cell_k.png)
 
 ### µCMZ.K · keygen
@@ -156,7 +174,6 @@ noncomputable def keygen {n : ℕ}
 <!-- figzoom: 1.75 -->
 
 <!-- figwidth: 25% -->
-<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.M](assets/cell_m.png)
 
 ### µCMZ.M · mac
@@ -188,7 +205,6 @@ def macScalar {n : ℕ} (sk : Key F n)
 <!-- figzoom: 1.75 -->
 
 <!-- figwidth: 25% -->
-<!-- codesize: 1.2vh -->
 ![Base MAC, procedure µCMZ.V](assets/cell_v.png)
 
 ### µCMZ.V · verify
@@ -203,3 +219,81 @@ def verify {n : ℕ} (sk : Key F n)
 - The mapping is 1-1: `decide` realizes the two checks as a Bool conjunction; deterministic, so no `ProbComp`.
 - `U ≠ 0`: rejects the universal forgery (0, 0), which would verify for every message and key (V = s·0 holds for any s). The check defends the verifier from dishonest parties; honest issuance never trips it, since `mac` samples U nonzero. Implicit in CMZ14, made explicit in O24 (footnote 5).
 - `decide`: the term-level `decide` function (a tactic of the same name exists): it evaluates a decidable proposition to a `Bool`, given a `Decidable` instance. Here `DecidableEq G` supplies the instances for U ≠ 0 and V = macScalar sk m • U.
+
+---
+
+## Credential Issuance · the relation R<sub>iu</sub>
+
+<!-- figzoom: 0.85 -->
+![Credential Issuance panel, πᵢᵤ sites marked](assets/cell_iss_iu.png)
+
+### R<sub>iu</sub> — the user's proof: opening of C′, policy φ
+
+![O24 Equation 9](assets/eq9.png "#0d9488")
+
+```lean
+def riuRel (gen : G) : RiuStmt G F n → RiuWitness F n → Bool :=
+  fun ⟨Cp, X, φ⟩ ⟨m, s⟩ => decide (Cp = (∑ i, m i • X i) + s • gen) && φ m
+```
+
+- **R<sub>iu</sub> in the box.** The boxed π<sub>iu</sub> of the panel: the user proves R<sub>iu</sub> with witness (m, s) when sending the commitment C′; the server checks it before issuing. The box marks it removable for the anonymous-token variant (Theorem 5.3).
+
+---
+
+## Credential Issuance · the relation R<sub>is</sub>
+
+<!-- figzoom: 0.85 -->
+![Credential Issuance panel, πᵢₛ sites marked](assets/cell_iss_is.png)
+
+### R<sub>is</sub> — the server's proof: (U′, V′) well-formed under (x₀, u)
+
+![O24 Equation 10](assets/eq10.png "#7c3aed")
+
+```lean
+def risRel (gen H : G) : RisStmt G → RisWitness F → Bool :=
+  fun ⟨X₀, C'', U', V'⟩ ⟨x₀, u⟩ => decide
+    (U' = u • gen ∧ X₀ = x₀ • H ∧
+      V' = x₀ • U' + u • C'')
+```
+
+- **R<sub>is</sub> in the box.** The proof π<sub>is</sub> on the return leg: the server proves R<sub>is</sub> with witness (x₀, u) when sending (U′, V′); the user checks it, with C″ = C′ + Xᵣ recomputed locally, before unblinding.
+
+---
+
+## Credential Issuance · the main result so far
+
+<!-- figzoom: 0.6 -->
+![Credential Issuance panel](assets/cell_iss.png)
+
+### The explicit extractor (from `riuSigma`)
+
+```lean
+extract c₁ z₁ c₂ z₂ :=
+  pure (fun i => (z₁.1 i - z₂.1 i) * (c₁ - c₂)⁻¹,
+    (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
+```
+
+### Special soundness, with policy enforcement
+
+```lean
+theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
+    (φ : Policy F n)
+    (hφ : Enforces (riuSigma (F := F) (n := n) gen) (Cp, X, φ)
+            (fun ⟨m, _s⟩ => φ m)) :
+    SpeciallySoundAt (riuSigma (F := F) (n := n) gen) (Cp, X, φ)
+```
+
+- From two accepting transcripts with the same announcement and distinct challenges, the extractor returns an actual witness: an opening (m, s) of the commitment C′ satisfying φ. Dually, `risSigma_speciallySound` recovers (x₀, u), so a server cannot convince the user with a malformed (U′, V′).
+- This is the knowledge-soundness seed of the box: Theorem 5.2's extractability bound rests on extracting exactly these witnesses.
+- `Enforces`: φ-enforcement is a hypothesis, discharged today for `trivialPolicy` (`riu_enforces_trivialPolicy`); a verifier that checks φ in zero knowledge discharges it for a proper φ.
+
+---
+
+## Credential Issuance · status
+
+<!-- figzoom: 0.85 -->
+![Credential Issuance panel, both proof sites marked](assets/cell_iss_annot.png)
+
+- **Formalized (merged).** Both proof relations of the box and their interactive Σ-protocols (`riuSigma`, `risSigma`): perfect completeness, special soundness, and HVZK via explicit simulated transcripts; the policy layer (`Policy`, `trivialPolicy`).
+- `HVZK`: honest-verifier zero-knowledge: a simulator given only the statement produces transcripts distributed identically to real interactions with the honest verifier, so the proof reveals nothing beyond the statement's validity. Proved by explicit simulated transcripts (`riuSimTranscript`, `risSimTranscript`) that sample the response first and solve for the announcement.
+- **Missing.** The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, in review (PR #77); Fiat–Shamir compilation of the Σ-protocols into the non-interactive π<sub>iu</sub>, π<sub>is</sub>; credential-level correctness (Definition 4.3).
