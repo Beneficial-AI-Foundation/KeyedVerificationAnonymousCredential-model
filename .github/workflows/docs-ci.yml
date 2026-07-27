@@ -24,6 +24,9 @@ jobs:
   build-and-check:
     name: Build docs and check declaration coverage
     runs-on: ubuntu-latest
+    # A healthy run finishes in minutes; cap well above that so a stalled
+    # `lean` process fails fast instead of burning the 6h GitHub default.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
