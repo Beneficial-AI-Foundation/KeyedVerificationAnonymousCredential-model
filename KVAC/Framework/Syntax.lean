@@ -77,6 +77,11 @@ structure KVACSyntax (M : Type → Type) [Monad M]
   BlindCred : {secParam n : Nat} → Crs secParam n → Type
   /-- Presentation message `ρ`, selected by the CRS. -/
   PresentMsg : {secParam n : Nat} → Crs secParam n → Type
+  /-- Decidable equality on presentation messages, needed by the
+  extractability game's `(φ*, ρ*) ∉ PQrs` check (O24 Figure 8). Mirrors
+  `KeyedSetupSyntax.DecidableEqMsg`. -/
+  DecidableEqPresentMsg : {secParam n : Nat} → (crs : Crs secParam n) →
+    DecidableEq (PresentMsg crs)
   /-- Issuance, user's first move: `(st_u, μ) ← KVAC.I.Usr₁(pp, m⃗, φ)`. -/
   issueUsr₁ : {secParam n : Nat} → (crs : Crs secParam n) → Pp crs →
     (Fin n → Msg crs) → Pred crs → M (UsrState crs × IssueMsg crs)
@@ -102,6 +107,10 @@ namespace KVACSyntax
 
 variable {M : Type → Type} [Monad M] (kvac : KVACSyntax M)
 variable {secParam n : Nat}
+
+/-- `DecidableEqPresentMsg` promoted to an instance. -/
+instance (crs : kvac.Crs secParam n) : DecidableEq (kvac.PresentMsg crs) :=
+  kvac.DecidableEqPresentMsg crs
 
 /--
 The full one-round issuance interaction `⟨I.Usr(pp, m⃗, φ) ⇌ I.Srv(sk, φ)⟩`
