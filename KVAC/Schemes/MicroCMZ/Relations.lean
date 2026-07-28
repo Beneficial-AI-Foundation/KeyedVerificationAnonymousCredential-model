@@ -1,5 +1,5 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
@@ -137,7 +137,7 @@ private lemma probOutput_decide_bind₄ {α β γ δ : Type}
 /-- Congruence under a uniform bind: pointwise-equal output probabilities give
 equal bound computations. -/
 private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
-    {k₁ k₂ : A → ProbComp γ} {t : γ} (h : ∀ a, Pr[=t | k₁ a] = Pr[=t | k₂ a]) :
+    {k₁ k₂ : A → ProbComp γ} {t : γ} (h : ∀ a, Pr[= t | k₁ a] = Pr[= t | k₂ a]) :
     Pr[=t | (($ᵗ A : ProbComp A) >>= k₁)] = Pr[=t | (($ᵗ A : ProbComp A) >>= k₂)] := by
   rw [probOutput_bind_eq_tsum ($ᵗ A) k₁ t, probOutput_bind_eq_tsum ($ᵗ A) k₂ t]
   exact tsum_congr fun a => by rw [h a]

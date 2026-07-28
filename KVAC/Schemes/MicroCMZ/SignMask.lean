@@ -1,5 +1,5 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/

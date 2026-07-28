@@ -7,6 +7,9 @@ defaultTargets = ["KVAC"]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
+# The header linter hardcodes Mathlib's "Apache 2.0" license line; this repo
+# is MIT (see LICENSE), so its license check can never pass here.
+weak.linter.style.header = false
 maxSynthPendingDepth = 3
 
 # Mathlib pinned to v4.28.0 to match the toolchain and the revision required
