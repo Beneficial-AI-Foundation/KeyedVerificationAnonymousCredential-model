@@ -29,11 +29,14 @@ Conventions the builder understands:
     mathematical statements).
   - A bullet that BEGINS with a `backticked` fragment does not render as a
     bullet: it becomes a hover tooltip attached to that fragment's
-    occurrences in the slide's code and text blocks (dotted underline);
-    failing that, in the visible bullets. If the fragment occurs nowhere,
-    the bullet stays visible.
+    occurrences in the slide's code, text blocks, and block captions
+    (dotted underline); failing that, in the visible bullets. If the
+    fragment occurs nowhere, the bullet stays visible.
   - Inline `backticks` become code; raw HTML such as <sup>λ</sup> passes
     through.
+  - `label: name` (per slide) names the slide; `<a href="#name">` anywhere
+    resolves to its number at build time, so slides can move without link
+    rewrites.
 -->
 
 <!-- figscale: 1.15 -->
@@ -52,14 +55,15 @@ July 30th, 2026
 
 ![The μCMZ protocol, three boxes](assets/fig9.png)
 
-- <a href="#3">**Base MAC**</a> — the algebraic MAC underneath (slides 3–7). Construction and perfect correctness machine-checked.
-- <a href="#8">**Credential Issuance**</a> — blind issuance of a tag on committed attributes (slides 8–11). The box's proof relations and Σ-protocols machine-checked; the protocol flow in progress.
+- <a href="#basemac">**Base MAC**</a> — the algebraic MAC underneath. Construction and perfect correctness machine-checked; Theorem 5.1's AGM unforgeability stated, reduction in progress.
+- <a href="#issuance">**Credential Issuance**</a> — blind issuance of a tag on committed attributes. The box's proof relations and Σ-protocols machine-checked; the protocol flow in progress.
 - **Credential Presentation** — anonymous showing under a policy φ. Its proof relation R<sub>p</sub> (Eq. 11) is machine-checked; the rest is sequenced after Issuance.
 
 ---
 
 ## Base MAC · the structure
 
+<!-- label: basemac -->
 <!-- figwidth: 50% -->
 ![Base MAC panel](assets/basemac.png)
 
@@ -119,6 +123,7 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 
 ## Base MAC · µCMZ.S (setup)
 
+<!-- label: setup -->
 <!-- figzoom: 1.4 -->
 
 <!-- figwidth: 25% -->
@@ -133,12 +138,14 @@ noncomputable def setup {G : Type}
   $ᵗ G
 ```
 
-- The formalization is per-group, not asymptotic: each theorem is an advantage inequality for one fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at Ristretto255, 3/p ≈ 2<sup>−251</sup>.
-- Line 1, Γ ← GrGen(1<sup>λ</sup>), has no runtime counterpart: the typeclass carries 𝔾 and p, the parameter `gen` carries G₀.
+- The formalization is per-group, not asymptotic: each theorem is an advantage inequality for one fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255, 3/p ≈ 2<sup>−250</sup>.
+- Why: O24 states Theorem 5.1 (and the Lemmas 5.4, 5.5 behind it) over GrGen, but every reduction in their proofs takes Γ as input and argues at that fixed Γ (§5.3), so for each adversary the proofs establish the per-group inequality, and averaging it over Γ gives the GrGen statements. The per-group form needs no polynomial-time cost model (the AGM restriction remains), and a deployment instantiates it at its one fixed group, with best-known attack costs bounding the assumption terms. The GrGen theorem follows by averaging; the converse does not hold in general.
+<!-- - Line 1, Γ ← GrGen(1<sup>λ</sup>), has no runtime counterpart: the typeclass carries 𝔾 and p, the parameter `gen` carries G₀. -->
 - `_secParam` and `_n` mirror S(1<sup>λ</sup>, n); nothing depends on them.
 - `SampleableType`: VCV-io class of finite inhabited types with a canonical uniform selection (`selectElem : ProbComp β`, full support, all outputs equally likely); it is what the `$ᵗ` sampling notation runs on.
 - `ProbComp`: VCV-io's monad of probabilistic computations (`OracleComp unifSpec`): programs with access to uniform sampling, whose semantics is the output distribution via `evalDist` (with `support` for the possible outputs).
-- The crs reduces to H as a consequence of the per-group model: Γ is ambient (the typeclass plus `gen`), so sampling H is all that remains of setup; `keygen` receives H and `gen`, the paper's crs data.
+<!-- - The crs reduces to H as a consequence of the per-group model: Γ is ambient (the typeclass plus `gen`), so sampling H is all that remains of setup; `keygen` receives H and `gen`, the paper's crs data. -->
+- <a href="per-group-analysis.html">Full analysis</a>, with the consequences of the per-group model for the rest of O24 §5.
 
 ---
 
@@ -228,7 +235,61 @@ def verify {n : ℕ} (sk : Key F n)
 
 ---
 
+## Base MAC · unforgeability (Theorem 5.1)
+
+<!-- label: ufcmva -->
+
+<!-- figzoom: 0.8 -->
+![Base MAC panel](assets/basemac.png)
+
+### O24 Theorem 5.1 (p. 35)
+
+![Theorem 5.1, the UF-CMVA bound](assets/thm51.png)
+
+### The AGM unforgeability game and advantage (`AlgebraicMAC.lean`)
+
+```lean
+noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
+    ProbComp Bool := do
+  let mac := μCMZBaseMACSyntax F gen
+  let H : G ← mac.setup secParam n
+  let (sk, pp) ← (mac.keygen (secParam := secParam) (n := n) H :
+      ProbComp (Key F n × Params G n))
+  let ((mStar, σStar, ρU, ρV), log) ←
+    (simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
+  let tags := log.map Prod.snd
+  let consistent :=
+    ρU.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.1 ∧
+    ρV.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.2
+  let fresh := mStar ∉ log.map Prod.fst
+  pure (decide consistent && decide fresh &&
+    mac.verify (secParam := secParam) H sk mStar σStar)
+
+noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) : ℝ≥0∞ :=
+  Pr[= true | AGM_UF_CMVAGame (gen := gen) secParam A]
+```
+
+- The proof is in the algebraic group model: the adversary accompanies every group element it outputs with a representation over the elements it has seen, and the forgery must be transcript-consistent and fresh.
+- `AGMUFAdversary`: an adversary whose oracles (`agmOracleImpl`) log the representations of all group elements it submits; the algebraic group model of Fuchsbauer, Kiltz, and Loss (CRYPTO 2018).
+- `Theorem 5.1`: the GrGen subscripts in the bound sample the group at each λ; the per-group formalization instead states the 3-DL and DL games at the fixed (G, gen) — `threeDlogAdv`, `dlogAdv` in `Assumptions.lean` — so both sides of the inequality live in the same model. The paper's form follows by averaging over GrGen's output.
+<!-- > **Formalized (merged).** The statement machinery: the algebraic adversary, the representation-logging oracles (with the paper's Help oracle, the stronger claim O24 proves), the game and advantage above. -->
+<!-- > **Missing.** The reduction itself: the n = 1 case and the reduction of n > 1 to it (Theorems 5.4, 5.5; `agm_ufcmva_le_n1`, `agm_ufcmva_le`, forthcoming module `AGMReduction`), and the bridge to the plain UF-CMVA game. -->
+
+---
+
+## Base MAC · status
+
+<!-- figzoom: 0.8 -->
+![Base MAC panel](assets/basemac.png)
+
+- **Formalized (merged).** The four procedures and `macScalar`, packaged with perfect correctness as an instance of the `AlgebraicMAC` structure (`μCMZBaseMAC`); the hardness assumptions O24 needs beyond VCV-io's DL (3-DL and 2-DL as q-DL instances, and gap-DL) in `Assumptions.lean`; Theorem 5.1's statement machinery in the AGM (algebraic adversary, representation-logging oracles with the Help oracle, game, advantage) with its polynomial toolkit (`AGMPolynomial`).
+- **Missing.** The Theorem 5.1 reduction (forthcoming module `AGMReduction`): the n = 1 case, the n > 1 to n = 1 step (via gap-DL), and the bridge from the AGM game to the plain UF-CMVA game of `KVAC.Core`.
+
+---
+
 ## Credential Issuance · R<sub>iu</sub> relation
+
+<!-- label: issuance -->
 
 <!-- figzoom: 0.85 -->
 ![Credential Issuance panel, πᵢᵤ sites marked](assets/cell_iss_iu.png)
@@ -303,7 +364,7 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
 
 - VCV-io's `SpeciallySoundAt` implements the textbook definition of perfect special soundness: two accepting transcripts with the same announcement and distinct challenges yield, through the extractor, a witness for the relation. 
 - At R<sub>iu</sub> the witness is an opening (m, s) of C′ satisfying φ; dually, `risSigma_speciallySound` recovers (x₀, u).
-- Why perfect: the <a href="#4">per-group</a> formalization has no λ, so the computational notion (extraction fails with probability negligible in λ; DG23, Definition 4.6) is not expressible. The perfect notion holds by pure algebra: the extractor computes the witness by field arithmetic from any two such transcripts, with no hardness assumption.
+- Why perfect: the <a href="#setup">per-group</a> formalization has no λ, so the computational notion (extraction fails with probability negligible in λ; DG23, Definition 4.6) is not expressible. The perfect notion holds by pure algebra: the extractor computes the witness by field arithmetic from any two such transcripts, with no hardness assumption.
 <!-- - This is the knowledge-soundness seed of the box: Theorem 5.2's extractability bound rests on extracting exactly these witnesses. -->
 - `Enforces`: φ-enforcement is a hypothesis, discharged today for `trivialPolicy` (`riu_enforces_trivialPolicy`); a verifier that checks φ in zero knowledge discharges it for a proper φ.
 - `announcement`: the Σ-protocol's first message, sent by the prover before the challenge is drawn. Classically called the commitment; renamed here to avoid a clash with the commitment C′. In `SpeciallySoundAt` it is the variable pc, shared by both transcripts.

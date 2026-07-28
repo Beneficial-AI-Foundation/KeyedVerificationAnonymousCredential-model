@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>The per-group model and O24's Section 5</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="the-per-group-model-and-o24s-section-5">The per-group model and
+O24’s Section 5</h1>
+<p>Analysis supporting the status presentation (2026-07-30). Paper:
+Orrù, <em>Revisiting Keyed-Verification Anonymous Credentials</em>, IACR
+ePrint 2024/1552 (“O24”), as <code>docs/Orru_2024.pdf</code>.
+Formalization: <code>KVAC/</code> with VCV-io.</p>
+<h2 id="statements-are-grgen-based-proofs-are-per-group">Statements are
+GrGen-based; proofs are per-group</h2>
+<p>O24 states every theorem of Section 5 in the GrGen model: each game
+samples a group description Γ ← GrGen(1<sup>λ</sup>), and advantages are
+functions of λ. Theorem 5.1 and the lemmas behind it (5.4, 5.5) all
+carry Adv<sub>GrGen</sub>(λ) terms; none fixes a group.</p>
+<p>The proofs argue at a fixed group throughout.</p>
+<ul>
+<li>Proof of Lemma 5.4 (p. 37): the reduction B “takes as input some
+group description Γ and (X, X′, X″) ∈ 𝔾³”; the simulated public
+parameters and signing answers are identically distributed within that
+Γ; the AGM case analysis runs over ℤ_p[η, x₀, xᵣ, x₁, u₁, …] with p the
+order of Γ’s group; the bad-event bound is 3/p at that p.</li>
+<li>Proof of Lemma 5.5: “Let A be an adversary … taking as input the
+public parameters (Γ, H, X₀, …, Xₙ)”.</li>
+<li>Claim 5.6: the gap-DL reduction B “takes as input (Γ, X)”.</li>
+</ul>
+<p>Nothing in these arguments uses the distribution GrGen places on
+groups. For each adversary, the proofs establish the inequality at every
+admissible fixed Γ; averaging that inequality over Γ ←
+GrGen(1<sup>λ</sup>) yields the GrGen statements. The averaging is per
+adversary, with the reductions uniform in Γ (they receive Γ as input);
+it is not an average of per-group optimized advantages.</p>
+<h2 id="why-the-formalization-is-per-group">Why the formalization is
+per-group</h2>
+<ol type="1">
+<li>The per-group inequality needs no polynomial-time cost model. It
+relates the advantages of concrete adversaries and reductions, so it
+holds with no resource bound; the AGM restriction on the adversary
+remains. Formalizing the asymptotic wrapper would require a cost model
+on every reduction (VCV-io has <code>Asymptotics</code> and
+<code>CostModel</code> layers) without adding algebraic content.</li>
+<li>The per-group form is the one a deployment instantiates. Signal’s
+zkgroup runs on ristretto255, one fixed group of prime order ℓ =
+2<sup>252</sup> + 27742317777372353535851937790883648493, so 3/p ≈
+2<sup>−250</sup>. The security interpretation then plugs best-known
+attack costs into the assumption terms (3-DL, DL) at that group; the
+inequality itself carries no resource bound, so it is the probability
+accounting, not a standalone security estimate.</li>
+<li>Nothing is lost. The GrGen theorem follows by averaging the
+per-group inequality; the converse does not hold in general (GrGen can
+hide a rare bad group).</li>
+</ol>
+<h2
+id="consequences-for-the-remaining-theorems-of-section-5">Consequences
+for the remaining theorems of Section 5</h2>
+<p><strong>AGM-shaped theorems (5.3, 5.11–5.14).</strong> Same anatomy
+as Theorem 5.1: GrGen statements, proofs whose reductions receive Γ and
+run an AGM polynomial case analysis at that group with bad events
+costing c/p. The per-group statement is the proofs’ native form. The
+assumption side is in the repo (<code>twoDlogAdv</code> for Theorem
+5.3’s 2-DL, <code>gapDlogAdv</code> for Claim 5.6, in
+<code>KVAC/Preliminaries/Assumptions.lean</code>). Bounds with query
+counts, such as Theorem 5.3’s Adv<sup>omuf</sup> ≤ Adv<sup>2-dl</sup> +
+q·Adv<sup>dl</sup> + (q+5)/p, keep q as an explicit parameter of the
+concrete inequality.</p>
+<p><strong>Hypothesis-style theorems (5.2, 5.10).</strong> Conditional
+statements: if ZKP is a proof system for R ⊇ R<sub>cmz</sub>, then
+anonymity and extractability hold with advantages bounded by sums of
+Adv<sup>zk</sup> and Adv<sup>ksnd</sup> terms. The proofs are game hops,
+each bounded by a reduction at fixed Γ. Two per-group consequences:</p>
+<ol type="1">
+<li>The ZKP advantage terms must be defined per-group, and for the
+formalized pieces they vanish: the interactive Σ-protocols have perfect
+HVZK and perfect special soundness, so the corresponding terms are 0
+rather than negligible. O24’s remark that µCMZ[ZKP = Σ] has statistical
+anonymity becomes an exact statement with a concrete bound.</li>
+<li>The terms that do not vanish are the knowledge-soundness advantages
+of the Fiat–Shamir-compiled proofs. Per-group these become concrete
+forking-lemma bounds with explicit query counts (VCV-io formalizes the
+forking lemma in <code>CryptoFoundations/Fork.lean</code>, with the
+bound <code>probOutput_none_fork_le</code>). This coincides with the
+Fiat–Shamir gap on the Issuance status slide; the future work
+concentrates there.</li>
+</ol>
+<p><strong>Cross-cutting.</strong> “n = poly(λ)” becomes “any fixed n”,
+a more general reading. “Overwhelming in λ” claims become
+statistical-distance bounds at the fixed group. Final numbers come from
+instantiating the inequality at the deployment group, not from a limit
+argument.</p>
+<h2
+id="what-modeling-with-grgen-would-change-and-what-it-would-gain">What
+modeling with GrGen would change, and what it would gain</h2>
+<p>Two axes hide in the question: sampling the group, and the asymptotic
+machinery that usually rides along (polynomial-time adversaries,
+negligibility).</p>
+<p><strong>What would change.</strong></p>
+<ol type="1">
+<li>The group becomes data instead of ambience. Today
+<code>SampleableGroup F G</code> is a typeclass: every definition lives
+at an implicit fixed (G, gen), wired through by instance resolution.
+With GrGen the game’s first line samples the group, and Lean cannot
+sample a <em>type</em> inside <code>ProbComp</code>, only a value. We
+would need a λ-indexed universe of group descriptions (a Σ-type bundling
+order, carrier representation, generator, and the group axioms) plus an
+interpretation function, and every carrier (<code>Key F n</code>,
+<code>Params G n</code>, tags, statements, witnesses) would depend on
+the sampled description. Typeclass-driven definitions become explicitly
+threaded record fields. This is the largest refactor; essentially every
+file in <code>KVAC/</code> touches it.</li>
+<li>Advantages become functions of λ, with the outer probability over
+GrGen. Mechanical, once (1) exists.</li>
+<li>Adversaries become λ-indexed families with resource bounds. Stating
+the paper’s theorems as security (not just an identity of averages)
+requires “for every PPT adversary family, the advantage is negligible”,
+which drags in VCV-io’s <code>Asymptotics</code>/<code>Negligible</code>
+layer and a cost model, and every reduction B acquires a proof
+obligation that it is PPT given that A is.</li>
+</ol>
+<p><strong>What we would gain.</strong></p>
+<ol type="1">
+<li>Statement-level fidelity: theorems that read like the paper’s
+Adv<sub>GrGen</sub>(λ) forms, and “µCMZ is secure” as one closed
+proposition instead of an inequality schema.</li>
+<li>A machine-checked uniformity and efficiency certificate for the
+reductions. This is the one substantive gain: the per-group inequality
+says nothing about the reductions’ cost, and its security interpretation
+silently relies on B being cheap. Today that is checkable by inspection
+(B is an explicit <code>ProbComp</code> program) but not stated as a
+theorem.</li>
+</ol>
+<p><strong>What we would not gain.</strong> No better bound (the
+per-group inequality already implies the averaged one, with identical
+constants), no additional deployment relevance (a deployment fixes the
+group), and the negligibility conclusion is strictly less informative
+than the concrete inequality it replaces.</p>
+<p><strong>The middle ground.</strong> Gain 2 does not require GrGen.
+VCV-io’s query-tracking and cost-model layers work per-group: theorems
+of the form “B makes at most q<sub>A</sub> + c oracle queries” can be
+added to the existing fixed-group reductions, capturing reduction
+efficiency concretely without touching the group-sampling axis.
+Per-group plus query accounting dominates GrGen plus negligibility on
+every axis except literal textual match with the paper.</p>
+<h2 id="repo-mapping">Repo mapping</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Paper object</th>
+<th>Formalization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Γ ← GrGen(1<sup>λ</sup>)</td>
+<td>typeclass <code>SampleableGroup F G</code> plus the parameter
+<code>gen</code> (G₀); no sampling</td>
+</tr>
+<tr>
+<td>Adv<sup>3-dl</sup><sub>GrGen</sub>(λ)</td>
+<td><code>threeDlogAdv g A</code> (<code>qdlogAdv 3</code>), fixed g, no
+λ</td>
+</tr>
+<tr>
+<td>Adv<sup>dl</sup><sub>GrGen</sub>(λ)</td>
+<td><code>dlogAdv g A</code> over VCV-io’s
+<code>DiffieHellman.dlogExp</code></td>
+</tr>
+<tr>
+<td>Adv<sup>gapdl</sup><sub>GrGen</sub>(λ)</td>
+<td><code>gapDlogAdv g A</code></td>
+</tr>
+<tr>
+<td>UF-CMVA(+Help) game, AGM</td>
+<td><code>AGM_UF_CMVAGame</code>, <code>AGM_UF_CMVAAdv</code>
+(<code>KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean</code>)</td>
+</tr>
+<tr>
+<td>Theorem 5.1’s bound</td>
+<td><code>agm_ufcmva_le_n1</code>, <code>agm_ufcmva_le</code>
+(forthcoming module <code>AGMReduction</code>)</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

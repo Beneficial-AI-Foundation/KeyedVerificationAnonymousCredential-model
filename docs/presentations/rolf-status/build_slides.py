@@ -68,7 +68,7 @@ def png_width(path):
 
 
 def parse_slides(text):
-    text = re.sub(r'<!--(?!\s*(figwidth|codesize|figzoom)).*?-->', '', text, flags=re.S)
+    text = re.sub(r'<!--(?!\s*(figwidth|codesize|figzoom|label)).*?-->', '', text, flags=re.S)
     return [s.strip() for s in re.split(r'\n---\n', text) if s.strip()]
 
 
@@ -201,13 +201,16 @@ def content_slide(block, nav=''):
         hit = False
         marked = []
         for kind, cap, code, extra in blocks:
+            cap2 = pat.sub(
+                lambda m: f'@@TIP{idx}@@{m.group()}@@ENDTIP@@', cap) if cap else cap
+            hit = hit or cap2 != cap
             if kind not in ('code', 'text'):
-                marked.append((kind, cap, code, extra))
+                marked.append((kind, cap2, code, extra))
                 continue
             code2 = pat.sub(
                 lambda m: f'@@TIP{idx}@@{m.group()}@@ENDTIP@@', code)
             hit = hit or code2 != code
-            marked.append((kind, cap, code2, extra))
+            marked.append((kind, cap2, code2, extra))
         if hit:
             blocks = marked
             tip_attrs[idx] = inline(text).replace('"', '&quot;')
@@ -287,6 +290,21 @@ def main():
     if m:
         FIG_MULT = float(m.group(1))
     slides = parse_slides(text)
+
+    # Symbolic slide labels: `<!-- label: name -->` names a slide, and
+    # `href="#name"` anywhere in the md resolves to that slide's number at
+    # build time, so slides can move without link rewrites.
+    labels = {}
+    for i, s in enumerate(slides):
+        for m in re.finditer(r'<!--\s*label:\s*([\w-]+)\s*-->', s):
+            labels[m.group(1)] = i + 1
+
+    def resolve(m):
+        name = m.group(1)
+        if name not in labels:
+            sys.exit(f'unknown slide label in link: #{name}')
+        return f'href="#{labels[name]}"'
+    slides = [re.sub(r'href="#([a-zA-Z][\w-]*)"', resolve, s) for s in slides]
 
     # Per-slide navigation: a link to the slide's box (first slide sharing
     # the title prefix before " · ") and to the overview (the first content
