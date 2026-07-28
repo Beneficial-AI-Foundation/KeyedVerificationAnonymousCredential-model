@@ -7,6 +7,9 @@ defaultTargets = ["KVAC"]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
 relaxedAutoImplicit = false
 weak.linter.mathlibStandardSet = true
+# The header linter hardcodes Mathlib's "Apache 2.0" license line; this repo
+# is MIT (see LICENSE), so its license check can never pass here.
+weak.linter.style.header = false
 maxSynthPendingDepth = 3
 
 # Mathlib pinned to v4.28.0 to match the toolchain and the revision required
@@ -16,17 +19,18 @@ maxSynthPendingDepth = 3
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.28.0"
+rev = "v4.30.0"
 
 # VCV-io provides the `SampleableType` typeclass used by `KVAC/Core/Group.lean`
 # and, in later tracks, the `OracleComp` / `OracleSpec` infrastructure for
 # game-based security definitions and the hardness-assumption library under
-# `VCVio/CryptoFoundations/HardnessAssumptions/`. Pinned to `ebea2fa` to match
-# the revision used by the PQXDH formalisation, for cross-project consistency.
+# `VCVio/CryptoFoundations/HardnessAssumptions/`. Pinned to the exact commit of
+# the upstream `bump-lean-mathlib-v4.30.0` branch that this port was built and
+# tested against; a branch name here would let `lake update` move the pin.
 [[require]]
 name = "VCVio"
 git = "https://github.com/Verified-zkEVM/VCV-io.git"
-rev = "ebea2fa"
+rev = "5ed119b1f0fa8b69975ad2b45bd9e7680056f404"
 
 # curve25519-dalek-lean-verify is intentionally NOT a dependency at this stage.
 # The 2024 paper formalisation does not require any Ristretto-specific

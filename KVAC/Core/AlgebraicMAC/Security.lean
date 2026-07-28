@@ -1,10 +1,11 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Jin Xing Lim
 -/
 import KVAC.Core.AlgebraicMAC.Construction
-import VCVio
+import VCVio.CryptoFoundations.SecExp
+import VCVio.OracleComp.SimSemantics.Append
 
 /-!
 # UF-CMVA security predicate for an algebraic MAC (O24 Figure 5)

@@ -1,5 +1,5 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
@@ -498,7 +498,7 @@ lemma totalDegree_toPoly_le (ρ : ReprCoeffs F q) (msgs : Fin q → F) :
           exact add_le_add (hX .x0) (hX .eta)
       · exact le_trans (hC _ _) (le_trans (hX .xr) one_le_two)
     · exact le_trans (hC _ _) (le_trans (hX .x1) one_le_two)
-  · exact le_trans (totalDegree_finset_sum _ _) (Finset.sup_le fun j _ => hterm j)
+  · exact le_trans (totalDegree_finsetSum _ _) (Finset.sup_le fun j _ => hterm j)
 
 /-- `totalDegree ϕ ≤ 3` — the multivariate half of the paper's
 `deg ψ ≤ totalDegree ϕ ≤ 3` bound (O24 Eq. 16); feeds

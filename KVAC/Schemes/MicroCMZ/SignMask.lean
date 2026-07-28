@@ -1,10 +1,12 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
-import VCVio
+import VCVio.EvalDist.Monad.Map
+import VCVio.EvalDist.Prod
+import VCVio.OracleComp.QueryTracking.Unpredictability
 
 /-!
 # μCMZ sign-mask uniformity (O24 §5.3)
