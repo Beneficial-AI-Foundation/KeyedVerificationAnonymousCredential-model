@@ -802,7 +802,7 @@
           "name": "UFQuery",
           "kind": "inductive",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 57,
+          "line": 58,
           "refs": [],
           "has_sorry": false
         },
@@ -810,7 +810,7 @@
           "name": "UFOracleSpec",
           "kind": "def",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 69,
+          "line": 70,
           "refs": [],
           "has_sorry": false
         },
@@ -818,7 +818,7 @@
           "name": "UFAdversary",
           "kind": "structure",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 79,
+          "line": 80,
           "refs": [],
           "has_sorry": false
         },
@@ -826,7 +826,7 @@
           "name": "SignedLog",
           "kind": "abbrev",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 89,
+          "line": 90,
           "refs": [],
           "has_sorry": false
         },
@@ -834,7 +834,7 @@
           "name": "ufOracleImpl",
           "kind": "def",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 99,
+          "line": 100,
           "refs": [],
           "has_sorry": false
         },
@@ -842,7 +842,7 @@
           "name": "UF_CMVAGame",
           "kind": "def",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 113,
+          "line": 114,
           "refs": [
             "Figure 5"
           ],
@@ -852,7 +852,7 @@
           "name": "UF_CMVAAdv",
           "kind": "abbrev",
           "file": "KVAC/Core/AlgebraicMAC/Security.lean",
-          "line": 130,
+          "line": 131,
           "refs": [],
           "has_sorry": false
         }
@@ -1258,7 +1258,7 @@
           "name": "QDLogAdversary",
           "kind": "def",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 54,
+          "line": 56,
           "refs": [],
           "has_sorry": false
         },
@@ -1266,7 +1266,7 @@
           "name": "qdlogExp",
           "kind": "def",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 59,
+          "line": 61,
           "refs": [
             "§3.1"
           ],
@@ -1276,7 +1276,7 @@
           "name": "qdlogAdv",
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 65,
+          "line": 67,
           "refs": [],
           "has_sorry": false
         },
@@ -1284,7 +1284,7 @@
           "name": "threeDlogAdv",
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 69,
+          "line": 71,
           "refs": [
             "Theorem 5.1"
           ],
@@ -1294,7 +1294,7 @@
           "name": "twoDlogAdv",
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 73,
+          "line": 75,
           "refs": [
             "Theorem 5.3"
           ],
@@ -1304,7 +1304,7 @@
           "name": "dlogAdv",
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 77,
+          "line": 79,
           "refs": [],
           "has_sorry": false
         },
@@ -1312,7 +1312,7 @@
           "name": "GapDLogOracleSpec",
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 85,
+          "line": 87,
           "refs": [],
           "has_sorry": false
         },
@@ -1320,7 +1320,7 @@
           "name": "GapDLogAdversary",
           "kind": "def",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 89,
+          "line": 91,
           "refs": [],
           "has_sorry": false
         },
@@ -1328,7 +1328,7 @@
           "name": "gapDdhOracleImpl",
           "kind": "def",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 94,
+          "line": 96,
           "refs": [],
           "has_sorry": false
         },
@@ -1336,7 +1336,7 @@
           "name": "gapDlogExp",
           "kind": "def",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 100,
+          "line": 102,
           "refs": [],
           "has_sorry": false
         },
@@ -1344,7 +1344,7 @@
           "name": "gapDlogAdv",
           "kind": "abbrev",
           "file": "KVAC/Preliminaries/Assumptions.lean",
-          "line": 107,
+          "line": 109,
           "refs": [],
           "has_sorry": false
         }
@@ -1611,7 +1611,7 @@
           "name": "gen_ne_zero",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 79,
+          "line": 80,
           "refs": [],
           "has_sorry": false
         },
@@ -1619,7 +1619,7 @@
           "name": "glog",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 87,
+          "line": 88,
           "refs": [],
           "has_sorry": false
         },
@@ -1627,7 +1627,7 @@
           "name": "glog_smul",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 90,
+          "line": 91,
           "refs": [],
           "has_sorry": false
         },
@@ -1635,7 +1635,7 @@
           "name": "glog_smul_self",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 93,
+          "line": 94,
           "refs": [],
           "has_sorry": false
         },
@@ -1643,7 +1643,7 @@
           "name": "glog_add",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 99,
+          "line": 100,
           "refs": [],
           "has_sorry": false
         },
@@ -1651,7 +1651,7 @@
           "name": "glog_smul_scalar",
           "kind": "theorem",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 106,
+          "line": 107,
           "refs": [],
           "has_sorry": false
         },
@@ -1659,7 +1659,7 @@
           "name": "AGMRepr",
           "kind": "structure",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 121,
+          "line": 122,
           "refs": [
             "§5.3"
           ],
@@ -1669,7 +1669,7 @@
           "name": "AGMRepr.eval",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 140,
+          "line": 141,
           "refs": [],
           "has_sorry": false
         },
@@ -1677,7 +1677,7 @@
           "name": "AGMQuery",
           "kind": "inductive",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 160,
+          "line": 161,
           "refs": [
             "Figure 5"
           ],
@@ -1687,7 +1687,7 @@
           "name": "AGMOracleSpec",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 168,
+          "line": 169,
           "refs": [],
           "has_sorry": false
         },
@@ -1695,7 +1695,7 @@
           "name": "AGMLog",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 179,
+          "line": 180,
           "refs": [],
           "has_sorry": false
         },
@@ -1703,7 +1703,7 @@
           "name": "agmOracleImpl",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 192,
+          "line": 193,
           "refs": [],
           "has_sorry": false
         },
@@ -1711,7 +1711,7 @@
           "name": "AGMUFAdversary",
           "kind": "structure",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 222,
+          "line": 223,
           "refs": [
             "§5.3"
           ],
@@ -1721,7 +1721,7 @@
           "name": "AGM_UF_CMVAGame",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 233,
+          "line": 234,
           "refs": [
             "Figure 5"
           ],
@@ -1731,7 +1731,7 @@
           "name": "AGM_UF_CMVAAdv",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 252,
+          "line": 253,
           "refs": [],
           "has_sorry": false
         }
@@ -1856,7 +1856,7 @@
           "name": "μCMZBaseMAC",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/Construction.lean",
-          "line": 256,
+          "line": 257,
           "refs": [
             "Definition 3.1"
           ],
@@ -2228,7 +2228,7 @@
           "name": "uniformNonzero_eq_map",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 36,
+          "line": 38,
           "refs": [],
           "has_sorry": false
         },
@@ -2236,7 +2236,7 @@
           "name": "instSampleableNonVanishingMasks",
           "kind": "instance",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 54,
+          "line": 56,
           "refs": [],
           "has_sorry": false
         },
@@ -2244,7 +2244,7 @@
           "name": "reductionMaskSample",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 65,
+          "line": 67,
           "refs": [],
           "has_sorry": false
         },
@@ -2252,7 +2252,7 @@
           "name": "signMaskFun",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 73,
+          "line": 75,
           "refs": [],
           "has_sorry": false
         },
@@ -2260,7 +2260,7 @@
           "name": "signMaskFun_bijective",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 84,
+          "line": 86,
           "refs": [],
           "has_sorry": false
         },
@@ -2268,7 +2268,7 @@
           "name": "signMaskEquiv",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 124,
+          "line": 126,
           "refs": [],
           "has_sorry": false
         },
@@ -2276,7 +2276,7 @@
           "name": "sign_U_dist_eq",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 136,
+          "line": 138,
           "refs": [],
           "has_sorry": false
         },
@@ -2284,7 +2284,7 @@
           "name": "sign_masked_tag_dist_eq",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 239,
+          "line": 241,
           "refs": [],
           "has_sorry": false
         },
@@ -2292,7 +2292,7 @@
           "name": "sign_U_bu_dist_eq",
           "kind": "lemma",
           "file": "KVAC/Schemes/MicroCMZ/SignMask.lean",
-          "line": 281,
+          "line": 283,
           "refs": [],
           "has_sorry": false
         }
