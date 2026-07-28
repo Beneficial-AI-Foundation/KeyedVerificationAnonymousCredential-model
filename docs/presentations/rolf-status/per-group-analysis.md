@@ -6,139 +6,144 @@ Analysis supporting the status presentation (2026-07-30). Paper: Orrù,
 
 ## Statements are GrGen-based; proofs are per-group
 
-O24 states every theorem of Section 5 in the GrGen model: each game samples a
-group description Γ ← GrGen(1<sup>λ</sup>), and advantages are functions of λ.
-Theorem 5.1 and the lemmas behind it (5.4, 5.5) all carry
-Adv<sub>GrGen</sub>(λ) terms; none fixes a group.
+O24 states every theorem of Section 5 over Γ ← GrGen(1<sup>λ</sup>), with
+advantages as functions of λ. The proofs argue at a fixed group throughout:
 
-The proofs argue at a fixed group throughout.
+- Lemma 5.4 (p. 37): the reduction "takes as input some group description Γ
+  and (X, X′, X″) ∈ 𝔾³"; the simulation and the AGM polynomial case analysis
+  run inside that Γ, over ℤ_p[η, x₀, xᵣ, x₁, u₁, …]. (Lemma 5.4 states 1/p
+  for a degree ≤ 3 identity where a Schwartz–Zippel count gives 3/p;
+  Theorem 5.1 assembles 3/p. The Lean reduction will compute the exact
+  constant.)
+- Lemma 5.5: the adversary takes "the public parameters (Γ, H, X₀, …, Xₙ)".
+- Claim 5.6: the gap-DL reduction "takes as input (Γ, X)".
 
-- Proof of Lemma 5.4 (p. 37): the reduction B "takes as input some group
-  description Γ and (X, X′, X″) ∈ 𝔾³"; the simulated public parameters and
-  signing answers are identically distributed within that Γ; the AGM case
-  analysis runs over ℤ_p[η, x₀, xᵣ, x₁, u₁, …] with p the order of Γ's group;
-  the bad-event bound is 3/p at that p.
-- Proof of Lemma 5.5: "Let A be an adversary … taking as input the public
-  parameters (Γ, H, X₀, …, Xₙ)".
-- Claim 5.6: the gap-DL reduction B "takes as input (Γ, X)".
-
-Nothing in these arguments uses the distribution GrGen places on groups. For
-each adversary, the proofs establish the inequality at every admissible fixed
-Γ; averaging that inequality over Γ ← GrGen(1<sup>λ</sup>) yields the GrGen
-statements. The averaging is per adversary, with the reductions uniform in Γ
-(they receive Γ as input); it is not an average of per-group optimized
-advantages.
+Nothing uses the distribution GrGen places on groups, so for each adversary
+the proofs establish the inequality at every admissible fixed Γ, and
+averaging over Γ yields the GrGen statements. Three qualifications: the
+averaging is per adversary, not over per-group optimized advantages; it
+applies to O24's reduction, which receives Γ as input — lifting the Lean
+theorem itself would additionally need the reduction packaged as one program
+over encoded descriptions (see the GrGen section); and c/p averages to an
+expectation over p(Γ) unless GrGen fixes the order at each λ.
 
 ## Why the formalization is per-group
 
-1. The per-group inequality needs no polynomial-time cost model. It relates
-   the advantages of concrete adversaries and reductions, so it holds with no
-   resource bound; the AGM restriction on the adversary remains. Formalizing
-   the asymptotic wrapper would require a cost model on every reduction
-   (VCV-io has `Asymptotics` and `CostModel` layers) without adding algebraic
-   content.
-2. The per-group form is the one a deployment instantiates. Signal's zkgroup
-   runs on ristretto255, one fixed group of prime order
-   ℓ = 2<sup>252</sup> + 27742317777372353535851937790883648493, so
-   3/p ≈ 2<sup>−250</sup>. The security interpretation then plugs best-known
-   attack costs into the assumption terms (3-DL, DL) at that group; the
-   inequality itself carries no resource bound, so it is the probability
-   accounting, not a standalone security estimate.
-3. Nothing is lost. The GrGen theorem follows by averaging the per-group
-   inequality; the converse does not hold in general (GrGen can hide a rare
-   bad group).
+1. The inequality holds with no resource bound: it relates advantages of
+   concrete adversaries and reductions (the AGM restriction remains).
+   Formalizing the asymptotic wrapper would put a cost-model obligation on
+   every reduction (VCV-io's `Asymptotics`/`CostModel` layers) without adding
+   algebraic content.
+2. It is the form a deployment instantiates. Signal's zkgroup runs on
+   ristretto255, prime order ℓ = 2<sup>252</sup> +
+   27742317777372353535851937790883648493, so 3/p ≈ 2<sup>−250</sup> — the
+   statistical term only. The deployment posits concrete bounds for the
+   assumption terms (3-DL, DL), informed by the best-known attacks; the
+   inequality is the probability accounting, not a standalone security
+   estimate, and for Theorem 5.1 it is additionally conditional on the AGM
+   and the pending well-behaved bridge.
+3. The content is preserved: the GrGen theorem follows by averaging, under
+   the qualifications above; the converse does not hold in general (GrGen can
+   hide a rare bad group).
 
 ## Consequences for the remaining theorems of Section 5
 
-**AGM-shaped theorems (5.3, 5.11–5.14).** Same anatomy as Theorem 5.1:
-GrGen statements, proofs whose reductions receive Γ and run an AGM polynomial
-case analysis at that group with bad events costing c/p. The per-group
-statement is the proofs' native form. The assumption side is in the repo
-(`twoDlogAdv` for Theorem 5.3's 2-DL, `gapDlogAdv` for Claim 5.6, in
-`KVAC/Preliminaries/Assumptions.lean`). Bounds with query counts, such as
+**AGM-shaped (5.3, 5.11–5.14).** Same anatomy as 5.1: reductions receive Γ,
+AGM case analysis, bad events costing c/p; per-group is the native form. The
+assumption side is merged (`twoDlogAdv`, `gapDlogAdv` in
+`Assumptions.lean`). Query counts stay explicit parameters, as in
 Theorem 5.3's Adv<sup>omuf</sup> ≤ Adv<sup>2-dl</sup> + q·Adv<sup>dl</sup> +
-(q+5)/p, keep q as an explicit parameter of the concrete inequality.
+(q+5)/p. (The underlying Theorem 5.11 proves the finer (q+6)/p +
+(q+1)·Adv<sup>dl</sup> + 3·Adv<sup>2-dl</sup> + Adv<sup>gapdl</sup>, which
+does not visibly reduce to the headline; the formalization must reconcile
+them.)
 
-**Hypothesis-style theorems (5.2, 5.10).** Conditional statements: if ZKP is
-a proof system for R ⊇ R<sub>cmz</sub>, then anonymity and extractability hold
-with advantages bounded by sums of Adv<sup>zk</sup> and Adv<sup>ksnd</sup>
-terms. The proofs are game hops, each bounded by a reduction at fixed Γ. Two
-per-group consequences:
+**Hypothesis-style (5.2, 5.10).** Conditional on a proof system for
+R ⊇ R<sub>cmz</sub>; the proofs are game hops, each bounded at fixed Γ. Two
+consequences:
 
-1. The ZKP advantage terms must be defined per-group, and for the formalized
-   pieces they vanish: the interactive Σ-protocols have perfect HVZK and
-   perfect special soundness, so the corresponding terms are 0 rather than
-   negligible. O24's remark that µCMZ[ZKP = Σ] has statistical anonymity
-   becomes an exact statement with a concrete bound.
-2. The terms that do not vanish are the knowledge-soundness advantages of the
-   Fiat–Shamir-compiled proofs. Per-group these become concrete forking-lemma
-   bounds with explicit query counts (VCV-io formalizes the forking lemma in
-   `CryptoFoundations/Fork.lean`, with the bound
-   `probOutput_none_fork_le`). This coincides with the Fiat–Shamir gap on the
-   Issuance status slide; the future work concentrates there.
+1. For the interactive instantiation µCMZ[ZKP = Σ] the zero-knowledge terms
+   vanish: perfect HVZK is exact distribution equality, so O24's statistical
+   anonymity remark becomes an exact statement. The compiled NIZK's
+   zero-knowledge term is a separate random-oracle object and does not
+   vanish by this argument.
+2. The knowledge-soundness terms are pending, and the extraction notion
+   matters: O24 uses straight-line simulation extractability in the AGM and
+   ROM (§9; Remark 5.9 gives when plain knowledge soundness suffices).
+   Forking-lemma extraction (VCV-io's `Fork.lean`,
+   `probOutput_none_fork_le`) does not by itself supply straight-line
+   extraction inside an adaptive issuance simulator; this layer must
+   formalize §9's argument or prove a weaker notion sufficient. It is the
+   Fiat–Shamir gap of the status slides.
 
-**Cross-cutting.** "n = poly(λ)" becomes "any fixed n", a more general
-reading. "Overwhelming in λ" claims become statistical-distance bounds at the
-fixed group. Final numbers come from instantiating the inequality at the
-deployment group, not from a limit argument.
+**Cross-cutting.** "n = poly(λ)" becomes "any fixed n" (an explicit
+parameter, a different reading rather than a stronger one). Statistical and
+perfect claims become exact bounds; computational hops keep their assumption
+terms. Final numbers come from instantiating at the deployment group.
 
 ## What modeling with GrGen would change, and what it would gain
 
-Two axes hide in the question: sampling the group, and the asymptotic
-machinery that usually rides along (polynomial-time adversaries,
-negligibility).
+**Change.** (1) The group becomes data instead of ambience: Lean cannot
+sample a type inside `ProbComp`, so GrGen needs a λ-indexed universe of
+group descriptions plus interpretation, and every carrier becomes dependent
+on the sampled description — the largest refactor, touching essentially all
+of `KVAC/`. (2) Advantages become functions of λ; mechanical once (1)
+exists. (3) Adversaries become λ-indexed families with resource bounds, and
+every reduction acquires a PPT obligation (`Asymptotics`/`Negligible` plus a
+cost model).
 
-**What would change.**
+**Gain.** (1) Statement-level fidelity: theorems reading like
+Adv<sub>GrGen</sub>(λ), and "µCMZ is secure" as one closed proposition.
+(2) The one substantive gain: a machine-checked uniformity and efficiency
+certificate for the reductions, today checkable only by inspection.
 
-1. The group becomes data instead of ambience. Today `SampleableGroup F G` is
-   a typeclass: every definition lives at an implicit fixed (G, gen), wired
-   through by instance resolution. With GrGen the game's first line samples
-   the group, and Lean cannot sample a *type* inside `ProbComp`, only a
-   value. We would need a λ-indexed universe of group descriptions (a Σ-type
-   bundling order, carrier representation, generator, and the group axioms)
-   plus an interpretation function, and every carrier (`Key F n`,
-   `Params G n`, tags, statements, witnesses) would depend on the sampled
-   description. Typeclass-driven definitions become explicitly threaded
-   record fields. This is the largest refactor; essentially every file in
-   `KVAC/` touches it.
-2. Advantages become functions of λ, with the outer probability over GrGen.
-   Mechanical, once (1) exists.
-3. Adversaries become λ-indexed families with resource bounds. Stating the
-   paper's theorems as security (not just an identity of averages) requires
-   "for every PPT adversary family, the advantage is negligible", which drags
-   in VCV-io's `Asymptotics`/`Negligible` layer and a cost model, and every
-   reduction B acquires a proof obligation that it is PPT given that A is.
+**No gain.** No better bound, no added deployment relevance, and
+negligibility is strictly less informative than the concrete inequality.
 
-**What we would gain.**
+**Middle ground.** Gain 2 does not require GrGen: VCV-io's query tracking
+adds per-group bounds "B makes at most q<sub>A</sub> + c oracle queries";
+local computation needs the cost-model layer on top. With both, per-group
+covers everything GrGen would except the textual match and the packaged
+uniformity statement.
 
-1. Statement-level fidelity: theorems that read like the paper's
-   Adv<sub>GrGen</sub>(λ) forms, and "µCMZ is secure" as one closed
-   proposition instead of an inequality schema.
-2. A machine-checked uniformity and efficiency certificate for the
-   reductions. This is the one substantive gain: the per-group inequality
-   says nothing about the reductions' cost, and its security interpretation
-   silently relies on B being cheap. Today that is checkable by inspection
-   (B is an explicit `ProbComp` program) but not stated as a theorem.
+## Modeling boundaries (Q&A material)
 
-**What we would not gain.** No better bound (the per-group inequality already
-implies the averaged one, with identical constants), no additional deployment
-relevance (a deployment fixes the group), and the negligibility conclusion is
-strictly less informative than the concrete inequality it replaces.
+Boundaries of the formalization track, not divergences from O24 (the paper
+does not treat them inside its theorems either).
 
-**The middle ground.** Gain 2 does not require GrGen. VCV-io's query-tracking
-and cost-model layers work per-group: theorems of the form "B makes at most
-q<sub>A</sub> + c oracle queries" can be added to the existing fixed-group
-reductions, capturing reduction efficiency concretely without touching the
-group-sampling axis. Per-group plus query accounting dominates GrGen plus
-negligibility on every axis except literal textual match with the paper.
+1. **No executable randomness.** Sampling is ideal and exact (`ProbComp`,
+   `evalDist`); an implementation's PRG sits below the model.
+2. **No group encoding.** The group is an abstract typeclass. ristretto255
+   supplies the prime-order abstraction and canonical encodings; decoding
+   failures, canonicality checks, transcript framing, and side channels
+   remain implementation obligations.
+3. **No cost model.** Adversaries are arbitrary probabilistic programs;
+   reductions are not proven efficient (future work, per the middle ground
+   above).
+4. **No serialization or domain separation.** These belong to the pending
+   Fiat–Shamir layer, with the ROM, statement binding, and extraction
+   losses; straight-line extraction (§9) is sequenced with Theorem 5.2.
+5. **No nontrivial policy.** Only `trivialPolicy` discharges `Enforces`. A
+   proper φ needs a combined proof binding φ to the same extracted witness,
+   an efficiently provable representation, and the policy's identity bound
+   into the transcript (else policy substitution).
+6. **U′ ≠ 0 lives outside R<sub>p</sub>**, next to the proof check, faithful
+   to Figure 9; the composition is an obligation of the pending presentation
+   flow.
+7. **Generator validity.** The security layer assumes (· • `gen`) bijective
+   (`glog` well defined), which prime order supplies for any nonzero
+   element.
+8. **Credential-level theorems are not yet consequences.** Theorems 5.2 and
+   5.10 need the flows (PR #77), the NIZK layer (PR #54), and the bridges on
+   the divergences slide, beyond the proven MAC and Σ-protocol lemmas.
 
 ## Repo mapping
 
 | Paper object | Formalization |
 | --- | --- |
-| Γ ← GrGen(1<sup>λ</sup>) | typeclass `SampleableGroup F G` plus the parameter `gen` (G₀); no sampling |
+| Γ ← GrGen(1<sup>λ</sup>) | typeclass `SampleableGroup F G` plus the generator parameter `gen`; no sampling |
 | Adv<sup>3-dl</sup><sub>GrGen</sub>(λ) | `threeDlogAdv g A` (`qdlogAdv 3`), fixed g, no λ |
 | Adv<sup>dl</sup><sub>GrGen</sub>(λ) | `dlogAdv g A` over VCV-io's `DiffieHellman.dlogExp` |
 | Adv<sup>gapdl</sup><sub>GrGen</sub>(λ) | `gapDlogAdv g A` |
 | UF-CMVA(+Help) game, AGM | `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv` (`KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`) |
-| Theorem 5.1's bound | `agm_ufcmva_le_n1`, `agm_ufcmva_le` (forthcoming module `AGMReduction`) |
+| Theorem 5.1's bound | `agm_ufcmva_le_n1`, `agm_ufcmva_le` (module `AGMReduction`, PR #88) |

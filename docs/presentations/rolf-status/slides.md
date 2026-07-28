@@ -57,7 +57,7 @@ July 30th, 2026
 
 - <a href="#basemac">**Base MAC**</a> — the algebraic MAC underneath. Construction and perfect correctness machine-checked; Theorem 5.1's AGM unforgeability stated, reduction in progress.
 - <a href="#issuance">**Credential Issuance**</a> — blind issuance of a tag on committed attributes. The box's proof relations and Σ-protocols machine-checked; the protocol flow in progress.
-- **Credential Presentation** — anonymous showing under a policy φ. Its proof relation R<sub>p</sub> (Eq. 11) is machine-checked; the rest is sequenced after Issuance.
+- <a href="#presentation">**Credential Presentation**</a> — anonymous showing under a policy φ. The box's proof relation R<sub>p</sub> (Eq. 11) and its Σ-protocol machine-checked; the flow in progress.
 
 ---
 
@@ -106,18 +106,27 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 ```
 
 - `Crs`: interface type `Crs : Nat → Nat → Type` — the crs family, indexed by secParam and n.
-- `Msg`: interface type `Msg : {secParam n : Nat} → Crs secParam n → Type` — the attribute space, selected by the crs.
+- `Msg`: interface type `Msg : {secParam n : Nat} → Crs secParam n → Type` — the per-attribute carrier, selected by the crs; a full message is a vector `Fin n → Msg crs`.
 - `Sk`: interface type `Sk : {secParam n : Nat} → Crs secParam n → Type` — the secret-key space.
 - `Pp`: interface type `Pp : {secParam n : Nat} → Crs secParam n → Type` — the public-parameter space.
 - `Tag`: interface type `Tag : {secParam n : Nat} → Crs secParam n → Type` — the tag space.
-- `DecidableEqMsg`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → DecidableEq (Msg crs)` — the UF-CMVA challenger computes the freshness check, so message equality must be decidable.
+- `DecidableEqMsg`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → DecidableEq (Msg crs)` — the UF-CMVA challenger computes the freshness check, so attribute equality must be decidable; equality on message vectors is derived from it pointwise.
 - `setup`: interface type `(secParam n : Nat) → M (Crs secParam n)`.
 - `keygen`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → M (Sk crs × Pp crs)`.
 - `MAC`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → Sk crs → (Fin n → Msg crs) → M (Tag crs)`.
 - `verify`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → Sk crs → (Fin n → Msg crs) → Tag crs → Bool`.
 - `noncomputable`: we verify the output distribution, not run code. The flag itself comes from choice inside the generic sampler (`Fintype.equivFin`).
-- `fun`: each carrier field is a type family indexed by secParam, n, and the crs (types in the comments). μCMZ's spaces depend only on n, so the lambdas bind n where needed and discard the rest.
-- `μCMZBaseMAC`: Definition 3.1 admits a scheme only together with correctness, so the pair syntax + `μCMZBaseMAC_correct` is the certified scheme. μCMZ's correctness is perfect (support-based).
+- `fun`: each carrier field after Crs is a type family over secParam, n, and the crs (types in the tooltips). μCMZ's instantiations are constant in secParam and the crs, and only Sk and Pp use n, so the lambdas bind what they need and discard the rest.
+- `μCMZBaseMAC`: the `AlgebraicMAC` structure bundles the four procedures with a proof of correctness (Definition 3.1's functional requirement), here perfect (support-based). Unforgeability is a separate theorem obligation (Theorem 5.1).
+- `Fin n → F`: the type of functions from Fin n (the naturals below n) to F: one value per index, so an n-tuple over F. It is how the formalization renders the paper's vectors: `m i` is mᵢ, the length is pinned by the type, and equality is pointwise.
+- `SampleableGroup F G`: the project's typeclass bundling a finite prime-order group G (written additively; 0 is the identity) with its scalar field F and abstract uniform sampling. It is not a concrete curve and carries no hardness assumption; the assumptions live in `Assumptions.lean`, and the security layer additionally assumes (· • gen) bijective, whence gen ≠ 0.
+- `{F : Type}`: the scalar field, the paper's ℤ<sub>q</sub>. The braces make it an implicit variable, inferred at use sites; the four instance brackets after it give F its structure.
+- `{G : Type}`: the group carrier, the paper's 𝔾. Its group structure, prime order, and scalar action by F come from `SampleableGroup F G`.
+- `Field F`: the scalars form a field: addition, multiplication, and inverses of nonzero elements. The extractors' (c₁ − c₂)⁻¹ lives here.
+- `Fintype F`: F is finite, with q = |F| elements. Finiteness is what makes the uniform distribution well-defined: q equal probabilities summing to 1 force mass 1/q per element, the source of the 1/p and 3/p terms in the bounds.
+- `DecidableEq F`: scalar equality computes to a Bool; `decide`-based checks and the UF-CMVA freshness bookkeeping need it.
+- `DecidableEq G`: group-element equality computes to a Bool; `verify`'s checks U ≠ 0 and V = macScalar·U run on it.
+- `SampleableType F`: VCV-io's class of finite inhabited types with a canonical uniform selection (full support, all outputs equally likely); it is what the `$ᵗ` sampling notation runs on.
 
 ---
 
@@ -138,10 +147,10 @@ noncomputable def setup {G : Type}
   $ᵗ G
 ```
 
-- The formalization is per-group, not asymptotic: each theorem is an advantage inequality for one fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255, 3/p ≈ 2<sup>−250</sup>.
-- Why: O24 states Theorem 5.1 (and the Lemmas 5.4, 5.5 behind it) over GrGen, but every reduction in their proofs takes Γ as input and argues at that fixed Γ (§5.3), so for each adversary the proofs establish the per-group inequality, and averaging it over Γ gives the GrGen statements. The per-group form needs no polynomial-time cost model (the AGM restriction remains), and a deployment instantiates it at its one fixed group, with best-known attack costs bounding the assumption terms. The GrGen theorem follows by averaging; the converse does not hold in general.
+- The formalization is per-group, not asymptotic: each security theorem is an advantage inequality, pointwise at an arbitrary fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255 the statistical term is 3/p ≈ 2<sup>−250</sup> (the assumption terms dominate).
+- Why: O24 states Theorem 5.1 (and the Lemmas 5.4, 5.5 behind it) over GrGen, but every reduction in their proofs takes Γ as input and argues at that fixed Γ (§5.3), so for each adversary the proofs establish the per-group inequality, and averaging it over Γ recovers the GrGen statements (uniformity and fixed-order qualifications in the analysis below). The per-group form avoids an asymptotic PPT formalization, and a deployment instantiates it at its one fixed group, positing concrete bounds for the assumption terms, informed by the best-known attacks. The converse does not hold in general.
 <!-- - Line 1, Γ ← GrGen(1<sup>λ</sup>), has no runtime counterpart: the typeclass carries 𝔾 and p, the parameter `gen` carries G₀. -->
-- `_secParam` and `_n` mirror S(1<sup>λ</sup>, n); nothing depends on them.
+- `_secParam` and `_n` mirror S(1<sup>λ</sup>, n); this definition ignores them (H depends on neither), while n shapes keys and messages from `keygen` on.
 - `SampleableType`: VCV-io class of finite inhabited types with a canonical uniform selection (`selectElem : ProbComp β`, full support, all outputs equally likely); it is what the `$ᵗ` sampling notation runs on.
 - `ProbComp`: VCV-io's monad of probabilistic computations (`OracleComp unifSpec`): programs with access to uniform sampling, whose semantics is the output distribution via `evalDist` (with `support` for the possible outputs).
 <!-- - The crs reduces to H as a consequence of the per-group model: Γ is ambient (the typeclass plus `gen`), so sampling H is all that remains of setup; `keygen` receives H and `gen`, the paper's crs data. -->
@@ -172,12 +181,12 @@ noncomputable def keygen {n : ℕ}
 ```
 
 - The single draw sk ←$ ℤ<sub>p</sub><sup>n+2</sup> is three draws: x₀, xᵣ, and the vector x; the joint distribution is the same.
-- X₀ = x₀·H uses the CRS element H, while Xᵣ and X use `gen` (G₀), matching the two distinct bases in Base MAC.
+- X₀ = x₀·H uses the CRS element H, while Xᵣ and X use `gen` (the paper's generator G; Lean names it gen because G is the carrier type), matching the two distinct bases in Base MAC.
 - `ProbComp (Key F n × Params G n)`: the return type: a probabilistic computation producing sk : Key F n = (x₀, xᵣ, x) together with pp : Params G n = (X₀, Xᵣ, X), the paper's "return sk, pp".
-- `H`: the crs: sampled once by `setup`, public, and with unknown discrete log relative to G₀. Basing X₀ = x₀·H on it makes pp perfectly binding to sk, which the statistical-anonymity proof uses (O24 §2.3.1).
+- `H`: the crs: sampled once by `setup`, public, and with unknown discrete log relative to the generator `gen`. Basing X₀ = x₀·H on it makes pp perfectly binding to sk, which the statistical-anonymity proof uses (O24 §2.3.1).
 - `pure`: the monad's return: embeds a value as a probabilistic computation that samples nothing (a point-mass distribution). All of keygen's randomness happens in the three draws above.
 - `F`: the scalar field, the paper's ℤ<sub>q</sub> (the group order, written p elsewhere in the paper). The key is not one F: sk lives in `Key F n` = F × F × (Fin n → F) ≅ ℤ<sub>q</sub><sup>n+2</sup>, matching Base MAC's draw.
-- `two distinct bases`: a base is a fixed group element others are written against: X = x·B, with x the discrete logarithm of X to base B. Base MAC uses two independent bases, H for X₀ and G₀ (`gen`) for Xᵣ and X; independent means no known discrete-log relation between them, which is what makes pp binding to sk.
+- `two distinct bases`: a base is a fixed group element others are written against: X = x·B, with x the discrete logarithm of X to base B. Base MAC uses two independent bases, H for X₀ and the generator (`gen`) for Xᵣ and X; independent means no known discrete-log relation between them, which is what makes pp binding to sk.
 - `do`: monadic sequencing notation, sugar for nested `bind`s in ProbComp. Inside it, `let x ← e` binds the result of a probabilistic step (here the draws), `let y := e` is an ordinary definition, and the block ends by returning a value with `pure`.
 
 ---
@@ -283,7 +292,7 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 ![Base MAC panel](assets/basemac.png)
 
 - **Formalized (merged).** The four procedures and `macScalar`, packaged with perfect correctness as an instance of the `AlgebraicMAC` structure (`μCMZBaseMAC`); the hardness assumptions O24 needs beyond VCV-io's DL (3-DL and 2-DL as q-DL instances, and gap-DL) in `Assumptions.lean`; Theorem 5.1's statement machinery in the AGM (algebraic adversary, representation-logging oracles with the Help oracle, game, advantage) with its polynomial toolkit (`AGMPolynomial`).
-- **Missing.** The Theorem 5.1 reduction (forthcoming module `AGMReduction`): the n = 1 case, the n > 1 to n = 1 step (via gap-DL), and the bridge from the AGM game to the plain UF-CMVA game of `KVAC.Core`.
+- **Missing.** The Theorem 5.1 reduction: the n = 1 case (module `AGMReduction`, in review as PR #88), the n > 1 to n = 1 step (via gap-DL), and the bridge from the AGM game to the plain UF-CMVA game of `KVAC.Core`.
 
 ---
 
@@ -332,6 +341,8 @@ def risRel (gen H : G) : RisStmt G → RisWitness F → Bool :=
 
 ## Credential Issuance · Special Soundness
 
+<!-- label: soundness -->
+
 <!-- figzoom: 0.6 -->
 ![Credential Issuance panel](assets/cell_iss.png)
 
@@ -363,6 +374,7 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
 ```
 
 - VCV-io's `SpeciallySoundAt` implements the textbook definition of perfect special soundness: two accepting transcripts with the same announcement and distinct challenges yield, through the extractor, a witness for the relation. 
+- `extract`: the classical Schnorr extraction: subtract the two responses and divide by the challenge difference. Subtracting the two verification equations cancels the shared announcement and leaves (c₁ − c₂)•C′ expressed over the bases; dividing by c₁ − c₂ (nonzero, since the challenges are distinct) yields an opening of C′.
 - At R<sub>iu</sub> the witness is an opening (m, s) of C′ satisfying φ; dually, `risSigma_speciallySound` recovers (x₀, u).
 - Why perfect: the <a href="#setup">per-group</a> formalization has no λ, so the computational notion (extraction fails with probability negligible in λ; DG23, Definition 4.6) is not expressible. The perfect notion holds by pure algebra: the extractor computes the witness by field arithmetic from any two such transcripts, with no hardness assumption.
 <!-- - This is the knowledge-soundness seed of the box: Theorem 5.2's extractability bound rests on extracting exactly these witnesses. -->
@@ -380,6 +392,71 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
 - **Formalized (merged).** Both proof relations of the box and their interactive Σ-protocols (`riuSigma`, `risSigma`): perfect completeness, special soundness, and HVZK via explicit simulated transcripts; the policy layer (`Policy`, `trivialPolicy`).
 - `HVZK`: honest-verifier zero-knowledge: a simulator given only the statement produces transcripts distributed identically to real interactions with the honest verifier, so the proof reveals nothing beyond the statement's validity. The Prop is VCV-io's `HVZK`, reused like `SpeciallySoundAt`; our simulators (`riuSimTranscript`, `risSimTranscript`) sample the response first and solve for the announcement.
 - **Missing.** The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, in review (PR #77); Fiat–Shamir compilation of the Σ-protocols into the non-interactive π<sub>iu</sub>, π<sub>is</sub>; credential-level correctness (Definition 4.3).
+
+---
+
+## Credential Presentation · R<sub>p</sub> relation
+
+<!-- label: presentation -->
+
+<!-- figzoom: 0.85 -->
+![Credential Presentation panel, πₚ sites marked](assets/cell_pres_rp.png)
+
+### R<sub>p</sub> — the user's proof: openings of the Cᵢ and Z, policy φ
+
+![O24 Equation 11](assets/eq11.png "#be123c")
+
+```lean
+def rpRel (gen H : G) : RpStmt G F n → RpWitness F n → Bool :=
+  fun ⟨U, X, C, Z, φ⟩ ⟨r', r, m⟩ => decide
+    ((∀ i, C i = m i • U + r i • gen) ∧
+      Z = (∑ i, r i • X i) - r' • H) && φ m
+```
+
+- `witness (r', r, m)`: the attributes m, the per-commitment randomness r (one rᵢ for each Cᵢ = mᵢ•U′ + rᵢ•gen), and the scalar r' that masks the tag as C<sub>V</sub> = V′ + r'•H.
+- `RpStmt G F n`: the statement (U′, X, C, Z, φ) : G × PublicBases G n × (Fin n → G) × G × Policy F n. X and C are the paper's vectors X₁, …, Xₙ and C₁, …, Cₙ, modeled as functions from Fin n; that is why the code applies them as `X i` and `C i`.
+- `RpWitness F n`: the witness (r', r, m) : F × (Fin n → F) × (Fin n → F). r and m are the paper's vectors r₁, …, rₙ and m₁, …, mₙ, functions from Fin n like X and C in the statement.
+- **R<sub>p</sub> in the box.** The user re-randomizes the credential σ = (U, V) into (U′, V′) = (r·U, r·V), commits to each attribute as Cᵢ, masks the tag as C<sub>V</sub>, and proves R<sub>p</sub> (ZKP<sub>cmz.p</sub>.P) with witness (r', r, m); the server checks U′ ≠ 0 and the proof.
+- **The two Z's.** The user computes Z = Σᵢ rᵢ•Xᵢ − r'•H from its randomness; the server recomputes Z = (x₀+xᵣ)•U′ + Σᵢ xᵢ•Cᵢ − C<sub>V</sub> from its key. The two agree exactly when V′ = (x₀+xᵣ+Σᵢxᵢmᵢ)•U′, so an accepting proof convinces the server the presented commitments open to a validly MAC'd m, with σ never revealed.
+
+---
+
+## Credential Presentation · Special Soundness
+
+<!-- figzoom: 0.6 -->
+![Credential Presentation panel](assets/cell_pres.png)
+
+### The explicit extractor (from `rpSigma`)
+
+```lean
+extract c₁ z₁ c₂ z₂ := pure
+  ((z₁.1 - z₂.1) * (c₁ - c₂)⁻¹,
+    fun i => (z₁.2.1 i - z₂.2.1 i) * (c₁ - c₂)⁻¹,
+    fun i => (z₁.2.2 i - z₂.2.2 i) * (c₁ - c₂)⁻¹)
+```
+
+### Our theorem: special soundness with policy enforcement
+
+```lean
+theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
+    (C : Fin n → G) (Z : G) (φ : Policy F n)
+    (hφ : Enforces (rpSigma (F := F) (n := n) gen H) (Up, X, C, Z, φ)
+      (fun ⟨_r', _r, m⟩ => φ m)) :
+    SpeciallySoundAt (rpSigma (F := F) (n := n) gen H) (Up, X, C, Z, φ)
+```
+
+- Same notion, same shape as <a href="#soundness">Issuance</a>: VCV-io's perfect `SpeciallySoundAt`, an `Enforces` hypothesis for φ (discharged for `trivialPolicy` by `rp_enforces_trivialPolicy`), and a Schnorr extractor run once per verification equation.
+- At R<sub>p</sub> the extracted witness (r', r, m) opens every Cᵢ and the Z equation, so a prover convincing the verifier knows the attributes m behind the presented commitments, satisfying φ.
+
+---
+
+## Credential Presentation · status
+
+<!-- figzoom: 0.85 -->
+![Credential Presentation panel, πₚ sites marked](assets/cell_pres_rp.png)
+
+- **Formalized (merged).** The box's proof relation (`rpRel`, Eq. 11) and its interactive Σ-protocol `rpSigma`: perfect completeness (`rpSigma_complete`), special soundness with policy enforcement (`rpSigma_speciallySoundAt`), and HVZK via an explicit simulated transcript (`rpSigma_hvzk`, `rpSimTranscript`); the policy layer is shared with Issuance.
+- **Missing.** The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (PR #77); Fiat–Shamir compilation into π<sub>p</sub>; the credential-level guarantees that consume it (anonymity and extractability, Theorem 5.2).
 
 ---
 
@@ -413,3 +490,20 @@ theorem riuSigma_speciallySoundAt (gen : G) (Cp : G) (X : PublicBases G n)
 - **Blueprint summary.** The same nodes as a triaged list: overview counters (today, 43 tracked entries, 12 fully closed), then a ready-next queue with effort and priority tags.
 - **Kept honest by CI.** Every public Lean declaration must anchor to exactly one blueprint node, and every anchor must resolve against the compiled library; a PR that breaks either fails.
 > Day-to-day activity — open PRs and reviews — is in the repository: <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pulls">github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model</a>.
+
+---
+
+## Divergences from the paper
+
+<!-- label: divergences -->
+
+<!-- figzoom: 0.55 -->
+![The μCMZ protocol, three boxes](assets/fig9.png)
+
+- **Per-group, not GrGen.** Every theorem is an advantage inequality at one fixed group: Γ becomes the typeclass plus `gen`, the crs reduces to H, secParam and n are phantom arguments. Why: it is the form O24's proofs natively establish, it needs no polynomial-time cost model, and it is what a deployment instantiates (<a href="per-group-analysis.html">full analysis</a>).
+- **Perfect correctness, not statistical.** O24 is itself split: its defining equation samples U from the nonzero elements of 𝔾, while the figures write U ←$ 𝔾, under which the honest tag (0, 0) fails verification with mass 1/p. The Lean formalization follows the defining equation (`uniformNonzero`) and proves perfect (support-based) correctness. The cost: the signing distribution is conditioned, and the reduction's counting argument under that law is deferred (`SignMask`).
+- **Interactive Σ-protocols now, Fiat–Shamir later.** The figure's non-interactive π<sub>iu</sub>, π<sub>is</sub>, π<sub>p</sub> are not yet formalized; their underlying interactive Σ-protocols are, with perfect completeness, special soundness (policy-conditional, next bullet), and HVZK. The compilation layer (random oracle, domain separation, knowledge extraction with its forking-lemma loss) is pending. Why: the perfect properties are proven once at the Σ level and consumed by the compiled proofs.
+- **Perfect special soundness, policy as a hypothesis.** `SpeciallySoundAt` is transcript-level and λ-free, the information-theoretic counterpart of DG23's computational notion (Definition 4.6). The φ arm is an `Enforces` hypothesis, discharged today only for `trivialPolicy`; a proper φ needs a combined proof binding φ to the same extracted witness. Why: per-group there is no λ to be negligible in, and `verify` checks only the linear arm.
+- **AGM baked into the unforgeability game.** `AGM_UF_CMVAGame` instruments Figure 5 with two distinct changes: representation logging (a restriction to algebraic adversaries) and the Help oracle (a strengthening from the proof preamble). Its oracles are gated on representation consistency, so it matches the honest game only for well-behaved adversaries; the `WellBehaved` bridge is deferred. Why: Theorem 5.1's proof is an AGM argument, and Lean must quantify over the algebraic adversary explicitly.
+- **Encodings, not semantics.** Vectors are functions `Fin n → F` (length pinned by the type, pointwise equality); relations are Bool-valued via `decide`; the Σ-protocol's classical "commitment" is renamed announcement to avoid clashing with the commitment C′. Why: mechanical checkability and unambiguous naming.
+> Recovering the O24-level statements is tracked work, not a given: averaging over GrGen for the model, the conditioned-distribution argument for the signing law, Fiat–Shamir compilation for the π's, and the well-behaved bridge for the AGM game.

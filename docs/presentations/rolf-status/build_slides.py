@@ -332,6 +332,8 @@ def main():
         for box, first in sorted(box_first.items(), key=lambda kv: kv[1]):
             if first != no:
                 links.append(f'<a href="#{first}">{box}</a>')
+        if 'upnext' in labels and labels['upnext'] != no:
+            links.append(f'<a href="#{labels["upnext"]}">Up next</a>')
         nav = f'<div class="slidenav">{" ".join(links)}</div>' if links else ''
         rendered.append(content_slide(s, nav))
     body = title_slide(slides[0]) + ''.join(rendered)
