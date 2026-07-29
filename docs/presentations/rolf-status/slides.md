@@ -308,7 +308,7 @@ Adv<sup>ufcmva</sup>(A)  ≤  Adv<sup>3-dl</sup>(B₁) + Adv<sup>gap-dl</sup>(B<
 5/p  =  3/p (Schwartz–Zippel, degree 3)  +  1/p (keygen shear)  +  1/p (gap-DL denominator)
 
 - **The 1/p non-vanishing bound (p. 38).** The paper asserts the substituted forgery polynomial ψ stays nonzero "except with probability 1/p" — stated bare, no derivation. The bad event is the hidden shift landing on a root of ϕ, and ϕ has total degree 3 (a degree-2 representation term times the degree-1 key polynomial); Schwartz–Zippel gives 3/p. A 1/p bound is what degree 1 would give.
-- **Eq. 13 coefficient.** X₀'s X-coefficient is printed aₕb₀ + bₕ; the correct coefficient is a₀bₕ + b₀aₕ (documented at its use site in the open PR #88 diff).
+- **Eq. 13 coefficient.** X₀'s X-coefficient is printed aₕb₀ + bₕ; the correct coefficient is aₕb₀ + a₀bₕ (documented at its use site in the open PR #88 diff).
   - Definitions (Eqs. 12, 16):  η = log<sub>G</sub> H = aₕ + x·bₕ,  and  x₀ = log<sub>H</sub> X₀ = a₀ + x·b₀.
   - Expansion:  log X₀ = x₀·η = (a₀ + x·b₀)(aₕ + x·bₕ) = a₀aₕ + x·(a₀bₕ + b₀aₕ) + x²·(b₀bₕ).
   - The printed constant and x² coefficients match this product; only the x coefficient is off.
