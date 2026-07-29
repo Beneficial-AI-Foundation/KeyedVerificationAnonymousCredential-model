@@ -148,14 +148,15 @@ noncomputable def setup {G : Type}
   $ᵗ G
 ```
 
-- The formalization is per-group, not asymptotic: each security theorem is an advantage inequality, pointwise at an arbitrary fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255 the statistical term is 3/p ≈ 2<sup>−250</sup> (the assumption terms dominate).
-- Why: O24 states Theorem 5.1 (and the Lemmas 5.4, 5.5 behind it) over GrGen, but every reduction in their proofs takes Γ as input and argues at that fixed Γ (§5.3), so for each adversary the proofs establish the per-group inequality, and averaging it over Γ recovers the GrGen statements (uniformity and fixed-order qualifications in the analysis below). The per-group form avoids an asymptotic PPT formalization, and a deployment instantiates it at its one fixed group, positing concrete bounds for the assumption terms, informed by the best-known attacks. The converse does not hold in general.
+- The formalization is per-group, not asymptotic: each security theorem is an advantage inequality at one arbitrary fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255 the statistical term is 3/p ≈ 2<sup>−250</sup>.
+- Why: O24 states Theorem 5.1 (with Lemmas 5.4, 5.5 behind it) over GrGen, yet every reduction in the proofs takes Γ as input and argues at that fixed Γ (§5.3). Averaging over Γ recovers the GrGen statements; a deployment instantiates its one group (<a href="per-group-analysis.html">full analysis</a>).
+- The technical cost of λ: a λ-parameterized protocol samples Γ ← GrGen(1<sup>λ</sup>), and a type cannot be sampled inside `ProbComp`, so groups would stop being types and become parameters drawn from a λ-indexed universe of descriptions with an interpretation function. Every carrier and statement would depend on the sampled description, and the reuse the ambient typeclass gives (one `SampleableGroup F G` context shared by all definitions and proofs) would be lost.
+- `takes Γ as input`: Lemma 5.4, p. 37: "We build a reduction B to 3-DL. The adversary B takes as input some group description Γ and (X, X′, X″) ∈ 𝔾³." Lemma 5.5, p. 38: "Let A be an adversary against MAC unforgeability, taking as input the public parameters (Γ, H, X₀, …, Xₙ)." Claim 5.6, p. 39: "B takes as input (Γ, X) with X ∈ 𝔾." Claim 5.7, p. 39: "The reduction B gets as input the public parameters (Γ, H, X₀, Xᵣ, X₁)." Theorem 5.1 adds no reduction of its own (p. 35). GrGen appears only in the statements, as the advantage subscript, never in a proof step.
 <!-- - Line 1, Γ ← GrGen(1<sup>λ</sup>), has no runtime counterpart: the typeclass carries 𝔾 and p, the parameter `gen` carries G₀. -->
 - `_secParam` and `_n` mirror S(1<sup>λ</sup>, n); this definition ignores them (H depends on neither), while n shapes keys and messages from `keygen` on.
 - `SampleableType`: VCV-io class of finite inhabited types with a canonical uniform selection (`selectElem : ProbComp β`, full support, all outputs equally likely); it is what the `$ᵗ` sampling notation runs on.
 - `ProbComp`: VCV-io's monad of probabilistic computations (`OracleComp unifSpec`): programs with access to uniform sampling, whose semantics is the output distribution via `evalDist` (with `support` for the possible outputs).
 <!-- - The crs reduces to H as a consequence of the per-group model: Γ is ambient (the typeclass plus `gen`), so sampling H is all that remains of setup; `keygen` receives H and `gen`, the paper's crs data. -->
-- <a href="per-group-analysis.html">Full analysis</a>, with the consequences of the per-group model for the rest of O24 §5.
 
 ---
 
@@ -406,6 +407,7 @@ theorem risSigma_speciallySound (gen H : G) :
 ```
 
 - Special soundness is proven for `riuSigma` and `risSigma`, the Σ-protocols for R<sub>iu</sub> and R<sub>is</sub>: `riuSigma_speciallySoundAt` and `risSigma_speciallySound` (both above), proved by the same argument.
+- R<sub>is</sub> has no policy (φ) arm: its equations pin the witness (x₀, u) completely, so its proof is statement-independent (`SpeciallySound`, every statement). R<sub>iu</sub>'s φ arm is not checked by the verification equation, which is why its theorem is per-statement, under `Enforces`.
 - `SpeciallySound`: the unconditional variant: `SpeciallySoundAt` at every statement (∀ x, SpeciallySoundAt σ x). R<sub>is</sub> carries no policy, so nothing conditions the statement.
 <!-- - `SigmaProtocol S W PC SC Ω P p`: A Σ-protocol over statements S, witnesses W, announcements PC, prover states SC, challenges Ω, responses P, and a relation p : S → W → Bool, packaged with the algorithms commit, respond, verify, sim, and extract. -->
 - `SpeciallySoundAt`: A predicate that states perfect special soundness at a statement: whenever two transcripts share an announcement, have distinct challenges, and both verify, every output of extract on them is a witness for the relation. No probability, no hardness assumption.
