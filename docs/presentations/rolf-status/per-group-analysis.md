@@ -135,7 +135,7 @@ does not treat them inside its theorems either).
    element.
 8. **Credential-level theorems are not yet consequences.** Theorems 5.2 and
    5.10 need the flows (PR #77), the NIZK layer (PR #54), and the bridges on
-   the divergences slide, beyond the proven MAC and Σ-protocol lemmas.
+   the design-decisions slide, beyond the proven MAC and Σ-protocol lemmas.
 
 ## Repo mapping
 

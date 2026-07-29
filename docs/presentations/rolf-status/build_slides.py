@@ -164,7 +164,7 @@ def content_slide(block, nav=''):
                 i += 1
             blocks.append(('code', caption or '', '\n'.join(code), None))
             caption = None
-        elif s.startswith('- '):
+        elif s.startswith('- ') or s.startswith('* '):
             flush_prose()
             sub = line.startswith('  ')
             bullets.append((s[2:], False, sub))
@@ -353,7 +353,9 @@ def main():
   .figpane {{ min-width:0; }}
   .inlinefig img {{ max-width:100%; display:block; border:1px solid #e5e7eb; border-radius:6px; }}
   .figpane img {{ max-width:100%; height:auto; display:block; margin:0 auto; border:1px solid #e5e7eb; border-radius:6px; }}
-  .code {{ min-width:0; max-height:100%; overflow:auto; align-self:stretch; display:flex; flex-direction:column; justify-content:center; gap:1.4vh; }}
+  .code {{ min-width:0; max-height:100%; overflow:auto; align-self:stretch; display:flex; flex-direction:column; gap:1.4vh; }}
+  .code > :first-child {{ margin-top:auto; }}
+  .code > :last-child {{ margin-bottom:auto; }}
   .proc .cap {{ font-size:1.9vh; color:#6b7280; margin:1.8vh 0 .25vh 0; }}
   .proc:first-child .cap {{ margin-top:0; }}
   .proc pre {{ margin:0; font-size:var(--codesize, 1.5vh); line-height:1.35; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:.9vh 1vw; overflow-x:auto; }}
