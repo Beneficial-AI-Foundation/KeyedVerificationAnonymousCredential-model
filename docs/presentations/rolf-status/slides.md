@@ -244,48 +244,6 @@ def verify {n : ℕ} (sk : Key F n)
 
 ---
 
-## Base MAC · unforgeability (Theorem 5.1)
-
-<!-- label: ufcmva -->
-
-<!-- figzoom: 0.8 -->
-![Base MAC panel](assets/basemac.png)
-
-### O24 Theorem 5.1 (p. 35)
-
-![Theorem 5.1, the UF-CMVA bound](assets/thm51.png)
-
-### The AGM unforgeability game and advantage (`AlgebraicMAC.lean`)
-
-```lean
-noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
-    ProbComp Bool := do
-  let mac := μCMZBaseMACSyntax F gen
-  let H : G ← mac.setup secParam n
-  let (sk, pp) ← (mac.keygen (secParam := secParam) (n := n) H :
-      ProbComp (Key F n × Params G n))
-  let ((mStar, σStar, ρU, ρV), log) ←
-    (simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
-  let tags := log.map Prod.snd
-  let consistent :=
-    ρU.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.1 ∧
-    ρV.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.2
-  let fresh := mStar ∉ log.map Prod.fst
-  pure (decide consistent && decide fresh &&
-    mac.verify (secParam := secParam) H sk mStar σStar)
-
-noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) : ℝ≥0∞ :=
-  Pr[= true | AGM_UF_CMVAGame (gen := gen) secParam A]
-```
-
-- The proof is in the algebraic group model: the adversary accompanies every group element it outputs with a representation over the elements it has seen, and the forgery must be transcript-consistent and fresh.
-- `AGMUFAdversary`: an adversary whose oracles (`agmOracleImpl`) log the representations of all group elements it submits; the algebraic group model of Fuchsbauer, Kiltz, and Loss (CRYPTO 2018).
-- `Theorem 5.1`: the GrGen subscripts in the bound sample the group at each λ; the per-group formalization instead states the 3-DL and DL games at the fixed (G, gen) — `threeDlogAdv`, `dlogAdv` in `Assumptions.lean` — so both sides of the inequality live in the same model. The paper's form follows by averaging over GrGen's output.
-<!-- > **Formalized (merged).** The statement machinery: the algebraic adversary, the representation-logging oracles (with the paper's Help oracle, the stronger claim O24 proves), the game and advantage above. -->
-<!-- > **Missing.** The reduction itself: the n = 1 case and the reduction of n > 1 to it (Theorems 5.4, 5.5; `agm_ufcmva_le_n1`, `agm_ufcmva_le`, forthcoming module `AGMReduction`), and the bridge to the plain UF-CMVA game. -->
-
----
-
 ## Base MAC · status
 
 <!-- figzoom: 0.8 -->
@@ -457,6 +415,83 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 
 - **Formalized (merged).** The box's proof relation (`rpRel`, Eq. 11) and its interactive Σ-protocol `rpSigma`: perfect completeness (`rpSigma_complete`), special soundness with policy enforcement (`rpSigma_speciallySoundAt`), and HVZK via an explicit simulated transcript (`rpSigma_hvzk`, `rpSimTranscript`); the policy layer is shared with Issuance.
 - **Missing.** The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (PR #77); Fiat–Shamir compilation into π<sub>p</sub>; the credential-level guarantees that consume it (anonymity and extractability, Theorem 5.2).
+
+---
+
+## Base MAC · unforgeability (Theorem 5.1)
+
+<!-- label: ufcmva -->
+
+<!-- figzoom: 0.65 -->
+<!-- codesize: 1.25vh -->
+![Base MAC panel](assets/basemac.png)
+
+### O24 Theorem 5.1 (p. 35)
+
+![Theorem 5.1, the UF-CMVA bound](assets/thm51.png)
+
+### The AGM unforgeability game and advantage (`AlgebraicMAC.lean`)
+
+```lean
+noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
+    ProbComp Bool := do
+  let mac := μCMZBaseMACSyntax F gen
+  let H : G ← mac.setup secParam n
+  let (sk, pp) ← (mac.keygen (secParam := secParam) (n := n) H :
+      ProbComp (Key F n × Params G n))
+  let ((mStar, σStar, ρU, ρV), log) ←
+    (simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
+  let tags := log.map Prod.snd
+  let consistent :=
+    ρU.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.1 ∧
+    ρV.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.2
+  let fresh := mStar ∉ log.map Prod.fst
+  pure (decide consistent && decide fresh &&
+    mac.verify (secParam := secParam) H sk mStar σStar)
+
+noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) : ℝ≥0∞ :=
+  Pr[= true | AGM_UF_CMVAGame (gen := gen) secParam A]
+```
+
+- The proof is set in the algebraic group model: every group element the adversary outputs carries a representation over the elements it has seen, and the forgery must be transcript-consistent and fresh.
+- **The game shown is the stronger one O24 proves**: its oracles include the paper's Help oracle (§5.3), whose strength the credential-level proofs (Theorem 5.2's extractability via 5.11) consume downstream — proving it once spares every consumer a separate argument.
+- **Scope, stated up front.** The theorem is about this AGM game; the bridge to the plain UF-CMVA game of `KVAC.Core` is a separate, tracked deliverable (its own blueprint node) — sequenced, not forgotten.
+> Everything on this slide is merged. main carries zero `sorry`s and zero axiom declarations — Lean's kernel accepts the library from `propext`/`Classical.choice`/`Quot.sound` alone — and CI rebuilds every PR before it lands.
+- `AGMUFAdversary`: an adversary whose oracles (`agmOracleImpl`) log the representations of all group elements it submits; the algebraic group model of Fuchsbauer, Kiltz, and Loss (CRYPTO 2018).
+- `agmOracleImpl`: the representation-logging oracle with three arms: sign, verify, and Help(A₀, A⃗, Z), which answers whether Z = (x₀+xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ for adversary-chosen group elements. Simulating Help without the key is what brings the gap-DL assumption into the reduction (its collision branch, Claim 5.6).
+- `Theorem 5.1`: the GrGen subscripts in the bound sample the group at each λ; the per-group formalization instead states the 3-DL and DL games at the fixed (G, gen) — `threeDlogAdv`, `dlogAdv` in `Assumptions.lean` — so both sides of the inequality live in the same model. The paper's form follows by averaging over GrGen's output.
+
+---
+
+## Theorem 5.1 · what the analysis corrected in the paper
+
+<!-- label: errata -->
+
+<!-- figzoom: 0.55 -->
+<!-- figwidth: 22% -->
+<!-- codesize: 1.4vh -->
+![Base MAC panel](assets/basemac.png)
+
+### O24's printed bound (Theorem 5.1, p. 35)
+
+![Theorem 5.1, the UF-CMVA bound](assets/thm51.png)
+
+### The corrected target, from constructing the reduction
+
+Adv<sup>ufcmva</sup>(A)  ≤  Adv<sup>3-dl</sup>(B₁) + Adv<sup>gap-dl</sup>(B<sub>gap</sub>) + 5/p
+5/p  =  3/p (Schwartz–Zippel, degree 3)  +  1/p (keygen shear)  +  1/p (gap-DL denominator)
+
+- **The 1/p non-vanishing bound (p. 38).** The paper asserts the substituted forgery polynomial ψ stays nonzero "except with probability 1/p" — stated bare, no derivation. The bad event is the hidden shift landing on a root of ϕ, and ϕ has total degree 3 (a degree-2 representation term times the degree-1 key polynomial); Schwartz–Zippel gives 3/p. A 1/p bound is what degree 1 would give.
+- **Eq. 13 coefficient.** X₀'s X-coefficient is printed aₕb₀ + bₕ; the correct coefficient is a₀bₕ + b₀aₕ (documented at its use site in the open PR #88 diff).
+  - Definitions (Eqs. 12, 16):  η = log<sub>G</sub> H = aₕ + x·bₕ,  and  x₀ = log<sub>H</sub> X₀ = a₀ + x·b₀.
+  - Expansion:  log X₀ = x₀·η = (a₀ + x·b₀)(aₕ + x·bₕ) = a₀aₕ + x·(a₀bₕ + b₀aₕ) + x²·(b₀bₕ).
+  - The printed constant and x² coefficients match this product; only the x coefficient is off.
+- **Eq. 14 coefficient.** A second misprint, in Vⱼ's G-coefficient: printed aᵤ(aₕa₀ + aₕ + a₁mⱼ); the correct factor is A = a₀ + aᵣ + a₁mⱼ (also in PR #88).
+  - Definitions:  keyⱼ = x₀ + xᵣ + mⱼx₁ = A + x·B  with  A = a₀ + aᵣ + a₁mⱼ,  B = b₀ + bᵣ + b₁mⱼ;  and  uⱼ = aᵤ + x·bᵤ.
+  - Expansion:  log Vⱼ = keyⱼ·uⱼ = (A + x·B)(aᵤ + x·bᵤ) = A·aᵤ + x·(A·bᵤ + B·aᵤ) + x²·(B·bᵤ).
+  - The printed x and x² coefficients use A and B correctly; only the G coefficient garbles A.
+- **The gap-DL term.** The printed bound elides the gap-DL advantage its own proof (Lemma 5.5 via Claim 5.6) consumes; we keep it explicit.
+> Each item is checkable by hand against the paper, and none weakens the result: the assumptions are the paper's own and the constant moves from 3/p to 5/p — ≈ 2<sup>−250</sup> at ristretto255 either way. Full write-up: <a href="errata.html">errata note</a>.
 
 ---
 
