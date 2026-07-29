@@ -249,10 +249,9 @@ def verify {n : ℕ} (sk : Key F n)
 ## Base MAC · unforgeability (Theorem 5.1)
 
 <!-- label: ufcmva -->
-
-<!-- figzoom: 0.65 -->
+<!-- figzoom: 0.85 -->
 <!-- codesize: 1.25vh -->
-![Base MAC panel](assets/basemac.png)
+![Game UF-CMVA](assets/fig5.png)
 
 ### O24 Theorem 5.1 (p. 35)
 
@@ -295,14 +294,12 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 
 <!-- label: errata -->
 
-<!-- figzoom: 0.55 -->
-<!-- figwidth: 22% -->
+<!-- figzoom: 0.65 -->
+<!-- figwidth: 30% -->
 <!-- codesize: 1.4vh -->
-![Base MAC panel](assets/basemac.png)
+![Theorem 5.1, the UF-CMVA bound](assets/thm51.png)
 
 ### O24's printed bound (Theorem 5.1, p. 35)
-
-![Theorem 5.1, the UF-CMVA bound](assets/thm51.png)
 
 ### The corrected target, from constructing the reduction
 
