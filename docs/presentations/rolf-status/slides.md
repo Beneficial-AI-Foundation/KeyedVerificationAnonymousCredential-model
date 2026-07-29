@@ -499,13 +499,13 @@ Adv<sup>ufcmva</sup>(A)  ≤  Adv<sup>3-dl</sup>(B₁) + Adv<sup>gap-dl</sup>(B<
 
 <!-- label: upnext -->
 
-<!-- figzoom: 0.8 -->
-![The μCMZ protocol, three boxes](assets/fig9.png)
+<!-- figwidth: 46% -->
+![O24 Theorems 5.1, 5.2, and 5.3 (p. 35)](assets/thm51_52_53.png)
 
 - **Now · Theorem 5.1 (Base MAC unforgeability).** The reduction core — Lemma 5.4's n = 1 case — is in review (module `AGMReduction`, PR #88). Behind it, in order: the bad-event probability bound, the n > 1 to n = 1 step (Lemma 5.5, with Claim 5.6's gap-DL reduction), and the bridge from the <a href="#ufcmva">AGM game</a> to the plain UF-CMVA game. Together these close Theorem 5.1.
 - **Next · Theorem 5.2 (µCMZ is a keyed-verification credential).** Anonymity and extractability, conditional on a proof system for R ⊇ R<sub>cmz</sub>. Its hypotheses are already in flight: knowledge soundness and simulation extractability of the NIZK layer (PR #54), the issuance flow (PR #77), and Fiat–Shamir compilation of the merged Σ-protocols.
 - **Then · Theorem 5.3 (µCMZ<sub>AT</sub>, the anonymous token).** One-more unforgeability and anonymity of the token variant. It follows from Theorem 5.2's machinery plus the AGM analysis of Theorem 5.11; the assumption side (2-DL as `twoDlogAdv`) is merged.
-> The three theorems are the security story of the paper's Section 5; the boxes of the panel above are their subjects — Base MAC for 5.1, the full credential for 5.2, the issuance-only token for 5.3.
+> The three theorems, stated at left as in O24 (p. 35), are the security story of the paper's Section 5 — Base MAC unforgeability (5.1), the full credential (5.2), the issuance-only token (5.3).
 
 ---
 
@@ -523,7 +523,7 @@ Adv<sup>ufcmva</sup>(A)  ≤  Adv<sup>3-dl</sup>(B₁) + Adv<sup>gap-dl</sup>(B<
 - **Where.** The formalization publishes its own status page: <a href="https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/">beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model</a>. It rebuilds and redeploys on every merge, so it is never older than the last merged PR.
 - **Dependency graph.** One node per definition and theorem of O24 plus our internal milestones, grouped by chapter, edges following the paper's dependencies; node color shows formalization status (the Legend button decodes it). The µCMZ cluster mirrors the Section 5 story of these slides.
 - **Blueprint summary.** The same nodes as a triaged list: overview counters (today, 43 tracked entries, 12 fully closed), then a ready-next queue with effort and priority tags.
-- **Kept honest by CI.** Every public Lean declaration must anchor to exactly one blueprint node, and every anchor must resolve against the compiled library; a PR that breaks either fails.
+- **Formalization progress tracker.** A generated per-element map of the whole paper, <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/formalization-progress/FORMALIZATION_PROGRESS.md">FORMALIZATION_PROGRESS.md</a>: every definition, theorem, lemma, figure, and equation of O24 with its formalization status and the Lean declarations citing it, with per-kind and per-section coverage tables.
 > Day-to-day activity — open PRs and reviews — is in the repository: <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pulls">github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model</a>.
 
 ---
