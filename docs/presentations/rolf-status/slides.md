@@ -530,9 +530,17 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 <!-- figzoom: 0.55 -->
 ![The μCMZ protocol, three boxes](assets/fig9.png)
 
-- **Per-group, not GrGen.** Every theorem is an advantage inequality at one fixed group: Γ becomes the typeclass plus `gen`, the crs reduces to H, secParam and n are phantom arguments. Why: it is the form O24's proofs natively establish, it needs no polynomial-time cost model, and it is what a deployment instantiates (<a href="per-group-analysis.html">full analysis</a>).
-- **Perfect correctness, not statistical.** O24 is itself split: its defining equation samples U from the nonzero elements of 𝔾, while the figures write U ←$ 𝔾, under which the honest tag (0, 0) fails verification with mass 1/p. The Lean formalization follows the defining equation (`uniformNonzero`) and proves perfect (support-based) correctness. The cost: the signing distribution is conditioned, and the reduction's counting argument under that law is deferred (`SignMask`).
-- **Encodings, not semantics.** Vectors are functions `Fin n → F` (length pinned by the type, pointwise equality); relations are Bool-valued via `decide`; the Σ-protocol's classical "commitment" is renamed announcement to avoid clashing with the commitment C′. Why: mechanical checkability and unambiguous naming.
+- **Per-group, not GrGen.** Every theorem is an advantage inequality at one fixed group.
+  - Γ becomes the typeclass plus `gen`; the crs reduces to H; secParam and n are phantom arguments.
+  - Why: it is the form O24's proofs natively establish, it needs no polynomial-time cost model, and it is what a deployment instantiates (<a href="per-group-analysis.html">full analysis</a>).
+- **Perfect correctness, not statistical.** Honest tags verify with probability exactly 1.
+  - O24 is itself split: its defining equation samples U from the nonzero elements of 𝔾, while the figures write U ←$ 𝔾, under which the honest tag (0, 0) fails verification with mass 1/p.
+  - The Lean formalization follows the defining equation (`uniformNonzero`) and proves perfect (support-based) correctness.
+  - The cost: the signing distribution is conditioned, and the reduction's counting argument under that law is deferred (`SignMask`).
+- **Encodings, not semantics.** Representations a proof checker can compute with, and names that cannot collide.
+  - Vectors are functions `Fin n → F`: length pinned by the type, equality pointwise.
+  - Relations are Bool-valued via `decide`, so a machine can evaluate them.
+  - The Σ-protocol's classical "commitment" is renamed announcement, avoiding a clash with the commitment C′.
 
 ---
 
@@ -541,9 +549,19 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 <!-- figzoom: 0.55 -->
 ![The μCMZ protocol, three boxes](assets/fig9.png)
 
-- **Interactive Σ-protocols now, Fiat–Shamir later.** The figure's non-interactive π<sub>iu</sub>, π<sub>is</sub>, π<sub>p</sub> are not yet formalized; their underlying interactive Σ-protocols are, with perfect completeness, special soundness (policy-conditional, next bullet), and HVZK. The compilation layer (random oracle, domain separation, knowledge extraction with its forking-lemma loss) is pending. Why: the perfect properties are proven once at the Σ level and consumed by the compiled proofs.
-- **Perfect special soundness, policy as a hypothesis.** `SpeciallySoundAt` is transcript-level and λ-free, the information-theoretic counterpart of DG23's computational notion (Definition 4.6). The φ arm is an `Enforces` hypothesis, discharged today only for `trivialPolicy`; a proper φ needs a combined proof binding φ to the same extracted witness. Why: per-group there is no λ to be negligible in, and `verify` checks only the linear arm.
-- **AGM baked into the unforgeability game.** `AGM_UF_CMVAGame` instruments Figure 5 with two distinct changes: representation logging (a restriction to algebraic adversaries) and the Help oracle (a strengthening from the proof preamble). Its oracles are gated on representation consistency, so it matches the honest game only for well-behaved adversaries; the `WellBehaved` bridge is deferred. Why: Theorem 5.1's proof is an AGM argument, and Lean must quantify over the algebraic adversary explicitly.
+- **Interactive Σ-protocols now, Fiat–Shamir later.**
+  - The figure's non-interactive π<sub>iu</sub>, π<sub>is</sub>, π<sub>p</sub> are not yet formalized; their underlying interactive Σ-protocols are, with perfect completeness, special soundness (policy-conditional, next bullet), and HVZK.
+  - The compilation layer (random oracle, domain separation, knowledge extraction with its forking-lemma loss) is pending.
+  - Why: the perfect properties are proven once at the Σ level and consumed by the compiled proofs.
+- **Perfect special soundness, policy as a hypothesis.**
+  - VCV-io's `SpeciallySoundAt` is transcript-level and λ-free, the information-theoretic counterpart of DG23's computational notion (Definition 4.6).
+  - The φ arm is an `Enforces` hypothesis, discharged today only for `trivialPolicy`; a proper φ needs a combined proof binding φ to the same extracted witness.
+  - Why: per-group there is no λ to be negligible in, and `verify` checks only the linear arm.
+- **AGM baked into the unforgeability game.**
+  - The game `AGM_UF_CMVAGame` instruments Figure 5 with two distinct changes: representation logging (a restriction to algebraic adversaries) and the Help oracle.
+  - The Help oracle follows O24's proof preamble: unforgeability is proven in the stronger form where the adversary also gets Help, at no cost to the bound, because Theorem 5.11 (µCMZ<sub>AT</sub> one-more unforgeability) consumes exactly that stronger claim.
+  - Its oracles are gated on representation consistency, so it matches the honest game only for well-behaved adversaries; the `WellBehaved` bridge is deferred.
+  - Why: Theorem 5.1's proof is an AGM argument, and Lean must quantify over the algebraic adversary explicitly.
 > Recovering the O24-level statements is tracked work, not a given: averaging over GrGen for the model, the conditioned-distribution argument for the signing law, Fiat–Shamir compilation for the π's, and the well-behaved bridge for the AGM game.
 
 ---
