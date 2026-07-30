@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>The per-group model and O24's Section 5</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="the-per-group-model-and-o24s-section-5">The per-group model and
+O24’s Section 5</h1>
+<p>Analysis supporting the status presentation (2026-07-30). Paper:
+Orrù, <em>Revisiting Keyed-Verification Anonymous Credentials</em>, IACR
+ePrint 2024/1552 (“O24”), as <code>docs/Orru_2024.pdf</code>.
+Formalization: <code>KVAC/</code> with VCV-io.</p>
+<h2 id="statements-are-grgen-based-proofs-are-per-group">Statements are
+GrGen-based; proofs are per-group</h2>
+<p>O24 states every theorem of Section 5 over Γ ← GrGen(1<sup>λ</sup>),
+with advantages as functions of λ. The proofs argue at a fixed group
+throughout:</p>
+<ul>
+<li>Lemma 5.4 (p. 37): the reduction “takes as input some group
+description Γ and (X, X′, X″) ∈ 𝔾³”; the simulation and the AGM
+polynomial case analysis run inside that Γ, over ℤ_p[η, x₀, xᵣ, x₁, u₁,
+…]. (Lemma 5.4 states 1/p for a degree ≤ 3 identity where a
+Schwartz–Zippel count gives 3/p; Theorem 5.1 assembles 3/p. The Lean
+reduction will compute the exact constant.)</li>
+<li>Lemma 5.5: the adversary takes “the public parameters (Γ, H, X₀, …,
+Xₙ)”.</li>
+<li>Claim 5.6: the gap-DL reduction “takes as input (Γ, X)”.</li>
+</ul>
+<p>Nothing uses the distribution GrGen places on groups, so for each
+adversary the proofs establish the inequality at every admissible fixed
+Γ, and averaging over Γ yields the GrGen statements. Three
+qualifications: the averaging is per adversary, not over per-group
+optimized advantages; it applies to O24’s reduction, which receives Γ as
+input — lifting the Lean theorem itself would additionally need the
+reduction packaged as one program over encoded descriptions (see the
+GrGen section); and c/p averages to an expectation over p(Γ) unless
+GrGen fixes the order at each λ.</p>
+<h2 id="why-the-formalization-is-per-group">Why the formalization is
+per-group</h2>
+<ol type="1">
+<li>The inequality holds with no resource bound: it relates advantages
+of concrete adversaries and reductions (the AGM restriction remains).
+Formalizing the asymptotic wrapper would put a cost-model obligation on
+every reduction (VCV-io’s
+<code>Asymptotics</code>/<code>CostModel</code> layers) without adding
+algebraic content.</li>
+<li>It is the form a deployment instantiates. Signal’s zkgroup runs on
+ristretto255, prime order ℓ = 2<sup>252</sup> +
+27742317777372353535851937790883648493, so 3/p ≈ 2<sup>−250</sup> — the
+statistical term only. The deployment posits concrete bounds for the
+assumption terms (3-DL, DL), informed by the best-known attacks; the
+inequality is the probability accounting, not a standalone security
+estimate, and for Theorem 5.1 it is additionally conditional on the AGM
+and the pending well-behaved bridge.</li>
+<li>The content is preserved: the GrGen theorem follows by averaging,
+under the qualifications above; the converse does not hold in general
+(GrGen can hide a rare bad group).</li>
+</ol>
+<h2
+id="consequences-for-the-remaining-theorems-of-section-5">Consequences
+for the remaining theorems of Section 5</h2>
+<p><strong>AGM-shaped (5.3, 5.11–5.14).</strong> Same anatomy as 5.1:
+reductions receive Γ, AGM case analysis, bad events costing c/p;
+per-group is the native form. The assumption side is merged
+(<code>twoDlogAdv</code>, <code>gapDlogAdv</code> in
+<code>Assumptions.lean</code>). Query counts stay explicit parameters,
+as in Theorem 5.3’s Adv<sup>omuf</sup> ≤ Adv<sup>2-dl</sup> +
+q·Adv<sup>dl</sup> + (q+5)/p. (The underlying Theorem 5.11 proves the
+finer (q+6)/p + (q+1)·Adv<sup>dl</sup> + 3·Adv<sup>2-dl</sup> +
+Adv<sup>gapdl</sup>, which does not visibly reduce to the headline; the
+formalization must reconcile them.)</p>
+<p><strong>Hypothesis-style (5.2, 5.10).</strong> Conditional on a proof
+system for R ⊇ R<sub>cmz</sub>; the proofs are game hops, each bounded
+at fixed Γ. Two consequences:</p>
+<ol type="1">
+<li>For the interactive instantiation µCMZ[ZKP = Σ] the zero-knowledge
+terms vanish: perfect HVZK is exact distribution equality, so O24’s
+statistical anonymity remark becomes an exact statement. The compiled
+NIZK’s zero-knowledge term is a separate random-oracle object and does
+not vanish by this argument.</li>
+<li>The knowledge-soundness terms are pending, and the extraction notion
+matters: O24 uses straight-line simulation extractability in the AGM and
+ROM (§9; Remark 5.9 gives when plain knowledge soundness suffices).
+Forking-lemma extraction (VCV-io’s <code>Fork.lean</code>,
+<code>probOutput_none_fork_le</code>) does not by itself supply
+straight-line extraction inside an adaptive issuance simulator; this
+layer must formalize §9’s argument or prove a weaker notion sufficient.
+It is the Fiat–Shamir gap of the status slides.</li>
+</ol>
+<p><strong>Cross-cutting.</strong> “n = poly(λ)” becomes “any fixed n”
+(an explicit parameter, a different reading rather than a stronger one).
+Statistical and perfect claims become exact bounds; computational hops
+keep their assumption terms. Final numbers come from instantiating at
+the deployment group.</p>
+<h2
+id="what-modeling-with-grgen-would-change-and-what-it-would-gain">What
+modeling with GrGen would change, and what it would gain</h2>
+<p><strong>Change.</strong> (1) The group becomes data instead of
+ambience: Lean cannot sample a type inside <code>ProbComp</code>, so
+GrGen needs a λ-indexed universe of group descriptions plus
+interpretation, and every carrier becomes dependent on the sampled
+description — the largest refactor, touching essentially all of
+<code>KVAC/</code>. (2) Advantages become functions of λ; mechanical
+once (1) exists. (3) Adversaries become λ-indexed families with resource
+bounds, and every reduction acquires a PPT obligation
+(<code>Asymptotics</code>/<code>Negligible</code> plus a cost
+model).</p>
+<p><strong>Gain.</strong> (1) Statement-level fidelity: theorems reading
+like Adv<sub>GrGen</sub>(λ), and “µCMZ is secure” as one closed
+proposition. (2) The one substantive gain: a machine-checked uniformity
+and efficiency certificate for the reductions, today checkable only by
+inspection.</p>
+<p><strong>No gain.</strong> No better bound, no added deployment
+relevance, and negligibility is strictly less informative than the
+concrete inequality.</p>
+<p><strong>Middle ground.</strong> Gain 2 does not require GrGen:
+VCV-io’s query tracking adds per-group bounds “B makes at most
+q<sub>A</sub> + c oracle queries”; local computation needs the
+cost-model layer on top. With both, per-group covers everything GrGen
+would except the textual match and the packaged uniformity
+statement.</p>
+<h2 id="modeling-boundaries-qa-material">Modeling boundaries (Q&amp;A
+material)</h2>
+<p>Boundaries of the formalization track, not divergences from O24 (the
+paper does not treat them inside its theorems either).</p>
+<ol type="1">
+<li><strong>No executable randomness.</strong> Sampling is ideal and
+exact (<code>ProbComp</code>, <code>evalDist</code>); an
+implementation’s PRG sits below the model.</li>
+<li><strong>No group encoding.</strong> The group is an abstract
+typeclass. ristretto255 supplies the prime-order abstraction and
+canonical encodings; decoding failures, canonicality checks, transcript
+framing, and side channels remain implementation obligations.</li>
+<li><strong>No cost model.</strong> Adversaries are arbitrary
+probabilistic programs; reductions are not proven efficient (future
+work, per the middle ground above).</li>
+<li><strong>No serialization or domain separation.</strong> These belong
+to the pending Fiat–Shamir layer, with the ROM, statement binding, and
+extraction losses; straight-line extraction (§9) is sequenced with
+Theorem 5.2.</li>
+<li><strong>No nontrivial policy.</strong> Only
+<code>trivialPolicy</code> discharges <code>Enforces</code>. A proper φ
+needs a combined proof binding φ to the same extracted witness, an
+efficiently provable representation, and the policy’s identity bound
+into the transcript (else policy substitution).</li>
+<li><strong>U′ ≠ 0 lives outside R<sub>p</sub></strong>, next to the
+proof check, faithful to Figure 9; the composition is an obligation of
+the pending presentation flow.</li>
+<li><strong>Generator validity.</strong> The security layer assumes (· •
+<code>gen</code>) bijective (<code>glog</code> well defined), which
+prime order supplies for any nonzero element.</li>
+<li><strong>Credential-level theorems are not yet consequences.</strong>
+Theorems 5.2 and 5.10 need the flows (PR #77), the NIZK layer (PR #54),
+and the bridges on the design-decisions slide, beyond the proven MAC and
+Σ-protocol lemmas.</li>
+</ol>
+<h2 id="repo-mapping">Repo mapping</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Paper object</th>
+<th>Formalization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Γ ← GrGen(1<sup>λ</sup>)</td>
+<td>typeclass <code>SampleableGroup F G</code> plus the generator
+parameter <code>gen</code>; no sampling</td>
+</tr>
+<tr>
+<td>Adv<sup>3-dl</sup><sub>GrGen</sub>(λ)</td>
+<td><code>threeDlogAdv g A</code> (<code>qdlogAdv 3</code>), fixed g, no
+λ</td>
+</tr>
+<tr>
+<td>Adv<sup>dl</sup><sub>GrGen</sub>(λ)</td>
+<td><code>dlogAdv g A</code> over VCV-io’s
+<code>DiffieHellman.dlogExp</code></td>
+</tr>
+<tr>
+<td>Adv<sup>gapdl</sup><sub>GrGen</sub>(λ)</td>
+<td><code>gapDlogAdv g A</code></td>
+</tr>
+<tr>
+<td>UF-CMVA(+Help) game, AGM</td>
+<td><code>AGM_UF_CMVAGame</code>, <code>AGM_UF_CMVAAdv</code>
+(<code>KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean</code>)</td>
+</tr>
+<tr>
+<td>Theorem 5.1’s bound</td>
+<td><code>agm_ufcmva_le_n1</code>, <code>agm_ufcmva_le</code> (module
+<code>AGMReduction</code>, PR #88)</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>
