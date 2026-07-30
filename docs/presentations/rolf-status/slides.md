@@ -504,7 +504,7 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 - ✅ Their interactive Σ-protocols (`riuSigma`, `risSigma`): perfect completeness, special soundness, and HVZK via explicit simulated transcripts.
 - ✅ The policy layer (`Policy`, `trivialPolicy`).
 - `HVZK`: honest-verifier zero-knowledge: a simulator given only the statement produces transcripts distributed identically to real interactions with the honest verifier, so the proof reveals nothing beyond the statement's validity. The Prop is VCV-io's `HVZK`, reused like `SpeciallySoundAt`; our simulators (`riuSimTranscript`, `risSimTranscript`) sample the response first and solve for the announcement.
-- ⬜ The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, in review (PR #77).
+- ⬜ The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, whose framework layer is in review (PR #77); the µCMZ instantiation is not yet in a PR.
 - ⬜ Fiat–Shamir compilation of the Σ-protocols into the non-interactive π<sub>iu</sub>, π<sub>is</sub>.
 - ⬜ Credential-level correctness (Definition 4.3).
 
@@ -517,7 +517,7 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 
 - ✅ The box's proof relation (`rpRel`, Eq. 11).
 - ✅ Its interactive Σ-protocol `rpSigma`: perfect completeness (`rpSigma_complete`), special soundness with policy enforcement (`rpSigma_speciallySoundAt`), and HVZK via an explicit simulated transcript (`rpSigma_hvzk`, `rpSimTranscript`). The policy layer is shared with Issuance.
-- ⬜ The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (PR #77).
+- ⬜ The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (framework layer in review, PR #77).
 - ⬜ Fiat–Shamir compilation into π<sub>p</sub>.
 - ⬜ The credential-level guarantees that consume it (anonymity and extractability, Theorem 5.2).
 
@@ -574,7 +574,7 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 ![O24 Theorems 5.1, 5.2, and 5.3 (p. 35)](assets/thm51_52_53.png)
 
 - **Now · Theorem 5.1 (Base MAC unforgeability).** The reduction core — Lemma 5.4's n = 1 case — is in review (module `AGMReduction`, PR #88). Behind it, in order: the bad-event probability bound, the n > 1 to n = 1 step (Lemma 5.5, with Claim 5.6's gap-DL reduction), and the bridge from the <a href="#ufcmva">AGM game</a> to the plain UF-CMVA game. Together these close Theorem 5.1.
-- **Next · Theorem 5.2 (µCMZ is a keyed-verification credential).** Anonymity and extractability, conditional on a proof system for R ⊇ R<sub>cmz</sub>. Its hypotheses are already in flight: knowledge soundness and simulation extractability of the NIZK layer (PR #54), the issuance flow (PR #77), and Fiat–Shamir compilation of the merged Σ-protocols.
+- **Next · Theorem 5.2 (µCMZ is a keyed-verification credential).** Anonymity and extractability, conditional on a proof system for R ⊇ R<sub>cmz</sub>. Its hypotheses are already in flight: knowledge soundness and simulation extractability of the NIZK layer (PR #54), the abstract credential framework the flows will instantiate (Definitions 4.1–4.3, PR #77), and Fiat–Shamir compilation of the merged Σ-protocols.
 - **Then · Theorem 5.3 (µCMZ<sub>AT</sub>, the anonymous token).** One-more unforgeability and anonymity of the token variant. It follows from Theorem 5.2's machinery plus the AGM analysis of Theorem 5.11; the assumption side (2-DL as `twoDlogAdv`) is merged.
 > The three theorems, stated at left as in O24 (p. 35), are the security story of the paper's Section 5 — Base MAC unforgeability (5.1), the full credential (5.2), the issuance-only token (5.3).
 
