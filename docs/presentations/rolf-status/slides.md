@@ -485,8 +485,13 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 <!-- figzoom: 0.8 -->
 ![Base MAC panel](assets/basemac.png)
 
-- **Formalized (merged).** The four procedures and `macScalar`, packaged with perfect correctness as an instance of the `AlgebraicMAC` structure (`μCMZBaseMAC`); the hardness assumptions O24 needs beyond VCV-io's DL (3-DL and 2-DL as q-DL instances, and gap-DL) in `Assumptions.lean`; Theorem 5.1's statement machinery in the AGM (algebraic adversary, representation-logging oracles with the Help oracle, game, advantage) with its polynomial toolkit (`AGMPolynomial`).
-- **Missing.** The Theorem 5.1 reduction: the n = 1 case (module `AGMReduction`, in review as PR #88), the n > 1 to n = 1 step (via gap-DL), and the bridge from the AGM game to the plain UF-CMVA game of `KVAC.Core`.
+- ✅ The four procedures and `macScalar`, packaged with perfect correctness as an instance of the `AlgebraicMAC` structure (`μCMZBaseMAC`).
+- ✅ The hardness assumptions O24 needs beyond VCV-io's DL — 3-DL and 2-DL as q-DL instances, and gap-DL — in `Assumptions.lean`.
+- ✅ Theorem 5.1's statement machinery in the AGM (algebraic adversary, representation-logging oracles with the Help oracle, game, advantage) with its polynomial toolkit (`AGMPolynomial`).
+- ⬜ The Theorem 5.1 reduction, n = 1 case (module `AGMReduction`, in review as PR #88).
+- ⬜ The n > 1 to n = 1 step (via gap-DL).
+- ⬜ The bridge from the AGM game to the plain UF-CMVA game of `KVAC.Core`.
+> ✅ formalized, merged on main · ⬜ missing or still in review.
 
 ---
 
@@ -495,9 +500,13 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 <!-- figzoom: 0.85 -->
 ![Credential Issuance panel, both proof sites marked](assets/cell_iss_annot.png)
 
-- **Formalized (merged).** Both proof relations of the box and their interactive Σ-protocols (`riuSigma`, `risSigma`): perfect completeness, special soundness, and HVZK via explicit simulated transcripts; the policy layer (`Policy`, `trivialPolicy`).
+- ✅ Both proof relations of the box (`riuRel`, `risRel`).
+- ✅ Their interactive Σ-protocols (`riuSigma`, `risSigma`): perfect completeness, special soundness, and HVZK via explicit simulated transcripts.
+- ✅ The policy layer (`Policy`, `trivialPolicy`).
 - `HVZK`: honest-verifier zero-knowledge: a simulator given only the statement produces transcripts distributed identically to real interactions with the honest verifier, so the proof reveals nothing beyond the statement's validity. The Prop is VCV-io's `HVZK`, reused like `SpeciallySoundAt`; our simulators (`riuSimTranscript`, `risSimTranscript`) sample the response first and solve for the announcement.
-- **Missing.** The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, in review (PR #77); Fiat–Shamir compilation of the Σ-protocols into the non-interactive π<sub>iu</sub>, π<sub>is</sub>; credential-level correctness (Definition 4.3).
+- ⬜ The flow itself (blinding s, C′ → C″ → (U′, V′), unblinding U := r·U′, V := r(V′ − s·U′)) — it instantiates the abstract KVAC syntax of Definition 4.2, in review (PR #77).
+- ⬜ Fiat–Shamir compilation of the Σ-protocols into the non-interactive π<sub>iu</sub>, π<sub>is</sub>.
+- ⬜ Credential-level correctness (Definition 4.3).
 
 ---
 
@@ -506,8 +515,11 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 <!-- figzoom: 0.85 -->
 ![Credential Presentation panel, πₚ sites marked](assets/cell_pres_rp.png)
 
-- **Formalized (merged).** The box's proof relation (`rpRel`, Eq. 11) and its interactive Σ-protocol `rpSigma`: perfect completeness (`rpSigma_complete`), special soundness with policy enforcement (`rpSigma_speciallySoundAt`), and HVZK via an explicit simulated transcript (`rpSigma_hvzk`, `rpSimTranscript`); the policy layer is shared with Issuance.
-- **Missing.** The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (PR #77); Fiat–Shamir compilation into π<sub>p</sub>; the credential-level guarantees that consume it (anonymity and extractability, Theorem 5.2).
+- ✅ The box's proof relation (`rpRel`, Eq. 11).
+- ✅ Its interactive Σ-protocol `rpSigma`: perfect completeness (`rpSigma_complete`), special soundness with policy enforcement (`rpSigma_speciallySoundAt`), and HVZK via an explicit simulated transcript (`rpSigma_hvzk`, `rpSimTranscript`). The policy layer is shared with Issuance.
+- ⬜ The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (PR #77).
+- ⬜ Fiat–Shamir compilation into π<sub>p</sub>.
+- ⬜ The credential-level guarantees that consume it (anonymity and extractability, Theorem 5.2).
 
 ---
 
