@@ -1,5 +1,5 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
@@ -137,7 +137,7 @@ private lemma probOutput_decide_bind₄ {α β γ δ : Type}
 /-- Congruence under a uniform bind: pointwise-equal output probabilities give
 equal bound computations. -/
 private lemma probOutput_bind_uniform_congr {A γ : Type} [SampleableType A]
-    {k₁ k₂ : A → ProbComp γ} {t : γ} (h : ∀ a, Pr[=t | k₁ a] = Pr[=t | k₂ a]) :
+    {k₁ k₂ : A → ProbComp γ} {t : γ} (h : ∀ a, Pr[= t | k₁ a] = Pr[= t | k₂ a]) :
     Pr[=t | (($ᵗ A : ProbComp A) >>= k₁)] = Pr[=t | (($ᵗ A : ProbComp A) >>= k₂)] := by
   rw [probOutput_bind_eq_tsum ($ᵗ A) k₁ t, probOutput_bind_eq_tsum ($ᵗ A) k₂ t]
   exact tsum_congr fun a => by rw [h a]
@@ -295,12 +295,12 @@ noncomputable def riuSimTranscript (gen : G) (stmt : RiuStmt G F n) :
 
 /-- HVZK (O24 Eq. 9): real transcripts match `riuSimTranscript` exactly. -/
 theorem riuSigma_hvzk (gen : G) :
-    HVZK (riuSigma (F := F) (n := n) gen) (riuSimTranscript gen) := by
+    PerfectHVZK (riuSigma (F := F) (n := n) gen) (riuSimTranscript gen) := by
   rintro ⟨Cp, X, φ⟩ ⟨m, s⟩ hrel
   simp only [riuRel] at hrel
   obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp hrel
   have h_eq : Cp = (∑ i, m i • X i) + s • gen := of_decide_eq_true hlin
-  simp only [riuSigma, riuSimTranscript, bind_assoc, pure_bind]
+  simp only [SigmaProtocol.realTranscript, riuSigma, riuSimTranscript, bind_assoc, pure_bind]
   apply evalDist_ext; intro t
   -- 1. Bring the challenge to the front (TWO swaps: a single `vcstep rw` would
   --    swap the two masks `ρ, ρs` and peel the wrong sample), then peel it.
@@ -470,12 +470,12 @@ announcement to the simulated one with each mask shifted by the challenge-scaled
 witness, then strip the two shifts. Both masks are scalars here, so both shifts
 are over `F`. -/
 theorem risSigma_hvzk (gen H : G) :
-    HVZK (risSigma (F := F) gen H) (risSimTranscript gen H) := by
+    PerfectHVZK (risSigma (F := F) gen H) (risSimTranscript gen H) := by
   intro s w hrel
   obtain ⟨X₀, C'', U', V'⟩ := s
   obtain ⟨x₀, u⟩ := w
   obtain ⟨hU, hX, hV⟩ := of_decide_eq_true hrel
-  simp only [risSigma, risSimTranscript, bind_assoc, pure_bind]
+  simp only [SigmaProtocol.realTranscript, risSigma, risSimTranscript, bind_assoc, pure_bind]
   apply evalDist_ext; intro t
   vcstep rw under 1
   vcstep rw
@@ -688,14 +688,14 @@ with an `n`-opening + one-`Z` announcement. Reorder the challenge to the front
 (three swaps), rewrite to the simulated value with each mask shifted, then strip
 the three shifts (one over `F`, two over `Fin n → F`). -/
 theorem rpSigma_hvzk (gen H : G) :
-    HVZK (rpSigma (F := F) (n := n) gen H) (rpSimTranscript gen H) := by
+    PerfectHVZK (rpSigma (F := F) (n := n) gen H) (rpSimTranscript gen H) := by
   intro s w hrel
   obtain ⟨U, X, C, Z, φ⟩ := s
   obtain ⟨r', r, m⟩ := w
   simp only [rpRel] at hrel
   obtain ⟨hlin, _hφ⟩ := Bool.and_eq_true_iff.mp hrel
   obtain ⟨hC, hZ⟩ := of_decide_eq_true hlin
-  simp only [rpSigma, rpSimTranscript, bind_assoc, pure_bind]
+  simp only [SigmaProtocol.realTranscript, rpSigma, rpSimTranscript, bind_assoc, pure_bind]
   apply evalDist_ext; intro t
   vcstep rw under 2
   vcstep rw under 1

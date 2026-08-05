@@ -9,6 +9,8 @@ import VersoBlueprint
 open Verso.Genre Manual
 open Informal
 
+set_option verso.blueprint.externalCode.strictResolve true
+
 
 #doc (Manual) "Proof systems" =>
 %%%
@@ -17,7 +19,7 @@ tag := "proof_systems"
 
 The proof-system technology that underpins every credential proof,
 corresponding to O24 Section 9 plus supporting Σ-protocol meta-theory.
-Three files under `KVAC/ProofSystems/`:
+Three planned files under `KVAC/ProofSystems/` (none landed yet):
 
 - `SigmaProtocol.lean` — Σ-protocol theory,
 - `FiatShamir.lean` — the non-interactive transformation in the random-oracle model,
@@ -36,9 +38,15 @@ properties are completeness, special soundness, and honest-verifier
 zero-knowledge.
 :::
 
-*TODO (Track Σ).* Define the Σ-protocol typeclass and the three security
-predicates. Provide combinators for AND / OR / equality-of-discrete-log
-compositions as needed by the schemes' presentation proofs.
+The three μCMZ instances are merged on VCV-io's upstream
+`SigmaProtocol` structure — completeness, honest-verifier
+zero-knowledge, and special soundness for `R_iu`, `R_is`, and `R_p` (see
+{bpref "mucmz_sigma_protocols"}[] in the *μCMZ* chapter). No
+project-local Σ-protocol typeclass proved necessary.
+
+*TODO (Track Σ).* Provide combinators for AND / OR /
+equality-of-discrete-log compositions as needed by the schemes'
+presentation proofs.
 
 # Fiat–Shamir transformation
 
