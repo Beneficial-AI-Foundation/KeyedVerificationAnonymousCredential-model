@@ -320,7 +320,7 @@ lemma recoverDlog_eq {g : G} (hg : g ≠ 0) {x : F} {ψ : Polynomial F}
   have hxmem : x ∈ ψ.roots.toList := by
     rw [Multiset.mem_toList]; exact (Polynomial.mem_roots hψ).mpr hroot
   have hnone : (ψ.roots.toList).find? (fun r => decide (r • g = x • g)) ≠ none := by
-    rw [Ne, List.find?_eq_none]; push_neg
+    rw [Ne, List.find?_eq_none]; push Not
     exact ⟨x, hxmem, by simp only [decide_eq_true_eq]⟩
   obtain ⟨y, hy⟩ := Option.ne_none_iff_exists'.mp hnone
   rw [hy, Option.getD_some]
