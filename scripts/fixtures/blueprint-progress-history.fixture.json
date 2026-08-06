@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "historyBasis": "fixture",
+  "projectStart": "2026-05-01T00:00:00+00:00",
+  "updatedAt": "2026-07-01T00:00:00+00:00",
+  "degradedHistory": false,
+  "snapshots": [
+    {
+      "commit": "fixture000000000000000000000000000000001",
+      "shortCommit": "fixture00",
+      "date": "2026-05-10T00:00:00+00:00",
+      "source": "fixture-estimate",
+      "estimated": true,
+      "definitions": { "total": 20, "specified": 2 },
+      "theorems": { "total": 10, "specified": 0, "verified": 0 }
+    },
+    {
+      "commit": "fixture000000000000000000000000000000002",
+      "shortCommit": "fixture00",
+      "date": "2026-06-01T00:00:00+00:00",
+      "source": "fixture-estimate",
+      "estimated": true,
+      "definitions": { "total": 20, "specified": 6 },
+      "theorems": { "total": 10, "specified": 2, "verified": 1 }
+    },
+    {
+      "commit": "fixture000000000000000000000000000000003",
+      "shortCommit": "fixture00",
+      "date": "2026-07-01T00:00:00+00:00",
+      "source": "blueprint-manifest",
+      "estimated": false,
+      "definitions": { "total": 22, "specified": 9 },
+      "theorems": { "total": 12, "specified": 4, "verified": 3 }
+    }
+  ]
+}
