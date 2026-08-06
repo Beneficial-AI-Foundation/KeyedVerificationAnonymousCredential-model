@@ -9,6 +9,8 @@ import VersoBlueprint
 open Verso.Genre Manual
 open Informal
 
+set_option verso.blueprint.externalCode.strictResolve true
+
 
 #doc (Manual) "μBBS" =>
 %%%
@@ -20,7 +22,7 @@ corresponding to O24, Section 6. μBBS improves on BBDT17 and BBS-MAC:
 one fewer group element per signature, alignment with the IETF BBS
 draft, and security in the algebraic group model under (q+2)-DL.
 
-Five files under `KVAC/Schemes/MicroBBS/`, parallel in structure to
+Five planned files under `KVAC/Schemes/MicroBBS/` (none landed yet), parallel in structure to
 *μCMZ*:
 
 - `Construction.lean` — Section 6.1 — Track BBS-C.
@@ -38,8 +40,8 @@ the *Concrete run* chapter.
 
 :::group "bbs_construction"
 The four protocol algorithms: `KeyGen`, `Setup`, `Issue`, and `Present`.
-Like *μCMZ Construction*, stated over the abstract
-`PrimeOrderGroup F G`.
+Like *μCMZ Construction*, stated over the abstract group API
+(`SampleableGroup F G`; setup and tag bases sample group elements).
 :::
 
 *TODO (Track BBS-C).* Implement the four algorithms following Section
@@ -48,9 +50,9 @@ Like *μCMZ Construction*, stated over the abstract
 # Algebraic-MAC security (Section 6.3)
 
 :::group "bbs_amac"
-*Theorems 6.6, 6.8, 6.9.* μBBS, viewed as an algebraic MAC under the
-*Core* algebraic-MAC interface, is UF-CMVA in the algebraic group model
-under (q+2)-DL. The proof requires the DDH-oracle augmentation in the
+*Theorems 6.1 and 6.5, via Lemmas 6.8 and 6.9.* μBBS, viewed as an
+algebraic MAC under the *Core* algebraic-MAC interface, is UF-CMVA in
+the algebraic group model under (q+2)-DL. The proof requires the DDH-oracle augmentation in the
 algebraic-MAC unforgeability game — one of the technical contributions
 of O24.
 :::
@@ -85,10 +87,11 @@ DDH-oracle-augmented MAC unforgeability result.
 # One-more unforgeability (Section 6.6)
 
 :::group "bbs_omuf"
-*Theorem 6.12.* The anonymous-token variant `μBBS_AT` is one-more
-unforgeable. The best known attack is `O(√q)` via Cheon's attack, which
-costs about 20 bits of security relative to the algebraic-group bound;
-the statement should reflect this.
+*Theorem 6.7.* The anonymous-token variant `μBBS_AT` is one-more
+unforgeable. Lemma 6.12 and Corollary 6.13 give a Cheon-style attack
+recovering the key in time `O(√(p/d) + √d)` for a divisor `d` of
+`p ± 1`, costing roughly 20 bits of security relative to the
+algebraic-group bound; the statement should reflect this.
 :::
 
 *TODO (Track BBS-OMUF).* State and prove Theorem 6.12.

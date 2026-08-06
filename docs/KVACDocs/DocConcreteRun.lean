@@ -9,15 +9,18 @@ import VersoBlueprint
 open Verso.Genre Manual
 open Informal
 
+set_option verso.blueprint.externalCode.strictResolve true
+
 
 #doc (Manual) "Concrete run" =>
 %%%
 tag := "concrete_run"
 %%%
 
-A small evaluable Lean script exercising the *μCMZ* protocol end-to-end
-against a verified Ristretto255 instance. The chapter covers both pieces
-of Track Ex (the project's last Wave):
+A planned small evaluable Lean script exercising the *μCMZ* protocol
+end-to-end against a verified Ristretto255 instance; nothing has landed
+yet. The chapter covers both pieces of Track Ex (the project's last
+Wave):
 
 - `KVAC/Instances/Ristretto.lean` — the only place Ristretto255 appears.
   Local binding of the abstract `PrimeOrderGroup` and `SampleableGroup`
