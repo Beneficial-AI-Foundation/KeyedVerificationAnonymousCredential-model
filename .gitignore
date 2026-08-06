@@ -1,3 +1,9 @@
 /.lake
 docs/.lake/
 docs/_out/
+
+# Local runs of scripts/blueprint_progress_history.py (deploy artifact, not source)
+docs/blueprint-progress-history.json
+
+# Python bytecode caches (scripts/, docs/formalization-progress/)
+__pycache__/

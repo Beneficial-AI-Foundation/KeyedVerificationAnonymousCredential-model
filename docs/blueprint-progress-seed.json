@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "historyBasis": "registry-2026-08-05 (fixed basis: today's 43 registry nodes projected back)",
+  "projectStart": "2026-05-04T16:57:13+08:00",
+  "note": "One-time estimated backfill against a fixed basis (the registry as of 2026-08-05, 43 nodes, projected back over the whole project timeline). A node counts from the earliest main commit at which all of its currently-anchored declarations exist in KVAC/ (short-name textual match). The method observes declaration existence only: it cannot see proof completeness (the June sorry interval is invisible to it) or statement-only phases, so specified and verified are conflated for estimated points.",
+  "snapshots": [
+    {
+      "commit": "74bf6fb734ef4040fe07ed1c28b9f218fbd59098",
+      "shortCommit": "74bf6fb73",
+      "date": "2026-05-13T09:39:57+08:00",
+      "subject": "Merge pull request #22 from Beneficial-AI-Foundation/track-0a-core-group",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 1
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 0,
+        "verified": 0
+      }
+    },
+    {
+      "commit": "f06de272b6331c8edbc0be5f0f57cf9c7f0b3bf2",
+      "shortCommit": "f06de272b",
+      "date": "2026-06-04T11:23:54+08:00",
+      "subject": "Track 0 Part 4: AlgebraicMAC.lean (O24 Definition 3.1) (#24)",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 3
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 0,
+        "verified": 0
+      }
+    },
+    {
+      "commit": "e2d525ba7fbf4547064cfb221bb7ca4f26501de5",
+      "shortCommit": "e2d525ba7",
+      "date": "2026-07-01T19:44:53-03:00",
+      "subject": "Merge pull request #30 from Beneficial-AI-Foundation/microCMZ-assumptions",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 4
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 0,
+        "verified": 0
+      }
+    },
+    {
+      "commit": "80e000e6cf1917d226a2eeb857a478018bfed62b",
+      "shortCommit": "80e000e6c",
+      "date": "2026-07-06T11:14:03-03:00",
+      "subject": "Merge pull request #31 from Beneficial-AI-Foundation/microCMZ-construction",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 5
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 0,
+        "verified": 0
+      }
+    },
+    {
+      "commit": "7cd48d744f4aba43e588eab129ef338a05a085f2",
+      "shortCommit": "7cd48d744",
+      "date": "2026-07-16T15:31:54-03:00",
+      "subject": "Merge pull request #33 from Beneficial-AI-Foundation/microCMZ-relations-Ris-Rp",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 9
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 1,
+        "verified": 1
+      }
+    },
+    {
+      "commit": "f6420ec414402eb1f939ff9a18b1f9106745c110",
+      "shortCommit": "f6420ec41",
+      "date": "2026-07-17T09:54:11+08:00",
+      "subject": "feat(Core): Hash.lean — hash / random-oracle interfaces (O24 §3, Notation) (#57)",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 10
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 1,
+        "verified": 1
+      }
+    },
+    {
+      "commit": "66d511d8202dfacf5525c2eaa8cae9bb73b737f7",
+      "shortCommit": "66d511d82",
+      "date": "2026-07-22T17:08:52-03:00",
+      "subject": "Merge pull request #44 from Beneficial-AI-Foundation/microCMZ-agm-polynomial",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 12
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 2,
+        "verified": 2
+      }
+    },
+    {
+      "commit": "8f155edd2e0e43693c083f65a3e6629fc79869c3",
+      "shortCommit": "8f155edd2",
+      "date": "2026-07-22T17:54:53-03:00",
+      "subject": "Merge pull request #47 from Beneficial-AI-Foundation/nizkp-security",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 14
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 2,
+        "verified": 2
+      }
+    },
+    {
+      "commit": "79bc728ec70c05515976e14e797c651fefea7877",
+      "shortCommit": "79bc728ec",
+      "date": "2026-07-23T13:36:33-03:00",
+      "subject": "Merge pull request #73 from Beneficial-AI-Foundation/microCMZ-agm-game",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 16
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 2,
+        "verified": 2
+      }
+    },
+    {
+      "commit": "a8eafed208525c32aa0643806c8c1bf35e0d4745",
+      "shortCommit": "a8eafed20",
+      "date": "2026-07-23T14:21:00-03:00",
+      "subject": "Merge pull request #48 from Beneficial-AI-Foundation/microCMZ-algebraic-mac",
+      "source": "git-backfill-estimate (anchored declarations first present)",
+      "estimated": true,
+      "definitions": {
+        "total": 26,
+        "specified": 16
+      },
+      "theorems": {
+        "total": 17,
+        "specified": 3,
+        "verified": 3
+      }
+    }
+  ]
+}

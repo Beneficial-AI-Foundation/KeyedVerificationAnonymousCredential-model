@@ -14,7 +14,14 @@ on:
       - "docs/**"
       - "scripts/blueprint_decl_manifest.lean"
       - "scripts/blueprint_coverage_check.py"
+      - "scripts/blueprint_dashboard.py"
+      - "scripts/blueprint_progress_history.py"
+      - "scripts/fixtures/**"
+      - "lakefile.toml"
+      - "lake-manifest.json"
+      - "lean-toolchain"
       - ".github/workflows/docs-ci.yml"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -70,3 +77,50 @@ jobs:
 
       - name: Blueprint coverage check
         run: python3 scripts/blueprint_coverage_check.py "$RUNNER_TEMP/decl-manifest.tsv"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Landing-page pipeline smoke tests: the history updater must produce
+      # exactly one exact HEAD snapshot on top of the seed, and the dashboard
+      # must render with working links and counters that agree with the
+      # rendered Blueprint Summary page.
+      - name: Progress history (exact HEAD snapshot)
+        run: |
+          python3 scripts/blueprint_progress_history.py update \
+            --site "$RUNNER_TEMP/site" \
+            --seed docs/blueprint-progress-seed.json
+          python3 - "$RUNNER_TEMP/site/blueprint-progress-history.json" <<'EOF'
+          import json, subprocess, sys
+          doc = json.load(open(sys.argv[1]))
+          exact = [s for s in doc["snapshots"] if not s.get("estimated")]
+          assert len(exact) == 1, f"expected exactly one exact snapshot, got {len(exact)}"
+          head = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+          assert exact[0]["commit"] == head, f"exact snapshot {exact[0]['commit']} is not HEAD {head}"
+          EOF
+
+      - name: Landing page (links + Blueprint Summary conformance)
+        run: |
+          python3 scripts/blueprint_dashboard.py --site "$RUNNER_TEMP/site" \
+            --check-links \
+            --conformance "$RUNNER_TEMP/site/html-multi/Blueprint-Summary/index.html"
+          test "$(grep -o 'class="chart-card"' "$RUNNER_TEMP/site/index.html" | wc -l)" = "2"
+          test "$(grep -o '<tr><th scope="row">' "$RUNNER_TEMP/site/index.html" | wc -l)" = "7"
+
+      - name: Landing page (determinism)
+        run: |
+          cp "$RUNNER_TEMP/site/index.html" "$RUNNER_TEMP/index-run1.html"
+          python3 scripts/blueprint_dashboard.py --site "$RUNNER_TEMP/site"
+          cmp "$RUNNER_TEMP/index-run1.html" "$RUNNER_TEMP/site/index.html"
+
+      - name: Landing page (estimated-history fixture)
+        run: |
+          python3 scripts/blueprint_dashboard.py --site "$RUNNER_TEMP/site" \
+            --history scripts/fixtures/blueprint-progress-history.fixture.json \
+            --output "$RUNNER_TEMP/fixture-index.html"
+          # Estimated SEGMENTS must render (dashed class), not just the word
+          # "estimated" in CSS or the permanent caption.
+          grep -q 'class="line specified estimated"' "$RUNNER_TEMP/fixture-index.html"
+          grep -q 'class="pt specified estimated"' "$RUNNER_TEMP/fixture-index.html"

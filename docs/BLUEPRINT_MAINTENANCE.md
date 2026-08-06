@@ -68,6 +68,49 @@ behind them.
 - `.github/workflows/docs-ci.yml` — runs both plus the full docs build and
   site generation on every PR touching `KVAC/**` or `docs/**`.
 
+## Landing page dashboard
+
+The site's root `index.html` is generated at deploy time by
+`scripts/blueprint_dashboard.py` from the blueprint manifest
+(`html-multi/-verso-data/blueprint-manifest.json`) plus a progress-history
+JSON — it is not a checked-in file and not the Verso output. Modeled on the
+secure-messaging landing page.
+
+- **Counter contracts** (all read from Verso-computed node statuses, never
+  recomputed): specified = `statementStatus ∈ {formalized, mathlib}`;
+  verified = `proofStatus ∈ {formalized, formalizedWithAncestors}`; fully
+  closed = `formalizedWithAncestors`; deps pending = `formalized`; ready =
+  either axis `ready`; sorries = `incomplete`. docs-ci asserts the landing
+  counters equal the rendered Blueprint-Summary numbers.
+- **History**: `scripts/blueprint_progress_history.py update` merges the
+  committed seed (`docs/blueprint-progress-seed.json`, a one-time reviewed
+  git backfill against a fixed basis, every point marked `estimated`) with
+  the previously deployed `blueprint-progress-history.json` (fetched from
+  the live site) and the exact HEAD snapshot, which always wins for its own
+  commit. Recovery guarantees: a clean 404 is bootstrap; any other fetch
+  failure **fails the deploy** (rerun it) rather than publishing a lossy
+  seed+HEAD document; a merge may never reduce the number of exact
+  snapshots. Residual risk: a post-bootstrap 404 (Pages serving 404 for a
+  file it used to serve) is indistinguishable from bootstrap. Registry
+  growth is recorded automatically as dated `basisChanges` entries in the
+  output document; never edit the seed to "fix" history.
+- **Deliberate semantic differences from the Blueprint Summary page** (both
+  excluded from the CI conformance check): the landing's "Ready to start" =
+  either axis `ready` (matches the table's Ready-next columns), while the
+  Summary's "Ready now" is actionable-stage gated; the Summary's "no proof"
+  counts theorem-like stubs only. Compared and enforced equal: total
+  entries, completed, deps incomplete, sorries.
+- **Chapters**: a node's chapter is the first path component of its manifest
+  `href`; the mapping lives in `CHAPTER_ORDER`/`CHAPTER_TITLES` in the
+  dashboard script. Adding a chapter to the manual means extending that
+  mapping (the script fails loudly otherwise). Chapters without registry
+  nodes render as "no registry entries yet".
+- **Local preview**: generate the site (step 6 above with `--output _out/site`),
+  then
+  `python3 scripts/blueprint_progress_history.py update --site docs/_out/site`
+  and `python3 scripts/blueprint_dashboard.py --site docs/_out/site`, then
+  serve `docs/_out/site`.
+
 ## Decision records
 
 - **§3.1 assumptions anchored despite deferred q-DDHI** (2026-07). q-DDHI is
