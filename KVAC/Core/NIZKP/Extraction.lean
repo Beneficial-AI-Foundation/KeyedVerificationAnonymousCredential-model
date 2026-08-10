@@ -4,7 +4,6 @@ Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
 import KVAC.Core.NIZKP.Security
-import VCVio
 
 /-!
 # Knowledge soundness and simulation extractability (O24 §3.3)
@@ -30,18 +29,14 @@ namespace KVAC.Core
 
 open OracleComp OracleSpec ENNReal
 
-/-- Random-oracle cache of `H`: the trace handed to the O24 §3.3 white-box
-extractors. -/
-abbrev ROCache (H : HashSpec) : Type := ((H.Dom →ₒ H.Rng).QueryCache)
-
 /-- Decidable equality on statements, deciding freshness and the
 candidate-statement check of the O24 §3.3 simulation-extractability game. -/
-abbrev StmtDecEq (zkp : NIZKPSyntax ProbComp) : Type :=
+abbrev NIZKPSyntax.DecidableEqStmt (zkp : NIZKPSyntax ProbComp) : Type :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam), DecidableEq (zkp.Stmt crs)
 
 /-- Decidable equality on proofs, deciding freshness in the O24 §3.3
 simulation-extractability game. -/
-abbrev ProofDecEq (zkp : NIZKPSyntax ProbComp) : Type :=
+abbrev NIZKPSyntax.DecidableEqProof (zkp : NIZKPSyntax ProbComp) : Type :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam), DecidableEq (zkp.Proof crs)
 
 /-- `true` iff the extractor returned a witness satisfying the relation. The
@@ -65,7 +60,7 @@ the adversary value and its run's trace, the output (x, π) and the
 random-oracle cache. Returns `none` on failure. -/
 abbrev KSNDExtractor (zkp : NIZKPSyntax ProbComp) (H : HashSpec) : Type :=
   KSNDAdversary zkp H → {secParam : Nat} → (crs : zkp.Crs secParam) →
-    zkp.Stmt crs → zkp.Proof crs → ROCache H →
+    zkp.Stmt crs → zkp.Proof crs → H.Cache →
     ProbComp (Option (zkp.Witness crs))
 
 /-- The knowledge-soundness experiment of O24 §3.3: crs ← ZKP.S(1^λ);
@@ -123,7 +118,7 @@ abbrev SimLog (zkp : NIZKPSyntax ProbComp) {secParam : Nat}
 cache and the simulation log. -/
 abbrev SEState (zkp : NIZKPSyntax ProbComp) {secParam : Nat}
     (crs : zkp.Crs secParam) (H : HashSpec) : Type :=
-  ROCache H × SimLog zkp crs
+  H.Cache × SimLog zkp crs
 
 /-- Implementation of the O24 §3.3 simulation-extractability oracles: `sim`
 runs the zero-knowledge simulator on the shared cache (so it may reprogram it)
@@ -144,7 +139,7 @@ statement in addition to the witness (the candidate instance Z of the
 extractability proofs). Returns `none` on failure. -/
 abbrev SEExtractor (zkp : NIZKPSyntax ProbComp) (H : HashSpec) : Type :=
   SEAdversary zkp H → {secParam : Nat} → (crs : zkp.Crs secParam) →
-    zkp.Stmt crs → zkp.Proof crs → ROCache H → SimLog zkp crs →
+    zkp.Stmt crs → zkp.Proof crs → H.Cache → SimLog zkp crs →
     ProbComp (Option (zkp.Stmt crs × zkp.Witness crs))
 
 /-- The strong simulation-extractability experiment of O24 §3.3 (Dao–Grubbs,
@@ -154,7 +149,7 @@ pairs, and extraction fails, where success demands x̂ = x and (x, w) ∈ R. -/
 def seGame (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
     (sim : ZKSimulator zkp H) (ext : SEExtractor zkp H)
     (A : SEAdversary zkp H) (dec : zkp.DecidableRelation)
-    (ds : StmtDecEq zkp) (dp : ProofDecEq zkp) (secParam : Nat) :
+    (ds : zkp.DecidableEqStmt) (dp : zkp.DecidableEqProof) (secParam : Nat) :
     ProbComp Bool := do
   let crs ← zkp.setup secParam
   let ((x, π), (cache, log)) ←
@@ -174,7 +169,7 @@ credential theorems consume. -/
 noncomputable abbrev SEAdv (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
     (sim : ZKSimulator zkp H) (ext : SEExtractor zkp H)
     (A : SEAdversary zkp H) (dec : zkp.DecidableRelation)
-    (ds : StmtDecEq zkp) (dp : ProofDecEq zkp) (secParam : Nat) : ℝ≥0∞ :=
+    (ds : zkp.DecidableEqStmt) (dp : zkp.DecidableEqProof) (secParam : Nat) : ℝ≥0∞ :=
   Pr[= true | seGame zkp H sim ext A dec ds dp secParam]
 
 end KVAC.Core

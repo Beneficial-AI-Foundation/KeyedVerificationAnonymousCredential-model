@@ -100,6 +100,12 @@ An `abbrev` (not a `def`) so that instance resolution sees through it — e.g.
 `SampleableType H.Rng` and hit `rngSampleable`. -/
 abbrev spec (H : HashSpec) : OracleSpec H.Dom := H.Dom →ₒ H.Rng
 
+/-- The lazy random oracle's cache, the `StateT` state `roImpl` threads: a
+partial map sending a queried domain point to its answer and every other point
+to `none`. It is a dependent function, not a finite structure, so it records
+neither the order of the queries nor an enumeration of the points queried. -/
+abbrev Cache (H : HashSpec) : Type := H.spec.QueryCache
+
 /-- The concrete VCV-io binding: the hash as a lazily sampled random oracle.
 On a fresh query it samples the answer uniformly from `H.Rng` and caches it;
 on a repeated query it answers from the cache. The cache is the `StateT`
@@ -111,7 +117,7 @@ already-answered entry, after which the same query answers differently. A
 reprogramming simulator that must stay consistent should only program fresh
 (unqueried) points — a discipline enforced at the game layer, not here. -/
 def roImpl (H : HashSpec) :
-    QueryImpl H.spec (StateT H.spec.QueryCache ProbComp) :=
+    QueryImpl H.spec (StateT H.Cache ProbComp) :=
   randomOracle
 
 /-- The paper's `H_p : {0,1}* → ℤ_p` (O24 §3, Notation): the Fiat–Shamir
