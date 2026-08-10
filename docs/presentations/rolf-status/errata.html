@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Errata to O24 §5.3</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Errata to O24 §5.3, found while constructing the Theorem 5.1 reduction</h1>
+</header>
+<p>Companion note to the status presentation (2026-07-30). Paper: Orrù, <em>Revisiting Keyed-Verification Anonymous Credentials</em>, IACR ePrint 2024/1552 ("O24"), as <code>docs/Orru_2024.pdf</code>. Each item below is a discrepancy between the paper's printed §5.3 material and what the reduction, worked in full detail, actually requires. Every item is checkable by hand against the paper; none weakens the result — the assumptions are the paper's own, and only the additive constant changes (3/p → 5/p, both ≈ 2<sup>−250</sup> at ristretto255).</p>
+<h2 id="1-the-1-p-non-vanishing-bound-should-be-3-p-p-38">1. The 1/p non-vanishing bound should be 3/p (p. 38)</h2>
+<p>The proof of Lemma 5.4 needs the affinely-substituted forgery polynomial to stay nonzero. The paper (p. 38, after Eq. 16) asserts that the partial evaluation ψ(χ) = ϕ(aₕ + χbₕ, a₀ + χb₀, …) "is still a non-zero polynomial in ℤp[χ], of degree at most 3, except with probability 1/p".</p>
+<p>The degree-3 claim is right; the probability constant is stated without derivation and is too small. The bad event is that the hidden shift (aₕ, a₀, aᵣ, a₁, a<sub>u,1</sub>, …) lands on a root of the nonzero polynomial ϕ — in particular ψ ≡ 0 forces ψ(0) = ϕ(a⃗) = 0. And ϕ has total degree 3: its top monomials come from α<sub>v,j</sub>·uⱼ·(x₀+xᵣ+mⱼx₁)·(x₀+xᵣ+m*x₁), a degree-2 representation term times the degree-1 key polynomial. Schwartz–Zippel over the uniform shift therefore gives 3/p; a bare 1/p is the bound a degree-1 polynomial would give.</p>
+<h2 id="2-the-verify-oracle-simulation-s-degree-2-should-be-3-p-37">2. The Verify-oracle simulation's degree: 2 should be 3 (p. 37)</h2>
+<p>Describing how the reduction answers Verify queries, the paper says the oracle tests the verification equation "using (X, X′) as the maximum degree of the resulting polynomial is 2". The maximum degree is 3: a queried U may itself involve X₀ or a signed Vⱼ — each already degree 2 in the key variables once the embedding is substituted — and the verification equation multiplies U's representation by the degree-1 key polynomial. So the simulation needs X″ as well, exactly as the paper itself concedes two paragraphs later for the Help oracle ("via (G, X, X′, X″), as the maximum degree of the resulting expression is 3"). As printed, the described reduction cannot answer such Verify queries; the formalized oracle evaluates via X″ throughout. This item affects the simulation's completeness, not the bound.</p>
+<h2 id="3-eq-13-x-s-x-coefficient-typo">3. Eq. 13: X₀'s X-coefficient (typo)</h2>
+<p>Eq. 13 defines the affine embedding of the public parameters off the 3-DL instance (X, X′, X″). The paper prints X₀'s X-coefficient as a<sub>h</sub>b₀ + b<sub>h</sub>. Expanding X₀ = x₀·H under the affine substitution v ↦ a<sub>v</sub> + x·b<sub>v</sub> gives the X-coefficient</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;a₀b<sub>h</sub> + b₀a<sub>h</sub>,</p>
+<p>i.e. the printed version drops the a₀ factor. The corrected coefficient is documented at its use site in the reduction-core module under review (PR #88, <code>AGMReduction/Core.lean</code>, docstring at the Eq. 13 embedding).</p>
+<h2 id="4-eq-14-signing-response-coefficient-typo">4. Eq. 14: signing-response coefficient (typo)</h2>
+<p>Eq. 14 gives the simulated signing response's coefficient. The paper prints the factor as a·uⱼ·(a<sub>h</sub>a₀ + a<sub>h</sub> + mⱼa₁); the correct factor is</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;A = a₀ + a<sub>r</sub> + a₁mⱼ,</p>
+<p>the key polynomial's constant part evaluated at the queried message. Also documented at its use site in PR #88.</p>
+<h2 id="5-claim-5-6-the-ddh-oracle-s-arguments-typo">5. Claim 5.6: the Ddh oracle's arguments (typo)</h2>
+<p>In Claim 5.6's gap-DL reduction, the paper folds x<sub>r</sub> into z and prints the Ddh-decision arguments without the Σᵢ aaᵢmᵢ and x<sub>r</sub> terms. The simulation of the verify/Help arms needs both terms for the decision to match the honest oracle's answer; the corrected arguments carry them.</p>
+<h2 id="6-theorem-5-1-s-printed-bound-elides-the-gap-dl-term">6. Theorem 5.1's printed bound elides the gap-DL term</h2>
+<p>The printed bound is Adv<sup>3-dl</sup> + Adv<sup>dl</sup> + 3/p. The paper's own proof of Lemma 5.5 case-splits on a collision event and sends the collision branch to gap-DL via Claim 5.6 — so the assembled bound carries a gap-DL advantage term that the printed theorem statement does not show. The formalized target keeps it explicit:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>gap-dl</sup>(B<sub>gap</sub>) + 5/p,</p>
+<p>with 5/p = 3/p (item 1) + 1/p (the keygen-shear bad event x₁ = 0 in the no-collision branch) + 1/p (the vanishing-denominator bad event in the gap-DL branch). The paper's Adv<sup>dl</sup> term has no reduction behind it in this proof plan; it survives only as nonnegative slack.</p>
+<h2 id="status">Status</h2>
+<p>The corrections to Eqs. 13/14 are visible today in the open PR #88 diff (module <code>AGMReduction/Core</code>); the remaining items are documented in the reduction modules queued behind it, in the order shown on the presentation's architecture slide. This note reports findings about the paper; the formal-completion status of each module is tracked on the project's blueprint page.</p>
+</body>
+</html>

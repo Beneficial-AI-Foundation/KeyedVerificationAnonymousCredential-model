@@ -9,4 +9,6 @@ import KVAC.Core.NIZKP.Extraction
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.Construction
+import KVAC.Schemes.MicroCMZ.AlgebraicMAC
+import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Preliminaries.Assumptions

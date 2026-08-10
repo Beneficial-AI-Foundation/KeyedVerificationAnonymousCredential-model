@@ -1,5 +1,5 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
@@ -114,9 +114,8 @@ via `Fintype.equivFin` (the `(exists_ne …).choose_spec` in the `Nonempty`
 witness lives in `Prop` and is erased, so it is not the obstruction).
 -/
 noncomputable instance instSampleableTypeNeZero : SampleableType {g : G // g ≠ 0} :=
-  haveI : Nonempty {g : G // g ≠ 0} := ⟨⟨_, (exists_ne (0 : G)).choose_spec⟩⟩
-  haveI : NeZero (Fintype.card {g : G // g ≠ 0}) := ⟨Fintype.card_ne_zero⟩
-  SampleableType.ofEquiv (Fintype.equivFin {g : G // g ≠ 0}).symm
+  SampleableType.ofNonemptySubtype (fun g : G => g ≠ 0)
+    ⟨⟨_, (exists_ne (0 : G)).choose_spec⟩⟩
 
 /--
 Uniform sampling from `G ∖ {0}`, returned as a plain `G`. This is `U ←$ G∖{0}`
@@ -243,9 +242,10 @@ since `MAC` builds `V` with exactly that scalar.
 theorem μCMZBaseMAC_correct (gen : G) : Correct (μCMZBaseMACSyntax F gen) := by
   intro _secParam n crs _hcrs keys _hkeys m sig hsig
   obtain ⟨sk, _pp⟩ := keys
-  simp only [μCMZBaseMACSyntax, mac, support_bind, mem_support_uniformNonzero, support_pure,
-    Set.mem_iUnion, Set.mem_singleton_iff] at hsig
-  obtain ⟨U, hU, rfl⟩ := hsig
+  simp only [μCMZBaseMACSyntax, mac, support_bind, mem_support_uniformNonzero, support_pure] at hsig
+  obtain ⟨U, hU, hmem⟩ := Set.mem_iUnion₂.mp hsig
+  rw [Set.mem_singleton_iff] at hmem
+  subst hmem
   simp only [μCMZBaseMACSyntax, verify, Bool.and_eq_true, decide_eq_true_eq, ne_eq]
   exact ⟨hU, trivial⟩
 

@@ -18,6 +18,10 @@ jobs:
   build-docs:
     name: Build Verso Documentation
     runs-on: ubuntu-latest
+    # Library build + site generation take a few minutes with a warm cache;
+    # cap well above that so a stalled `lean` process fails fast instead of
+    # burning the 6h GitHub default.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,15 +37,18 @@ jobs:
           path: |
             .lake
             docs/.lake
-          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json') }}
+          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json', 'docs/lean-toolchain') }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json', 'docs/lean-toolchain') }}-
             ${{ runner.os }}-lake-docs-
 
-      - name: Resolve docs dependencies
-        run: lake -d docs update
+      - name: Download Mathlib cache (docs)
+        continue-on-error: true
+        run: lake -d docs exe cache get
 
-      - name: Download Mathlib cache
-        run: lake -d docs exe cache get 2>&1 || echo "cache get returned non-zero (may be partial)"
+      - name: Download Mathlib cache (root)
+        continue-on-error: true
+        run: lake exe cache get
 
       # Build only the KVACDocs library. The `docs` executable is no longer
       # defined; linking it would pull in VCV-io's post-quantum C/FFI sources,
@@ -54,39 +61,25 @@ jobs:
         working-directory: docs
         run: lake env lean --run Main.lean --output ../site
 
-      - name: Add root landing page
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Progress-over-time persistence: merge the committed seed, the
+      # previously deployed history (fetched from the live site; a 404 is
+      # bootstrap, any other failure degrades gracefully), and the exact
+      # HEAD snapshot computed from the freshly generated manifest.
+      - name: Update progress history
         run: |
-          cat > site/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>KVAC — Lean Formalization</title>
-            <style>
-              body { font-family: system-ui, -apple-system, sans-serif; max-width: 700px; margin: 60px auto; padding: 0 20px; color: #333; line-height: 1.6; }
-              h1 { margin-bottom: 0.3em; }
-              .subtitle { color: #666; margin-top: 0; }
-              .links { list-style: none; padding: 0; margin-top: 2em; }
-              .links li { margin: 1em 0; }
-              .links a { font-size: 1.15em; text-decoration: none; color: #0366d6; }
-              .links a:hover { text-decoration: underline; }
-              .links .desc { display: block; color: #666; font-size: 0.9em; margin-top: 0.2em; }
-            </style>
-          </head>
-          <body>
-            <h1>KVAC — Lean Formalization</h1>
-            <p class="subtitle">Keyed-verification anonymous credentials, after Orrù (IACR ePrint 2024/1552)</p>
-            <ul class="links">
-              <li>
-                <a href="html-multi/">Documentation</a>
-                <span class="desc">Framework, μCMZ, and μBBS specifications, chapter by chapter</span>
-              </li>
-            </ul>
-            <p><a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model">Source on GitHub</a></p>
-          </body>
-          </html>
-          EOF
+          python3 scripts/blueprint_progress_history.py update \
+            --site site \
+            --seed docs/blueprint-progress-seed.json \
+            --previous-url "https://${GITHUB_REPOSITORY_OWNER,,}.github.io/${GITHUB_REPOSITORY#*/}/blueprint-progress-history.json" \
+            --commit "$GITHUB_SHA"
+
+      - name: Generate landing page
+        run: python3 scripts/blueprint_dashboard.py --site site --check-links
 
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
@@ -99,6 +92,7 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build-docs
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     environment:
       name: github-pages
