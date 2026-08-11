@@ -13,13 +13,15 @@ The two extraction-based notions of O24 §3.3 for an
 simulation-extractability game (Dao–Grubbs, IACR ePrint 2023/494, plus O24's
 candidate statement).
 
-Both extractors are white-box, following O24 §3.3 (p. 25) literally: Ext takes
-the random coins and the code of the p.p.t. adversary A. The extractor
-receives the adversary value (the code) and the run's trace (the output pair,
-the random-oracle cache, and, for simulation extractability, the simulation
-log). The optional crs trapdoor is omitted; the paper's instantiations never
-use it. Issue #43 records this decision and the divergence from the black-box
-rewindable convention.
+Both extractors are white-box, following O24 §3.3 (p. 25). The paper defines
+Ext over the random coins and the code of the p.p.t. adversary A. In this
+formalization the code enters as the adversary value, and the run's observables
+enter as the output pair, the final random-oracle cache, and, for simulation
+extractability, the simulation log. The adversary's coins are not recorded, so
+same-coins replay and rewinding are out of scope, and neither is needed by the
+straight-line §9 instantiation. The optional crs trapdoor is omitted, the
+paper's instantiations never use it. Issue #43 records this decision and the
+divergence from the black-box rewindable convention.
 
 The scheme is instantiated at the carrier `OracleComp (ZKRO H)`, so `verify`
 runs through `zkROImpl` on the run's random-oracle cache and a Fiat–Shamir
@@ -64,9 +66,10 @@ structure KSNDAdversary (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
   run : {secParam : Nat} → (crs : zkp.Crs secParam) →
     OracleComp (ZKRO H) (zkp.Stmt crs × zkp.Proof crs)
 
-/-- The white-box extractor Ext of O24 §3.3. The coins and code of A enter as
-the adversary value and its run's trace, the output (x, π) and the
-random-oracle cache. Returns `none` on failure. -/
+/-- The white-box extractor Ext of O24 §3.3. The code enters as the adversary
+value, and the run's observables as the output (x, π) and the final
+random-oracle cache. The adversary's coins are not recorded. Returns `none` on
+failure. -/
 abbrev KSNDExtractor (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
   KSNDAdversary H zkp → {secParam : Nat} → (crs : zkp.Crs secParam) →
     zkp.Stmt crs → zkp.Proof crs → H.Cache →

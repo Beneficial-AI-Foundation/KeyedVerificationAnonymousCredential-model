@@ -111,10 +111,10 @@ the game rather than the carrier.
 **Decision.** The knowledge-soundness and simulation-extractability extractors
 are white-box, per O24 §3.3 (p. 25), which has Ext take "the random coins and
 the code of the p.p.t. adversary A". The extractor receives the adversary
-value (the code) and the run's trace, that is, the output pair, the
-random-oracle cache, and, for simulation extractability, the simulation log.
-The optional crs trapdoor is omitted; the paper's instantiations never use it
-(PR #54, `Extraction.lean`).
+value (the code) and the run's observables, that is, the output pair, the final
+random-oracle cache, and, for simulation extractability, the simulation log. The
+adversary's coins are not recorded. The optional crs trapdoor is omitted, the
+paper's instantiations never use it (PR #54, `Extraction.lean`).
 
 **Rejected alternative.** The standard black-box convention, where the
 extractor has rewindable oracle access to the prover and sees neither its
@@ -125,9 +125,18 @@ committed.
 
 **Fidelity argument.** O24 defines the extractor over the coins and code of A,
 and its §9 instantiation is inherently non-black-box, since it relies on AGM
-representations. White-box access subsumes rewindable black-box access, since
-the extractor can re-run the adversary value. Issue #43 records the
-discussion; the paper-fidelity requirement decides it.
+representations. The formalization gives the extractor the adversary value
+together with the run's observables, the output pair and the final random-oracle
+cache, and the simulation log for SE. The coins themselves are not recorded, so
+same-coins replay and rewinding are out of scope, unneeded by the straight-line
+§9 instantiation. Issue #43 records the discussion; the paper-fidelity
+requirement decides it.
+
+**Open question, the AGM extractor interface.** Whether the extractor needs an
+ordered `QueryLog` alongside the cache, or a `QuerySeed` for the literal coins,
+is left to the AGM extractor design of §9. VCV-io ships both, `loggingOracle`
+and `seededOracle`. Deciding before an extractor consumes this layer avoids
+restating the games later.
 
 ## NIZKP procedure carrier and the `verify` effect
 
