@@ -16,7 +16,7 @@ The `Core` part here provides:
   evaluation equals `ReprCoeffs.toPoly` at the transcript's discrete-log point;
 - `agm_n1_identity_Ustar_eq_zero` — the identity branch: a fresh forgery with an
   identically-vanishing verification polynomial forces `U* = 0`, which
-  `microCMZVerify` rejects;
+  `MicroCMZ.verify` rejects;
 - `recoverDlog` / `recoverDlog_eq` — discrete-log extraction: the unique root of
   `ψ` hitting the challenge `X` is `log_gen X` (never uses `glog`);
 - `recoverDlog_verifPoly_eq` — win implies extract: when the verification equation
@@ -24,19 +24,15 @@ The `Core` part here provides:
 - `reductionOracleImpl` / `microCMZ3DLReduction` — the reduction adversary and its
   simulated oracle: runs `A` with no `sk`, then extracts `x` from `ψ`'s roots.
 
-The probability bound (3-DL + Schwartz–Zippel) and the security theorems are
-assembled in the forthcoming parts (see the aggregator note below); Lemma 5.4
-is untagged here until that bound lands.
+This file is the aggregator: the reduction lives in the `AGMReduction/`
+subdirectory, and `Core` is its only part so far. The probability bound (3-DL +
+Schwartz–Zippel) and the security theorems land in later parts, so Lemma 5.4 is
+untagged here until that bound arrives.
 
 The module is separate from `AlgebraicMAC` because importing `AGMPolynomial` arms
 the order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
 only *use* the sealed `glog`. The bad-event bound is `deg ψ / p = 3/p`
-(Schwartz–Zippel on the degree-≤3 `ψ`), not the `1/p` O24 prints.
--/
-
-/-!
-Aggregator: the reduction lives in the `AGMReduction/` subdirectory. `Core` is
-the only part so far; the planned parts (Coupling, DeterministicCore, Assembly,
-Shear, ShearShift, Security) will be added to the import list above as they
-land.
+(Schwartz–Zippel on the degree-≤3 `ψ`), not the `1/p` O24 prints. O24's `Adv^dl`
+summand is likewise absent: its proof never builds a DL reduction — that term
+enters via Lemma 5.5's gap-DL — so the bound assembled here is 3-DL + `3/p`.
 -/
