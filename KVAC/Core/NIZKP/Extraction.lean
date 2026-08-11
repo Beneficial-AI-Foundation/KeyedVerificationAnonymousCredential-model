@@ -159,8 +159,13 @@ abbrev SEExtractor (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Ty
 /-- The strong simulation-extractability experiment of O24 §3.3 (Dao–Grubbs,
 IACR ePrint 2023/494, plus the candidate statement): A^Sim(crs) outputs
 (x, π) and wins iff ZKP.V(crs, x, π) = 1, (x, π) is not among the simulated
-pairs, and extraction fails, where success demands x̂ = x and (x, w) ∈ R.
-`verify` runs through `zkROImpl` on the run's final random-oracle cache. -/
+pairs, and extraction fails, where extraction succeeds iff the extracted witness
+satisfies (x, w) ∈ R for the adversary's statement x. The extractor's candidate
+statement x̂ is carried for the downstream credential reductions, checked there
+by the relation-specific mechanism (the secret-key or DDH check of O24 §5.5/6.5,
+which the paper notes gives no correctness guarantee on its own, p. 16), not
+against x here. `verify` runs through `zkROImpl` on the run's final
+random-oracle cache. -/
 def seGame (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (sim : ZKSimulator H zkp) (ext : SEExtractor H zkp)
     (A : SEAdversary H zkp) (dec : zkp.DecidableRelation)
@@ -175,7 +180,7 @@ def seGame (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
   let fresh := decide ((x, π) ∉ log)
   let extracted := match r? with
     | none => false
-    | some (x', w) => decide (x' = x) && witnessValid H zkp dec crs x (some w)
+    | some (_, w) => witnessValid H zkp dec crs x (some w)
   pure (v && fresh && !extracted)
 
 /-- The simulation-extractability advantage of the O24 §3.3 stronger notion:
