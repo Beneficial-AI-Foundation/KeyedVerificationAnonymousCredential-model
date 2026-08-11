@@ -10,6 +10,7 @@ import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
+import KVAC.Schemes.MicroCMZ.AGMReduction
 
 open Verso.Genre Manual
 open Informal
@@ -156,12 +157,14 @@ not route through this theorem.
 
 The Lemma 5.4 workshop is merged: the AGM game, the verification
 polynomial with its identity case, and the sign-mask distribution
-lemmas. The assembly of Lemma 5.4 from these pieces (the `AGMReduction`
-game bridge, including the ≤3-roots bound and the ψ ≠ 0 argument) is in
-flight.
+lemmas. The `AGMReduction` core is merged on top — the game-polynomial
+eval bridge, the challenge embedding, the simulated oracle, and
+discrete-log root recovery. What remains for Lemma 5.4 itself is the
+probability bound: the coupling of the simulated oracle to the honest
+game, and the Schwartz–Zippel argument for `ψ ≠ 0`.
 
-*TODO (Track CMZ-M).* Assemble Lemma 5.4 from the merged workshop
-pieces, then state Lemma 5.5 and Theorem 5.1.
+*TODO (Track CMZ-M).* Bound the reduction's success probability, then
+assemble Lemma 5.4 and state Lemma 5.5 and Theorem 5.1.
 
 :::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] specialised to algebraic
@@ -201,6 +204,83 @@ distribution matches the honest sign oracle's; the mask coordinate stays
 uniform on every fiber.
 :::
 
+:::theorem "agm_eval_bridge" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.toReprCoeffs, KVAC.Schemes.MicroCMZ.gamePoint, KVAC.Schemes.MicroCMZ.sum_zipWith_eq_fin_sum_getD, KVAC.Schemes.MicroCMZ.agmRepr_eval_eq_eval_toPoly, KVAC.Schemes.MicroCMZ.agm_n1_identity_Ustar_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+The dictionary joining the AGM game {uses "agm_model"}[] to the
+polynomial layer {uses "agm_verification_polynomial"}[]: a game-layer
+representation's coefficients read as polynomial coefficients, the
+transcript's discrete-log evaluation point, and the bridge itself — a
+representation's group evaluation equals its polynomial evaluated at that
+point, scaled onto the generator. Its corollary carries
+{uses "identity_case_lem54"}[] across the bridge: a fresh forgery whose
+verification polynomial vanishes identically forces `U* = 0`, which
+{uses "mucmz_construction"}[] rejects.
+:::
+
+:::proof "agm_eval_bridge"
+Surjectivity of `(· • gen)` names the transcript's discrete logs, so both
+sides become scalar multiples of the generator. The tag fold is
+reconciled by a `zipWith`-to-`Fin`-sum lemma reading the shorter
+coefficient list with a zero default, matching the truncation in the
+game's evaluation; the honest-tag hypothesis rewrites each `Vⱼ` into its
+key multiple of `Uⱼ`. The identity corollary then rewrites through the
+bridge and the polynomial-layer identity case, leaving `0 • gen`.
+:::
+
+:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
+*O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
+parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
+`X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
+reduction simulates {uses "agm_model"}[] holding no secret key. The
+masks and the embedded basis points are bundled as two records; the
+reduction adversary runs the AGM adversary against
+{bpref "simulated_sign_oracle"}[] and extracts through
+{uses "dlog_root_recovery"}[]. Its experiment and advantage fix the
+challenge base to the generator by construction, so the reduction can
+never be run at a base where it is unsound.
+
+O24 prints `X₀`'s `X`-coefficient as `(a_h·b₀ + b_h)`, dropping the `a₀`
+factor; the correct coefficient `a₀·b_h + b₀·a_h` is the one used here.
+:::
+
+:::definition "simulated_sign_oracle" (lean := "KVAC.Schemes.MicroCMZ.SignRecord, KVAC.Schemes.MicroCMZ.RedLog, KVAC.Schemes.MicroCMZ.RedLog.tags, KVAC.Schemes.MicroCMZ.RedLog.msg, KVAC.Schemes.MicroCMZ.RedLog.aMask, KVAC.Schemes.MicroCMZ.RedLog.bMask, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr, KVAC.Schemes.MicroCMZ.maskLift, KVAC.Schemes.MicroCMZ.exponentEval, KVAC.Schemes.MicroCMZ.exponentEval_eq, KVAC.Schemes.MicroCMZ.reductionSignStep, KVAC.Schemes.MicroCMZ.reductionVerifyStep, KVAC.Schemes.MicroCMZ.reductionHelpStep, KVAC.Schemes.MicroCMZ.reductionOracleImpl") (parent := "cmz_amac") (tags := "paper, O24 Eq 14")
+*O24 Equation 14.* The reduction's simulated oracle for
+{uses "agm_model"}[], run under the embedding
+{uses "challenge_embedding"}[] with no secret key. The sign arm issues
+`Uⱼ = a_{u,j}·G + b_{u,j}·X` with `Vⱼ` its key multiple expanded over the
+challenge powers, drawing masks conditioned on a nonvanishing tag base
+({uses "sign_masks"}[]) and logging one record per query. The verify and
+help arms evaluate the represented check "in the exponent": each
+mask-derived univariate and each represented transcript polynomial is
+degree `≤ 3` in the challenge exponent, so the answer is a fixed
+combination of `g, X, X', X''` that agrees with evaluation at the
+unknown exponent.
+
+Two departures from O24. Equation 14 prints `Vⱼ`'s `G`-coefficient with a
+spurious `a_h` factor; the correct key coefficient `a₀ + aᵣ + a₁mⱼ` is
+used here. And O24 gives Verify only `(X, X')`, on the grounds that the
+resulting polynomial has degree at most 2; the represented check is a
+degree-1 key against a degree-`≤ 2` representation, so both arms need
+`X''`.
+:::
+
+:::theorem "dlog_root_recovery" (lean := "KVAC.Schemes.MicroCMZ.recoverDlog, KVAC.Schemes.MicroCMZ.recoverDlog_eq, KVAC.Schemes.MicroCMZ.recoverDlog_verifPoly_eq") (parent := "cmz_amac") (tags := "milestone")
+The reduction's extraction step: given the masked univariate `ψ` of
+{uses "partial_evaluation_psi"}[] and the challenge `X`, return the root
+of `ψ` whose generator-multiple is `X`. Honest extraction — it consults
+only `ψ`'s root multiset and a decidable equality test, never the
+noncomputable discrete logarithm. When `ψ` is nonzero and the challenge
+exponent is one of its roots, the step returns exactly that exponent.
+:::
+
+:::proof "dlog_root_recovery"
+The challenge exponent lies in `ψ`'s root multiset, so the search
+succeeds; injectivity of `(· • g)` for a nonzero `g` makes the root it
+finds equal to the challenge exponent. Composed with the evaluation law
+of {uses "partial_evaluation_psi"}[], a forgery whose verification
+polynomial vanishes at the embedded point and whose `ψ` is nonzero — the
+Schwartz–Zippel good event — yields the discrete logarithm.
+:::
+
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
 *O24 Theorem 5.1.* In the algebraic group model, μCMZ is an
 `n`-attribute algebraic MAC ({uses "algebraic_mac"}[]), UF-CMVA secure in the
@@ -221,14 +301,17 @@ secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumpt
 :::
 
 :::proof "single_attribute_mac"
-Played in the AGM game {uses "agm_model"}[]. Case split on the
+Played in the AGM game {uses "agm_model"}[], read through the
+game-polynomial bridge {uses "agm_eval_bridge"}[]. Case split on the
 adversary's algebraic representation of the forgery. If the
 verification identity {uses "agm_verification_polynomial"}[] holds over
 the polynomial ring, {uses "identity_case_lem54"}[] makes the forgery
-invalid; otherwise the partial evaluation
-{uses "partial_evaluation_psi"}[] embeds a 3-DL challenge whose discrete
-logarithm is among at most 3 roots, with the challenge masked through
-{uses "sign_masks"}[].
+invalid; otherwise {uses "challenge_embedding"}[] plants a 3-DL
+challenge, {uses "simulated_sign_oracle"}[] answers the adversary's
+queries without a key (masked through {uses "sign_masks"}[]), and the
+partial evaluation {uses "partial_evaluation_psi"}[] has the challenge's
+discrete logarithm among at most 3 roots, recovered by
+{uses "dlog_root_recovery"}[].
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
