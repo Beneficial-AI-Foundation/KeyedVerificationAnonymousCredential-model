@@ -9,6 +9,7 @@ import KVAC.Core.Group
 import KVAC.Core.Hash
 import KVAC.Core.ZKProof
 import KVAC.Core.NIZKP.Security
+import KVAC.Core.NIZKP.Extraction
 import KVAC.Core.AlgebraicMAC
 import KVAC.Core.AlgebraicMAC.Security
 
