@@ -1,27 +1,26 @@
 name: Docs CI
 
-# PR-time verification of the Verso blueprint docs: the site must build, every
+# Merge-time verification of the Verso blueprint docs: the site must build, every
 # `(lean := ...)` anchor must resolve (strictResolve makes unresolved anchors
 # errors), and every public declaration of the root library must be covered by
-# exactly one blueprint anchor. Closes the gap where docs breakage could only
-# surface in the post-merge Pages deploy.
-
+# exactly one blueprint anchor.
+#
+# This runs on `merge_group`, so the heavy Verso + blueprint build (16–30 min)
+# happens once, on the merge queue's candidate commit, instead of on every push
+# to every PR. Coverage is not weakened: a failing docs build fails the merge, so
+# `main` is never left with documentation that does not compile. The only change
+# is feedback timing — an author sees a docs failure when the PR enters the queue
+# rather than on first push. The post-merge Pages deploy (`deploy-pages.yml`) is
+# unaffected.
+#
+# OPERATIONAL PREREQUISITE: a merge queue must be enabled on `main` (repo branch
+# protection), with this job's check ("Build docs and check declaration
+# coverage") set as a required check for the queue. Until the merge queue is on,
+# `merge_group` events are never emitted and this job will not run. `paths`
+# filters are intentionally dropped: `merge_group` does not support them, so the
+# build runs on every merge candidate regardless of which files changed.
 on:
-  pull_request:
-    paths:
-      - "KVAC/**"
-      - "KVAC.lean"
-      - "docs/**"
-      - "scripts/blueprint_decl_manifest.lean"
-      - "scripts/blueprint_coverage_check.py"
-      - "scripts/blueprint_dashboard.py"
-      - "scripts/blueprint_progress_history.py"
-      - "scripts/fixtures/**"
-      - "lakefile.toml"
-      - "lake-manifest.json"
-      - "lean-toolchain"
-      - ".github/workflows/docs-ci.yml"
-      - ".github/workflows/deploy-pages.yml"
+  merge_group:
   workflow_dispatch:
 
 permissions:
