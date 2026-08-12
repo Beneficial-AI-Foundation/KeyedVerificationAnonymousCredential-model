@@ -126,6 +126,19 @@ secure-messaging landing page.
 - **Registry covers all undimmed tracker elements** (2026-07). Unformalized
   elements are registered as unanchored stubs so the summary's denominator is
   honest; content and anchors are written for merged work only.
+- **`keyed_setup` is a milestone, not a paper element** (2026-08).
+  `KeyedSetupSyntax` factors the CRS/keygen preamble shared by O24
+  Definition 3.1 and Definition 4.2; it states no paper element of its own,
+  so it is a `milestone` node under `core_keyed_setup` that `algebraic_mac`
+  and `credential_predicate` both `uses`. Alternative (folding it into
+  `algebraic_mac`) rejected: the graph would then hide the framework's
+  dependency on the shared setup.
+- **`kvac_correctness` anchored despite the deferred family-scope clause**
+  (2026-08). O24 Definition 4.3 also requires `Φ ⊇ {φ_a⃗}`, which the
+  abstract layer does not exhibit. `Correct` is stated for all `φ`, `φ'`, so
+  it states the correctness experiment in full and never needs those members
+  to exist; the obligation is carried by the scheme instances and recorded in
+  the node's Tracks CMZ-C / BBS-C TODO.
 
 ## Pending updates ledger
 

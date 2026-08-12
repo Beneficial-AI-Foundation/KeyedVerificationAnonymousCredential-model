@@ -156,6 +156,25 @@ canonical encoding of its domain type and domain-separation tags wherever
 two uses share one oracle. A literal bitstring domain would push encoding
 boilerplate into every caller without strengthening any theorem.
 
+## Exact-attribute predicate as a family field
+
+**Decision.** `PredicateFamily` carries the full-disclosure predicate
+`exactPred` (`φ_m⃗`) with its semantic law `holds_exactPred`
+(`Framework/PredicateFamily.lean`).
+
+**Rejected alternative.** Parameterizing the security games by an arbitrary
+selector `(m⃗ : MsgVec crs) → Pred crs`, leaving the family at the literal
+Definition 4.1 content (trivial predicate, conjunction).
+
+**Fidelity argument.** O24 Definition 4.2 requires the predicate family to
+contain the partial-disclosure predicates `{φ_a⃗ : a⃗ ∈ (M ∪ {⋆})ⁿ}`, and the
+framework's own games consume exactly one member of that set: Figure 8's
+`NewUsr` runs the §4.1 shorthand `KVAC.M(sk, m⃗) = issue(…, φ_m⃗)`. A game
+parameter would let a scheme instantiate the games with a non-exact predicate,
+silently changing what the security notions mean; a field with a semantic law
+is checked once per scheme. The rest of the partial-disclosure family stays a
+scheme-level obligation (the TODO recorded in `Framework/Correctness.lean`).
+
 ## Schwartz–Zippel bound `3/p`, not the paper's `1/p`
 
 **Decision.** The Eq. 16 root bound for the non-identity case of Lemma 5.4 is
