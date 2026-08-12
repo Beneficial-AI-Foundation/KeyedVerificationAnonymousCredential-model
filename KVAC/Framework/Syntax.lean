@@ -82,6 +82,18 @@ structure KVACSyntax (M : Type → Type) [Monad M]
   `KeyedSetupSyntax.DecidableEqMsg`. -/
   DecidableEqPresentMsg : {secParam n : Nat} → (crs : Crs secParam n) →
     DecidableEq (PresentMsg crs)
+  /-- The exact-attribute (full-disclosure) predicate `φ_m⃗`: the `a⃗ = m⃗`,
+  no-`⋆` member of the partial-disclosure family `{φ_a⃗}` that O24
+  Definition 4.2 requires the family to contain. It lives here, on the
+  Definition 4.2 object, rather than on `PredicateFamily` (Definition 4.1,
+  which does not ask for it). Needed as *data* by the framework security
+  games: O24 Figure 8's `NewUsr` invokes the shorthand
+  `KVAC.M(sk, m⃗) = issue(…, φ_m⃗)` (O24 §4.1). -/
+  exactPred : {secParam n : Nat} → (crs : Crs secParam n) →
+    (Fin n → Msg crs) → Pred crs
+  /-- `φ_m⃗` holds exactly on `m⃗`. -/
+  holds_exactPred : ∀ {secParam n : Nat} (crs : Crs secParam n)
+    (m m' : Fin n → Msg crs), holds crs (exactPred crs m) m' = true ↔ m' = m
   /-- Issuance, user's first move: `(st_u, μ) ← KVAC.I.Usr₁(pp, m⃗, φ)`. -/
   issueUsr₁ : {secParam n : Nat} → (crs : Crs secParam n) → Pp crs →
     (Fin n → Msg crs) → Pred crs → M (UsrState crs × IssueMsg crs)

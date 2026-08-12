@@ -20,13 +20,11 @@ structure carrying a per-CRS type `Pred` with its Boolean semantics `holds`,
 together with the two closure properties of Definition 4.1 — a trivial
 predicate and conjunction — as fields.
 
-Beyond Definition 4.1, the structure carries two game-support fields. The
-exact-attribute predicate `exactPred` is the full-disclosure member `φ_m⃗` of
-the partial-disclosure family that Definition 4.2 requires (`Φ ⊇ {φ_a⃗}`); the
-security games consume it through the `KVAC.M(sk, m⃗) = issue(…, φ_m⃗)`
-shorthand of O24 §4.1 (Figure 8's `NewUsr` oracle). `DecidableEqPred` supports
-the games' bookkeeping (`(φ*, ρ*) ∉ PQrs` in O24 Figure 8), mirroring
-`KeyedSetupSyntax.DecidableEqMsg`.
+Beyond Definition 4.1, the structure carries one game-support field.
+`DecidableEqPred` supports the games' bookkeeping (`(φ*, ρ*) ∉ PQrs` in O24
+Figure 8), mirroring `KeyedSetupSyntax.DecidableEqMsg`. The full-disclosure
+member `φ_m⃗` that Definition 4.2 requires (`Φ ⊇ {φ_a⃗}`) is a Definition 4.2
+obligation, so it lives on `KVACSyntax` as `exactPred`, not here.
 
 ## Layering
 
@@ -77,16 +75,6 @@ structure PredicateFamily (M : Type → Type) [Monad M]
   holds_andPred : ∀ {secParam n : Nat} (crs : Crs secParam n)
     (φ φ' : Pred crs) (m : Fin n → Msg crs),
     holds crs (andPred crs φ φ') m = (holds crs φ m && holds crs φ' m)
-  /-- The exact-attribute (full-disclosure) predicate `φ_m⃗`: the `a⃗ = m⃗`,
-  no-`⋆` member of the partial-disclosure family `{φ_a⃗}` that O24
-  Definition 4.2 requires the family to contain. Needed as *data* by the
-  framework security games: O24 Figure 8's `NewUsr` invokes the shorthand
-  `KVAC.M(sk, m⃗) = issue(…, φ_m⃗)` (O24 §4.1). -/
-  exactPred : {secParam n : Nat} → (crs : Crs secParam n) →
-    (Fin n → Msg crs) → Pred crs
-  /-- `φ_m⃗` holds exactly on `m⃗`. -/
-  holds_exactPred : ∀ {secParam n : Nat} (crs : Crs secParam n)
-    (m m' : Fin n → Msg crs), holds crs (exactPred crs m) m' = true ↔ m' = m
   /-- Decidable equality on predicate descriptions, needed by the security
   games' bookkeeping (`(φ*, ρ*) ∉ PQrs` in O24 Figure 8). Mirrors
   `KeyedSetupSyntax.DecidableEqMsg`. -/
