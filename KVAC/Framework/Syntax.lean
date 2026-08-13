@@ -147,6 +147,15 @@ def present (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
   let ρ ← kvac.presentUsr crs pp m σ φ
   kvac.presentSrv crs sk φ ρ
 
+/--
+The honest MAC `KVAC.M(sk, m)` of O24 §4.1, the credential a user obtains when
+the issuer runs honest issuance under the exact-attribute predicate `φ_m`. A
+derived shorthand, the special case `φ = φ_m` of `issue`, not a syntax field,
+so it cannot disagree with the scheme's own issuance. -/
+def mac (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
+    (m : kvac.MsgVec crs) : M (Option (kvac.Cred crs)) :=
+  kvac.issue crs sk pp m (kvac.exactPred crs m)
+
 end KVACSyntax
 
 end KVAC.Framework
