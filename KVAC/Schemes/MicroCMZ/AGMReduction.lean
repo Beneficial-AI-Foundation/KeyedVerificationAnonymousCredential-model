@@ -31,8 +31,18 @@ untagged here until that bound arrives.
 
 The module is separate from `AlgebraicMAC` because importing `AGMPolynomial` arms
 the order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
-only *use* the sealed `glog`. The bad-event bound is `deg ψ / p = 3/p`
-(Schwartz–Zippel on the degree-≤3 `ψ`), not the `1/p` O24 prints. O24's `Adv^dl`
-summand is likewise absent: its proof never builds a DL reduction — that term
-enters via Lemma 5.5's gap-DL — so the bound assembled here is 3-DL + `3/p`.
+only *use* the sealed `glog`.
+
+**Two departures from O24's printed bound.** Lemma 5.4 states
+`Adv^{3-dl} + Adv^{dl} + 1/p` (p. 35), and the bound assembled here is
+3-DL + `3/p`.
+
+- The bad-event bound is `deg ψ / p = 3/p` (Schwartz–Zippel on the degree-≤3
+  `ψ`), not the `1/p` O24 prints (`docs/DESIGN_ALTERNATIVES.md`).
+- The `Adv^dl` summand is dropped: Lemma 5.4's proof (pp. 36–38) builds only the
+  3-DL reduction and no DL reduction, so the summand is left unjustified — in
+  O24 it survives only as nonnegative slack. Lemma 5.5's gap-DL term is *not*
+  this term: it is a separate `n = poly` argument (its case (i) collision branch,
+  via Thm 5.6), and there is no collision branch at `n = 1`. See
+  `docs/presentations/rolf-status/errata.md` §6.
 -/

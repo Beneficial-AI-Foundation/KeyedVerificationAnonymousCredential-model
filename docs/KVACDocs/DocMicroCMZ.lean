@@ -226,7 +226,7 @@ key multiple of `Uⱼ`. The identity corollary then rewrites through the
 bridge and the polynomial-layer identity case, leaving `0 • gen`.
 :::
 
-:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
+:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
 *O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
 parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
 `X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
@@ -238,11 +238,18 @@ reduction adversary runs the AGM adversary against
 challenge base to the generator by construction, so the reduction can
 never be run at a base where it is unsound.
 
+Against genuine challenge powers the embedding is *honest* at the challenge
+exponent: `H`, `Xᵣ` and `X₁` are the masked scalars' generator multiples,
+`X₀` is `x₀·H`, and the masked key scalar is the honest one of
+{uses "mucmz_construction"}[]. These are named identities rather than
+arithmetic in a comment, because the deferred proof that the simulated and
+real games are distributed identically has to cite exactly them.
+
 O24 prints `X₀`'s `X`-coefficient as `(a_h·b₀ + b_h)`, dropping the `a₀`
 factor; the correct coefficient `a₀·b_h + b₀·a_h` is the one used here.
 :::
 
-:::definition "simulated_sign_oracle" (lean := "KVAC.Schemes.MicroCMZ.SignRecord, KVAC.Schemes.MicroCMZ.RedLog, KVAC.Schemes.MicroCMZ.RedLog.tags, KVAC.Schemes.MicroCMZ.RedLog.msg, KVAC.Schemes.MicroCMZ.RedLog.aMask, KVAC.Schemes.MicroCMZ.RedLog.bMask, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr, KVAC.Schemes.MicroCMZ.maskLift, KVAC.Schemes.MicroCMZ.exponentEval, KVAC.Schemes.MicroCMZ.exponentEval_eq, KVAC.Schemes.MicroCMZ.reductionSignStep, KVAC.Schemes.MicroCMZ.reductionVerifyStep, KVAC.Schemes.MicroCMZ.reductionHelpStep, KVAC.Schemes.MicroCMZ.reductionOracleImpl") (parent := "cmz_amac") (tags := "paper, O24 Eq 14")
+:::definition "simulated_sign_oracle" (lean := "KVAC.Schemes.MicroCMZ.SignRecord, KVAC.Schemes.MicroCMZ.RedLog, KVAC.Schemes.MicroCMZ.RedLog.tags, KVAC.Schemes.MicroCMZ.RedLog.msg, KVAC.Schemes.MicroCMZ.RedLog.aMask, KVAC.Schemes.MicroCMZ.RedLog.bMask, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr, KVAC.Schemes.MicroCMZ.maskLift, KVAC.Schemes.MicroCMZ.maskLift_eval, KVAC.Schemes.MicroCMZ.embedTag_eq, KVAC.Schemes.MicroCMZ.exponentEval, KVAC.Schemes.MicroCMZ.exponentEval_eq, KVAC.Schemes.MicroCMZ.reductionSignStep, KVAC.Schemes.MicroCMZ.reductionVerifyStep, KVAC.Schemes.MicroCMZ.reductionHelpStep, KVAC.Schemes.MicroCMZ.reductionOracleImpl") (parent := "cmz_amac") (tags := "paper, O24 Eq 14")
 *O24 Equation 14.* The reduction's simulated oracle for
 {uses "agm_model"}[], run under the embedding
 {uses "challenge_embedding"}[] with no secret key. The sign arm issues
@@ -253,7 +260,10 @@ help arms evaluate the represented check "in the exponent": each
 mask-derived univariate and each represented transcript polynomial is
 degree `≤ 3` in the challenge exponent, so the answer is a fixed
 combination of `g, X, X', X''` that agrees with evaluation at the
-unknown exponent.
+unknown exponent. As with {uses "challenge_embedding"}[], the two
+identities the coupling will cite are named: each issued tag is the honest
+key multiple of its own base at the challenge exponent, and each
+mask-derived univariate evaluates there to the mask it lifts.
 
 Two departures from O24. Equation 14 prints `Vⱼ`'s `G`-coefficient with a
 spurious `a_h` factor; the correct key coefficient `a₀ + aᵣ + a₁mⱼ` is

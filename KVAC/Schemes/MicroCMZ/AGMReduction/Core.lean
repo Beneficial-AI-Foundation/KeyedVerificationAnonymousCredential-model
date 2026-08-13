@@ -258,7 +258,18 @@ the 3-DL powers `g, X = x·g, X' = x²·g, X'' = x³·g`: returns `(p.eval x) ·
 degree-`≤ 3` polynomial in the challenge exponent. (O24 §5.3 says Verify needs
 only `(X, X')` because "the maximum degree of the resulting polynomial is 2",
 but the represented check is degree-1 key × degree-≤2 representation = degree
-`≤ 3`, so both branches use `X''` here.) -/
+`≤ 3`, so both branches use `X''` here.)
+
+Coefficients past the third are **dropped, not rejected**, so a hypothetical
+degree-≥4 argument would be answered wrongly rather than loudly. Nothing silent
+survives into a proof: `exponentEval_eq` is the only way to relate this to a real
+evaluation and it takes `p.natDegree ≤ 3`, so every feed site owes that bound —
+`maskLift` is degree `≤ 1` and `RedLog.maskedRepr` degree `≤ 2`
+(`AGMPoly.totalDegree_toPoly_le`, `AGMPoly.natDegree_affineSubst_le`), giving
+`≤ 3` for the products the two arms build. A degree-bounded carrier (a `Fin 4 → F`
+vector, or a `natDegree ≤ 3` subtype) would move that obligation into the type; it
+is not worth the arithmetic it would add to every use site while the bound is
+discharged once per feed anyway. -/
 def exponentEval (g X X' X'' : G) (p : Polynomial F) : G :=
   p.coeff 0 • g + p.coeff 1 • X + p.coeff 2 • X' + p.coeff 3 • X''
 
@@ -269,6 +280,67 @@ lemma exponentEval_eq (g : G) (x : F) (p : Polynomial F) (hp : p.natDegree ≤ 3
   rw [exponentEval, Polynomial.eval_eq_sum_range' (by omega : p.natDegree < 4)]
   simp only [Finset.sum_range_succ, Finset.sum_range_zero, zero_add, pow_zero,
     mul_one, pow_one, add_smul, smul_smul]
+
+/-! ## The embedding at the challenge exponent
+
+What the challenge embedding satisfies once the 3-DL powers are the genuine ones
+(`X = x • gen`, `X' = x² • gen`): every embedded public parameter and every issued
+tag equals its **honest** value at the masked secrets `v ↦ a_v + x · b_v`. The
+oracle-fidelity coupling of Lemma 5.4 has to cite exactly these equalities, so
+they are lemmas here rather than arithmetic in the comments at the construction
+sites below.
+-/
+
+omit hgen in
+/-- One mask pair, embedded and read at the challenge exponent. The shape of `H`,
+`Xᵣ` and `X₁` (O24 Eq. 13) and of each issued `Uⱼ` (Eq. 14); their honest
+counterparts are `η • gen`, `xᵣ • gen`, `x₁ • gen` (`MicroCMZ.keygen`) and
+`uⱼ • gen`. -/
+lemma embedMask_eq (a b x : F) : a • gen + b • (x • gen) = (a + x * b) • gen := by
+  module
+
+omit hgen in
+/-- **Eq. 13's `X₀` is honest.** The three-term embedded `X₀` equals `x₀ • H` — the
+shape `MicroCMZ.keygen` produces — with `x₀ = a₀ + x·b₀` the masked key component
+and `H` the embedded `η`-basis. This is the identity the paper's printed
+`X`-coefficient breaks (see the Eq. 13 comment below). -/
+lemma embedX0_eq (aM bM : FixedMasks F) (x : F) :
+    (aM.x0 * aM.eta) • gen + (aM.x0 * bM.eta + bM.x0 * aM.eta) • (x • gen)
+        + (bM.x0 * bM.eta) • (x ^ 2 • gen)
+      = (aM.x0 + x * bM.x0) • (aM.eta • gen + bM.eta • (x • gen)) := by
+  module
+
+omit hgen in
+/-- **Eq. 14's tag is honest.** The three-term `V` of `reductionSignStep` equals
+`key • U` at the challenge exponent, with `key` the two sides' `keyCoeff` read at
+that exponent. This is both the honest MAC relation of `MicroCMZ.mac`
+(via `macScalar_eq_keyCoeff`) and the `htag` hypothesis that
+`agmRepr_eval_eq_eval_toPoly` and `agm_n1_identity_Ustar_eq_zero` take. -/
+lemma embedTag_eq (aM bM : FixedMasks F) (x m au bu : F) :
+    (aM.keyCoeff m * au) • gen
+        + (aM.keyCoeff m * bu + bM.keyCoeff m * au) • (x • gen)
+        + (bM.keyCoeff m * bu) • (x ^ 2 • gen)
+      = (aM.keyCoeff m + x * bM.keyCoeff m) • (au • gen + bu • (x • gen)) := by
+  module
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] in
+/-- The honest key scalar at the masked secrets is the two sides' `keyCoeff` read at
+the challenge exponent — what makes `embedTag_eq` literally the honest relation
+`V = macScalar sk m • U`. -/
+lemma macScalar_eq_keyCoeff (aM bM : FixedMasks F) (x m : F) :
+    macScalar (n := 1)
+        (aM.x0 + x * bM.x0, aM.xr + x * bM.xr, fun _ => aM.x1 + x * bM.x1)
+        (fun _ => m) = aM.keyCoeff m + x * bM.keyCoeff m := by
+  simp only [macScalar, FixedMasks.keyCoeff, Fin.sum_univ_one]
+  ring
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] in
+/-- What makes `maskLift` a lift: at the challenge exponent it returns the real mask
+`a + x·b`. The `keyUniv`/`x1Univ` arguments the verify and help arms feed to
+`exponentEval` are read through this. -/
+lemma maskLift_eval (a b x : F) : (maskLift a b).eval x = a + x * b := by
+  simp only [maskLift, Polynomial.eval_add, Polynomial.eval_C, Polynomial.eval_mul,
+    Polynomial.eval_X, mul_comm]
 
 /-- **Reduction `sign` step** (factored out of `reductionOracleImpl`; see its
 docstring for why). Samples the non-vanishing masks `(au, bu)`, builds the honest
@@ -284,9 +356,9 @@ noncomputable def reductionSignStep (X X' : G) (aM bM : FixedMasks F) (m : Fin 1
       let A := aM.keyCoeff (m 0)
       let B := bM.keyCoeff (m 0)
       let U := au • gen + bu • X
-      -- dlog V = (A + B·x)(au + bu·x), expanded onto (gen, X, X'). O24 Eq. 14
-      -- prints V's gen-coefficient as a_{u,j}(a_h·a₀ + a_h + a₁mⱼ); the correct
-      -- factor, used here, is A = a₀ + aᵣ + a₁mⱼ (typo in the paper).
+      -- `V = key·U` at the challenge exponent: `embedTag_eq`. O24 Eq. 14 prints
+      -- V's gen-coefficient as a_{u,j}(a_h·a₀ + a_h + a₁mⱼ); the correct factor,
+      -- used here, is A = a₀ + aᵣ + a₁mⱼ (typo in the paper, p. 37).
       let V := (A * au) • gen + (A * bu + B * au) • X + (B * bu) • X'
       pure ((U, V), L ++ [⟨m, (U, V), au, bu⟩])
 
@@ -343,8 +415,17 @@ The reduction's root-finding step. Given the masked univariate `ψ` (which vanis
 at the challenge exponent `x`) and the challenge `X = x • g`, return the root of
 `ψ` whose `g`-multiple is `X`. There is exactly one — the discrete log `x` — found
 among `ψ`'s `≤ 3` roots. Honest extraction: consults only `ψ.roots` and the
-decidable test `r • g = X`, never the noncomputable `glog`. Defaults to `0` when no
-root matches (ruled out by the success analysis). -/
+decidable test `r • g = X`, never the noncomputable `glog`. (`noncomputable` here is
+Mathlib's `Polynomial.roots`, and the whole layer around it — `ProbComp`, the
+samplers — is noncomputable too; "honest" is about not reading `glog`, not about
+executability. Root-finding for degree `≤ 3` over a prime field is efficient in
+reality, which is outside Mathlib's scope and irrelevant to the bound.)
+
+Defaults to `0` when no root matches. The success analysis needs no lower bound on
+that fallback: it is one-sided, `Pr[B wins] ≥ Pr[good event ∧ A wins]` via
+`recoverDlog_eq`, so the one case where the fallback coincides with a win — the
+challenge exponent `x = 0` — only adds mass and cannot break the inequality. It
+would matter only for an exact equality, which the bound does not need. -/
 noncomputable def recoverDlog (g X : G) (ψ : Polynomial F) : F :=
   ((ψ.roots.toList).find? (fun r => decide (r • g = X))).getD 0
 
@@ -397,17 +478,17 @@ Given the challenge `(g, X = x·g, X' = x²·g, X'' = x³·g)`, it:
 3. forms the masked univariate `ψ = affineSubst a b (verifPoly …)` from all masks
    and returns `recoverDlog g X ψ` — the challenge exponent `x`, among `ψ`'s roots.
 
-**Base convention.** The reduction works relative to `gen` and ignores the
-experiment's base argument (`fun _g pows => …`), so it is only sound at base `gen`.
-Consume it through `microCMZ3DLReductionExp` / `microCMZ3DLReductionAdv` below,
-which fix the base to `gen` by construction. (It can't be a type-level constraint:
-`QDLogAdversary` has no `base = gen` field, and `gen`'s bijectivity `Fact` isn't
-available at an arbitrary base — the order-instance hazard.) -/
-noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
-    QDLogAdversary 3 F G :=
-  -- `_g`: the challenge base, ignored by design — `microCMZ3DLReductionExp` fixes
-  -- it to `gen`.
-  fun _g pows => do
+**Base convention, enforced by the signature.** Everything here — the embedding, the
+simulated oracle, the extraction — works relative to `gen`, so the reduction is sound
+only at base `gen`. It therefore takes the challenge *powers* alone and is not itself
+a `QDLogAdversary`: the base slot that a `QDLogAdversary` carries, and that this
+reduction would have to ignore, is supplied once by `microCMZ3DLReductionExp` below
+and always as `gen`. There is consequently no `QDLogAdversary`-typed declaration in
+this development that could be run at another base. The constraint has to be
+structural rather than a hypothesis on the base: `gen`'s bijectivity `Fact` is not
+available at an arbitrary base — the order-instance hazard. -/
+noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1)
+    (pows : Fin 3 → G) : ProbComp F := do
     let X := pows 0
     let X' := pows 1
     let X'' := pows 2
@@ -418,10 +499,11 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
     let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
     let aM : FixedMasks F := ⟨aEta, a0, aXr, aX1⟩
     let bM : FixedMasks F := ⟨bEta, b0, bXr, bX1⟩
+    -- each of H, Xᵣ, X₁ is honest at the challenge exponent: `embedMask_eq`
     let H := aM.eta • gen + bM.eta • X
-    -- dlog X₀ = (a₀ + b₀·x)(aη + bη·x), expanded onto (gen, X, X'). O24 Eq. 13
-    -- prints X₀'s X-coefficient as (a_h·b₀ + b_h), dropping the a₀ factor; the
-    -- correct coefficient, used here, is a₀·bη + b₀·aη (typo in the paper).
+    -- `X₀ = x₀·H` at the challenge exponent: `embedX0_eq`. O24 Eq. 13 prints X₀'s
+    -- X-coefficient as (a_h·b₀ + b_h), dropping the a₀ factor; the correct
+    -- coefficient, used here, is a₀·bη + b₀·aη (typo in the paper, p. 37).
     let X0 := (aM.x0 * aM.eta) • gen + (aM.x0 * bM.eta + bM.x0 * aM.eta) • X +
       (bM.x0 * bM.eta) • X'
     let Xr := aM.xr • gen + bM.xr • X
@@ -438,12 +520,13 @@ noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1) :
 
 /--
 The 3-DL experiment for the reduction, with the challenge base **fixed to `gen`**.
-The canonical entry point: baking the base in here means the reduction never runs
-at another base, so its base convention holds by construction. The security
-theorem bounds `AGM_UF_CMVAAdv` via `microCMZ3DLReductionAdv`, never a bare
+The canonical entry point, and the only place the `QDLogAdversary` shape is formed:
+the base slot `qdlogExp` passes is discarded here and `gen` used instead, so the
+reduction's base convention holds by construction rather than by discipline. The
+security theorem bounds `AGM_UF_CMVAAdv` via `microCMZ3DLReductionAdv`, never a bare
 `threeDlogAdv` with a free base. -/
 noncomputable def microCMZ3DLReductionExp (A : AGMUFAdversary F G 1) : ProbComp Bool :=
-  qdlogExp 3 gen (microCMZ3DLReduction gen A)
+  qdlogExp 3 gen (fun _g pows => microCMZ3DLReduction gen A pows)
 
 /-- The 3-DL advantage of the reduction at base `gen`, as `Pr[= true | …]` over
 `microCMZ3DLReductionExp`. The 3-DL term of Lemma 5.4's bound (O24 §5.3). -/

@@ -284,6 +284,53 @@ polynomial needs `3/p`. The deviation loosens the concrete additive term
 statement, unchanged. The full derivation is documented at the head of the
 Eq. 16 section in `AGMPolynomial.lean`.
 
+## Eq. 13: X₀'s `X`-coefficient (O24 p. 37)
+
+**Decision.** The challenge embedding builds `X₀`'s `X`-coefficient as
+`a₀·b_h + b₀·a_h` (`AGMReduction/Core.lean`, PR #88, the Eq. 13 block of
+`microCMZ3DLReduction`). As with the `3/p` entry above, the rejected
+alternative is the paper's own value, dropped on correctness grounds rather
+than fidelity.
+
+**Rejected alternative.** O24 Eq. 13 (p. 37) prints
+`X₀ = a_h a₀ G + (a_h b₀ + b_h) X + b_h b₀ X'`.
+
+**Fidelity argument.** `X₀ = x₀·H`, so `log_G X₀ = x₀·η`; under the affine
+masking `v ↦ a_v + χ·b_v` that is
+`(a₀ + χb₀)(a_h + χb_h) = a₀a_h + (a₀b_h + b₀a_h)χ + b₀b_h χ²`. The printed
+`G`- and `X'`-coefficients match; the printed `X`-coefficient `a_h b₀ + b_h`
+drops the `a₀` factor from the second term. The dropped factor is not
+cosmetic: with the printed coefficient the embedded `X₀` is no longer `x₀·H`
+for the masked `x₀`, so the simulated public parameters stop being identically
+distributed to an honest signer's, and Eq. 14's tag — which does use the
+correct key factor — becomes inconsistent with them. Also recorded as item 3
+of `docs/presentations/rolf-status/errata.md`.
+
+## Eq. 14: the simulated signing response (O24 p. 37)
+
+**Decision.** The reduction's sign step gives `Vⱼ` the `G`-coefficient
+`a_{u,j}·A` with `A = a₀ + aᵣ + a₁mⱼ` (`reductionSignStep`), and both the
+verify and help arms evaluate in the exponent against all four powers
+`(G, X, X', X'')` (`exponentEval`). Two corrections to the same equation's
+paragraph, both on correctness grounds.
+
+**Rejected alternative.** O24 Eq. 14 (p. 37) prints `Vⱼ`'s `G`-coefficient as
+`a_{u,j}(a_h a₀ + a_h + a₁mⱼ)`; its Verify bullet gives that oracle only
+`(X, X')`, "as the maximum degree of the resulting polynomial is 2".
+
+**Fidelity argument.** `log_G Vⱼ = (x₀ + xᵣ + mⱼx₁)·uⱼ`, which under the
+masking is `(A + χB)(a_{u,j} + χb_{u,j})` with `A = a₀ + aᵣ + a₁mⱼ` and
+`B = b₀ + bᵣ + b₁mⱼ`; its constant term is `a_{u,j}·A`. The printed factor
+instead carries the `η`-mask `a_h` — which belongs to `X₀`'s representation,
+not to the key — and omits `aᵣ`, so it contradicts the `X`- and
+`X'`-coefficients of the very same equation, which do print `(a₀ + aᵣ + a₁mⱼ)`
+and `(b₀ + bᵣ + b₁mⱼ)`. On the degree: the represented verification check is
+`keyPoly · α.toPoly`, a degree-1 key (`totalDegree_keyPoly_le`) against a
+degree-≤2 representation (`totalDegree_toPoly_le`, degree 2 reached by the
+`x₀η` and `uⱼ(x₀+xᵣ+mⱼx₁)` monomials), hence degree ≤ 3 and not ≤ 2 — so the
+verify arm needs `X''` exactly as the help arm does. Also recorded as item 4
+of `docs/presentations/rolf-status/errata.md`.
+
 ## Open alternatives
 
 None at present.
