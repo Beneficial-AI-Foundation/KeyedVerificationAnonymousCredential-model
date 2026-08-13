@@ -4,17 +4,20 @@ Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
 import KVAC.Framework.Syntax
+import VCVio.OracleComp.ProbComp
 
 /-!
 # Extraction game for a keyed-verification credential (O24 §4.4, Definition 4.5)
 
 The multi-user man-in-the-middle extraction game `EXT_{KVAC, Ext, A}(λ, n)` of
-O24 Figure 8. This file starts with the extractor interface `Ext = (Ext.I, Ext.P)`,
-an abstract parameter of the game (Definition 4.5); its μCMZ instantiation from
-the ZKP extractors is built in Theorem 5.2.
+O24 Figure 8. The extractor `Ext = (Ext.I, Ext.P)` is an abstract parameter of
+the game (Definition 4.5); its μCMZ instantiation from the ZKP extractors is
+built in Theorem 5.2.
 -/
 
 namespace KVAC.Framework
+
+open OracleComp OracleSpec
 
 variable {M : Type → Type} [Monad M]
 
@@ -31,5 +34,29 @@ structure Extractor (kvac : KVACSyntax M) where
   /-- `Ext.P(sk, φ, ρ)`: the attribute vector behind a presentation message `ρ`. -/
   extP : {secParam n : Nat} → {crs : kvac.Crs secParam n} →
     kvac.Sk crs → kvac.Pred crs → kvac.PresentMsg crs → Option (kvac.MsgVec crs)
+
+/-! ## The four oracles of Figure 8 -/
+
+/-- The oracle calls of the O24 Figure 8 extraction game, for a fixed crs.
+`newUsr m⃗` creates an honest user, `issue φ μ` is the server's issuance response
+to a user message `μ`, `presentUsr i φ` is honest user `i`'s presentation, and
+`present φ ρ` is the server's presentation check. -/
+inductive EXTQuery (kvac : KVACSyntax M) {secParam n : Nat}
+    (crs : kvac.Crs secParam n) : Type where
+  | newUsr     : kvac.MsgVec crs → EXTQuery kvac crs
+  | issue      : kvac.Pred crs → kvac.IssueMsg crs → EXTQuery kvac crs
+  | presentUsr : Nat → kvac.Pred crs → EXTQuery kvac crs
+  | present    : kvac.Pred crs → kvac.PresentMsg crs → EXTQuery kvac crs
+
+/-- Answer types of the Figure 8 oracles: `newUsr` returns the new user index
+`ctr`, `issue` the blinded credential or `⊥` (`Option`), `presentUsr` the
+presentation message or `none` on an out-of-range index, `present` the accept
+bit. -/
+def EXTOracleSpec (kvac : KVACSyntax M) {secParam n : Nat}
+    (crs : kvac.Crs secParam n) : OracleSpec (EXTQuery kvac crs)
+  | .newUsr _       => Nat
+  | .issue _ _      => Option (kvac.BlindCred crs)
+  | .presentUsr _ _ => Option (kvac.PresentMsg crs)
+  | .present _ _    => Bool
 
 end KVAC.Framework
