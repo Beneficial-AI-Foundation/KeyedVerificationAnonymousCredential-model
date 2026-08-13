@@ -34,7 +34,7 @@ the order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
 only *use* the sealed `glog`.
 
 **Two departures from O24's printed bound.** Lemma 5.4 states
-`Adv^{3-dl} + Adv^{dl} + 1/p` (p. 35), and the bound assembled here is
+`Adv^{3-dl} + Adv^{dl} + 1/p` (p. 36), and the bound assembled here is
 3-DL + `3/p`.
 
 - The bad-event bound is `deg ψ / p = 3/p` (Schwartz–Zippel on the degree-≤3
