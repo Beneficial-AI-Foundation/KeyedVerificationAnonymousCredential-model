@@ -295,11 +295,14 @@ polynomial vanishes at the embedded point and whose `ψ` is nonzero — the
 Schwartz–Zippel good event — yields the discrete logarithm.
 :::
 
-:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.redLog_aMask_def, KVAC.Schemes.MicroCMZ.redLog_bMask_def, KVAC.Schemes.MicroCMZ.redLog_msg_def, KVAC.Schemes.MicroCMZ.redLog_tags_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.redRState") (parent := "cmz_amac") (tags := "milestone")
+:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.redLog_aMask_def, KVAC.Schemes.MicroCMZ.redLog_bMask_def, KVAC.Schemes.MicroCMZ.redLog_msg_def, KVAC.Schemes.MicroCMZ.redLog_tags_def, KVAC.Schemes.MicroCMZ.redLog_maskedSubst_def, KVAC.Schemes.MicroCMZ.redLog_maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.redRState") (parent := "cmz_amac") (tags := "milestone")
 The pieces the proof that {uses "simulated_sign_oracle"}[] is
 indistinguishable from the honest oracle of {uses "agm_model"}[] is
-assembled from. Four normal forms bridge the oracle's packaged mask
-projections to the per-index lambdas the coupling quantifies over. Two
+assembled from. Six normal forms bridge the packaged forms the oracle and
+the reduction emit — the per-query mask projections, and the affine-mask
+substitution they are bundled into — to the per-index lambdas and the bare
+substitution that the coupling, the shift lemma below and
+{uses "dlog_root_recovery"}[] are stated in. Two
 uniformity lemmas say the embedding hides its masks: a uniform scalar
 multiple of the generator is a uniform group element, and so is an affine
 shift of one — this is what makes the simulated public parameters and

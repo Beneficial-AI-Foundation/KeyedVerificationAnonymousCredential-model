@@ -12,8 +12,9 @@ import VCVio.ProgramLogic.Relational.Basic
 
 The first probability-layer slice on top of `AGMReduction/Core.lean`:
 
-- `RedLog` projection normal forms — `rfl` bridges between `Core`'s packaged
-  mask projections and the explicit per-index lambdas the coupling lemmas use;
+- `RedLog` normal forms — `rfl` bridges between `Core`'s packaged mask
+  projections and substitution, and the explicit per-index lambdas and
+  `affineSubst` the coupling lemmas use;
 - uniformity of the embedded group elements (`evalDist_{smul,affine}_gen_uniform`);
 - `relTriple_map_eq`, the deterministic-map coupling brick for the `sign` arm;
 - `redRState`, the reduction ↔ honest state invariant of the `simulateQ` coupling;
@@ -38,7 +39,7 @@ variable {G : Type} [DecidableEq G] [SampleableGroup F G]
 variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
-/-! ## `RedLog` projection normal forms
+/-! ## `RedLog` normal forms
 
 The coupling lemmas below quantify over explicit per-index lambdas
 (`fun j => (L.get j).au`, …); `Core`'s oracle definitions carry the packaged
@@ -47,7 +48,16 @@ can rewrite the partially-applied occurrences the oracle bodies produce)
 normalize the packaged form to the lambda form wherever a `simp only` unfolds
 a reduction step. They are consumed by every later part of the reduction (the
 verify/help couplings, the θ-sheared steps, the `n = 1` assembly), so they are
-public rather than `private`. -/
+public rather than `private`.
+
+The same gap opens one level up, at the *substitution* `Core` packages the
+projections into: the reduction hands the extraction step a `ψ` in
+`RedLog.maskedSubst` form, and the polynomials the verify/help arms feed to
+`exponentEval` come from `RedLog.maskedRepr`, while `C★`, `eval_affineSubst` and
+`recoverDlog_verifPoly_eq` all speak `AGMPoly.affineSubst` of two mask points.
+The second block below closes that step, so the chain
+`maskedRepr → maskedSubst → affineSubst → per-index lambdas` runs in one
+`simp only`. -/
 
 section RedLogNormalForms
 -- `RedLog`/`SignRecord` are plain data: none of the algebraic or sampling
@@ -68,6 +78,27 @@ lemma redLog_tags_def (L : RedLog F G) :
     L.tags = L.map (fun e => e.tag) := rfl
 
 end RedLogNormalForms
+
+section MaskedSubstNormalForms
+-- Unlike the projections above, these mention `AGMPoly`/`Polynomial` and so keep `Field F`.
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G]
+
+/-- Unfolding for the packaged substitution. `microCMZ3DLReduction` emits its `ψ` as
+`L.maskedSubst aM bM (verifPoly …)`, while everything that reasons about `ψ` — `C★` below,
+`AGMPoly.eval_affineSubst`, `recoverDlog_verifPoly_eq` — is stated in `affineSubst` form.
+`RedLog.maskedSubst` is a plain `def`, so `exact` sees through it but `rw`/`simp only` do
+not; this is the bridge for those. -/
+lemma redLog_maskedSubst_def (L : RedLog F G) (aM bM : FixedMasks F) :
+    L.maskedSubst aM bM = AGMPoly.affineSubst (aM.embed L.aMask) (bM.embed L.bMask) := rfl
+
+/-- Unfolding for a representation pushed through the packaged substitution. One step, to
+`maskedSubst` rather than straight to `affineSubst`, so that
+`simp only [redLog_maskedRepr_def, redLog_maskedSubst_def, redLog_aMask_def, redLog_bMask_def]`
+walks the whole chain down to the explicit per-index lambdas. -/
+lemma redLog_maskedRepr_def (L : RedLog F G) (aM bM : FixedMasks F) (ρ : AGMRepr F 1) :
+    L.maskedRepr aM bM ρ = L.maskedSubst aM bM ((ρ.toReprCoeffs L.length).toPoly L.msg) := rfl
+
+end MaskedSubstNormalForms
 
 /-! ## Uniformity of the embedded elements (coupling bricks) -/
 
