@@ -12,19 +12,17 @@ import VCVio.ProgramLogic.Relational.Basic
 
 The first probability-layer slice on top of `AGMReduction/Core.lean`:
 
-- `RedLog` normal forms — `rfl` bridges between `Core`'s packaged mask
-  projections and substitution, and the explicit per-index lambdas and
-  `affineSubst` the coupling lemmas use;
+- `RedLog` normal forms — `rfl` bridges from `Core`'s packaged mask projections
+  and substitution down to the per-index lambdas the coupling lemmas use;
 - uniformity of the embedded group elements (`evalDist_{smul,affine}_gen_uniform`);
 - `relTriple_map_eq`, the deterministic-map coupling brick for the `sign` arm;
-- `redRState`, the reduction ↔ honest state invariant of the `simulateQ` coupling;
-- the **static** (view-independent) Schwartz–Zippel bound — the cardinality core
-  `card_filter_eval_eq_zero_le` and its probability form
-  `probEvent_eval_shift_eq_zero_le`, plus the `C★` shift lemma that lets
-  Schwartz–Zippel hit `verifPoly` directly.
+- `redLogHonestInv`, the reduction ↔ honest state invariant, and its `maskedKey`;
+- the **static** (view-independent) Schwartz–Zippel bound: the `C★` shift lemma,
+  the cardinality core `card_filter_eval_eq_zero_le`, and its probability form
+  `probEvent_eval_shift_eq_zero_le`.
 
-The distribution-layer bad-event bound built on top of these lives further down
-the stack; see `AGMReduction.lean` for the assembled picture.
+The distribution-layer bad-event bound built on these lives further down the
+stack; see `AGMReduction.lean`.
 -/
 
 set_option autoImplicit false
@@ -41,86 +39,77 @@ variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
 /-! ## `RedLog` normal forms
 
-The coupling lemmas below quantify over explicit per-index lambdas
-(`fun j => (L.get j).au`, …); `Core`'s oracle definitions carry the packaged
-projections (`L.aMask`, …). These `rfl` bridges (stated *unapplied*, so `simp`
-can rewrite the partially-applied occurrences the oracle bodies produce)
-normalize the packaged form to the lambda form wherever a `simp only` unfolds
-a reduction step. They are consumed by every later part of the reduction (the
-verify/help couplings, the θ-sheared steps, the `n = 1` assembly), so they are
-public rather than `private`.
+`Core`'s oracle bodies carry the packaged projections (`L.aMask`, …) and the
+substitution they bundle into (`maskedRepr`, `maskedSubst`); the coupling lemmas,
+`C★`, `eval_affineSubst` and `recoverDlog_verifPoly_eq` all speak per-index
+lambdas and `AGMPoly.affineSubst`. Both forms are plain `def`s, so `exact` sees
+through them but `rw`/`simp only` do not. These `rfl` bridges close the gap —
+stated *unapplied*, so `simp` catches the partially-applied occurrences the
+oracle bodies produce, and public because every later part of the reduction
+consumes them. The chain `maskedRepr → maskedSubst → affineSubst → per-index
+lambdas` then runs in one `simp only`. -/
 
-The same gap opens one level up, at the *substitution* `Core` packages the
-projections into: the reduction hands the extraction step a `ψ` in
-`RedLog.maskedSubst` form, and the polynomials the verify/help arms feed to
-`exponentEval` come from `RedLog.maskedRepr`, while `C★`, `eval_affineSubst` and
-`recoverDlog_verifPoly_eq` all speak `AGMPoly.affineSubst` of two mask points.
-The second block below closes that step, so the chain
-`maskedRepr → maskedSubst → affineSubst → per-index lambdas` runs in one
-`simp only`. -/
+namespace RedLog
 
-section RedLogNormalForms
+section NormalForms
 -- `RedLog`/`SignRecord` are plain data: none of the algebraic or sampling
 -- structure on `F`/`G` is involved in these `rfl`s.
 omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G]
   [SampleableGroup F G]
 
-lemma redLog_aMask_def (L : RedLog F G) :
+/-- The `a`-side per-query mask, unapplied. -/
+lemma aMask_def (L : RedLog F G) :
     L.aMask = fun j => (L.get j).au := rfl
 
-lemma redLog_bMask_def (L : RedLog F G) :
+/-- The `b`-side per-query mask, unapplied. -/
+lemma bMask_def (L : RedLog F G) :
     L.bMask = fun j => (L.get j).bu := rfl
 
-lemma redLog_msg_def (L : RedLog F G) :
+/-- The per-query message, unapplied. -/
+lemma msg_def (L : RedLog F G) :
     L.msg = fun j => (L.get j).msg 0 := rfl
 
-lemma redLog_tags_def (L : RedLog F G) :
+/-- The issued tags, unapplied. -/
+lemma tags_def (L : RedLog F G) :
     L.tags = L.map (fun e => e.tag) := rfl
 
-end RedLogNormalForms
+end NormalForms
 
 section MaskedSubstNormalForms
 -- Unlike the projections above, these mention `AGMPoly`/`Polynomial` and so keep `Field F`.
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G]
 
-/-- Unfolding for the packaged substitution. `microCMZ3DLReduction` emits its `ψ` as
-`L.maskedSubst aM bM (verifPoly …)`, while everything that reasons about `ψ` — `C★` below,
-`AGMPoly.eval_affineSubst`, `recoverDlog_verifPoly_eq` — is stated in `affineSubst` form.
-`RedLog.maskedSubst` is a plain `def`, so `exact` sees through it but `rw`/`simp only` do
-not; this is the bridge for those. -/
-lemma redLog_maskedSubst_def (L : RedLog F G) (aM bM : FixedMasks F) :
+/-- The packaged substitution — the form `microCMZ3DLReduction` emits its `ψ` in — in the
+`affineSubst` form everything downstream is stated in. -/
+lemma maskedSubst_def (L : RedLog F G) (aM bM : FixedMasks F) :
     L.maskedSubst aM bM = AGMPoly.affineSubst (aM.embed L.aMask) (bM.embed L.bMask) := rfl
 
-/-- Unfolding for a representation pushed through the packaged substitution. One step, to
-`maskedSubst` rather than straight to `affineSubst`, so that
-`simp only [redLog_maskedRepr_def, redLog_maskedSubst_def, redLog_aMask_def, redLog_bMask_def]`
-walks the whole chain down to the explicit per-index lambdas. -/
-lemma redLog_maskedRepr_def (L : RedLog F G) (aM bM : FixedMasks F) (ρ : AGMRepr F 1) :
+/-- A representation pushed through the substitution. One step, to `maskedSubst` rather than
+straight to `affineSubst`, so that
+`simp only [maskedRepr_def, maskedSubst_def, aMask_def, bMask_def]` walks the whole chain. -/
+lemma maskedRepr_def (L : RedLog F G) (aM bM : FixedMasks F) (ρ : AGMRepr F 1) :
     L.maskedRepr aM bM ρ = L.maskedSubst aM bM ((ρ.toReprCoeffs L.length).toPoly L.msg) := rfl
 
 end MaskedSubstNormalForms
 
+end RedLog
+
 /-! ## Uniformity of the embedded elements (coupling bricks) -/
 
-/-- Sampling a scalar and scaling the generator yields a *uniform* group element:
-`(· • gen)` is a bijection, so it pushes `$ᵗ F` to `$ᵗ G`. -/
+/-- `(· • gen)` is a bijection, so it pushes `$ᵗ F` to `$ᵗ G`. The unshifted case, for the
+issued tag base `Uⱼ = (auⱼ + x·buⱼ) • gen`. -/
 lemma evalDist_smul_gen_uniform :
     evalDist ((fun a : F => a • gen) <$> ($ᵗ F : ProbComp F)) =
       evalDist ($ᵗ G : ProbComp G) :=
   evalDist_map_bijective_uniform_cross (α := F) _ hgen.out
 
-/-- The embedded affine element `a ↦ (a + c) • gen` is uniform over `G`
-when `a ←$ F` — shift by `c` then scale the generator, a composition of
-bijections. This is the distribution-matching brick for the coupling with
-`AGM_UF_CMVAGame`: the reduction's `H`, `Xᵣ`, `X₁` (and each `Uⱼ`) have exactly
-this affine form, so they are uniform just like the real game's. -/
+/-- Shift by `c`, then scale the generator: a composition of bijections. The reduction's `H`,
+`Xᵣ`, `X₁` all have this affine form, so they are uniform just like `AGM_UF_CMVAGame`'s. -/
 lemma evalDist_affine_gen_uniform (c : F) :
     evalDist ((fun a : F => (a + c) • gen) <$> ($ᵗ F : ProbComp F)) =
       evalDist ($ᵗ G : ProbComp G) := by
-  have hadd : Function.Bijective (fun a : F => a + c) :=
-    ⟨fun a b h => add_right_cancel h, fun y => ⟨y - c, by ring⟩⟩
   exact evalDist_map_bijective_uniform_cross (α := F) _
-    (hgen.out.comp hadd)
+    (hgen.out.comp (Equiv.addRight c).bijective)
 
 section RelationalCoupling
 open OracleComp.ProgramLogic.Relational
@@ -128,16 +117,13 @@ open OracleComp.ProgramLogic.Relational
 variable {ι₁ ι₂ : Type} {specR₁ : OracleSpec ι₁} {specR₂ : OracleSpec ι₂}
 variable [IsUniformSpec specR₁] [IsUniformSpec specR₂]
 
-/-- **Deterministic map coupling.** If `f <$> a` has the same evaluation distribution as `b`,
-then `a` and `b` are coupled by the relation `f x = y`: pair each `x ← a` with the deterministic
-image `f x`. Witness: the graph coupling `evalDist a >>= fun x => pure (x, f x)`.
+/-- **Deterministic map coupling.** If `f <$> a` matches `b` in distribution, then `a` and `b`
+are coupled by `f x = y`. Witness: the graph coupling `evalDist a >>= fun x => pure (x, f x)`.
 
-This is the per-query coupling brick for the reduction `sign` arm (`reductionSignStep` vs
-`agmOracleImpl (.sign _)`): the reduction samples the masks `(au, bu)` and computes the tag
-`(U, V) = (U, key·U)` (by `sign_tag_honest`), whose distribution matches `mac`'s
-`(U, key·U)` (by `sign_masked_tag_dist_eq`); `relTriple_map_eq` lifts that `evalDist` equality
-to the relation “computed tag = sampled tag”, which `relTriple_bind` then threads through the
-state (log) append. -/
+The per-query brick for the `sign` arm (`reductionSignStep` vs `agmOracleImpl (.sign _)`):
+`embedTag_eq` puts the reduction's tag in the honest shape `(U, key·U)` and
+`sign_masked_tag_dist_eq` matches its distribution to `mac`'s; this lifts that equality to
+“computed tag = sampled tag”, for `relTriple_bind` to thread through the log append. -/
 lemma relTriple_map_eq {α β : Type} (a : OracleComp specR₁ α) (f : α → β)
     (b : OracleComp specR₂ β) (h : evalDist (f <$> a) = evalDist b) :
     RelTriple a b (fun x y => f x = y) := by
@@ -163,33 +149,39 @@ end RelationalCoupling
 
 /-! ## B2 oracle coupling (reduction ↔ honest) -/
 
-/-- The reduction↔honest state invariant for the two-impl `simulateQ` coupling: the honest log is
-the reduction log with masks projected away, every logged tag is honest
-(`Vⱼ = keyⱼ·Uⱼ` at the real logs `xₖ = aₖ + x·bₖ`), and every logged `Uⱼ` has the embedded form
-`Uⱼ = auⱼ·g + buⱼ·X` (so `gamePoint_eq_affine`'s `htagU` holds). The first conjunct is the
-structural log correspondence (sign appends match); the second is `redLog_honest`'s invariant,
-the third `redLog_U_form`'s — both needed by `represented_value_eq_affineSubst_eval` (hence the
-`verify`/`help` bit-equality `exponentEval_verify_eq`).
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- The honest key at the challenge exponent: each `Key F 1` component read at the masked
+secrets `xₖ = aₖ + x·bₖ`. `abbrev`, so `rw`/`simp only` see through it. -/
+abbrev maskedKey (x : F) (aM bM : FixedMasks F) : Key F 1 :=
+  (aM.x0 + x * bM.x0, aM.xr + x * bM.xr, fun _ => aM.x1 + x * bM.x1)
 
-Both are `Core`'s named embedding identities, written out at the masked secrets: the second
-conjunct's scalar is `macScalar_eq_keyCoeff`'s left-hand side (the honest key scalar, whose
-`keyCoeff` form `embedTag_eq` uses), the third is `embedMask_eq`'s. They are kept expanded here
-rather than folded into `keyCoeff`, since the expanded form is what the `simulateQ` coupling
-downstream matches against syntactically. -/
-def redRState (x : F) (aM bM : FixedMasks F) (L : RedLog F G) (log : AGMLog F G 1) : Prop :=
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- `Core`'s `macScalar_eq_keyCoeff` for an arbitrary `m : Fin 1 → F`: the bridge from the honest
+form `redLogHonestInv` is stated in to the `keyCoeff` form `embedTag_eq` consumes. -/
+lemma macScalar_maskedKey_eq (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
+    macScalar (maskedKey x aM bM) m = aM.keyCoeff (m 0) + x * bM.keyCoeff (m 0) := by
+  simp only [macScalar, FixedMasks.keyCoeff, Fin.sum_univ_one]
+  ring
+
+/-- The reduction↔honest state invariant for the two-impl `simulateQ` coupling.
+
+First conjunct: both impls append one entry per `sign` query in order, so the honest log is the
+reduction log with the masks projected away. Second: per entry, the embedded base form
+`Uⱼ = auⱼ·g + buⱼ·X` (`Core`'s `embedMask_eq`) and `MicroCMZ.verify`'s own tag relation read at
+`maskedKey`. The tag relation is stated through `macScalar` rather than expanded by hand, so it
+stays in step with `Construction.lean` and is literally what the honest `sign` arm emits;
+`macScalar_maskedKey_eq` converts it to the `keyCoeff` form `embedTag_eq` consumes. -/
+def redLogHonestInv (x : F) (aM bM : FixedMasks F) (L : RedLog F G) (log : AGMLog F G 1) : Prop :=
   log = L.map (fun e => (e.msg, e.tag)) ∧
-  (∀ e ∈ L, e.tag.2 =
-    ((aM.x0 + x*bM.x0) + (aM.xr + x*bM.xr) + e.msg 0 * (aM.x1 + x*bM.x1)) • e.tag.1) ∧
-  ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen)
+  ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen) ∧
+           e.tag.2 = macScalar (maskedKey x aM bM) e.msg • e.tag.1
 
 /-! ## Schwartz–Zippel bad-event bound (Piece C) -/
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
-/-- **C★.** If the affine restriction `ψ = affineSubst a b φ` is the *zero polynomial*, then `φ`
-vanishes at the shifted real-log point `v ↦ (a v + x·b v) + b v` — evaluate `ψ` at `χ = x + 1`
-(`ψ ≡ 0` ⇒ `ψ(x+1) = 0`). One step from the already-proven `eval_affineSubst`. This is what lets
-Schwartz–Zippel hit `φ = verifPoly` *directly*, with no top-coefficient / homogeneous-component
-lemma: for a fixed view the point `θ + b` is uniform when `b` is. -/
+/-- **C★.** `ψ ≡ 0` ⇒ `ψ(x+1) = 0`, which by `eval_affineSubst` says `φ` vanishes at the real-log
+point shifted by `b`. This is what lets Schwartz–Zippel hit `φ = verifPoly` *directly*, with no
+top-coefficient / homogeneous-component lemma. -/
 lemma eval_shift_eq_zero_of_affineSubst_eq_zero {q : ℕ} (a b : AGMPoly.Var q → F)
     (x : F) (φ : AGMPoly.P F q) (h : AGMPoly.affineSubst a b φ = 0) :
     MvPolynomial.eval (fun v => a v + (x + 1) * b v) φ = 0 := by
@@ -198,10 +190,9 @@ lemma eval_shift_eq_zero_of_affineSubst_eq_zero {q : ℕ} (a b : AGMPoly.Var q �
   exact key.symm
 
 omit [SampleableType F] in
-/-- Reindexing helper: a bijection `wOf : (Fin N → F) → (Var q → F)` preserves the count of
-vanishing points (`wOf` ranges over all of `Var q → F` as its argument ranges over `Fin N → F`).
-Used twice below: to transport the Schwartz–Zippel count off `Fin N` in the cardinality core, and
-to absorb the uniform shift in the probability form. -/
+/-- A bijection `wOf : (Fin N → F) → (Var q → F)` preserves the count of vanishing points. Used
+twice below: bare, to transport the Schwartz–Zippel count off `Fin N`, and composed with a
+translation, to absorb the uniform shift. -/
 private lemma card_filter_eval_wOf_eq {q : ℕ} (φ : AGMPoly.P F q)
     (wOf : (Fin (Fintype.card (AGMPoly.Var q)) → F) → (AGMPoly.Var q → F))
     (hbij : Function.Bijective wOf) :
@@ -213,19 +204,24 @@ private lemma card_filter_eval_wOf_eq {q : ℕ} (φ : AGMPoly.P F q)
   exact Fintype.card_congr (Equiv.subtypeEquiv (Equiv.ofBijective wOf hbij) (fun b => by
     simp only [Equiv.ofBijective_apply]))
 
+omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] in
+/-- Reindexing `Fin (#Var q) → F` to `Var q → F` along `Fintype.equivFin`: the `wOf` both uses
+of `card_filter_eval_wOf_eq` are built from. -/
+private lemma reindexMasks_bijective {q : ℕ} :
+    Function.Bijective (fun b : Fin (Fintype.card (AGMPoly.Var q)) → F =>
+      (fun v => b (Fintype.equivFin (AGMPoly.Var q) v) : AGMPoly.Var q → F)) :=
+  (Equiv.arrowCongr (Fintype.equivFin (AGMPoly.Var q)).symm (Equiv.refl F)).bijective
+
 omit [SampleableType F] in
-/-- **C-SZ (cardinality form).** Schwartz–Zippel for the verification polynomial, stated as a pure
-`Finset`/`Fintype` cardinality bound: the number of points where a nonzero degree-`≤ 3`
-multivariate polynomial `φ` over `Var q → F` vanishes, times `|F|`, is at most `3·|F|^(#Var q)`.
+/-- **C-SZ (cardinality form).** The combinatorial core of the `3/p` bad event: a nonzero
+degree-`≤ 3` `φ` over `Var q → F` vanishes at `card * |F| ≤ 3 * |F|^(#Var q)` points. Wrapper
+around `MvPolynomial.schwartz_zippel_totalDegree`, transported off `Fin (#Var q)` via
+`Fintype.equivFin` / `MvPolynomial.rename`.
 
-This is the combinatorial core of the `1/p` (here `3/p`) bad event. It is deliberately stated
-**without** `Pr[…]`/`$ᵗ (Var q → F)`: in this module's import context (the `MvPolynomial` /
-`Polynomial` order instances) `probEvent` over a uniform *function-type* sample sends instance
-search into a loop. The probability conversion `Pr[eval (w ←$ Var q→F) φ = 0] = #filter / |F|^#Var`
-is done at the use site via `probEvent_uniformSample`, where the masks are sampled.
-
-Wrapper around `MvPolynomial.schwartz_zippel_totalDegree`, transported from `Fin (#Var q)` to
-`Var q` via `Fintype.equivFin` / `MvPolynomial.rename`. -/
+Deliberately stated **without** `Pr[…]`/`$ᵗ (Var q → F)`: in this module's import context (the
+`MvPolynomial` / `Polynomial` order instances) `probEvent` over a uniform *function-type* sample
+sends instance search into a loop. The conversion is done at the use site via
+`probEvent_uniformSample`, where the masks are sampled. -/
 lemma card_filter_eval_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0)
     (hdeg : φ.totalDegree ≤ 3) :
     (Finset.univ.filter (fun w : AGMPoly.Var q → F => MvPolynomial.eval w φ = 0)).card
@@ -233,7 +229,7 @@ lemma card_filter_eval_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0
       ≤ 3 * Fintype.card F ^ Fintype.card (AGMPoly.Var q) := by
   classical
   set N := Fintype.card (AGMPoly.Var q)
-  let e : AGMPoly.Var q ≃ Fin N := Fintype.equivFin _
+  let e : AGMPoly.Var q ≃ Fin N := Fintype.equivFin (AGMPoly.Var q)
   set p : MvPolynomial (Fin N) F := MvPolynomial.rename e φ with hp_def
   have hp : p ≠ 0 := by
     rw [hp_def]; intro h
@@ -250,8 +246,7 @@ lemma card_filter_eval_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0
   have hcard : (Finset.univ.filter (fun w : AGMPoly.Var q → F => MvPolynomial.eval w φ = 0)).card
              = (Finset.univ.filter (fun f : Fin N → F => MvPolynomial.eval f p = 0)).card := by
     simp only [hEval]
-    exact (card_filter_eval_wOf_eq φ (fun f v => f (e v))
-      (Equiv.arrowCongr e.symm (Equiv.refl F)).bijective).symm
+    exact (card_filter_eval_wOf_eq φ (fun f v => f (e v)) reindexMasks_bijective).symm
   have hsz := MvPolynomial.schwartz_zippel_totalDegree hp (Finset.univ : Finset F)
   rw [Fintype.piFinset_univ, Finset.card_univ] at hsz
   rw [div_le_div_iff₀ (by positivity) (by positivity)] at hsz
@@ -267,7 +262,8 @@ lemma card_filter_eval_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0
 omit [SampleableType F] in
 /-- Arithmetic helper: convert the cardinality Schwartz–Zippel bound to the `3/|F|`
 rational form. -/
-private lemma szCard_to_prob {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0) (hdeg : φ.totalDegree ≤ 3) :
+private lemma card_filter_div_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0)
+    (hdeg : φ.totalDegree ≤ 3) :
     (((Finset.univ.filter (fun w : AGMPoly.Var q → F => MvPolynomial.eval w φ = 0)).card : ℝ≥0∞))
         / (Fintype.card F : ℝ≥0∞) ^ Fintype.card (AGMPoly.Var q)
       ≤ 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
@@ -298,18 +294,17 @@ private lemma szCard_to_prob {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0) (hd
 -- it (as `linter.unusedDecidableInType` suggests) sends that search into this module's documented
 -- instance loop and the declaration times out. Scoped to this one declaration.
 set_option linter.unusedDecidableInType false in
-/-- **C-SZ (probability form).** The Schwartz–Zippel bad event as a probability over a uniform
-shift. The shift `b` is sampled through `Fin (#Var q) → F` rather than `Var q → F`: only the
-`Var q`-indexed uniform function sample hangs `SampleableType` instance search in this module's
-`MvPolynomial`-heavy context, while `Fin k → F` is clean. For a fixed offset `θ`, a uniform
-`b : Fin (#Var q) → F` makes the point `w v = θ v + b (e v)` uniform over `Var q → F`
-(reindexing by `e := Fintype.equivFin` and translating by `θ` are bijections), so
-`card_filter_eval_eq_zero_le` bounds the vanishing probability of a nonzero degree-`≤ 3`
-polynomial by `3/|F|`.
+/-- **C-SZ (probability form).** For a *fixed* offset `θ`, a uniform shift `b` makes the point
+`w v = θ v + b (e v)` uniform over `Var q → F` (reindexing by `e := Fintype.equivFin` and
+translating by `θ` are both bijections), so `card_filter_eval_eq_zero_le` bounds the vanishing
+probability by `3/|F|`.
 
-This is the reusable analytic core for the shear keystone: there the uniform `b` is the free
-(post-reparametrization) `b`-masks reindexed to `Fin (#Var q)`, `θ v = a v + x·b v` is the offset,
-and `w = θ + b` is the shifted real-log point at which C★ forces `φ` to vanish. -/
+`b` is sampled through `Fin (#Var q) → F`, not `Var q → F`: only the `Var q`-indexed uniform
+function sample hangs `SampleableType` instance search in this `MvPolynomial`-heavy context.
+
+The reusable analytic core for the shear keystone, where `θ v = a v + x·b v` is the offset, `b`
+is the free post-reparametrization mask, and `w = θ + b` is the point C★ forces `φ` to vanish
+at. -/
 lemma probEvent_eval_shift_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0)
     (hdeg : φ.totalDegree ≤ 3) (θ : AGMPoly.Var q → F) :
     Pr[(fun b : Fin (Fintype.card (AGMPoly.Var q)) → F =>
@@ -322,17 +317,13 @@ lemma probEvent_eval_shift_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ �
   have hbij : Function.Bijective
       (fun b : Fin (Fintype.card (AGMPoly.Var q)) → F =>
         (fun v => θ v + b ((Fintype.equivFin (AGMPoly.Var q)) v) : AGMPoly.Var q → F)) := by
-    have h1 : Function.Bijective
-        (fun b : Fin (Fintype.card (AGMPoly.Var q)) → F =>
-          (fun v => b ((Fintype.equivFin (AGMPoly.Var q)) v) : AGMPoly.Var q → F)) :=
-      (Equiv.arrowCongr (Fintype.equivFin (AGMPoly.Var q)).symm (Equiv.refl F)).bijective
     have h2 : Function.Bijective
         (fun w : AGMPoly.Var q → F => (fun v => θ v + w v : AGMPoly.Var q → F)) :=
       (Equiv.addLeft (θ : AGMPoly.Var q → F)).bijective
-    exact h2.comp h1
+    exact h2.comp reindexMasks_bijective
   have hcard := card_filter_eval_wOf_eq φ
     (fun b v => θ v + b ((Fintype.equivFin (AGMPoly.Var q)) v)) hbij
   rw [hcard, Nat.cast_pow]
-  exact szCard_to_prob φ hφ hdeg
+  exact card_filter_div_le φ hφ hdeg
 
 end KVAC.Schemes.MicroCMZ

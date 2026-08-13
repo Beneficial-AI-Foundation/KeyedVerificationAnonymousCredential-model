@@ -294,11 +294,14 @@ monomials of `ϕ` can reach `χ^d` and each contributes the product of its
 Schwartz–Zippel on the nonzero degree-`d` form gives `Pr_b[ϕ_d(b) = 0] ≤ d/p`.
 Rejected as a *formalization* route only: it needs the top-homogeneous-component
 extraction lemma and its coefficient identity, where `C★` is one rewrite off an
-already-proven evaluation law. The degree tower it relies on
-(`totalDegree_verifPoly_le`, `natDegree_affineSubst_le`, and the at-most-3-roots
-bound `card_roots_affineSubst_verifPoly_le`) is still what caps the degree at 3;
-that derivation is documented at the head of the Eq. 16 section in
-`AGMPolynomial.lean`.
+already-proven evaluation law.
+
+Either way the `3` is `totalDegree_verifPoly_le` — the only rung of the Eq. 16
+degree tower the `C★` route consults. The other two serve different steps:
+`natDegree_affineSubst_le` bounds the *univariate* `ψ` for `exponentEval`, and
+`card_roots_affineSubst_verifPoly_le` is the at-most-3-roots bound the
+*extraction* step uses. The full tower is documented at the head of the Eq. 16
+section in `AGMPolynomial.lean`.
 
 ## Eq. 13: X₀'s `X`-coefficient (O24 p. 37)
 

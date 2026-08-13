@@ -295,51 +295,61 @@ polynomial vanishes at the embedded point and whose `ψ` is nonzero — the
 Schwartz–Zippel good event — yields the discrete logarithm.
 :::
 
-:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.redLog_aMask_def, KVAC.Schemes.MicroCMZ.redLog_bMask_def, KVAC.Schemes.MicroCMZ.redLog_msg_def, KVAC.Schemes.MicroCMZ.redLog_tags_def, KVAC.Schemes.MicroCMZ.redLog_maskedSubst_def, KVAC.Schemes.MicroCMZ.redLog_maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.redRState") (parent := "cmz_amac") (tags := "milestone")
+:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
 The pieces the proof that {uses "simulated_sign_oracle"}[] is
 indistinguishable from the honest oracle of {uses "agm_model"}[] is
-assembled from. Six normal forms bridge the packaged forms the oracle and
-the reduction emit — the per-query mask projections, and the affine-mask
-substitution they are bundled into — to the per-index lambdas and the bare
-substitution that the coupling, the shift lemma below and
-{uses "dlog_root_recovery"}[] are stated in. Two
-uniformity lemmas say the embedding hides its masks: a uniform scalar
+assembled from.
+
+Six normal forms bridge the packaged forms the oracle and the reduction
+emit to the per-index lambdas and bare substitution that the coupling, the
+shift lemma below and {uses "dlog_root_recovery"}[] are stated in. Two
+uniformity lemmas say the embedding hides its masks — a uniform scalar
 multiple of the generator is a uniform group element, and so is an affine
-shift of one — this is what makes the simulated public parameters and
-tags of {uses "challenge_embedding"}[] identically distributed to honest
-ones. A deterministic-map coupling brick lifts an equality of evaluation
-distributions to a relation between two computations, the form the
-`sign` arm needs on top of {uses "sign_masks"}[]. Finally the
-reduction ↔ honest state invariant: the honest log is the reduction log
-with masks projected away, every logged tag is the honest key multiple of
-its own base at the challenge exponent, and every logged base has the
-embedded shape — the two named identities of
-{uses "challenge_embedding"}[], written out at the masked secrets.
+shift of one — which is what makes the simulated parameters and tags of
+{uses "challenge_embedding"}[] identically distributed to honest ones. A
+deterministic-map coupling brick lifts an equality of evaluation
+distributions to a relation between two computations, the form the `sign`
+arm needs on top of {uses "sign_masks"}[].
+
+Finally the reduction ↔ honest state invariant: the honest log is the
+reduction log with masks projected away, and every logged entry has both
+the embedded base shape and the honest tag relation at the masked
+secrets. The tag relation is stated through the scheme's own key scalar
+rather than expanded, so it is literally what the signing oracle of
+{uses "mucmz_construction"}[] emits.
 :::
 
 :::theorem "sz_static_core" (lean := "KVAC.Schemes.MicroCMZ.eval_shift_eq_zero_of_affineSubst_eq_zero, KVAC.Schemes.MicroCMZ.card_filter_eval_eq_zero_le, KVAC.Schemes.MicroCMZ.probEvent_eval_shift_eq_zero_le") (parent := "cmz_amac") (tags := "milestone")
-The view-independent half of the Schwartz–Zippel argument: for a *fixed*
-nonzero verification polynomial of total degree `≤ 3`, the masks that make
-its partial evaluation {uses "partial_evaluation_psi"}[] vanish
-identically are at most a `3/p` fraction. Stated first as a cardinality
-bound on the mask vectors and then in probability form. The shift lemma
-is what points Schwartz–Zippel at the multivariate polynomial directly,
-which is where the `3/p` of {uses "mucmz_mac_security"}[] comes from —
-O24 prints `1/p`. What remains for the full bad event is the
-distribution-layer step, where the polynomial is the adversary's and so
-depends on its view.
+The view-independent half of the Schwartz–Zippel argument. The shift
+lemma turns "the partial evaluation {uses "partial_evaluation_psi"}[]
+vanishes identically" into "the multivariate polynomial vanishes at the
+real-log point shifted by the `b`-side masks", which is what aims
+Schwartz–Zippel at the multivariate polynomial directly — the source of
+the `3/p` in {uses "mucmz_mac_security"}[], against the `1/p` O24 prints.
+The bound is then stated for a *fixed* nonzero polynomial of total degree
+`≤ 3` and a *fixed* offset, over a uniform shift: at most a `3/p` fraction
+of shifts make it vanish. Given as a cardinality bound and then in
+probability form.
+
+Two steps remain before this becomes the bad event. The offset must be
+decoupled from the shift — the reparametrization sending the mask pair to
+(real-log point, free `b`), O24's "the `b`'s are uniformly random and
+perfectly hidden by the respective `a`'s", which must also survive the
+nonzero-`U` conditioning of {uses "sign_masks"}[]. And the polynomial is
+the adversary's, so it depends on its view.
 :::
 
 :::proof "sz_static_core"
 If the affine restriction is the zero polynomial then it vanishes at
 `χ = x + 1` in particular, so by the evaluation law of
 {uses "partial_evaluation_psi"}[] the multivariate polynomial vanishes at
-the real-log point shifted by the `b`-side masks. For a fixed `x` that
-shifted point ranges uniformly with the masks, so the count of vanishing
-mask vectors is the Schwartz–Zippel count for the multivariate
-polynomial, `≤ 3` times the fiber size. Dividing by the mask space gives
-the probability form. No top-coefficient or homogeneous-component lemma
-is needed.
+the real-log point shifted by the `b`-side masks. Reindexing and
+translating are both bijections, so for a fixed offset the shifted point
+ranges over the whole evaluation space as the shift does; the count of
+vanishing shifts is therefore the Schwartz–Zippel count for the
+multivariate polynomial, `≤ 3` times the fiber size. Dividing by the
+shift space gives the probability form. No top-coefficient or
+homogeneous-component lemma is needed.
 :::
 
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
