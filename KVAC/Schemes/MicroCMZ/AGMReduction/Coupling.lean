@@ -138,7 +138,13 @@ the reduction log with masks projected away, every logged tag is honest
 `Uⱼ = auⱼ·g + buⱼ·X` (so `gamePoint_eq_affine`'s `htagU` holds). The first conjunct is the
 structural log correspondence (sign appends match); the second is `redLog_honest`'s invariant,
 the third `redLog_U_form`'s — both needed by `represented_value_eq_affineSubst_eval` (hence the
-`verify`/`help` bit-equality `exponentEval_verify_eq`). -/
+`verify`/`help` bit-equality `exponentEval_verify_eq`).
+
+Both are `Core`'s named embedding identities, written out at the masked secrets: the second
+conjunct's scalar is `macScalar_eq_keyCoeff`'s left-hand side (the honest key scalar, whose
+`keyCoeff` form `embedTag_eq` uses), the third is `embedMask_eq`'s. They are kept expanded here
+rather than folded into `keyCoeff`, since the expanded form is what the `simulateQ` coupling
+downstream matches against syntactically. -/
 def redRState (x : F) (aM bM : FixedMasks F) (L : RedLog F G) (log : AGMLog F G 1) : Prop :=
   log = L.map (fun e => (e.msg, e.tag)) ∧
   (∀ e ∈ L, e.tag.2 =
