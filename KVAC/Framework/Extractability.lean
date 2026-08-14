@@ -6,6 +6,7 @@ Authors: Christiano Braga
 import KVAC.Framework.Syntax
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
+import VCVio.CryptoFoundations.Asymptotics.Security
 
 /-!
 # Extraction game for a keyed-verification credential (O24 §4.4, Definition 4.5)
@@ -105,9 +106,9 @@ def KVACSyntax.mac (kvac : KVACSyntax M) {secParam n : Nat}
 /-- The Figure 8 oracle implementation over the carrier `OracleComp (ZKRO H)`.
 Each credential algorithm runs through `runRO` on the shared table, which is
 carried alongside the game state, so a Fiat–Shamir credential's proofs share one
-random oracle. The `Issue` abort of Figure 8 is `throw ()` in the `ExceptT Unit`
-layer of the target monad, short-circuiting the run; the game reads a thrown
-abort as an adversary win. -/
+random oracle. The `Issue` abort of Figure 8 is `throw ()` through the target
+monad's `ExceptT Unit` transformer, short-circuiting the run. The game reads a
+thrown abort as an adversary win. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
     (sk : kvac.Sk crs) (pp : kvac.Pp crs) :
@@ -201,8 +202,8 @@ structure EXTAdversary (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) 
 /-- The random-oracle handler over the game's combined state. The adversary's
 direct `ZKRO H` queries must hit the same table the honest oracles use, so this
 runs `zkROImpl H` on the `cache` component of the shared `(cache × EXTState)`
-state, leaving the game state and the `ExceptT` abort layer untouched. It is the
-`ZKRO H` half of the game's `QueryImpl`, added to `extOracleImpl`. -/
+state, leaving the game state and the `ExceptT` abort transformer untouched. It is
+the `ZKRO H` half of the game's `QueryImpl`, added to `extOracleImpl`. -/
 def extROImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     {secParam n : Nat} (crs : kvac.Crs secParam n) :
     QueryImpl (ZKRO H)
@@ -250,12 +251,45 @@ def EXTGame (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
       pure (accepts && notHonest && freshOrUnsat)
 
 /-- The extraction advantage of `A` with respect to extractor `ext`: the
-probability that `EXTGame` returns `true`. A scheme is extractable if some `ext`
-makes this negligible in `secParam` for every PPT `A`; the asymptotic statement is
-deferred, like the negligibility of `UF_CMVAAdv` and `ZKAdv`. An `abbrev`, so it
-unfolds in the Theorem 5.2 reduction. -/
+probability that `EXTGame` returns `true`. This is `Adv^ext_{KVAC,Ext,A}` of O24
+Definition 4.5, the quantity `Extractable` asks to be negligible. An `abbrev`, so
+it unfolds in the Theorem 5.2 reduction. -/
 noncomputable abbrev EXTAdv (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor kvac) (A : EXTAdversary H kvac) (secParam n : Nat) : ℝ≥0∞ :=
   Pr[= true | EXTGame H kvac ext A secParam n]
+
+/-! ## Extractability (O24 Definition 4.5) -/
+
+/-- The extraction game as an asymptotic `SecurityGame` for a fixed attribute
+count `n` and extractor `ext`: the advantage `Adv^ext` as a function of the
+adversary and the security parameter. -/
+noncomputable def extSecurityGame (H : HashSpec)
+    (kvac : KVACSyntax (OracleComp (ZKRO H))) (ext : Extractor kvac) (n : Nat) :
+    SecurityGame (EXTAdversary H kvac) where
+  advantage A secParam := EXTAdv H kvac ext A secParam n
+
+/-- Extractability, O24 Definition 4.5: there is an extractor `Ext = (Ext.I, Ext.P)`
+such that the extraction game is secure against the efficient adversaries, that is,
+`Adv^ext_{KVAC,Ext,A}` is negligible in the security parameter for every p.p.t. `A`.
+
+Unfolding `SecurityGame.secureAgainst`, this reads
+
+  `∃ ext, ∀ A, isPPT A → negligible (fun secParam => EXTAdv H kvac ext A secParam n)`,
+
+which matches the paper's quantifier structure. `∃ ext` is "there exists
+`Ext = (Ext.I, Ext.P)`", the `∀ A` is "for any adversary `A`", the `isPPT A →`
+guard renders the adjective "p.p.t." (a restricted quantifier, since there is no
+type of efficient adversaries to range over), and `negligible (… EXTAdv …)` is
+"`Adv^ext` is negligible in λ".
+
+The efficiency predicate `isPPT` is an abstract parameter, exactly as VCVio's
+`SecurityGame.secureAgainst` leaves it, because this development fixes no concrete
+efficiency notion, that is, no probabilistic-polynomial-time bound (such as a
+`PolyQueries` query-count bound), on `OracleComp` adversaries. Taking it as a
+parameter renders the paper's "for any p.p.t. A" faithfully, and a concrete
+instantiation supplies the efficiency notion. -/
+def Extractable (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (isPPT : EXTAdversary H kvac → Prop) (n : Nat) : Prop :=
+  ∃ ext : Extractor kvac, (extSecurityGame H kvac ext n).secureAgainst isPPT
 
 end KVAC.Framework
