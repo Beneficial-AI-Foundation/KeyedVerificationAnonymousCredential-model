@@ -40,13 +40,18 @@ namespace KVAC.Core
 open OracleComp OracleSpec ENNReal
 
 /-- Decidable equality on statements, deciding freshness in the O24 §3.3
-simulation-extractability game. -/
+simulation-extractability game. It is over `NIZKPSyntax (OracleComp (ZKRO H))`
+rather than `NIZKPSyntax ProbComp` because the extraction games take `zkp` at the
+oracle carrier (a Fiat–Shamir `verify` queries the random oracle), so a
+`ProbComp`-carrier abbrev would name a different scheme's `Stmt` and would not
+apply to the game's `zkp`. -/
 abbrev NIZKPSyntax.DecidableEqStmt (H : HashSpec)
     (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam), DecidableEq (zkp.Stmt crs)
 
 /-- Decidable equality on proofs, deciding freshness in the O24 §3.3
-simulation-extractability game. -/
+simulation-extractability game. Over `NIZKPSyntax (OracleComp (ZKRO H))` for the
+same reason as `DecidableEqStmt`. -/
 abbrev NIZKPSyntax.DecidableEqProof (H : HashSpec)
     (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam), DecidableEq (zkp.Proof crs)
@@ -150,10 +155,11 @@ def seOracleImpl (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
       let (a, cache) ← (zkROImpl H q).run s.1
       pure (a, (cache, s.2))
 
-/-- The white-box extractor of the O24 §3.3 stronger notion: the
-`KSNDExtractor` inputs plus the simulation log, returning a candidate
-statement in addition to the witness (the candidate instance Z of the
-extractability proofs). Returns `none` on failure. -/
+/-- The white-box extractor of the O24 §3.3 stronger notion: the `KSNDExtractor`
+inputs (the adversary value, the output (x, π), and the random-oracle cache as of
+the end of the adversary's run, before `verify`) plus the simulation log,
+returning a candidate statement in addition to the witness (the candidate
+instance Z of the extractability proofs). Returns `none` on failure. -/
 abbrev SEExtractor (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
   SEAdversary H zkp → {secParam : Nat} → (crs : zkp.Crs secParam) →
     zkp.Stmt crs → zkp.Proof crs → H.Cache → SimLog H zkp crs →
