@@ -18,7 +18,7 @@ built in Theorem 5.2.
 
 namespace KVAC.Framework
 
-open OracleComp OracleSpec KVAC.Core
+open OracleComp OracleSpec KVAC.Core ENNReal
 
 variable {M : Type → Type} [Monad M]
 
@@ -195,5 +195,67 @@ alongside `pp`, matching `UFAdversary`; the paper infers it from `pp`. -/
 structure EXTAdversary (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) where
   run : {secParam n : Nat} → (crs : kvac.Crs secParam n) → kvac.Pp crs →
     OracleComp (EXTAdvSpec H kvac crs) (kvac.Pred crs × kvac.PresentMsg crs)
+
+/-! ## The game -/
+
+/-- The random-oracle handler over the game's combined state. The adversary's
+direct `ZKRO H` queries must hit the same table the honest oracles use, so this
+runs `zkROImpl H` on the `cache` component of the shared `(cache × EXTState)`
+state, leaving the game state and the `ExceptT` abort layer untouched. It is the
+`ZKRO H` half of the game's `QueryImpl`, added to `extOracleImpl`. -/
+def extROImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    {secParam n : Nat} (crs : kvac.Crs secParam n) :
+    QueryImpl (ZKRO H)
+      (StateT (H.spec.QueryCache × EXTState kvac crs) (ExceptT Unit ProbComp)) :=
+  fun q => StateT.mk fun (cache, st) => do
+    let (a, cache') ← (zkROImpl H q).run cache
+    pure (a, (cache', st))
+
+/-- The O24 Figure 8 extraction game `EXT_{KVAC, Ext, A}(λ, n)` as a `ProbComp Bool`.
+
+Samples `crs` and `(sk, pp)` against a fresh random-oracle table, then runs the
+adversary through the four extraction oracles (`extOracleImpl`) and the shared
+random oracle (`extROImpl`), carrying one table across both halves. A Figure 8
+`Issue` abort surfaces as `Except.error` and is an adversary win. Otherwise the
+challenge `(φ*, ρ*)` wins when the presentation verifies, `(φ*, ρ*)` was not an
+honest presentation (`∉ PQrs`), and the extracted `m* := Ext.P(sk, φ*, ρ*)` was
+never issued (`∉ Qrs`) or fails `φ*`. A failed `Ext.P` (its `none`) counts as the
+last disjunct, matching the abort convention for `Ext.I`. -/
+def EXTGame (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (ext : Extractor kvac) (A : EXTAdversary H kvac) (secParam n : Nat) :
+    ProbComp Bool := do
+  let (crs, cache₁) ← runRO H ∅ (kvac.setup secParam n)
+  let ((sk, pp), cache₂) ← runRO H cache₁ (kvac.keygen crs)
+  -- `oracles` is the superscript `^{Issue, Present, NewUsr, PresentUsr}`, the four
+  -- extraction oracles and the shared random oracle answering the adversary's queries
+  -- over one table, run from the post-keygen cache and the empty game state.
+  let oracles := extOracleImpl H kvac ext crs sk pp + extROImpl H kvac crs
+  -- (φ*, ρ*) ← A^{Issue, Present, NewUsr, PresentUsr}(pp)
+  let challenge := simulateQ oracles (A.run crs pp)
+  match ← (challenge.run (cache₂, EXTState.empty kvac crs)).run with
+  | .error () => pure true                                    -- Figure 8 `Issue` abort ⇒ win
+  | .ok ((φStar, ρStar), cache₃, st) => do
+      let (accepts, _) ← runRO H cache₃ (kvac.presentSrv crs sk φStar ρStar)
+      let notHonest := decide ((φStar, ρStar) ∉ st.pqrs)
+      -- `Ext.P` is `Option`-valued, unlike Figure 8's total `m* := Ext.P(sk, φ*, ρ*)`.
+      -- A `none` is an extraction failure: the extractor could not open a presentation
+      -- that nonetheless verifies. We read it as satisfying the last disjunct
+      -- `(m* ∉ Qrs ∨ φ*(m*) = 0)`, an adversary win, on the same footing as the `Ext.I`
+      -- abort in `Issue`. A verifying presentation the extractor cannot open is the
+      -- strongest form of the winning event.
+      let freshOrUnsat :=
+        match ext.extP sk φStar ρStar with
+        | none       => true
+        | some mStar => decide (mStar ∉ st.qrs) || !kvac.holds crs φStar mStar
+      pure (accepts && notHonest && freshOrUnsat)
+
+/-- The extraction advantage of `A` with respect to extractor `ext`: the
+probability that `EXTGame` returns `true`. A scheme is extractable if some `ext`
+makes this negligible in `secParam` for every PPT `A`; the asymptotic statement is
+deferred, like the negligibility of `UF_CMVAAdv` and `ZKAdv`. An `abbrev`, so it
+unfolds in the Theorem 5.2 reduction. -/
+noncomputable abbrev EXTAdv (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (ext : Extractor kvac) (A : EXTAdversary H kvac) (secParam n : Nat) : ℝ≥0∞ :=
+  Pr[= true | EXTGame H kvac ext A secParam n]
 
 end KVAC.Framework
