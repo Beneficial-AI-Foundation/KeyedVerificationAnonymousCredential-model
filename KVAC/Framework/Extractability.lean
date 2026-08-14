@@ -12,7 +12,7 @@ import VCVio.OracleComp.ProbComp
 The multi-user man-in-the-middle extraction game `EXT_{KVAC, Ext, A}(λ, n)` of
 O24 Figure 8. The extractor `Ext = (Ext.I, Ext.P)` is an abstract parameter of
 the game (Definition 4.5); its μCMZ instantiation from the ZKP extractors is
-built in Theorem 5.2.
+built in Theorem 5.10.
 -/
 
 namespace KVAC.Framework
