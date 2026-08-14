@@ -925,10 +925,18 @@
           "has_sorry": false
         },
         {
+          "name": "Cache",
+          "kind": "abbrev",
+          "file": "KVAC/Core/Hash.lean",
+          "line": 107,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
           "name": "roImpl",
           "kind": "def",
           "file": "KVAC/Core/Hash.lean",
-          "line": 113,
+          "line": 119,
           "refs": [],
           "has_sorry": false
         },
@@ -936,7 +944,7 @@
           "name": "transcriptHashSpec",
           "kind": "def",
           "file": "KVAC/Core/Hash.lean",
-          "line": 124,
+          "line": 130,
           "refs": [
             "§3"
           ],
@@ -946,7 +954,7 @@
           "name": "curveHashSpec",
           "kind": "def",
           "file": "KVAC/Core/Hash.lean",
-          "line": 134,
+          "line": 140,
           "refs": [
             "§3"
           ],
@@ -1069,7 +1077,7 @@
           "name": "PerfectlyComplete",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Completeness.lean",
-          "line": 37,
+          "line": 45,
           "refs": [
             "§3.3"
           ],
@@ -1096,6 +1104,185 @@
       ]
     },
     {
+      "file": "KVAC/Core/NIZKP/Extraction.lean",
+      "module_refs": [
+        "§3.3"
+      ],
+      "decls": [
+        {
+          "name": "NIZKPSyntax.DecidableEqStmt",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 48,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "NIZKPSyntax.DecidableEqProof",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 55,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "witnessValid",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 61,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "KSNDAdversary",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 71,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "KSNDExtractor",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 79,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ksndGame",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 90,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "KSNDAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 101,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SEQuery",
+          "kind": "inductive",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 110,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SESpec",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 116,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SEAdvSpec",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 122,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SEAdversary",
+          "kind": "structure",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 129,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SimLog",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 135,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SEState",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 141,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "seOracleImpl",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 148,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SEExtractor",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 163,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "seGame",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 179,
+          "refs": [
+            "§3.3",
+            "§5.5"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "SEAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Core/NIZKP/Extraction.lean",
+          "line": 199,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
       "file": "KVAC/Core/NIZKP/Security.lean",
       "module_refs": [
         "§3.3"
@@ -1105,25 +1292,7 @@
           "name": "NIZKPSyntax.DecidableRelation",
           "kind": "abbrev",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 77,
-          "refs": [
-            "§3.3"
-          ],
-          "has_sorry": false
-        },
-        {
-          "name": "ZKQuery",
-          "kind": "inductive",
-          "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 84,
-          "refs": [],
-          "has_sorry": false
-        },
-        {
-          "name": "ZKProveSpec",
-          "kind": "def",
-          "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 92,
+          "line": 76,
           "refs": [
             "§3.3"
           ],
@@ -1133,7 +1302,35 @@
           "name": "ZKRO",
           "kind": "abbrev",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 101,
+          "line": 86,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "zkROImpl",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 93,
+          "refs": [
+            "§3.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKQuery",
+          "kind": "inductive",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 100,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "ZKProveSpec",
+          "kind": "def",
+          "file": "KVAC/Core/NIZKP/Security.lean",
+          "line": 108,
           "refs": [
             "§3.3"
           ],
@@ -1143,7 +1340,7 @@
           "name": "ZKAdvSpec",
           "kind": "abbrev",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 108,
+          "line": 117,
           "refs": [
             "§3.3"
           ],
@@ -1153,23 +1350,13 @@
           "name": "ZKAdversary",
           "kind": "structure",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 115,
+          "line": 124,
           "refs": [],
           "has_sorry": false
         },
         {
           "name": "ZKSimulator",
           "kind": "abbrev",
-          "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 124,
-          "refs": [
-            "§3.3"
-          ],
-          "has_sorry": false
-        },
-        {
-          "name": "zkROImpl",
-          "kind": "def",
           "file": "KVAC/Core/NIZKP/Security.lean",
           "line": 133,
           "refs": [
@@ -1181,7 +1368,7 @@
           "name": "zkProveReal",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 144,
+          "line": 143,
           "refs": [
             "§3.3"
           ],
@@ -1191,7 +1378,7 @@
           "name": "zkProveSim",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 157,
+          "line": 158,
           "refs": [
             "§3.3"
           ],
@@ -1201,7 +1388,7 @@
           "name": "zkRun",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 169,
+          "line": 171,
           "refs": [
             "§3.3"
           ],
@@ -1211,7 +1398,7 @@
           "name": "zkGameReal",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 179,
+          "line": 181,
           "refs": [
             "§3.3"
           ],
@@ -1221,7 +1408,7 @@
           "name": "zkGameSim",
           "kind": "def",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 187,
+          "line": 189,
           "refs": [
             "§3.3"
           ],
@@ -1231,7 +1418,7 @@
           "name": "ZKAdv",
           "kind": "abbrev",
           "file": "KVAC/Core/NIZKP/Security.lean",
-          "line": 202,
+          "line": 204,
           "refs": [
             "§3.3"
           ],
@@ -1249,7 +1436,7 @@
           "name": "NIZKP",
           "kind": "structure",
           "file": "KVAC/Core/NIZKP.lean",
-          "line": 33,
+          "line": 37,
           "refs": [
             "§3.3"
           ],
