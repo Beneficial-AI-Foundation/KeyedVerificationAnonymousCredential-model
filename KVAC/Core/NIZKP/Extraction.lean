@@ -1,5 +1,5 @@
 /-
-Copyright 2026 The Beneficial AI Foundation. All rights reserved.
+Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
@@ -16,9 +16,10 @@ candidate statement).
 Both extractors are white-box, following O24 §3.3 (p. 25). The paper defines
 Ext over the random coins and the code of the p.p.t. adversary A. In this
 formalization the code enters as the adversary value, and the run's observables
-enter as the output pair, the final random-oracle cache, and, for simulation
-extractability, the simulation log. The adversary's coins are not recorded, so
-same-coins replay and rewinding are out of scope, and neither is needed by the
+enter as the output pair, the random-oracle cache at the end of the adversary's
+run, and, for simulation extractability, the simulation log. The adversary's
+coins are not recorded, so same-coins replay and rewinding are out of scope, and
+neither is needed by the
 straight-line §9 instantiation. The optional crs trapdoor is omitted, the
 paper's instantiations never use it. Issue #43 records this decision and the
 divergence from the black-box rewindable convention.
@@ -38,8 +39,8 @@ namespace KVAC.Core
 
 open OracleComp OracleSpec ENNReal
 
-/-- Decidable equality on statements, deciding freshness and the
-candidate-statement check of the O24 §3.3 simulation-extractability game. -/
+/-- Decidable equality on statements, deciding freshness in the O24 §3.3
+simulation-extractability game. -/
 abbrev NIZKPSyntax.DecidableEqStmt (H : HashSpec)
     (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam), DecidableEq (zkp.Stmt crs)
@@ -67,18 +68,20 @@ structure KSNDAdversary (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     OracleComp (ZKRO H) (zkp.Stmt crs × zkp.Proof crs)
 
 /-- The white-box extractor Ext of O24 §3.3. The code enters as the adversary
-value, and the run's observables as the output (x, π) and the final
-random-oracle cache. The adversary's coins are not recorded. Returns `none` on
-failure. -/
+value, and the run's observables as the output (x, π) and the random-oracle
+cache as of the end of the adversary's run, before `verify`. The adversary's
+coins are not recorded. Returns `none` on failure. -/
 abbrev KSNDExtractor (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
   KSNDAdversary H zkp → {secParam : Nat} → (crs : zkp.Crs secParam) →
     zkp.Stmt crs → zkp.Proof crs → H.Cache →
     ProbComp (Option (zkp.Witness crs))
 
 /-- The knowledge-soundness experiment of O24 §3.3: crs ← ZKP.S(1^λ);
-(x, π) ← A(crs); w ← Ext; A wins iff ZKP.V(crs, x, π) = 1 ∧ (x, w) ∉ R. One
-cache is threaded through `setup`, the adversary, and `verify`, so `verify`
-runs against the adversary's final cache. -/
+(x, π) ← A(crs); w ← Ext; A wins iff ZKP.V(crs, x, π) = 1 ∧ (x, w) ∉ R. The
+extractor and `verify` both receive the cache as of the end of the adversary's
+run. `verify` runs after the extractor, and its resulting cache is discarded, so
+a Fiat–Shamir `verify`'s fresh answers never reach the extractor. This ordering
+is deliberate. -/
 def ksndGame (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (ext : KSNDExtractor H zkp) (A : KSNDAdversary H zkp)
     (dec : zkp.DecidableRelation) (secParam : Nat) : ProbComp Bool := do
@@ -164,8 +167,9 @@ satisfies (x, w) ∈ R for the adversary's statement x. The extractor's candidat
 statement x̂ is carried for the downstream credential reductions, checked there
 by the relation-specific mechanism (the secret-key or DDH check of O24 §5.5/6.5,
 which the paper notes gives no correctness guarantee on its own, p. 16), not
-against x here. `verify` runs through `zkROImpl` on the run's final
-random-oracle cache. -/
+against x here. The extractor and `verify` both receive the cache as of the end
+of the adversary's run. `verify` runs after the extractor, and its resulting
+cache is discarded. This ordering is deliberate. -/
 def seGame (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (sim : ZKSimulator H zkp) (ext : SEExtractor H zkp)
     (A : SEAdversary H zkp) (dec : zkp.DecidableRelation)

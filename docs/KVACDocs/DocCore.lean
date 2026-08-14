@@ -124,13 +124,15 @@ and the distinguishing advantage `ZKAdv`.
 
 :::definition "extraction_game" (lean := "KVAC.Core.NIZKPSyntax.DecidableEqStmt, KVAC.Core.NIZKPSyntax.DecidableEqProof, KVAC.Core.witnessValid, KVAC.Core.KSNDAdversary, KVAC.Core.KSNDExtractor, KVAC.Core.ksndGame, KVAC.Core.KSNDAdv, KVAC.Core.SEQuery, KVAC.Core.SESpec, KVAC.Core.SEAdvSpec, KVAC.Core.SEAdversary, KVAC.Core.SimLog, KVAC.Core.SEState, KVAC.Core.seOracleImpl, KVAC.Core.SEExtractor, KVAC.Core.seGame, KVAC.Core.SEAdv") (parent := "core_zkproof") (tags := "milestone")
 The knowledge-soundness and strong simulation-extractability games of O24
-Section 3.3 on a {uses "nizkp_syntax"}[] carrier at `OracleComp (ZKRO H)`:
+Section 3.3 on a {uses "nizkp_syntax"}[] carrier at `OracleComp (ZKRO H)`,
+building on the simulator and random oracle of {uses "zk_game"}[]:
 white-box extractors receiving the adversary value and the run's
-observables (the output pair, the final random-oracle cache, and for SE the
-simulation log), the two experiments `ksndGame` and `seGame` with `verify`
-threaded through the run's cache, and the advantages `KSNDAdv` and `SEAdv`.
-The SE extractor returns a candidate statement (O24 Remark 5.9); the
-`verify` no-sampling constraint is deferred (issue #101).
+observables (the output pair, the random-oracle cache at the end of the
+adversary's run, and for SE the simulation log), the two experiments
+`ksndGame` and `seGame` with `verify` threaded through that cache, and the
+advantages `KSNDAdv` and `SEAdv`. The SE extractor returns a candidate
+statement (O24 Section 3.3, p. 25). The `verify` no-sampling constraint is
+deferred (issue #101).
 :::
 
 # Algebraic MAC
