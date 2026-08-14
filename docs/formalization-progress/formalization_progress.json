@@ -750,18 +750,10 @@
           "name": "AlgebraicMACSyntax",
           "kind": "structure",
           "file": "KVAC/Core/AlgebraicMAC/Construction.lean",
-          "line": 94,
+          "line": 59,
           "refs": [
             "Definition 3.1"
           ],
-          "has_sorry": false
-        },
-        {
-          "name": "MsgVec",
-          "kind": "abbrev",
-          "file": "KVAC/Core/AlgebraicMAC/Construction.lean",
-          "line": 141,
-          "refs": [],
           "has_sorry": false
         }
       ]
@@ -958,6 +950,31 @@
           "refs": [
             "§3"
           ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Core/KeyedSetup.lean",
+      "module_refs": [
+        "Definition 3.1",
+        "Definition 4.2"
+      ],
+      "decls": [
+        {
+          "name": "KeyedSetupSyntax",
+          "kind": "structure",
+          "file": "KVAC/Core/KeyedSetup.lean",
+          "line": 38,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "MsgVec",
+          "kind": "abbrev",
+          "file": "KVAC/Core/KeyedSetup.lean",
+          "line": 69,
+          "refs": [],
           "has_sorry": false
         }
       ]
@@ -1246,6 +1263,109 @@
         "§3.3"
       ],
       "decls": []
+    },
+    {
+      "file": "KVAC/Framework/Correctness.lean",
+      "module_refs": [
+        "Definition 4.3"
+      ],
+      "decls": [
+        {
+          "name": "Correct",
+          "kind": "def",
+          "file": "KVAC/Framework/Correctness.lean",
+          "line": 64,
+          "refs": [
+            "Definition 4.3",
+            "Definition 4.2"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Framework/PredicateFamily.lean",
+      "module_refs": [
+        "Definition 4.1",
+        "Figure 8",
+        "Definition 4.2"
+      ],
+      "decls": [
+        {
+          "name": "carrying",
+          "kind": "structure",
+          "file": "KVAC/Framework/PredicateFamily.lean",
+          "line": 19,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "PredicateFamily",
+          "kind": "structure",
+          "file": "KVAC/Framework/PredicateFamily.lean",
+          "line": 55,
+          "refs": [
+            "Definition 4.1"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Framework/Syntax.lean",
+      "module_refs": [
+        "Definition 4.2"
+      ],
+      "decls": [
+        {
+          "name": "KVACSyntax",
+          "kind": "structure",
+          "file": "KVAC/Framework/Syntax.lean",
+          "line": 68,
+          "refs": [
+            "Definition 4.2"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "issue",
+          "kind": "def",
+          "file": "KVAC/Framework/Syntax.lean",
+          "line": 133,
+          "refs": [
+            "§4.1"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "present",
+          "kind": "def",
+          "file": "KVAC/Framework/Syntax.lean",
+          "line": 145,
+          "refs": [
+            "§4.1"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Framework.lean",
+      "module_refs": [
+        "Definition 4.2"
+      ],
+      "decls": [
+        {
+          "name": "KVAC",
+          "kind": "structure",
+          "file": "KVAC/Framework.lean",
+          "line": 66,
+          "refs": [
+            "Definition 4.2"
+          ],
+          "has_sorry": false
+        }
+      ]
     },
     {
       "file": "KVAC/Preliminaries/Assumptions.lean",

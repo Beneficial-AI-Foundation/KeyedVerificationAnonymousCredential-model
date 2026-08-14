@@ -26,7 +26,8 @@ tag := "core"
 
 Shared abstract algebra (Track 0). These typeclasses define the API contract
 that every higher chapter imports: a prime-order group, hash and
-random-oracle interfaces, a generic NIZK proof system, and the algebraic
+random-oracle interfaces, a generic NIZK proof system, the CRS and
+key-generation skeleton shared by every keyed scheme, and the algebraic
 MAC syntax of O24, Section 3.2. The interfaces are designed once and
 remain stable across the life of the project; concrete instantiations
 live in the *Concrete run* chapter.
@@ -135,6 +136,30 @@ statement (O24 Section 3.3, p. 25). The `verify` no-sampling constraint is
 deferred (issue #101).
 :::
 
+# Keyed setup
+
+:::group "core_keyed_setup"
+Keyed setup
+:::
+
+A Lean-level factoring rather than an O24 object. The algebraic MAC of
+Definition 3.1 and the keyed-verification credential system of
+Definition 4.2 open the same way, sampling a CRS `crs ← S(1^λ, n)` and
+then a key pair `(sk, pp) ← K(crs)` over a CRS-selected message space.
+`KeyedSetupSyntax` carries that shared preamble, so the intrinsic-typing
+discipline is stated once instead of being repeated. `AlgebraicMACSyntax`
+extends it directly; the framework's `KVACSyntax` extends it through the
+credential predicate family.
+
+:::definition "keyed_setup" (lean := "KVAC.Core.KeyedSetupSyntax, KVAC.Core.KeyedSetupSyntax.MsgVec, KVAC.Core.KeyedSetupSyntax.instDecidableEqMsg") (parent := "core_keyed_setup") (tags := "milestone")
+The CRS and key-generation skeleton common to every keyed scheme: the
+CRS family `Crs secParam n`, the carriers `Msg`, `Sk`, and `Pp` selected
+by a CRS, and the algorithms `setup` and `keygen`. `MsgVec` abbreviates
+the attribute vector `Fin n → Msg crs`, the paper's `m⃗ ∈ M^n`.
+`DecidableEqMsg` carries decidable equality on the message space, which
+the security games need for their freshness checks.
+:::
+
 # Algebraic MAC
 
 :::group "core_amac"
@@ -148,10 +173,11 @@ correctness (every honestly generated MAC verifies) and UF-CMVA
 target security notion. The abstract framework's extractability chapter
 then proves the bridge from MAC UF-CMVA to KVAC extractability.
 
-:::definition "algebraic_mac" (lean := "KVAC.Core.AlgebraicMACSyntax, KVAC.Core.MsgVec, KVAC.Core.instDecidableEqMsg, KVAC.Core.Correct, KVAC.Core.AlgebraicMAC") (parent := "core_amac") (tags := "paper, O24 Def 3.1")
+:::definition "algebraic_mac" (lean := "KVAC.Core.AlgebraicMACSyntax, KVAC.Core.Correct, KVAC.Core.AlgebraicMAC") (parent := "core_amac") (tags := "paper, O24 Def 3.1")
 *O24 Definition 3.1.* Syntax of an algebraic message authentication code
 for `n` attributes over a prime-order group: the algorithms `Setup`,
-`KeyGen`, `MAC`, and `Verify`.
+`KeyGen`, `MAC`, and `Verify`. The setup half is inherited from
+{uses "keyed_setup"}[].
 :::
 
 :::definition "ufcmva_game" (lean := "KVAC.Core.SignedLog, KVAC.Core.UFQuery, KVAC.Core.UFOracleSpec, KVAC.Core.ufOracleImpl, KVAC.Core.UFAdversary, KVAC.Core.UF_CMVAGame, KVAC.Core.UF_CMVAAdv") (parent := "core_amac") (tags := "paper, O24 Fig 5")
