@@ -86,6 +86,19 @@ r#"
   gap: 0.35rem;
   white-space: nowrap;
 }
+
+/* Home icon in the header logo slot, linking back to the landing page. */
+.kvac-home-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem;
+  border-radius: 0.4rem;
+  color: inherit;
+}
+.kvac-home-link:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
 "#
 
 def bpJs : JS := JS.mk
@@ -144,6 +157,28 @@ r#"
       var text = el.textContent.trim();
       if (!text) el.remove();
     });
+  });
+
+  /* Landing-page link: fill the (empty) header logo slot with a home icon
+     pointing at the site root, one level above html-multi/. Works at any
+     page depth by stripping the html-multi/... suffix from the path. */
+  onReady(function() {
+    var slot = document.querySelector('header .header-logo-wrapper');
+    if (!slot || slot.querySelector('.kvac-home-link')) return;
+    var root = location.pathname.replace(/html-multi\/.*$/, '');
+    if (root === location.pathname) return;
+    var link = document.createElement('a');
+    link.className = 'kvac-home-link';
+    link.href = root;
+    link.title = 'Project landing page (progress dashboard)';
+    link.setAttribute('aria-label', 'Project landing page');
+    link.innerHTML =
+      '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" ' +
+      'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+      'stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M3 10.5 12 3l9 7.5"/>' +
+      '<path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>';
+    slot.appendChild(link);
   });
 })();
 "#
