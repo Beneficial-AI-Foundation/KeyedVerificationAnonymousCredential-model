@@ -111,10 +111,10 @@ the game rather than the carrier.
 **Decision.** The knowledge-soundness and simulation-extractability extractors
 are white-box, per O24 §3.3 (p. 25), which has Ext take "the random coins and
 the code of the p.p.t. adversary A". The extractor receives the adversary
-value (the code) and the run's trace, that is, the output pair, the
-random-oracle cache, and, for simulation extractability, the simulation log.
-The optional crs trapdoor is omitted; the paper's instantiations never use it
-(PR #54, `Extraction.lean`).
+value (the code) and the run's observables, that is, the output pair, the final
+random-oracle cache, and, for simulation extractability, the simulation log. The
+adversary's coins are not recorded. The optional crs trapdoor is omitted, the
+paper's instantiations never use it (PR #54, `Extraction.lean`).
 
 **Rejected alternative.** The standard black-box convention, where the
 extractor has rewindable oracle access to the prover and sees neither its
@@ -125,9 +125,91 @@ committed.
 
 **Fidelity argument.** O24 defines the extractor over the coins and code of A,
 and its §9 instantiation is inherently non-black-box, since it relies on AGM
-representations. White-box access subsumes rewindable black-box access, since
-the extractor can re-run the adversary value. Issue #43 records the
-discussion; the paper-fidelity requirement decides it.
+representations. The formalization gives the extractor the adversary value
+together with the run's observables, the output pair and the final random-oracle
+cache, and the simulation log for SE. The coins themselves are not recorded, so
+same-coins replay and rewinding are out of scope, unneeded by the straight-line
+§9 instantiation. Issue #43 records the discussion; the paper-fidelity
+requirement decides it.
+
+**Open question, the AGM extractor interface.** Whether the extractor needs an
+ordered `QueryLog` alongside the cache, or a `QuerySeed` for the literal coins,
+is left to the AGM extractor design of §9. VCV-io ships both, `loggingOracle`
+and `seededOracle`. Deciding before an extractor consumes this layer avoids
+restating the games later.
+
+## NIZKP procedure carrier and the `verify` effect
+
+**Decision.** Instantiate the generic `NIZKPSyntax M` of `Construction.lean` at
+`M = OracleComp (ZKRO H)`, so `setup`, `prove`, and `verify` share one carrier
+and every honest algorithm may read the random oracle `H`. In particular
+`verify : … → OracleComp (ZKRO H) Bool`, which a Fiat–Shamir verifier needs to
+recompute its challenge `c = H(R, x)` from the same oracle the proof was built
+against. This keeps the generic structure unchanged and threads one cache
+through the adversary and `verify` in the games.
+
+The single thing this carrier does not pin is that `verify` draws no coins of
+its own. Since `ZKRO H = unifSpec + H.spec`, the type still exposes the sampling
+arm, so a verifier that sampled fresh randomness would type-check. That
+guarantee is deferred to a lemma added when the concrete Fiat–Shamir scheme of
+§5 lands, consumed by the §9 straight-line extraction (issue #101).
+
+**Bespoke alternatives.** Each moves the no-sampling guarantee into the type of
+`verify`. Each edits the structure, so each is bespoke and diverges from the
+generic single-monad `NIZKPSyntax M`. In both, `unifSpec` is unreachable from
+`verify`, so a coin-sampling verifier is not expressible.
+
+Alternative A, `verify` fixed to the narrower hash-only monad. Every algorithm
+gets its narrowest effect.
+
+```lean
+structure NIZKPSyntaxFixed (H : HashSpec) where
+  Crs     : Nat → Type
+  Stmt    : {secParam : Nat} → Crs secParam → Type
+  Witness : {secParam : Nat} → Crs secParam → Type
+  Proof   : {secParam : Nat} → Crs secParam → Type
+  setup   : (secParam : Nat) → ProbComp (Crs secParam)
+  prove   : {secParam : Nat} → (crs : Crs secParam) →
+              Stmt crs → Witness crs → OracleComp (ZKRO H) (Proof crs)
+  verify  : {secParam : Nat} → (crs : Crs secParam) →
+              Stmt crs → Proof crs → OracleComp H.spec Bool
+  relation : {secParam : Nat} → (crs : Crs secParam) →
+              Stmt crs → Witness crs → Prop
+```
+
+Alternative B, `verify` polymorphic over a hash-only capability. No second
+concrete monad is committed, and `verify` may bind, return, and hash, nothing
+else.
+
+```lean
+/-- A monad exposing exactly the `H` random oracle and no other effect. -/
+class HashOnly (H : HashSpec) (N : Type → Type) [Monad N] where
+  hash : H.Dom → N H.Rng
+
+structure NIZKPSyntaxCap (H : HashSpec) where
+  Crs     : Nat → Type
+  Stmt    : {secParam : Nat} → Crs secParam → Type
+  Witness : {secParam : Nat} → Crs secParam → Type
+  Proof   : {secParam : Nat} → Crs secParam → Type
+  setup   : (secParam : Nat) → ProbComp (Crs secParam)
+  prove   : {secParam : Nat} → (crs : Crs secParam) →
+              Stmt crs → Witness crs → OracleComp (ZKRO H) (Proof crs)
+  verify  : {secParam : Nat} → (crs : Crs secParam) → Stmt crs → Proof crs →
+              {N : Type → Type} → [Monad N] → [HashOnly H N] → N Bool
+  relation : {secParam : Nat} → (crs : Crs secParam) →
+              Stmt crs → Witness crs → Prop
+```
+
+**Why deferred rather than adopted.** Both alternatives pay at every use site.
+Alternative A lifts `verify` from `H.spec` into `ZKRO H` in each game and in the
+completeness statement. Alternative B carries a monad-polymorphic field and
+instantiates `N` with its `HashOnly` instance everywhere `verify` runs. Both
+replace the generic `NIZKPSyntax M` the rest of the layer speaks with an
+H-indexed record. With the chosen carrier the same Fiat–Shamir faithfulness
+holds with the generic structure untouched, and the no-sampling guarantee is
+recoverable later as a lemma that `verify` factors through `H.spec`, which is
+precisely Alternative A's type read back as a property, without committing the
+structure now.
 
 ## Conditioned sign masks.
 
