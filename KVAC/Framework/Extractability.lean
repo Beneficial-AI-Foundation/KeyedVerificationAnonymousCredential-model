@@ -59,4 +59,30 @@ def EXTOracleSpec (kvac : KVACSyntax M) {secParam n : Nat}
   | .presentUsr _ _ => Option (kvac.PresentMsg crs)
   | .present _ _    => Bool
 
+/-! ## The game state -/
+
+/-- The game state carried through the O24 Figure 8 oracles for a fixed crs.
+`qrs` is the list of attribute vectors extracted from accepted issuance queries
+(the paper's `Qrs`), `pqrs` the honestly presented `(φ, ρ)` pairs (`PQrs`), and
+`usrs` the honest users `(m, σ)` in creation order (`Usrs`). Figure 8 writes the
+user counter update as `ctr := ctr + 1`; we read a `newUsr` query as returning
+the index just written (this list's length at creation), the only reading under
+which `usrs[i]` resolves to that user. Figure 8's `Issue`
+abort is not a field here: the oracle implementation raises it as an exception in
+the oracle monad, which the game counts as an adversary win. Generic over the
+carrier `M`. -/
+structure EXTState (kvac : KVACSyntax M) {secParam n : Nat}
+    (crs : kvac.Crs secParam n) where
+  /-- `Qrs`: attribute vectors extracted from accepted issuance queries. -/
+  qrs : List (kvac.MsgVec crs)
+  /-- `PQrs`: `(predicate, presentation)` pairs produced by honest users. -/
+  pqrs : List (kvac.Pred crs × kvac.PresentMsg crs)
+  /-- `Usrs`: honest users `(m, σ)`, indexed by creation order. -/
+  usrs : List (kvac.MsgVec crs × kvac.Cred crs)
+
+/-- The initial game state, all logs empty. -/
+def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
+    (crs : kvac.Crs secParam n) : EXTState kvac crs :=
+  ⟨[], [], []⟩
+
 end KVAC.Framework
