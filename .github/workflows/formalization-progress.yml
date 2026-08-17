@@ -1,8 +1,9 @@
 name: Formalization progress
 
 on:
-  push:
-    branches: [main]
+  # Manual-only: this regeneration no longer runs automatically on every push to
+  # `main` (which opened a fresh `bot/progress-regen` PR per merge). Trigger it on
+  # demand from the Actions tab or with `gh workflow run formalization-progress.yml`.
   workflow_dispatch:
 
 permissions:
