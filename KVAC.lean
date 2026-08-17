@@ -11,5 +11,6 @@ import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
+import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Preliminaries.Assumptions
 import KVAC.Framework
