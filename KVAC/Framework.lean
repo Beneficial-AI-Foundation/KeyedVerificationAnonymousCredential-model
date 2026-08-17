@@ -5,6 +5,7 @@ Authors: Semar Augusto
 -/
 import KVAC.Framework.Syntax
 import KVAC.Framework.Correctness
+import KVAC.Framework.Extractability
 
 /-!
 # Keyed-verification credential systems (O24 Definition 4.2)
@@ -15,12 +16,13 @@ Definition 4.2: a `KVACSyntax ProbComp` paired with a proof of correctness
 (Definition 4.3).
 
 Re-exports `Syntax.lean` (the syntactic structure) and `Correctness.lean`
-(the correctness predicate) — i.e. what the bundle is built from. The
-anonymity game (`Anonymity.lean`) and extractability game
-(`Extractability.lean`) are *not* re-exported, matching `AlgebraicMAC`:
-they are not part of the paper-level definition, and files reasoning about
-those properties import `KVAC.Framework.Anonymity` /
-`KVAC.Framework.Extractability` explicitly.
+(the correctness predicate), which is what the bundle is built from. It also
+imports `Extractability.lean` (the Definition 4.5 game) so the §4.5
+formalization is compiled by the default `lake build`, though the game is not
+part of the paper-level bundle object. The anonymity game (`Anonymity.lean`,
+not yet written) will join the same way. As with `AlgebraicMAC`, only `Syntax`
+and `Correctness` build the `KVAC` structure. Files reasoning about the
+security properties import the game modules for their own use.
 
 ## Layering recap
 

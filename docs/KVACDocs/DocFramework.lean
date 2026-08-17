@@ -66,7 +66,7 @@ exact-attribute predicate `φ_m⃗` that Figure 8's `NewUsr` oracle needs as
 data, and decidable equality on predicate descriptions.
 :::
 
-:::definition "kvac_syntax" (lean := "KVAC.Framework.KVACSyntax, KVAC.Framework.KVACSyntax.instDecidableEqPresentMsg, KVAC.Framework.KVACSyntax.issue, KVAC.Framework.KVACSyntax.present") (parent := "framework_syntax") (tags := "paper, O24 Def 4.2")
+:::definition "kvac_syntax" (lean := "KVAC.Framework.KVACSyntax, KVAC.Framework.KVACSyntax.instDecidableEqPresentMsg, KVAC.Framework.KVACSyntax.issue, KVAC.Framework.KVACSyntax.present, KVAC.Framework.KVACSyntax.mac") (parent := "framework_syntax") (tags := "paper, O24 Def 4.2")
 *O24 Definition 4.2.* A keyed-verification credential system
 `KVAC = (S, K, I, P)` for a predicate family
 {uses "credential_predicate"}[]. Each one-round protocol is split into
@@ -76,7 +76,9 @@ its non-interactive moves as the paper does, issuance into `issueUsr₁`,
 `σ' = ⊥` of this definition and the user's abort on the `check` lines of
 Figure 9. The derived `issue` and `present` chain those moves into the
 full interactions, generalising the paper's `KVAC.M` and `KVAC.V`
-shorthands from `φ_m⃗` to an arbitrary predicate.
+shorthands from `φ_m⃗` to an arbitrary predicate. The further shorthand
+`mac` is the paper's `KVAC.M(sk, m⃗)` itself, `issue` specialised to the
+exact-attribute predicate `φ_m⃗`.
 :::
 
 # Correctness (Definition 4.3)
@@ -157,7 +159,7 @@ single-user unforgeability is included as a sanity check.
 *TODO (Track F2).* Define the extractability game (Definition 4.5) and
 prove the reduction to CMZ14 unforgeability as a corollary.
 
-:::definition "extractability_game" (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
+:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
 *O24 Figure 8.* The extractability game for a keyed-verification
 credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.

@@ -13,7 +13,7 @@ import VCVio.OracleComp.ProbComp
 The multi-user man-in-the-middle extraction game `EXT_{KVAC, Ext, A}(λ, n)` of
 O24 Figure 8. The extractor `Ext = (Ext.I, Ext.P)` is an abstract parameter of
 the game (Definition 4.5); its μCMZ instantiation from the ZKP extractors is
-built in Theorem 5.2.
+built in Theorem 5.10.
 -/
 
 namespace KVAC.Framework
@@ -65,11 +65,13 @@ def EXTOracleSpec (kvac : KVACSyntax M) {secParam n : Nat}
 /-- The game state carried through the O24 Figure 8 oracles for a fixed crs.
 `qrs` is the list of attribute vectors extracted from accepted issuance queries
 (the paper's `Qrs`), `pqrs` the honestly presented `(φ, ρ)` pairs (`PQrs`), and
-`usrs` the honest users `(m, σ)` in creation order (`Usrs`, so the index a
-`newUsr` query returns is this list's length at creation). Figure 8's `Issue`
-abort is not a field here: it is raised as an exception in the oracle monad
-(`ExceptT`), which the game counts as an adversary win. Generic over the carrier
-`M`. -/
+`usrs` the honest users `(m, σ)` in creation order (`Usrs`). Figure 8 writes the
+user counter update as `ctr := ctr + 1`; we read a `newUsr` query as returning
+the index just written (this list's length at creation), the only reading under
+which `usrs[i]` resolves to that user. Figure 8's `Issue`
+abort is not a field here: the oracle implementation raises it as an exception in
+the oracle monad (`ExceptT`), which the game counts as an adversary win. Generic
+over the carrier `M`. -/
 structure EXTState (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) where
   /-- `Qrs`: attribute vectors extracted from accepted issuance queries. -/
@@ -91,14 +93,6 @@ def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
 def runRO {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
     (c : OracleComp (ZKRO H) α) : ProbComp (α × H.spec.QueryCache) :=
   (simulateQ (zkROImpl H) c).run cache
-
-/-- The honest MAC `KVAC.M(sk, m)` of O24 §4.1, honest issuance under the
-exact-attribute predicate `φ_m`. A derived shorthand over `KVACSyntax`, not a
-syntax field, so it cannot disagree with the scheme's own issuance. -/
-def KVACSyntax.mac (kvac : KVACSyntax M) {secParam n : Nat}
-    (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
-    (m : kvac.MsgVec crs) : M (Option (kvac.Cred crs)) :=
-  kvac.issue crs sk pp m (kvac.exactPred crs m)
 
 /-! ## The oracle implementation -/
 
