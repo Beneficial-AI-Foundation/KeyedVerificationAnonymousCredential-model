@@ -306,6 +306,30 @@
       "summary": "The AGM verification polynomial for μCMZ unforgeability at n = 1: a winning forgery would force this identity in the secret exponents (η, x₀, xᵣ, x₁, u₁…u_q), which Lemma 5.4 shows cannot hold over the polynomial ring, reducing to 3-DL."
     },
     {
+      "key": "Equation 13",
+      "kind": "Equation",
+      "number": "13",
+      "label": "",
+      "statement": "",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 37,
+      "seq": 114,
+      "summary": "The 3-DL challenge embedding of the μCMZ public parameters in Lemma 5.4: each fixed secret exponent is masked as a + χ·b, so H, X₀, Xᵣ and X₁ are built from the challenge powers alone and the reduction simulates the game holding no secret key."
+    },
+    {
+      "key": "Equation 14",
+      "kind": "Equation",
+      "number": "14",
+      "label": "",
+      "statement": "",
+      "section": "5.3",
+      "section_title": "Algebraic MAC",
+      "page": 37,
+      "seq": 115,
+      "summary": "The reduction's simulated Sign response in Lemma 5.4: the tag Uⱼ = a_{u,j}·G + b_{u,j}·X is masked like the public parameters, and Vⱼ — its key multiple — is expanded over (G, X, X'), so an honestly-distributed tag is issued without knowing the challenge exponent."
+    },
+    {
       "key": "Lemma 5.5",
       "kind": "Lemma",
       "number": "5.5",
@@ -1471,6 +1495,62 @@
       ]
     },
     {
+      "file": "KVAC/Framework/Extractability.lean",
+      "module_refs": [
+        "§4.4",
+        "Definition 4.5",
+        "Figure 8"
+      ],
+      "decls": [
+        {
+          "name": "Extractor",
+          "kind": "structure",
+          "file": "KVAC/Framework/Extractability.lean",
+          "line": 29,
+          "refs": [
+            "Definition 4.5"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "EXTQuery",
+          "kind": "inductive",
+          "file": "KVAC/Framework/Extractability.lean",
+          "line": 44,
+          "refs": [
+            "Figure 8"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "EXTOracleSpec",
+          "kind": "def",
+          "file": "KVAC/Framework/Extractability.lean",
+          "line": 55,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "EXTState",
+          "kind": "structure",
+          "file": "KVAC/Framework/Extractability.lean",
+          "line": 74,
+          "refs": [
+            "Figure 8"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "EXTState.empty",
+          "kind": "def",
+          "file": "KVAC/Framework/Extractability.lean",
+          "line": 84,
+          "refs": [],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
       "file": "KVAC/Framework/PredicateFamily.lean",
       "module_refs": [
         "Definition 4.1",
@@ -1546,7 +1626,7 @@
           "name": "KVAC",
           "kind": "structure",
           "file": "KVAC/Framework.lean",
-          "line": 66,
+          "line": 68,
           "refs": [
             "Definition 4.2"
           ],
@@ -1908,6 +1988,326 @@
       ]
     },
     {
+      "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+      "module_refs": [],
+      "decls": [
+        {
+          "name": "AGMRepr.toReprCoeffs",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 29,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "gamePoint",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 41,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "sum_zipWith_eq_fin_sum_getD",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 54,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "agmRepr_eval_eq_eval_toPoly",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 91,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "agm_n1_identity_Ustar_eq_zero",
+          "kind": "theorem",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 122,
+          "refs": [
+            "§5.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "FixedMasks",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 143,
+          "refs": [
+            "Equation 13"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "FixedMasks.embed",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 157,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "FixedMasks.keyCoeff",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 168,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "EmbeddedParams",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 177,
+          "refs": [
+            "Equation 13"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "AGMRepr.evalAt",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 191,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "SignRecord",
+          "kind": "structure",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 198,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 210,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog.tags",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 213,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog.msg",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 217,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog.aMask",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 221,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog.bMask",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 225,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog.maskedSubst",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 232,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "RedLog.maskedRepr",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 238,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "maskLift",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 251,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "exponentEval",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 273,
+          "refs": [
+            "§5.3"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "exponentEval_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 278,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "embedMask_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 299,
+          "refs": [
+            "Equation 13"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "embedX0_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 307,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "embedTag_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 319,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "macScalar_eq_keyCoeff",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 330,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "maskLift_eval",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 341,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "reductionSignStep",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 350,
+          "refs": [
+            "Equation 14"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "reductionVerifyStep",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 366,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "reductionHelpStep",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 379,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "reductionOracleImpl",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 402,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "recoverDlog",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 429,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "recoverDlog_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 436,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "recoverDlog_verifPoly_eq",
+          "kind": "lemma",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 458,
+          "refs": [
+            "Equation 16"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "microCMZ3DLReduction",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 490,
+          "refs": [
+            "§5.3",
+            "Equation 13"
+          ],
+          "has_sorry": false
+        },
+        {
+          "name": "microCMZ3DLReductionExp",
+          "kind": "def",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 528,
+          "refs": [],
+          "has_sorry": false
+        },
+        {
+          "name": "microCMZ3DLReductionAdv",
+          "kind": "abbrev",
+          "file": "KVAC/Schemes/MicroCMZ/AGMReduction/Core.lean",
+          "line": 533,
+          "refs": [
+            "§5.3"
+          ],
+          "has_sorry": false
+        }
+      ]
+    },
+    {
+      "file": "KVAC/Schemes/MicroCMZ/AGMReduction.lean",
+      "module_refs": [
+        "§5.3"
+      ],
+      "decls": []
+    },
+    {
       "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
       "module_refs": [
         "§5.3",
@@ -1966,7 +2366,7 @@
           "name": "AGMRepr",
           "kind": "structure",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 122,
+          "line": 148,
           "refs": [
             "§5.3"
           ],
@@ -1976,7 +2376,7 @@
           "name": "AGMRepr.eval",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 141,
+          "line": 167,
           "refs": [],
           "has_sorry": false
         },
@@ -1984,7 +2384,7 @@
           "name": "AGMQuery",
           "kind": "inductive",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 161,
+          "line": 187,
           "refs": [
             "Figure 5"
           ],
@@ -1994,7 +2394,7 @@
           "name": "AGMOracleSpec",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 169,
+          "line": 195,
           "refs": [],
           "has_sorry": false
         },
@@ -2002,7 +2402,7 @@
           "name": "AGMLog",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 180,
+          "line": 206,
           "refs": [],
           "has_sorry": false
         },
@@ -2010,7 +2410,7 @@
           "name": "agmOracleImpl",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 193,
+          "line": 219,
           "refs": [],
           "has_sorry": false
         },
@@ -2018,7 +2418,7 @@
           "name": "AGMUFAdversary",
           "kind": "structure",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 223,
+          "line": 249,
           "refs": [
             "§5.3"
           ],
@@ -2028,7 +2428,7 @@
           "name": "AGM_UF_CMVAGame",
           "kind": "def",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 234,
+          "line": 260,
           "refs": [
             "Figure 5"
           ],
@@ -2038,7 +2438,7 @@
           "name": "AGM_UF_CMVAAdv",
           "kind": "abbrev",
           "file": "KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean",
-          "line": 253,
+          "line": 279,
           "refs": [],
           "has_sorry": false
         }
