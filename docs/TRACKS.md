@@ -20,17 +20,11 @@ graph TD
 
   TF2["Track F2<br/>Framework/<br/>Anonymity, Extractability"]:::w2
   TCMZ_C["Track CMZ-C<br/>μCMZ Construction"]:::w2
-  TBBS_C["Track BBS-C<br/>μBBS Construction"]:::w2
 
   TCMZ_M["Track CMZ-M<br/>μCMZ AlgebraicMAC"]:::w3
   TCMZ_A["Track CMZ-A<br/>μCMZ Anonymity"]:::w3
   TCMZ_E["Track CMZ-E<br/>μCMZ Extractability"]:::w3
   TCMZ_OMUF["Track CMZ-OMUF<br/>μCMZ OneMoreUnforgeability"]:::w3
-
-  TBBS_M["Track BBS-M<br/>μBBS AlgebraicMAC"]:::w3
-  TBBS_A["Track BBS-A<br/>μBBS Anonymity"]:::w3
-  TBBS_E["Track BBS-E<br/>μBBS Extractability"]:::w3
-  TBBS_OMUF["Track BBS-OMUF<br/>μBBS OneMoreUnforgeability"]:::w3
 
   TEx["Track Ex<br/>Examples/ConcreteRun<br/>+ Instances/Ristretto<br/>+ lakefile dalek dep"]:::w4
 
@@ -42,29 +36,19 @@ graph TD
 
   TPre --> TF1
   TPre --> TCMZ_C
-  TPre --> TBBS_C
   TΣ --> TCMZ_C
-  TΣ --> TBBS_C
   TΣ --> TF2
 
   TF1 --> TF2
   TF1 --> TCMZ_C
-  TF1 --> TBBS_C
 
   TCMZ_C --> TCMZ_M
   TCMZ_C --> TCMZ_A
   TCMZ_C --> TCMZ_E
   TCMZ_C --> TCMZ_OMUF
 
-  TBBS_C --> TBBS_M
-  TBBS_C --> TBBS_A
-  TBBS_C --> TBBS_E
-  TBBS_C --> TBBS_OMUF
-
   TF2 --> TCMZ_A
   TF2 --> TCMZ_E
-  TF2 --> TBBS_A
-  TF2 --> TBBS_E
 
   TCMZ_C --> TEx
 
@@ -83,7 +67,7 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
 - [ ] **Track 0** — Shared API contract (`KVAC/Core/`)
   - Modules: `KVAC/Core/Group.lean`, `KVAC/Core/Hash.lean`, `KVAC/Core/ZKProof.lean`, `KVAC/Core/AlgebraicMAC.lean`
   - Depends on: nothing
-  - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
+  - **Critical path:** Tracks Pre, Σ, F1, CMZ-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
   - **Status** (split into sub-issues #18–#21):
     - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
     - [x] `Hash.lean` — landed (#19): `HashSpec` (taken over from PR #47) + the lazy `randomOracle` binding, with `transcriptHashSpec` (`H_p`) and `curveHashSpec` (`H_𝔾`).
@@ -126,10 +110,6 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
     - [ ] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — in review (#40; PR #32).
     - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32).
     - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
-- [ ] **Track BBS-C** — μBBS construction
-  - Modules: `KVAC/Schemes/MicroBBS/Construction.lean`
-  - Depends on: Track 0, Track Pre, Track Σ, Track F1
-  - The protocol description from §6.1 of O24. Independent of CMZ-C — the two scheme tracks proceed in parallel.
 
 ## Wave 3 — security tracks (per scheme)
 
@@ -151,23 +131,6 @@ The security tracks for each scheme are mostly independent of the other scheme. 
   - Modules: `KVAC/Schemes/MicroCMZ/OneMoreUnforgeability.lean`
   - Depends on: Track CMZ-C, Track CMZ-M
   - Theorem 5.3: μCMZ$_{AT}$ (the anonymous-token variant, with $\pi_{iu}$ removed) is one-more unforgeable in AGM under 2-DL. Reduces non-tightly to DL.
-- [ ] **Track BBS-M** — μBBS as algebraic MAC (§6.3)
-  - Modules: `KVAC/Schemes/MicroBBS/AlgebraicMAC.lean`
-  - Depends on: Track BBS-C
-  - Theorems 6.6, 6.8, 6.9: μBBS is an algebraic MAC in AGM under (q+2)-DL.
-- [ ] **Track BBS-A** — μBBS anonymity (§6.4)
-  - Modules: `KVAC/Schemes/MicroBBS/Anonymity.lean`
-  - Depends on: Track BBS-C, Track F2
-  - The anonymity analogue of Theorem 5.8 for μBBS, with the technical caveat around messages satisfying $\sum_i m_i G_i = -G_0$ (Equation 7).
-- [ ] **Track BBS-E** — μBBS extractability (§6.5)
-  - Modules: `KVAC/Schemes/MicroBBS/Extractability.lean`
-  - Depends on: Track BBS-C, Track F2, Track BBS-M
-  - μBBS is extractable in AGM. Requires the DDH oracle augmentation in the algebraic-MAC unforgeability game (this is one of the technical contributions of the paper).
-- [ ] **Track BBS-OMUF** — μBBS one-more unforgeability (§6.6)
-  - Modules: `KVAC/Schemes/MicroBBS/OneMoreUnforgeability.lean`
-  - Depends on: Track BBS-C, Track BBS-M
-  - Theorem 6.12: μBBS$_{AT}$ is one-more unforgeable. Best attack is $O(\sqrt{q})$ via Cheon's attack; ~20 bits of security loss.
-
 ## Wave 4 — final integration
 
 - [ ] **Track Ex** — concrete μCMZ run, Ristretto binding, and Lake dependency
@@ -186,6 +149,7 @@ The tracks below are deferred — see [`PLAN.md`](PLAN.md) (section "Future work
 - **Track Ext-RL** — Rate-limiting (O24 §8.2). Combines a Dodis–Yampolskiy PRF with the OMUF property of the underlying KVAC. ~3–4 weeks.
 - **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has landed first.
 - **Track DV** — Designated-verifier SNARKs / dvKZG (O24 §7). Substantial cryptographic content; probably warrants a separate repository. Indefinitely deferred.
+- **μBBS scheme** — the μBBS construction (§6.1) and its whole security stack: algebraic-MAC unforgeability (§6.3, Theorems 6.6/6.8/6.9), anonymity (§6.4), extractability (§6.5), and one-more unforgeability (§6.6, Theorem 6.12). Deferred out of v1. μBBS needs a curve larger than Ristretto255 for 128-bit security, so no verified instance can exercise it yet, and its AGM security stack (including the DDH-oracle augmentation of §6.5) is a large body of work orthogonal to the μCMZ v1 goal. The former Wave 2/3 tracks BBS-C, BBS-M, BBS-A, BBS-E, and BBS-OMUF, with issues #7, #13, #14, #15, and #16, are closed as not planned.
 - **μBBS Examples** — concrete μBBS run on a ≈300–384-bit curve. Out of scope until a verified larger-curve instance is available.
 
 ## Updating this file
