@@ -64,8 +64,10 @@ def EXTOracleSpec (kvac : KVACSyntax M) {secParam n : Nat}
 /-- The game state carried through the O24 Figure 8 oracles for a fixed crs.
 `qrs` is the list of attribute vectors extracted from accepted issuance queries
 (the paper's `Qrs`), `pqrs` the honestly presented `(φ, ρ)` pairs (`PQrs`), and
-`usrs` the honest users `(m, σ)` in creation order (`Usrs`, so the index a
-`newUsr` query returns is this list's length at creation). Figure 8's `Issue`
+`usrs` the honest users `(m, σ)` in creation order (`Usrs`). Figure 8 writes the
+user counter update as `ctr := ctr + 1`; we read a `newUsr` query as returning
+the index just written (this list's length at creation), the only reading under
+which `usrs[i]` resolves to that user. Figure 8's `Issue`
 abort is not a field here: the oracle implementation raises it as an exception in
 the oracle monad, which the game counts as an adversary win. Generic over the
 carrier `M`. -/
