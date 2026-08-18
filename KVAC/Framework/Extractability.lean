@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
 import KVAC.Framework.Syntax
+import KVAC.Framework.Correctness
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
 
@@ -129,7 +130,15 @@ def modifyEXTState (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
 Each credential algorithm runs through `liftRO` on the shared table, so a
 Fiat–Shamir credential's proofs share one random oracle. The `Issue` abort of
 Figure 8 is `throw ()` in the `ExceptT Unit` layer, short-circuiting the run; the
-game reads a thrown abort as an adversary win. -/
+game reads a thrown abort as an adversary win.
+
+The `newUsr` arm keeps a `none` branch for honest-issuance failure. That branch
+is never taken on the happy trace: `newUsr_mac_isSome` shows it is unreachable
+under `CorrectRO`. The obligation is not discharged here — a definition carries no
+proof — nor by `newUsr_mac_isSome` alone, which only states the fact given
+`CorrectRO`. It is discharged at the game-reasoning site, the μCMZ extractability
+proof (O24 Thm 5.2/5.10, Track CMZ-E, issue #11), once the concrete μCMZ scheme
+supplies `CorrectRO`. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
     (sk : kvac.Sk crs) (pp : kvac.Pp crs) :
@@ -138,14 +147,10 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- return (ctr := ctr + 1). Runs the honest MAC `kvac.mac`; on a credential it
   -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
   -- user's index).
-  -- The `none` arm below is the honest-issuance failure. On the happy trace it
-  -- never fires: for a correct scheme, issuance under the exact-attribute
-  -- predicate `φ_m` always yields `some` (`Correct` specialised at `φ = φ_m` via
-  -- `holds_exactPred`), so `usrs` always grows and the counter matches the
-  -- paper's unconditional `ctr := ctr + 1`. Proving the `none` case unreachable
-  -- (hence that the happy trace is the only outcome) needs `Correct` lifted to
-  -- the `OracleComp (ZKRO H)` carrier (issue #118) and is deferred to a future
-  -- PR #TODO(fill-with-PR).
+  -- The `none` arm below is the honest-issuance failure. Under `CorrectRO` it is
+  -- unreachable — `newUsr_mac_isSome` (below) shows the honest MAC's `runRO`
+  -- support is all `some` — so on the happy trace `usrs` always grows and the
+  -- counter matches the paper's unconditional `ctr := ctr + 1`.
   | .newUsr m => do
       match ← liftRO H (kvac.mac crs sk pp m) with
       | none   => return (← getEXTState H).usrs.length
@@ -183,5 +188,38 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- Figure 8  Oracle Present(φ, ρ): return KVAC.P.Srv(sk, φ, ρ). Runs the server
   -- presentation check and answers with the accept bit; records nothing.
   | .present φ ρ => liftRO H (kvac.presentSrv crs sk φ ρ)
+
+/-! ## Honest issuance for `NewUsr` oracle never fails -/
+
+/-- Under `CorrectRO`, honest issuance for the `NewUsr` oracle never fails: every
+result in the `runRO` support of `kvac.mac` is `some`. Hence the `none` arm of
+`extOracleImpl`'s `newUsr` is unreachable and the counter always advances, as in
+O24 Figure 8's unconditional `ctr := ctr + 1`.
+
+The proof rewrites `kvac.mac` to `kvac.issue … (exactPred m)`, specialises
+`CorrectRO` at `φ = φ' = exactPred m` using `holds_exactPred`, and reads
+`σ?.isSome` off the `∃ σ, σ? = some σ` in its `CorrectOutcome` conclusion. -/
+lemma newUsr_mac_isSome (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (hcorr : CorrectRO H kvac)
+    {secParam n : Nat} (hn : 0 < n)
+    {crs : kvac.Crs secParam n} {c₀ : H.spec.QueryCache}
+    (hsetup : (crs, c₀) ∈ support (runRO H ∅ (kvac.setup secParam n)))
+    {sk : kvac.Sk crs} {pp : kvac.Pp crs} {c₁ : H.spec.QueryCache}
+    (hkeys : ((sk, pp), c₁) ∈ support (runRO H c₀ (kvac.keygen crs)))
+    {m : kvac.MsgVec crs} {c₂ : H.spec.QueryCache} {σ? : Option (kvac.Cred crs)}
+    (hmac : (σ?, c₂) ∈ support (runRO H c₁ (kvac.mac crs sk pp m))) :
+    σ?.isSome := by
+  -- `φ_m` holds on `m`, the premise `CorrectRO` needs for `φ = φ' = exactPred m`.
+  have hφ : kvac.holds crs (kvac.exactPred crs m) m = true :=
+    (kvac.holds_exactPred crs m m).mpr rfl
+  -- `kvac.mac … = kvac.issue … (exactPred m)`, so `hmac` is an issuance outcome.
+  have hmac' : (σ?, c₂) ∈
+      support (runRO H c₁ (kvac.issue crs sk pp m (kvac.exactPred crs m))) := by
+    simpa [KVACSyntax.mac] using hmac
+  -- Specialise `CorrectRO` at this run and `φ = φ' = exactPred m`.
+  have hout := hcorr secParam n hn crs c₀ hsetup (sk, pp) c₁ hkeys m
+    (kvac.exactPred crs m) (kvac.exactPred crs m) hφ hφ
+  obtain ⟨σ, hσ, _⟩ := hout σ? c₂ hmac'
+  simp [hσ]
 
 end KVAC.Framework
