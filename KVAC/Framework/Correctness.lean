@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Framework.Syntax
+import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
 
 /-!
@@ -50,7 +51,7 @@ show they lie in the family. This obligation is not visible to the abstract
 
 namespace KVAC.Framework
 
-open OracleComp
+open OracleComp KVAC.Core
 
 /--
 Correctness (O24 Definition 4.3), support-based: for every CRS from `setup`,
@@ -70,5 +71,29 @@ def Correct (kvac : KVACSyntax ProbComp) : Prop :=
     (∀ σ? ∈ support (kvac.issue crs keys.1 keys.2 m φ),
       ∃ σ, σ? = some σ ∧
         ∀ b ∈ support (kvac.present crs keys.1 keys.2 m σ φ'), b = true)
+
+/--
+Correctness lifted to the `OracleComp (ZKRO H)` carrier (issue #118). The same
+support-based statement as `Correct`, but `setup`, `keygen`, `issue`, `present`
+run through the shared random oracle via `runRO`, threading one cache
+`∅ → c₀ → c₁ → c₂ → c₃`, so a Fiat–Shamir credential's proofs share the oracle.
+Mirrors `KVAC.Core.PerfectlyComplete`. The `ProbComp` `Correct` is the
+oracle-free special case, recovered through the `ProbComp ↪ OracleComp (ZKRO H)`
+lift.
+-/
+def CorrectRO (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop :=
+  ∀ (secParam n : Nat), 0 < n →
+  ∀ (crs : kvac.Crs secParam n) (c₀ : H.spec.QueryCache),
+    (crs, c₀) ∈ support (runRO H ∅ (kvac.setup secParam n)) →
+  ∀ (keys : kvac.Sk crs × kvac.Pp crs) (c₁ : H.spec.QueryCache),
+    (keys, c₁) ∈ support (runRO H c₀ (kvac.keygen crs)) →
+  ∀ (m : kvac.MsgVec crs) (φ φ' : kvac.Pred crs),
+    kvac.holds crs φ m = true → kvac.holds crs φ' m = true →
+  ∀ (σ? : Option (kvac.Cred crs)) (c₂ : H.spec.QueryCache),
+    (σ?, c₂) ∈ support (runRO H c₁ (kvac.issue crs keys.1 keys.2 m φ)) →
+      ∃ σ, σ? = some σ ∧
+        ∀ (b : Bool) (c₃ : H.spec.QueryCache),
+          (b, c₃) ∈ support (runRO H c₂ (kvac.present crs keys.1 keys.2 m σ φ')) →
+            b = true
 
 end KVAC.Framework
