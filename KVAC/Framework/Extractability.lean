@@ -86,86 +86,95 @@ def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) : EXTState kvac crs :=
   ⟨[], [], []⟩
 
-/-! ## Running credential algorithms against the random oracle -/
+/-! ## The oracle monad and its plumbing -/
 
-/-- Run a credential computation against the random oracle, from the table
-`cache`, and return its result together with the updated table. -/
-def runRO {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
-    (c : OracleComp (ZKRO H) α) : ProbComp (α × H.spec.QueryCache) :=
-  (simulateQ (zkROImpl H) c).run cache
+/-- The monad the O24 Figure 8 oracles run in: the shared random-oracle cache and
+the game state `EXTState` carried in one `StateT`, over `ExceptT Unit` (the
+`Issue` abort, read as an adversary win) over `ProbComp`. -/
+abbrev EXTComp (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    {secParam n : Nat} (crs : kvac.Crs secParam n) : Type → Type :=
+  StateT (H.spec.QueryCache × EXTState kvac crs) (ExceptT Unit ProbComp)
+
+/-- Lift a credential computation into the oracle monad: run it against the shared
+random-oracle table via `runRO`, write the table back, leave the game state alone.
+
+IMPORTANT. This is the single site of the cache plumbing the whole game depends
+on. It projects the cache out of the state, runs the credential algorithm at the
+`ProbComp` layer, and threads the updated cache back, so all four Figure 8 oracles
+share one random-oracle table and a Fiat–Shamir credential's proofs stay
+consistent. Get this threading wrong and the shared-oracle semantics break
+silently. The carrier reconciliation that governs it is tracked in issue #118. -/
+def liftRO {α : Type} (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
+    {secParam n : Nat} {crs : kvac.Crs secParam n} (c : OracleComp (ZKRO H) α) :
+    EXTComp H kvac crs α :=
+  StateT.mk fun (cache, st) => do
+    let (a, cache') ← runRO H cache c
+    pure (a, (cache', st))
+
+/-- Read the `EXTState` half of the game state, leaving the cache implicit. -/
+def getEXTState (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
+    {secParam n : Nat} {crs : kvac.Crs secParam n} :
+    EXTComp H kvac crs (EXTState kvac crs) :=
+  Prod.snd <$> get
+
+/-- Update the `EXTState` half of the game state, leaving the cache untouched. -/
+def modifyEXTState (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
+    {secParam n : Nat} {crs : kvac.Crs secParam n}
+    (f : EXTState kvac crs → EXTState kvac crs) : EXTComp H kvac crs Unit :=
+  modify fun (cache, st) => (cache, f st)
 
 /-! ## The oracle implementation -/
 
 /-- The Figure 8 oracle implementation over the carrier `OracleComp (ZKRO H)`.
-Each credential algorithm runs through `runRO` on the shared table, which is
-carried alongside the game state, so a Fiat–Shamir credential's proofs share one
-random oracle. The `Issue` abort of Figure 8 is `throw ()` in the `ExceptT Unit`
-layer of the target monad, short-circuiting the run; the game reads a thrown
-abort as an adversary win. -/
+Each credential algorithm runs through `liftRO` on the shared table, so a
+Fiat–Shamir credential's proofs share one random oracle. The `Issue` abort of
+Figure 8 is `throw ()` in the `ExceptT Unit` layer, short-circuiting the run; the
+game reads a thrown abort as an adversary win. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
     (sk : kvac.Sk crs) (pp : kvac.Pp crs) :
-    QueryImpl (EXTOracleSpec kvac crs)
-      (StateT (H.spec.QueryCache × EXTState kvac crs) (ExceptT Unit ProbComp))
-  -- Figure 8  Oracle NewUsr(m):
-  --   σ ← KVAC.M(sk, m)
-  --   Usrs[ctr] := (m, σ)
-  --   return (ctr := ctr + 1)
-  -- Implementation. Runs the honest MAC KVAC.M(sk, m), which is `kvac.mac`,
-  -- against the random oracle. When a credential `σ` results it appends (m, σ)
-  -- to `usrs`, whose length is the counter `ctr`, and answers with the length
-  -- before the append, the new user's index. Honest issuance may fail (`none`),
-  -- and then no user is recorded.
-  | .newUsr m => StateT.mk fun (cache, st) => do
-      let (σ?, cache') ← runRO H cache (kvac.mac crs sk pp m)
-      match σ? with
-      | none   => pure (st.usrs.length, (cache', st))
-      | some σ => pure (st.usrs.length, (cache', { st with usrs := st.usrs ++ [(m, σ)] }))
-  -- Figure 8  Oracle Issue(φ, µ):
-  --   σ' ← KVAC.I.Srv(sk, φ, µ)
-  --   if σ' = ⊥ : return ⊥
-  --   m := Ext.I(sk, φ, µ)
-  --   if φ(m) = 0 : abort
-  --   Qrs := Qrs ∪ {m}
-  --   return σ'
-  -- Implementation. Runs the server issuance `kvac.issueSrv` against the random
-  -- oracle. On ⊥ it answers `none`. Otherwise it applies the extractor `Ext.I`,
-  -- a pure step. If extraction fails, or returns `m` with `φ(m) = 0`, it aborts
-  -- the run with `throw ()` (Figure 8's `abort`), which the game counts as an
-  -- adversary win. Otherwise it adds `m` to `qrs` (the paper's Qrs) and answers
-  -- with the credential σ'.
-  | .issue φ μ => StateT.mk fun (cache, st) => do
-      let (σ'?, cache') ← runRO H cache (kvac.issueSrv crs sk φ μ)
-      match σ'? with
-      | none    => pure (none, (cache', st))
+    QueryImpl (EXTOracleSpec kvac crs) (EXTComp H kvac crs)
+  -- Figure 8  Oracle NewUsr(m): σ ← KVAC.M(sk, m); Usrs[ctr] := (m, σ);
+  -- return (ctr := ctr + 1). Runs the honest MAC `kvac.mac`; on a credential it
+  -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
+  -- user's index). Honest issuance may fail (`none`), and then no user is
+  -- recorded.
+  | .newUsr m => do
+      match ← liftRO H (kvac.mac crs sk pp m) with
+      | none   => return (← getEXTState H).usrs.length
+      | some σ =>
+        let i := (← getEXTState H).usrs.length
+        modifyEXTState H fun st => { st with usrs := st.usrs ++ [(m, σ)] }
+        return i
+  -- Figure 8  Oracle Issue(φ, µ): σ' ← KVAC.I.Srv(sk, φ, µ); if σ' = ⊥ return ⊥;
+  -- m := Ext.I(sk, φ, µ); if φ(m) = 0 abort; Qrs := Qrs ∪ {m}; return σ'. On ⊥
+  -- it answers `none`; otherwise it applies the pure extractor `Ext.I`, aborts
+  -- with `throw ()` if extraction fails or `φ(m) = 0` (the game counts it a win),
+  -- else records `m` in `qrs` and answers with σ'.
+  | .issue φ μ => do
+      match ← liftRO H (kvac.issueSrv crs sk φ μ) with
+      | none    => return none
       | some σ' =>
         match ext.extI sk φ μ with
         | none   => throw ()
         | some m =>
-          if kvac.holds crs φ m
-          then pure (some σ', (cache', { st with qrs := st.qrs ++ [m] }))
+          if kvac.holds crs φ m then
+            modifyEXTState H fun st => { st with qrs := st.qrs ++ [m] }
+            return some σ'
           else throw ()
-  -- Figure 8  Oracle PresentUsr(i, φ):
-  --   (m, σ) := Usrs[i]
-  --   ρ ← KVAC.P.Usr(pp, m, σ, φ)
-  --   PQrs := PQrs ∪ {(φ, ρ)}
-  --   return ρ
-  -- Implementation. Reads honest user `i` from `usrs`. For an index past the end
-  -- it answers `none`. Otherwise it runs the honest presentation `kvac.presentUsr`
-  -- against the random oracle, records `(φ, ρ)` in `pqrs` (the paper's PQrs), and
-  -- answers with ρ.
-  | .presentUsr i φ => StateT.mk fun (cache, st) =>
-      match st.usrs[i]? with
-      | none        => pure (none, (cache, st))
-      | some (m, σ) => do
-          let (ρ, cache') ← runRO H cache (kvac.presentUsr crs pp m σ φ)
-          pure (some ρ, (cache', { st with pqrs := st.pqrs ++ [(φ, ρ)] }))
-  -- Figure 8  Oracle Present(φ, ρ):
-  --   return KVAC.P.Srv(sk, φ, ρ)
-  -- Implementation. Runs the server presentation check `kvac.presentSrv` against
-  -- the random oracle and answers with the accept bit. It records nothing.
-  | .present φ ρ => StateT.mk fun (cache, st) => do
-      let (b, cache') ← runRO H cache (kvac.presentSrv crs sk φ ρ)
-      pure (b, (cache', st))
+  -- Figure 8  Oracle PresentUsr(i, φ): (m, σ) := Usrs[i];
+  -- ρ ← KVAC.P.Usr(pp, m, σ, φ); PQrs := PQrs ∪ {(φ, ρ)}; return ρ. An
+  -- out-of-range index answers `none`; otherwise it runs the honest presentation,
+  -- records `(φ, ρ)` in `pqrs`, and answers with ρ.
+  | .presentUsr i φ => do
+      match (← getEXTState H).usrs[i]? with
+      | none        => return none
+      | some (m, σ) =>
+        let ρ ← liftRO H (kvac.presentUsr crs pp m σ φ)
+        modifyEXTState H fun st => { st with pqrs := st.pqrs ++ [(φ, ρ)] }
+        return some ρ
+  -- Figure 8  Oracle Present(φ, ρ): return KVAC.P.Srv(sk, φ, ρ). Runs the server
+  -- presentation check and answers with the accept bit; records nothing.
+  | .present φ ρ => liftRO H (kvac.presentSrv crs sk φ ρ)
 
 end KVAC.Framework
