@@ -54,13 +54,26 @@ namespace KVAC.Framework
 open OracleComp KVAC.Core
 
 /--
+The correctness conclusion of O24 Definition 4.3, factored out of both `Correct`
+and `CorrectRO` and abstracted over how issuance and presentation outcomes are
+drawn. `issued σ? s` holds when `σ?` is a possible issuance result carrying
+auxiliary data `s` (the random-oracle cache at the `OracleComp (ZKRO H)` carrier,
+`Unit` at `ProbComp`); `accepted σ s b` when `b` is a possible presentation bit
+started from that `s`. The conclusion: issuance yields a credential and every
+presentation under a satisfied `φ'` accepts. -/
+def CorrectOutcome {Cr S : Type} (issued : Option Cr → S → Prop)
+    (accepted : Cr → S → Bool → Prop) : Prop :=
+  ∀ σ? s, issued σ? s → ∃ σ, σ? = some σ ∧ ∀ b, accepted σ s b → b = true
+
+/--
 Correctness (O24 Definition 4.3), support-based: for every CRS from `setup`,
 every key pair from `keygen`, every attribute vector, and all predicates
 `φ, φ'` holding on it, honest issuance under `φ` always yields a credential
 and honest presentation under `φ'` always verifies.
 
 The `0 < n` hypothesis mirrors O24 Definition 4.2's requirement that the
-attribute count `n > 0`.
+attribute count `n > 0`. The conclusion is `CorrectOutcome` with `Unit`
+auxiliary data (no cache at the `ProbComp` carrier).
 -/
 def Correct (kvac : KVACSyntax ProbComp) : Prop :=
   ∀ (secParam n : Nat), 0 < n →
@@ -68,14 +81,14 @@ def Correct (kvac : KVACSyntax ProbComp) : Prop :=
   ∀ (keys : kvac.Sk crs × kvac.Pp crs), keys ∈ support (kvac.keygen crs) →
   ∀ (m : kvac.MsgVec crs) (φ φ' : kvac.Pred crs),
     kvac.holds crs φ m = true → kvac.holds crs φ' m = true →
-    (∀ σ? ∈ support (kvac.issue crs keys.1 keys.2 m φ),
-      ∃ σ, σ? = some σ ∧
-        ∀ b ∈ support (kvac.present crs keys.1 keys.2 m σ φ'), b = true)
+    CorrectOutcome
+      (fun σ? (_ : Unit) => σ? ∈ support (kvac.issue crs keys.1 keys.2 m φ))
+      (fun σ _ b => b ∈ support (kvac.present crs keys.1 keys.2 m σ φ'))
 
 /--
 Correctness lifted to the `OracleComp (ZKRO H)` carrier (issue #118). The same
-support-based statement as `Correct`, but `setup`, `keygen`, `issue`, `present`
-run through the shared random oracle via `runRO`, threading one cache
+`CorrectOutcome` conclusion as `Correct`, but `setup`, `keygen`, `issue`,
+`present` run through the shared random oracle via `runRO`, threading one cache
 `∅ → c₀ → c₁ → c₂ → c₃`, so a Fiat–Shamir credential's proofs share the oracle.
 Mirrors `KVAC.Core.PerfectlyComplete`. The `ProbComp` `Correct` is the
 oracle-free special case, recovered through the `ProbComp ↪ OracleComp (ZKRO H)`
@@ -89,11 +102,9 @@ def CorrectRO (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop :=
     (keys, c₁) ∈ support (runRO H c₀ (kvac.keygen crs)) →
   ∀ (m : kvac.MsgVec crs) (φ φ' : kvac.Pred crs),
     kvac.holds crs φ m = true → kvac.holds crs φ' m = true →
-  ∀ (σ? : Option (kvac.Cred crs)) (c₂ : H.spec.QueryCache),
-    (σ?, c₂) ∈ support (runRO H c₁ (kvac.issue crs keys.1 keys.2 m φ)) →
-      ∃ σ, σ? = some σ ∧
-        ∀ (b : Bool) (c₃ : H.spec.QueryCache),
-          (b, c₃) ∈ support (runRO H c₂ (kvac.present crs keys.1 keys.2 m σ φ')) →
-            b = true
+    CorrectOutcome
+      (fun σ? c₂ => (σ?, c₂) ∈ support (runRO H c₁ (kvac.issue crs keys.1 keys.2 m φ)))
+      (fun σ c₂ b =>
+        ∃ c₃, (b, c₃) ∈ support (runRO H c₂ (kvac.present crs keys.1 keys.2 m σ φ')))
 
 end KVAC.Framework
