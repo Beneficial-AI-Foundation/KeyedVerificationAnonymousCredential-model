@@ -107,7 +107,7 @@ it never needs them to exist. Exhibiting them is a scheme-level
 obligation, discharged when μCMZ and μBBS build their predicate-family
 instances.
 
-:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
+:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
 *O24 Definition 4.3.* Correctness for a KVAC scheme {uses "kvac_syntax"}[]:
 honestly issued credentials always produce accepting presentations for
 the predicates they satisfy. Stated as two halves, issuance never
