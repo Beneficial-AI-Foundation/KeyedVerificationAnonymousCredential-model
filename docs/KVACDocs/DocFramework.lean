@@ -107,7 +107,7 @@ it never needs them to exist. Exhibiting them is a scheme-level
 obligation, discharged when μCMZ and μBBS build their predicate-family
 instances.
 
-:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
+:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
 *O24 Definition 4.3.* Correctness for a KVAC scheme {uses "kvac_syntax"}[]:
 honestly issued credentials always produce accepting presentations for
 the predicates they satisfy. Stated as two halves, issuance never
@@ -159,7 +159,7 @@ single-user unforgeability is included as a sanity check.
 *TODO (Track F2).* Define the extractability game (Definition 4.5) and
 prove the reduction to CMZ14 unforgeability as a corollary.
 
-:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
+:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty, KVAC.Framework.EXTComp, KVAC.Framework.liftRO, KVAC.Framework.getEXTState, KVAC.Framework.modifyEXTState, KVAC.Framework.extOracleImpl, KVAC.Framework.newUsr_mac_isSome") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
 *O24 Figure 8.* The extractability game for a keyed-verification
 credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.
