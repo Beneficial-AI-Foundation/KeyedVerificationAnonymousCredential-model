@@ -6,6 +6,7 @@ Authors: Christiano Braga
 import KVAC.Framework.Syntax
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
+import VCVio.CryptoFoundations.Asymptotics.Security
 
 /-!
 # Extraction game for a keyed-verification credential (O24 §4.4, Definition 4.5)
@@ -210,8 +211,8 @@ structure EXTAdversary (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) 
 /-- The random-oracle handler over the game's combined state. The adversary's
 direct `ZKRO H` queries must hit the same table the honest oracles use, so this
 runs `zkROImpl H` on the `cache` component of the shared `(cache × EXTState)`
-state, leaving the game state and the `ExceptT` abort layer untouched. It is the
-`ZKRO H` half of the game's `QueryImpl`, added to `extOracleImpl`. -/
+state, leaving the game state and the `ExceptT` abort transformer untouched. It is
+the `ZKRO H` half of the game's `QueryImpl`, added to `extOracleImpl`. -/
 def extROImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     {secParam n : Nat} (crs : kvac.Crs secParam n) :
     QueryImpl (ZKRO H)
@@ -259,12 +260,89 @@ def EXTGame (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
       pure (accepts && notHonest && freshOrUnsat)
 
 /-- The extraction advantage of `A` with respect to extractor `ext`: the
-probability that `EXTGame` returns `true`. A scheme is extractable if some `ext`
-makes this negligible in `secParam` for every PPT `A`; the asymptotic statement is
-deferred, like the negligibility of `UF_CMVAAdv` and `ZKAdv`. An `abbrev`, so it
-unfolds in the Theorem 5.2 reduction. -/
+probability that `EXTGame` returns `true`. This is `Adv^ext_{KVAC,Ext,A}` of O24
+Definition 4.5, the quantity `Extractable` asks to be negligible. An `abbrev`, so
+it unfolds in the Theorem 5.2 reduction. -/
 noncomputable abbrev EXTAdv (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor kvac) (A : EXTAdversary H kvac) (secParam n : Nat) : ℝ≥0∞ :=
   Pr[= true | EXTGame H kvac ext A secParam n]
+
+/-! ## Extractability (O24 Definition 4.5) -/
+
+/-- The extraction game as an asymptotic `SecurityGame` for a fixed attribute
+count `n` and extractor `ext`: the advantage `Adv^ext` as a function of the
+adversary and the security parameter. -/
+noncomputable def extSecurityGame (H : HashSpec)
+    (kvac : KVACSyntax (OracleComp (ZKRO H))) (ext : Extractor kvac) (n : Nat) :
+    SecurityGame (EXTAdversary H kvac) where
+  advantage A secParam := EXTAdv H kvac ext A secParam n
+
+/-- Extractability, O24 Definition 4.5: there is an extractor `Ext = (Ext.I, Ext.P)`
+such that the extraction game is secure against the efficient adversaries, that is,
+`Adv^ext_{KVAC,Ext,A}` is negligible in the security parameter for every p.p.t. `A`.
+
+Unfolding `SecurityGame.secureAgainst`, this reads
+
+  `∃ ext, ∀ A, isPPT A → negligible (fun secParam => EXTAdv H kvac ext A secParam n)`,
+
+which matches the paper's quantifier structure. `∃ ext` is "there exists
+`Ext = (Ext.I, Ext.P)`", the `∀ A` is "for any adversary `A`", the `isPPT A →`
+guard renders the adjective "p.p.t." (a restricted quantifier, since there is no
+type of efficient adversaries to range over), and `negligible (… EXTAdv …)` is
+"`Adv^ext` is negligible in λ".
+
+The efficiency predicate `isPPT` is an abstract parameter, exactly as VCVio's
+`SecurityGame.secureAgainst` leaves it, because this development fixes no concrete
+efficiency notion, that is, no probabilistic-polynomial-time bound (such as a
+`PolyQueries` query-count bound), on `OracleComp` adversaries. Taking it as a
+parameter renders the paper's "for any p.p.t. A" faithfully, and a concrete
+instantiation supplies the efficiency notion. -/
+def Extractable (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (isPPT : EXTAdversary H kvac → Prop) (n : Nat) : Prop :=
+  ∃ ext : Extractor kvac, (extSecurityGame H kvac ext n).secureAgainst isPPT
+
+/-! ## The `n ≤ poly(λ)` side condition (O24 Definition 4.5) -/
+
+/-- The attribute count `n(λ)`, taken as a function of the security parameter `λ`,
+is polynomially bounded: `n λ ≤ c · λ^d + c` for some constants `c, d`. This makes
+O24's side condition `n ≤ poly(λ)` an explicit predicate, rather than leaving `n` a
+free `Nat` independent of `λ`. -/
+def PolyBounded (n : ℕ → ℕ) : Prop :=
+  ∃ c d : ℕ, ∀ lam : ℕ, n lam ≤ c * lam ^ d + c
+
+/-- Asymptotic extractability with O24's `n ≤ poly(λ)` side condition made a proof
+obligation. Here the attribute count `n(λ)` is a function of the security parameter;
+for every polynomially-bounded `n` there is an extractor making the extraction game,
+run at attribute count `n secParam` for each `secParam`, secure against the efficient
+adversaries. The `PolyBounded n →` hypothesis is the generated obligation: any proof
+of `ExtractablePoly`, or instantiation of it, must exhibit `n`'s polynomial bound
+rather than silently assume a constant attribute count. `Extractable` above is the
+fixed-`n` slice; this ties `n` to `λ` as the paper does.
+
+The full discharge (a concrete `PolyBounded` witness and the negligibility proof)
+belongs to the μCMZ extractability proof, Track CMZ-E (issue #11). -/
+def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (isPPT : EXTAdversary H kvac → Prop) : Prop :=
+  ∀ n : ℕ → ℕ, PolyBounded n →
+    ∃ ext : Extractor kvac,
+      (SecurityGame.mk (fun A secParam => EXTAdv H kvac ext A secParam (n secParam))
+        : SecurityGame (EXTAdversary H kvac)).secureAgainst isPPT
+
+/-- Obligation generator for O24 Theorem 5.10 (extractability with the `n ≤ poly(λ)`
+side condition). Stated over an abstract scheme `kvac` and adversary-efficiency
+predicate `isPPT`; the premises the paper uses — scheme correctness and a
+knowledge-sound ZKP supplying straight-line extractors (O24 §5.5) — are not yet
+formalized, so they are elided here and this stands as a deferred obligation.
+
+The `sorry` is the point: it turns `ExtractablePoly` from a latent definition into a
+real open goal, so `PolyBounded n` and the negligibility of `EXTAdv` become subgoals
+that the μCMZ extractability proof must discharge. Full proof (and the missing
+premises) belong to Track CMZ-E (issue #11), where the concrete μCMZ `KVACSyntax`
+instantiates `kvac`. -/
+theorem extractablePoly_obligation (H : HashSpec)
+    (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (isPPT : EXTAdversary H kvac → Prop) :
+    ExtractablePoly H kvac isPPT := by
+  sorry
 
 end KVAC.Framework
