@@ -139,6 +139,15 @@ secure-messaging landing page.
   it states the correctness experiment in full and never needs those members
   to exist; the obligation is carried by the scheme instances and recorded in
   the node's Tracks CMZ-C / BBS-C TODO.
+- **`anonymous_tokens` anchored despite the unlinkability clause**
+  (2026-08). O24 §3.4 demands anonymous tokens be correct, one-more
+  unforgeable, and unlinkable, but omits unlinkability's formal definition
+  (deferring to [KLOR20] / [DVC22]; keyed-verification token systems satisfy
+  the stronger §4 anonymity notions instead). There is no paper-internal
+  statement to formalize, so the node anchors the syntax/correctness layer
+  and records the gap in its body. Alternative (an unanchored §3.4 node plus
+  a milestone) rejected: it would misreport the formalized syntax and OMUF
+  game as absent.
 
 ## Pending updates ledger
 
