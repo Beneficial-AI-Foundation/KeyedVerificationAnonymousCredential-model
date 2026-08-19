@@ -144,8 +144,7 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- `holds_exactPred`), so `usrs` always grows and the counter matches the
   -- paper's unconditional `ctr := ctr + 1`. Proving the `none` case unreachable
   -- (hence that the happy trace is the only outcome) needs `Correct` lifted to
-  -- the `OracleComp (ZKRO H)` carrier (issue #118) and is deferred to a future
-  -- PR #TODO(fill-with-PR).
+  -- the `OracleComp (ZKRO H)` carrier (issue #118) and is deferred to PR #138.
   | .newUsr m => do
       match ← liftRO H (kvac.mac crs sk pp m) with
       | none   => return (← getEXTState H).usrs.length
