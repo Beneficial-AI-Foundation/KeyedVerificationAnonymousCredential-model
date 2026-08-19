@@ -64,15 +64,16 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
 
 ## Wave 0 — foundational, start immediately
 
-- [ ] **Track 0** — Shared API contract (`KVAC/Core/`)
+- [x] **Track 0** — Shared API contract (`KVAC/Core/`)
   - Modules: `KVAC/Core/Group.lean`, `KVAC/Core/Hash.lean`, `KVAC/Core/ZKProof.lean`, `KVAC/Core/AlgebraicMAC.lean`
   - Depends on: nothing
   - **Critical path:** Tracks Pre, Σ, F1, CMZ-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
   - **Status** (split into sub-issues #18–#21):
     - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
     - [x] `Hash.lean` — landed (#19): `HashSpec` (taken over from PR #47) + the lazy `randomOracle` binding, with `transcriptHashSpec` (`H_p`) and `curveHashSpec` (`H_𝔾`).
-    - [ ] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 (externalized extractor + completeness) in review.
+    - [x] `ZKProof.lean` / `NIZKP/*.lean` — landed (#20): model-agnostic NIZKP spec with `NIZKPSyntax` (`NIZKP/Construction.lean`), completeness (`NIZKP/Completeness.lean`), security (`NIZKP/Security.lean`), and straight-line extraction (`NIZKP/Extraction.lean`).
     - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
+    - [ ] `Hash.lean` `HashSpec.programFresh` (abort-on-collision reprogramming) — remaining (#60).
 
 ## Wave 1 — start once Track 0 lands
 
@@ -89,11 +90,12 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
   - Depends on: Track 0
   - Σ-protocol meta-theory (completeness, special soundness, HVZK), the Fiat–Shamir transformation in the random oracle model, and straight-line extraction in the AGM (Sec. 9 of O24). Critical infrastructure for both schemes' security proofs.
-  - **Status:** not started as a generic layer. Concrete per-relation Σ-protocol instances for μCMZ (Eqs. 9–11) are being delivered under Track CMZ-C (#40, #41) directly on VCV-io's `SigmaProtocol`; this track remains the home for the generic meta-theory (Fiat–Shamir, straight-line extraction).
-- [ ] **Track F1** — Framework: syntax and correctness
+  - **Status:** the generic `ProofSystems/` layer is not started. Straight-line extraction already lives in `KVAC/Core/NIZKP/Extraction.lean`, and the concrete per-relation μCMZ Σ-protocols (Eqs. 9–11) landed under Track CMZ-C in `KVAC/Schemes/MicroCMZ/Relations.lean` (#40, #41). This track remains the home for the generic Σ meta-theory and Fiat–Shamir.
+- [x] **Track F1** — Framework: syntax and correctness
   - Modules: `KVAC/Framework/Syntax.lean`, `KVAC/Framework/Correctness.lean`
   - Depends on: Track 0, Track Pre
   - Definitions 4.2 and 4.3 of O24. Scheme-agnostic by construction — both μCMZ and μBBS will instantiate this same surface.
+  - **Status:** landed (#77). `KVACSyntax` (`Framework/Syntax.lean`) and the correctness predicate `Correct` (`Framework/Correctness.lean`).
 
 ## Wave 2 — Framework security and scheme constructions
 
@@ -101,15 +103,16 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Modules: `KVAC/Framework/Anonymity.lean`, `KVAC/Framework/Extractability.lean`
   - Depends on: Track F1, Track Σ
   - Definitions 4.4 (anonymity, statistical / everlasting-forward variants) and 4.5 (multi-user MITM extractability) of O24.
+  - **Status** (partial): the extraction-game interfaces and state landed (#117 via #120) in `Framework/Extractability.lean` (`Extractor`, `EXTQuery`, `EXTOracleSpec`, `EXTState`); the rest of the Definition 4.5 game (adversary, `EXTGame`, `Extractable`) is in the open stack #122→#126. Anonymity (`Framework/Anonymity.lean`, Definition 4.4) is not started — the module does not yet exist.
 - [ ] **Track CMZ-C** — μCMZ construction
   - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
   - **Status** (split into sub-issues #39–#41 under #6):
     - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
-    - [ ] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — in review (#40; PR #32).
-    - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32).
-    - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
+    - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40): `riuRel` / `riuSigma` with completeness and special soundness.
+    - [x] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — landed (#41): `risRel` / `risSigma` and `rpRel` / `rpSigma`.
+    - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above. No `Credential.lean` yet; `Construction.lean` provides the base MAC only.
 
 ## Wave 3 — security tracks (per scheme)
 
@@ -119,6 +122,7 @@ The security tracks for each scheme are mostly independent of the other scheme. 
   - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`
   - Depends on: Track CMZ-C
   - Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n). Uses straight-line extraction from Track Σ.
+  - **Status** (partial): AGM game scaffolding landed in `Schemes/MicroCMZ/AlgebraicMAC.lean` (`AGM_UF_CMVAGame`, `AGMUFAdversary`, `AGMRepr`), with `AGMPolynomial.lean`, `SignMask.lean`, and the reduction core `AGMReduction/Core.lean` (#88). Theorem 5.1 itself is open: coupling + Schwartz–Zippel (#129), the 3-DL/gap-DL embedding (#80), the bridge to plain `UF_CMVA` (#81), and the granular reduction lemmas (#106–#116).
 - [ ] **Track CMZ-A** — μCMZ anonymity (§5.4)
   - Modules: `KVAC/Schemes/MicroCMZ/Anonymity.lean`
   - Depends on: Track CMZ-C, Track F2
