@@ -7,6 +7,7 @@ import VersoManual
 import VersoBlueprint
 import KVAC.Preliminaries.Assumptions
 import KVAC.Preliminaries.AnonymousTokens
+import KVAC.Preliminaries.AnonymousTokens.Security
 
 open Verso.Genre Manual
 open Informal
@@ -105,9 +106,7 @@ Anonymous tokens
 Anonymous-token syntax and the one-more unforgeability (OMUF) game of
 O24 Section 3.4. Anonymous tokens are the headline application of the
 OMUF notion — used in the `μCMZ_AT` and `μBBS_AT` chapters of the two
-scheme directories.
-
-*TODO (Track Pre).* Define the OMUF security game (Figure 6).
+scheme directories (Track CMZ-OMUF states Theorem 5.11 over this game).
 
 :::definition "anonymous_tokens" (lean := "KVAC.Preliminaries.ATSyntax, KVAC.Preliminaries.ATSyntax.issue, KVAC.Preliminaries.ATSyntax.Correct, KVAC.Preliminaries.AnonymousToken") (parent := "pre_anontoken") (tags := "paper, O24 §3.4")
 *O24 Section 3.4.* Syntax and correctness of anonymous token schemes
@@ -126,9 +125,15 @@ token systems satisfying the stronger §4 anonymity instead); it is
 accordingly not formalized here.
 :::
 
-:::definition "omuf_game" (parent := "pre_anontoken") (tags := "paper, O24 Fig 6")
+:::definition "omuf_game" (lean := "KVAC.Preliminaries.OMUFQuery, KVAC.Preliminaries.OMUFOracleSpec, KVAC.Preliminaries.OMUFAdversary, KVAC.Preliminaries.SignLog, KVAC.Preliminaries.omufOracleImpl, KVAC.Preliminaries.OMUFWins, KVAC.Preliminaries.OMUFGame, KVAC.Preliminaries.OMUFAdv") (parent := "pre_anontoken") (tags := "paper, O24 Fig 6")
 *O24 Figure 6.* The one-more unforgeability game for an anonymous token
 scheme {uses "anonymous_tokens"}[] with non-interactive issuance: after `q`
 blind-issuance sessions the adversary must present `q + 1` valid
-pairwise-distinct message/token pairs.
+pairwise-distinct message/token pairs. Mirrors the UF-CMVA game
+{bpref "ufcmva_game"}[]: a Sign/Verify query menu, a logged
+honest oracle implementation (the log's length is Figure 6's dynamic
+counter `q`), the experiment as a `ProbComp Bool` with the three-clause
+win condition `OMUFWins`, and the advantage `OMUFAdv`. Static
+query-budget hypotheses belong to the security theorems over this game,
+not to the game itself.
 :::
