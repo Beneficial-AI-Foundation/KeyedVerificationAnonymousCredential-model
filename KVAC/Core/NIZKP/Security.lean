@@ -207,4 +207,14 @@ noncomputable abbrev ZKAdv (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H
   ProbComp.boolDistAdvantage (zkGameReal H zkp decR A secParam)
     (zkGameSim H zkp decR A sim secParam)
 
+/-- Run an oracle computation against the ZK random oracle, from the table
+`cache`, and return its result together with the updated table. This is the one
+place the `OracleComp (ZKRO H)` carrier is interpreted down to `ProbComp`, via
+`zkROImpl`; `simulateQ` is a monad morphism, so the cache is threaded by the
+`StateT` instance. The carrier reconciliation this belongs to is tracked in
+issue #118. -/
+def runRO {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
+    (c : OracleComp (ZKRO H) α) : ProbComp (α × H.spec.QueryCache) :=
+  (simulateQ (zkROImpl H) c).run cache
+
 end KVAC.Core
