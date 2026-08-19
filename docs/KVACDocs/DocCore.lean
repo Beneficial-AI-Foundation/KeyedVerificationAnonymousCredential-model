@@ -115,7 +115,7 @@ statement, witness, and proof families with monad-polymorphic `setup`,
 of the relation family, and the syntax-plus-completeness bundle.
 :::
 
-:::definition "zk_game" (lean := "KVAC.Core.ZKQuery, KVAC.Core.ZKProveSpec, KVAC.Core.ZKRO, KVAC.Core.ZKAdvSpec, KVAC.Core.ZKAdversary, KVAC.Core.ZKSimulator, KVAC.Core.zkROImpl, KVAC.Core.zkProveReal, KVAC.Core.zkProveSim, KVAC.Core.zkRun, KVAC.Core.zkGameReal, KVAC.Core.zkGameSim, KVAC.Core.ZKAdv") (parent := "core_zkproof") (tags := "milestone")
+:::definition "zk_game" (lean := "KVAC.Core.ZKQuery, KVAC.Core.ZKProveSpec, KVAC.Core.ZKRO, KVAC.Core.ZKAdvSpec, KVAC.Core.ZKAdversary, KVAC.Core.ZKSimulator, KVAC.Core.zkROImpl, KVAC.Core.zkProveReal, KVAC.Core.zkProveSim, KVAC.Core.zkRun, KVAC.Core.zkGameReal, KVAC.Core.zkGameSim, KVAC.Core.ZKAdv, KVAC.Core.runRO") (parent := "core_zkproof") (tags := "milestone")
 The two-world zero-knowledge game of O24 Section 3.3 on a
 {uses "nizkp_syntax"}[] carrier: a Proveᵦ oracle answering with the real
 prover or the simulator behind the `(x, w) ∈ R` guard, the lazy random
