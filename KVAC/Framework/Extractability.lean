@@ -303,34 +303,29 @@ def Extractable (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
 
 /-! ## The `n ≤ poly(λ)` side condition (O24 Definition 4.5) -/
 
-/-- An attribute-count *schedule* grows at most polynomially in the security
-parameter: `n λ ≤ c · λ^d + c` for some constants `c, d`. This makes O24's side
-condition `n ≤ poly(λ)` an explicit predicate on `n : ℕ → ℕ`, rather than leaving
-`n` a free `Nat` independent of `λ`. -/
+/-- The attribute count `n(λ)`, taken as a function of the security parameter `λ`,
+is polynomially bounded: `n λ ≤ c · λ^d + c` for some constants `c, d`. This makes
+O24's side condition `n ≤ poly(λ)` an explicit predicate, rather than leaving `n` a
+free `Nat` independent of `λ`. -/
 def PolyBounded (n : ℕ → ℕ) : Prop :=
   ∃ c d : ℕ, ∀ lam : ℕ, n lam ≤ c * lam ^ d + c
 
-/-- The extraction game as a `SecurityGame` for an attribute-count *schedule*
-`n : ℕ → ℕ`: at security parameter `secParam` the attribute count is `n secParam`,
-so `n` may grow with `λ` (unlike `extSecurityGame`, which fixes `n`). -/
-noncomputable def extSecurityGameSched (H : HashSpec)
-    (kvac : KVACSyntax (OracleComp (ZKRO H))) (ext : Extractor kvac) (n : ℕ → ℕ) :
-    SecurityGame (EXTAdversary H kvac) where
-  advantage A secParam := EXTAdv H kvac ext A secParam (n secParam)
-
 /-- Asymptotic extractability with O24's `n ≤ poly(λ)` side condition made a proof
-obligation. For every attribute-count schedule `n : ℕ → ℕ` that is `PolyBounded`,
-there is an extractor making the extraction game secure against the efficient
-adversaries. The `PolyBounded n →` hypothesis is the generated obligation: a proof
-of `ExtractablePoly`, or any instantiation of it, must exhibit `n`'s polynomial
-bound rather than silently assume a constant attribute count. `Extractable` above
-is the fixed-`n` slice; this is the harness that ties `n` to `λ` as the paper does.
+obligation. Here the attribute count `n(λ)` is a function of the security parameter;
+for every polynomially-bounded `n` there is an extractor making the extraction game,
+run at attribute count `n secParam` for each `secParam`, secure against the efficient
+adversaries. The `PolyBounded n →` hypothesis is the generated obligation: any proof
+of `ExtractablePoly`, or instantiation of it, must exhibit `n`'s polynomial bound
+rather than silently assume a constant attribute count. `Extractable` above is the
+fixed-`n` slice; this ties `n` to `λ` as the paper does.
 
 The full discharge (a concrete `PolyBounded` witness and the negligibility proof)
 belongs to the μCMZ extractability proof, Track CMZ-E (issue #11). -/
 def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (isPPT : EXTAdversary H kvac → Prop) : Prop :=
   ∀ n : ℕ → ℕ, PolyBounded n →
-    ∃ ext : Extractor kvac, (extSecurityGameSched H kvac ext n).secureAgainst isPPT
+    ∃ ext : Extractor kvac,
+      (SecurityGame.mk (fun A secParam => EXTAdv H kvac ext A secParam (n secParam))
+        : SecurityGame (EXTAdversary H kvac)).secureAgainst isPPT
 
 end KVAC.Framework
