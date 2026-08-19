@@ -199,6 +199,15 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
   the at-most-3-roots count stays unformalized — not because it is false, but
   because nothing in the reduction consumes it. The Eq. 16 section head in
   `AGMPolynomial.lean` states the same thing at the source.
+- **`anonymous_tokens` anchored despite the unlinkability clause**
+  (2026-08). O24 §3.4 demands anonymous tokens be correct, one-more
+  unforgeable, and unlinkable, but omits unlinkability's formal definition
+  (deferring to [KLOR20] / [DVC22]; keyed-verification token systems satisfy
+  the stronger §4 anonymity notions instead). There is no paper-internal
+  statement to formalize, so the node anchors the syntax/correctness layer
+  and records the gap in its body. Alternative (an unanchored §3.4 node plus
+  a milestone) rejected: it would misreport the formalized syntax and OMUF
+  game as absent.
 
 ## Pending updates ledger
 
