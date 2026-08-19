@@ -183,4 +183,26 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- presentation check and answers with the accept bit; records nothing.
   | .present φ ρ => liftRO H (kvac.presentSrv crs sk φ ρ)
 
+/-! ## The adversary -/
+
+/-- The full oracle interface an extraction adversary sees for a fixed crs: the
+four Figure 8 oracles together with the random oracle `ZKRO H`.
+
+Formalizes the oracle access of `A^{Issue, Present, NewUsr, PresentUsr}` in O24
+Figure 8. The random oracle is included because the issuance and presentation
+messages the adversary submits embed Fiat–Shamir proofs, so it queries the same
+`H` the honest oracles use; the game runs both halves on one shared table. -/
+abbrev EXTAdvSpec (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    {secParam n : Nat} (crs : kvac.Crs secParam n) :
+    OracleSpec (EXTQuery kvac crs ⊕ (ℕ ⊕ H.Dom)) :=
+  EXTOracleSpec kvac crs + ZKRO H
+
+/-- An extraction adversary (O24 Figure 8): given the public parameters `pp`, it
+queries the four extraction oracles and the random oracle, and outputs the
+challenge `(φ*, ρ*)`, a predicate and a presentation message. The crs is passed
+alongside `pp`, matching `UFAdversary`; the paper infers it from `pp`. -/
+structure EXTAdversary (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) where
+  run : {secParam n : Nat} → (crs : kvac.Crs secParam n) → kvac.Pp crs →
+    OracleComp (EXTAdvSpec H kvac crs) (kvac.Pred crs × kvac.PresentMsg crs)
+
 end KVAC.Framework
