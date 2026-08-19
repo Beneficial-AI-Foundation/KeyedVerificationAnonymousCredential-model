@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
 import KVAC.Framework.Syntax
+import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
 
 /-!
@@ -17,7 +18,7 @@ built in Theorem 5.10.
 
 namespace KVAC.Framework
 
-open OracleComp OracleSpec
+open OracleComp OracleSpec KVAC.Core
 
 variable {M : Type → Type} [Monad M]
 
@@ -38,7 +39,7 @@ structure Extractor (kvac : KVACSyntax M) where
 /-! ## The four oracles of Figure 8 -/
 
 /-- The oracle calls of the O24 Figure 8 extraction game, for a fixed crs.
-`newUsr m⃗` creates an honest user, `issue φ μ` is the server's issuance response
+`newUsr m` creates an honest user, `issue φ μ` is the server's issuance response
 to a user message `μ`, `presentUsr i φ` is honest user `i`'s presentation, and
 `present φ ρ` is the server's presentation check. -/
 inductive EXTQuery (kvac : KVACSyntax M) {secParam n : Nat}
@@ -69,8 +70,8 @@ user counter update as `ctr := ctr + 1`; we read a `newUsr` query as returning
 the index just written (this list's length at creation), the only reading under
 which `usrs[i]` resolves to that user. Figure 8's `Issue`
 abort is not a field here: the oracle implementation raises it as an exception in
-the oracle monad, which the game counts as an adversary win. Generic over the
-carrier `M`. -/
+the oracle monad (`ExceptT`), which the game counts as an adversary win. Generic
+over the carrier `M`. -/
 structure EXTState (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) where
   /-- `Qrs`: attribute vectors extracted from accepted issuance queries. -/
@@ -84,5 +85,102 @@ structure EXTState (kvac : KVACSyntax M) {secParam n : Nat}
 def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) : EXTState kvac crs :=
   ⟨[], [], []⟩
+
+/-! ## The oracle monad and its plumbing -/
+
+/-- The monad the O24 Figure 8 oracles run in: the shared random-oracle cache and
+the game state `EXTState` carried in one `StateT`, over `ExceptT Unit` (the
+`Issue` abort, read as an adversary win) over `ProbComp`. -/
+abbrev EXTComp (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    {secParam n : Nat} (crs : kvac.Crs secParam n) : Type → Type :=
+  StateT (H.spec.QueryCache × EXTState kvac crs) (ExceptT Unit ProbComp)
+
+/-- Lift a credential computation into the oracle monad: run it against the shared
+random-oracle table via `runRO`, write the table back, leave the game state alone.
+
+IMPORTANT. This is the single site of the cache plumbing the whole game depends
+on. It projects the cache out of the state, runs the credential algorithm at the
+`ProbComp` layer, and threads the updated cache back, so all four Figure 8 oracles
+share one random-oracle table and a Fiat–Shamir credential's proofs stay
+consistent. Get this threading wrong and the shared-oracle semantics break
+silently. The carrier reconciliation that governs it is tracked in issue #118. -/
+def liftRO {α : Type} (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
+    {secParam n : Nat} {crs : kvac.Crs secParam n} (c : OracleComp (ZKRO H) α) :
+    EXTComp H kvac crs α :=
+  StateT.mk fun (cache, st) => do
+    let (a, cache') ← runRO H cache c
+    pure (a, (cache', st))
+
+/-- Read the `EXTState` half of the game state, leaving the cache implicit. -/
+def getEXTState (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
+    {secParam n : Nat} {crs : kvac.Crs secParam n} :
+    EXTComp H kvac crs (EXTState kvac crs) :=
+  Prod.snd <$> get
+
+/-- Update the `EXTState` half of the game state, leaving the cache untouched. -/
+def modifyEXTState (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
+    {secParam n : Nat} {crs : kvac.Crs secParam n}
+    (f : EXTState kvac crs → EXTState kvac crs) : EXTComp H kvac crs Unit :=
+  modify fun (cache, st) => (cache, f st)
+
+/-! ## The oracle implementation -/
+
+/-- The Figure 8 oracle implementation over the carrier `OracleComp (ZKRO H)`.
+Each credential algorithm runs through `liftRO` on the shared table, so a
+Fiat–Shamir credential's proofs share one random oracle. The `Issue` abort of
+Figure 8 is `throw ()` in the `ExceptT Unit` layer, short-circuiting the run; the
+game reads a thrown abort as an adversary win. -/
+def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (ext : Extractor kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
+    (sk : kvac.Sk crs) (pp : kvac.Pp crs) :
+    QueryImpl (EXTOracleSpec kvac crs) (EXTComp H kvac crs)
+  -- Figure 8  Oracle NewUsr(m): σ ← KVAC.M(sk, m); Usrs[ctr] := (m, σ);
+  -- return (ctr := ctr + 1). Runs the honest MAC `kvac.mac`; on a credential it
+  -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
+  -- user's index).
+  -- The `none` arm below is the honest-issuance failure. On the happy trace it
+  -- never fires: for a correct scheme, issuance under the exact-attribute
+  -- predicate `φ_m` always yields `some` (`Correct` specialised at `φ = φ_m` via
+  -- `holds_exactPred`), so `usrs` always grows and the counter matches the
+  -- paper's unconditional `ctr := ctr + 1`. Proving the `none` case unreachable
+  -- (hence that the happy trace is the only outcome) needs `Correct` lifted to
+  -- the `OracleComp (ZKRO H)` carrier (issue #118) and is deferred to PR #138.
+  | .newUsr m => do
+      match ← liftRO H (kvac.mac crs sk pp m) with
+      | none   => return (← getEXTState H).usrs.length
+      | some σ =>
+        let i := (← getEXTState H).usrs.length
+        modifyEXTState H fun st => { st with usrs := st.usrs ++ [(m, σ)] }
+        return i
+  -- Figure 8  Oracle Issue(φ, µ): σ' ← KVAC.I.Srv(sk, φ, µ); if σ' = ⊥ return ⊥;
+  -- m := Ext.I(sk, φ, µ); if φ(m) = 0 abort; Qrs := Qrs ∪ {m}; return σ'. On ⊥
+  -- it answers `none`; otherwise it applies the pure extractor `Ext.I`, aborts
+  -- with `throw ()` if extraction fails or `φ(m) = 0` (the game counts it a win),
+  -- else records `m` in `qrs` and answers with σ'.
+  | .issue φ μ => do
+      match ← liftRO H (kvac.issueSrv crs sk φ μ) with
+      | none    => return none
+      | some σ' =>
+        match ext.extI sk φ μ with
+        | none   => throw ()
+        | some m =>
+          if kvac.holds crs φ m then
+            modifyEXTState H fun st => { st with qrs := st.qrs ++ [m] }
+            return some σ'
+          else throw ()
+  -- Figure 8  Oracle PresentUsr(i, φ): (m, σ) := Usrs[i];
+  -- ρ ← KVAC.P.Usr(pp, m, σ, φ); PQrs := PQrs ∪ {(φ, ρ)}; return ρ. An
+  -- out-of-range index answers `none`; otherwise it runs the honest presentation,
+  -- records `(φ, ρ)` in `pqrs`, and answers with ρ.
+  | .presentUsr i φ => do
+      match (← getEXTState H).usrs[i]? with
+      | none        => return none
+      | some (m, σ) =>
+        let ρ ← liftRO H (kvac.presentUsr crs pp m σ φ)
+        modifyEXTState H fun st => { st with pqrs := st.pqrs ++ [(φ, ρ)] }
+        return some ρ
+  -- Figure 8  Oracle Present(φ, ρ): return KVAC.P.Srv(sk, φ, ρ). Runs the server
+  -- presentation check and answers with the accept bit; records nothing.
+  | .present φ ρ => liftRO H (kvac.presentSrv crs sk φ ρ)
 
 end KVAC.Framework

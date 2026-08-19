@@ -159,7 +159,7 @@ single-user unforgeability is included as a sanity check.
 *TODO (Track F2).* Define the extractability game (Definition 4.5) and
 prove the reduction to CMZ14 unforgeability as a corollary.
 
-:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
+:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty, KVAC.Framework.EXTComp, KVAC.Framework.liftRO, KVAC.Framework.getEXTState, KVAC.Framework.modifyEXTState, KVAC.Framework.extOracleImpl") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
 *O24 Figure 8.* The extractability game for a keyed-verification
 credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.
