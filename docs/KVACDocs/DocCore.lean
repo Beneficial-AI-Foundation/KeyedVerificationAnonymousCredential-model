@@ -9,6 +9,7 @@ import KVAC.Core.Group
 import KVAC.Core.Hash
 import KVAC.Core.ZKProof
 import KVAC.Core.NIZKP.Security
+import KVAC.Core.NIZKP.Extraction
 import KVAC.Core.AlgebraicMAC
 import KVAC.Core.AlgebraicMAC.Security
 
@@ -88,7 +89,7 @@ instantiations. Domains stay abstract (structured per scheme); the
 injective-encoding and domain-separation obligations of the paper's
 `{0,1}*` domain are discharged at the instantiation layer.
 
-:::definition "random_oracle_hashes" (lean := "KVAC.Core.HashSpec, KVAC.Core.HashSpec.spec, KVAC.Core.HashSpec.roImpl, KVAC.Core.HashSpec.transcriptHashSpec, KVAC.Core.HashSpec.curveHashSpec") (parent := "core_hash") (tags := "paper, O24 §3")
+:::definition "random_oracle_hashes" (lean := "KVAC.Core.HashSpec, KVAC.Core.HashSpec.spec, KVAC.Core.HashSpec.Cache, KVAC.Core.HashSpec.roImpl, KVAC.Core.HashSpec.transcriptHashSpec, KVAC.Core.HashSpec.curveHashSpec") (parent := "core_hash") (tags := "paper, O24 §3")
 *O24 Section 3, Notation.* The two random-oracle hashes used throughout
 the paper: `H_p : {0,1}* → ℤ_p` for Fiat–Shamir transcript hashing and
 `H_G : {0,1}* → 𝔾` for hash-to-curve.
@@ -114,7 +115,7 @@ statement, witness, and proof families with monad-polymorphic `setup`,
 of the relation family, and the syntax-plus-completeness bundle.
 :::
 
-:::definition "zk_game" (lean := "KVAC.Core.ZKQuery, KVAC.Core.ZKProveSpec, KVAC.Core.ZKRO, KVAC.Core.ZKAdvSpec, KVAC.Core.ZKAdversary, KVAC.Core.ZKSimulator, KVAC.Core.zkROImpl, KVAC.Core.zkProveReal, KVAC.Core.zkProveSim, KVAC.Core.zkRun, KVAC.Core.zkGameReal, KVAC.Core.zkGameSim, KVAC.Core.ZKAdv") (parent := "core_zkproof") (tags := "milestone")
+:::definition "zk_game" (lean := "KVAC.Core.ZKQuery, KVAC.Core.ZKProveSpec, KVAC.Core.ZKRO, KVAC.Core.ZKAdvSpec, KVAC.Core.ZKAdversary, KVAC.Core.ZKSimulator, KVAC.Core.zkROImpl, KVAC.Core.zkProveReal, KVAC.Core.zkProveSim, KVAC.Core.zkRun, KVAC.Core.zkGameReal, KVAC.Core.zkGameSim, KVAC.Core.ZKAdv, KVAC.Core.runRO") (parent := "core_zkproof") (tags := "milestone")
 The two-world zero-knowledge game of O24 Section 3.3 on a
 {uses "nizkp_syntax"}[] carrier: a Proveᵦ oracle answering with the real
 prover or the simulator behind the `(x, w) ∈ R` guard, the lazy random
@@ -122,9 +123,18 @@ oracle of {uses "random_oracle_hashes"}[] with a reprogrammable cache,
 and the distinguishing advantage `ZKAdv`.
 :::
 
-*TODO (Track 0).* Knowledge soundness and simulation extractability
-(the remaining two of the four security predicates) are under review in
-PR #54.
+:::definition "extraction_game" (lean := "KVAC.Core.NIZKPSyntax.DecidableEqStmt, KVAC.Core.NIZKPSyntax.DecidableEqProof, KVAC.Core.witnessValid, KVAC.Core.KSNDAdversary, KVAC.Core.KSNDExtractor, KVAC.Core.ksndGame, KVAC.Core.KSNDAdv, KVAC.Core.SEQuery, KVAC.Core.SESpec, KVAC.Core.SEAdvSpec, KVAC.Core.SEAdversary, KVAC.Core.SimLog, KVAC.Core.SEState, KVAC.Core.seOracleImpl, KVAC.Core.SEExtractor, KVAC.Core.seGame, KVAC.Core.SEAdv") (parent := "core_zkproof") (tags := "milestone")
+The knowledge-soundness and strong simulation-extractability games of O24
+Section 3.3 on a {uses "nizkp_syntax"}[] carrier at `OracleComp (ZKRO H)`,
+building on the simulator and random oracle of {uses "zk_game"}[]:
+white-box extractors receiving the adversary value and the run's
+observables (the output pair, the random-oracle cache at the end of the
+adversary's run, and for SE the simulation log), the two experiments
+`ksndGame` and `seGame` with `verify` threaded through that cache, and the
+advantages `KSNDAdv` and `SEAdv`. The SE extractor returns a candidate
+statement (O24 Section 3.3, p. 25). The `verify` no-sampling constraint is
+deferred (issue #101).
+:::
 
 # Keyed setup
 

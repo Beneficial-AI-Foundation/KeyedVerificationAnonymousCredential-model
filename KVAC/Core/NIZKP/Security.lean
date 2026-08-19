@@ -13,7 +13,7 @@ import VCVio.OracleComp.SimSemantics.Append
 
 The two-world zero-knowledge game of Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §3.3, on an
-`NIZKPSyntax ProbComp`, following `AlgebraicMAC/Security.lean`.
+`NIZKPSyntax (OracleComp (ZKRO H))`, following `AlgebraicMAC/Security.lean`.
 
 O24 §3.3: a proof system is zero-knowledge if there is a simulator `Sim` such
 that for every adversary A,
@@ -31,28 +31,27 @@ decidable, supplied as a `DecidableRelation` argument to the games.
 
 ## The random oracle
 
-`NIZKPSyntax` stays clean: the scheme is `ProbComp`, with no hash types among its
-S/P/V fields, faithful to §3.3, where H appears only in the zero-knowledge
-definition. The random oracle enters through the `HashSpec` interface (imported
-from `Core/Hash.lean`): a signature `Dom →ₒ Rng` interpreted by VCV-io's
-`randomOracle` over a `QueryCache`. VCV-io calls this implementation the *lazy*
-random oracle
-(`uniformSampleImpl.withCaching`): it samples a fresh uniform answer on first
-query and caches it for consistency, in contrast to the pre-seeded
-`eagerRandomOracle`. The honest computation stays `ProbComp`; the oracle lives
-at the game boundary.
+The scheme is instantiated at the carrier `OracleComp (ZKRO H)`, so the honest
+`setup`, `prove`, and `verify` may all read the random oracle `H` (a Fiat–Shamir
+prover and verifier both query it). The random oracle enters through the
+`HashSpec` interface (imported from `Core/Hash.lean`): a signature `Dom →ₒ Rng`
+interpreted by VCV-io's `randomOracle` over a `QueryCache`. VCV-io calls this
+implementation the *lazy* random oracle (`uniformSampleImpl.withCaching`): it
+samples a fresh uniform answer on first query and caches it for consistency, in
+contrast to the pre-seeded `eagerRandomOracle`. The honest computation is
+interpreted through `zkROImpl` on the game's shared cache.
 
 The simulator runs in `StateT (Dom →ₒ Rng).QueryCache ProbComp`, giving it read
 and write access to the oracle cache — the reprogramming O24 grants it. The real
-prover is lifted from `ProbComp` and does not touch the cache.
+prover runs through `zkROImpl` on the same cache and so shares its answers.
 
 ## Layout
 
 - `HashSpec` — the random-oracle / hash interface, imported from `Core/Hash.lean`.
+- `ZKRO` / `zkROImpl` — unifSpec + the lazy random oracle `H.spec`.
 - `NIZKPSyntax.DecidableRelation` — decidability of the relation family, for
   the `(x, w) ∈ R` guard of Proveᵦ.
 - `ZKQuery` / `ZKProveSpec` — the `Prove` oracle arm.
-- `ZKRO` / `zkROImpl` — unifSpec + the lazy random oracle `H.spec`.
 - `ZKAdversary` — an `OracleComp`-valued program with `Prove` and RO access,
   returning a guess bit.
 - `zkProveReal` / `zkProveSim` — the two `QueryImpl`s answering `Prove` with the
@@ -79,51 +78,12 @@ abbrev NIZKPSyntax.DecidableRelation {M : Type → Type} [Monad M]
   ∀ {secParam : Nat} (crs : zkp.Crs secParam) (x : zkp.Stmt crs)
     (w : zkp.Witness crs), Decidable (zkp.relation crs x w)
 
-/-- The `Prove` oracle arm for a fixed crs: `prove x w` requests a proof for the
-witnessed instance `(x, w)`. -/
-inductive ZKQuery (zkp : NIZKPSyntax ProbComp) {secParam : Nat}
-    (crs : zkp.Crs secParam) : Type where
-  | prove : zkp.Stmt crs → zkp.Witness crs → ZKQuery zkp crs
-
-/-- The `OracleSpec` of the `Prove` arm: `prove x w` answers with a proof, or
-`none` (the paper's implicit ⊥) when `(x, w) ∉ R`.
-
-Formalizes the Proveᵦ oracle of O24 §3.3, the oracle A calls in `A^Proveᵦ(crs)`. -/
-def ZKProveSpec (zkp : NIZKPSyntax ProbComp) {secParam : Nat}
-    (crs : zkp.Crs secParam) : OracleSpec (ZKQuery zkp crs)
-  | .prove _ _ => Option (zkp.Proof crs)
-
 /-- The random-oracle side of the interface: uniform sampling plus a lazy random
 oracle with signature `H.Dom →ₒ H.Rng`.
 
 Formalizes the random oracle of O24 §3.3 ("both adversary and simulator have
 access to a random oracle"). -/
 abbrev ZKRO (H : HashSpec) : OracleSpec (ℕ ⊕ H.Dom) := unifSpec + H.spec
-
-/-- The full oracle interface a zero-knowledge adversary sees for a fixed crs:
-the `Prove` arm together with `ZKRO`.
-
-Formalizes the oracle access of `A^Proveᵦ` in O24 §3.3: the Proveᵦ oracle and the
-random oracle together. -/
-abbrev ZKAdvSpec (zkp : NIZKPSyntax ProbComp) {secParam : Nat}
-    (crs : zkp.Crs secParam) (H : HashSpec) :
-    OracleSpec (ZKQuery zkp crs ⊕ (ℕ ⊕ H.Dom)) :=
-  ZKProveSpec zkp crs + ZKRO H
-
-/-- A zero-knowledge adversary: given the crs, it queries `Prove` and the random
-oracle, and outputs a guess bit `b'`. -/
-structure ZKAdversary (zkp : NIZKPSyntax ProbComp) (H : HashSpec) where
-  run : {secParam : Nat} → (crs : zkp.Crs secParam) →
-    OracleComp (ZKAdvSpec zkp crs H) Bool
-
-/-- A simulator `Sim(crs, x)`: produces a proof from the statement alone, running
-in the random-oracle state monad so it may inspect and reprogram the cache.
-
-Formalizes Sim of O24 §3.3; the state monad realizes "the simulator can
-explicitly re-program the random oracle". -/
-abbrev ZKSimulator (zkp : NIZKPSyntax ProbComp) (H : HashSpec) : Type :=
-  {secParam : Nat} → (crs : zkp.Crs secParam) → zkp.Stmt crs →
-    StateT (H.spec.QueryCache) ProbComp (zkp.Proof crs)
 
 /-- Interpretation of `ZKRO`: uniform sampling by the lifted identity
 implementation, the random oracle by the lazy `randomOracle`.
@@ -135,18 +95,59 @@ def zkROImpl (H : HashSpec) :
   (QueryImpl.ofLift unifSpec ProbComp).liftTarget
     (StateT (H.spec.QueryCache) ProbComp) + H.roImpl
 
+/-- The `Prove` oracle arm for a fixed crs: `prove x w` requests a proof for the
+witnessed instance `(x, w)`. -/
+inductive ZKQuery (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    {secParam : Nat} (crs : zkp.Crs secParam) : Type where
+  | prove : zkp.Stmt crs → zkp.Witness crs → ZKQuery H zkp crs
+
+/-- The `OracleSpec` of the `Prove` arm: `prove x w` answers with a proof, or
+`none` (the paper's implicit ⊥) when `(x, w) ∉ R`.
+
+Formalizes the Proveᵦ oracle of O24 §3.3, the oracle A calls in `A^Proveᵦ(crs)`. -/
+def ZKProveSpec (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    {secParam : Nat} (crs : zkp.Crs secParam) : OracleSpec (ZKQuery H zkp crs)
+  | .prove _ _ => Option (zkp.Proof crs)
+
+/-- The full oracle interface a zero-knowledge adversary sees for a fixed crs:
+the `Prove` arm together with `ZKRO`.
+
+Formalizes the oracle access of `A^Proveᵦ` in O24 §3.3: the Proveᵦ oracle and the
+random oracle together. -/
+abbrev ZKAdvSpec (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    {secParam : Nat} (crs : zkp.Crs secParam) :
+    OracleSpec (ZKQuery H zkp crs ⊕ (ℕ ⊕ H.Dom)) :=
+  ZKProveSpec H zkp crs + ZKRO H
+
+/-- A zero-knowledge adversary: given the crs, it queries `Prove` and the random
+oracle, and outputs a guess bit `b'`. -/
+structure ZKAdversary (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) where
+  run : {secParam : Nat} → (crs : zkp.Crs secParam) →
+    OracleComp (ZKAdvSpec H zkp crs) Bool
+
+/-- A simulator `Sim(crs, x)`: produces a proof from the statement alone, running
+in the random-oracle state monad so it may inspect and reprogram the cache.
+
+Formalizes Sim of O24 §3.3; the state monad realizes "the simulator can
+explicitly re-program the random oracle". -/
+abbrev ZKSimulator (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
+  {secParam : Nat} → (crs : zkp.Crs secParam) → zkp.Stmt crs →
+    StateT (H.spec.QueryCache) ProbComp (zkp.Proof crs)
+
 /-- World 0: when `(x, w) ∈ R`, answer `Prove` with the real prover
-`ZKP.P(crs, x, w)`, lifted from `ProbComp` into the random-oracle state monad;
-otherwise answer `none`.
+`ZKP.P(crs, x, w)`, interpreted through `zkROImpl` on the shared random-oracle
+cache; otherwise answer `none`.
 
 Formalizes Prove₀ of O24 §3.3: Proveᵦ(x, w) checks (x, w) ∈ R and outputs
 ZKP.P(crs, x, w) when b = 0. -/
-def zkProveReal (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
+def zkProveReal (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (decR : zkp.DecidableRelation) {secParam : Nat} (crs : zkp.Crs secParam) :
-    QueryImpl (ZKProveSpec zkp crs) (StateT (H.spec.QueryCache) ProbComp)
+    QueryImpl (ZKProveSpec H zkp crs) (StateT (H.spec.QueryCache) ProbComp)
   | .prove x w =>
     letI := decR crs x w
-    if zkp.relation crs x w then some <$> liftM (zkp.prove crs x w) else pure none
+    if zkp.relation crs x w then
+      some <$> simulateQ (zkROImpl H) (zkp.prove crs x w)
+    else pure none
 
 /-- World 1: when `(x, w) ∈ R`, answer `Prove` with the simulator `Sim(crs, x)`,
 ignoring the witness; otherwise answer `none`. The guard reads the witness, so
@@ -154,40 +155,41 @@ the two worlds reject exactly the same queries.
 
 Formalizes Prove₁ of O24 §3.3: Proveᵦ(x, w) checks (x, w) ∈ R and outputs
 Sim(crs, x) when b = 1. -/
-def zkProveSim (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
-    (decR : zkp.DecidableRelation) (sim : ZKSimulator zkp H) {secParam : Nat}
+def zkProveSim (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    (decR : zkp.DecidableRelation) (sim : ZKSimulator H zkp) {secParam : Nat}
     (crs : zkp.Crs secParam) :
-    QueryImpl (ZKProveSpec zkp crs) (StateT (H.spec.QueryCache) ProbComp)
+    QueryImpl (ZKProveSpec H zkp crs) (StateT (H.spec.QueryCache) ProbComp)
   | .prove x w =>
     letI := decR crs x w
     if zkp.relation crs x w then some <$> sim crs x else pure none
 
-/-- Run adversary `A` against a given `Prove` implementation with a fresh (empty)
-random-oracle cache, returning its guess bit as a `ProbComp Bool`.
+/-- Run adversary `A` against a given `Prove` implementation. The crs is drawn by
+running `setup` through `zkROImpl` on a fresh cache, and the adversary continues
+from that cache, so any oracle queries `setup` made persist.
 
 Formalizes the experiment body of O24 §3.3: crs ← ZKP.S(1^λ); b' ← A^Proveᵦ(crs). -/
-def zkRun (zkp : NIZKPSyntax ProbComp) (H : HashSpec) (A : ZKAdversary zkp H)
+def zkRun (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) (A : ZKAdversary H zkp)
     (proveImpl : {secParam : Nat} → (crs : zkp.Crs secParam) →
-      QueryImpl (ZKProveSpec zkp crs) (StateT (H.spec.QueryCache) ProbComp))
+      QueryImpl (ZKProveSpec H zkp crs) (StateT (H.spec.QueryCache) ProbComp))
     (secParam : Nat) : ProbComp Bool := do
-  let crs ← zkp.setup secParam
-  (simulateQ (proveImpl crs + zkROImpl H) (A.run crs)).run' ∅
+  let (crs, cache) ← (simulateQ (zkROImpl H) (zkp.setup secParam)).run ∅
+  (simulateQ (proveImpl crs + zkROImpl H) (A.run crs)).run' cache
 
 /-- The real-world experiment (b = 0).
 
 Formalizes the b = 0 world of O24 §3.3: crs ← S; b' ← A^Prove₀(crs). -/
-def zkGameReal (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
-    (decR : zkp.DecidableRelation) (A : ZKAdversary zkp H)
+def zkGameReal (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    (decR : zkp.DecidableRelation) (A : ZKAdversary H zkp)
     (secParam : Nat) : ProbComp Bool :=
-  zkRun zkp H A (fun crs => zkProveReal zkp H decR crs) secParam
+  zkRun H zkp A (fun crs => zkProveReal H zkp decR crs) secParam
 
 /-- The simulated-world experiment (b = 1).
 
 Formalizes the b = 1 world of O24 §3.3: crs ← S; b' ← A^Prove₁(crs). -/
-def zkGameSim (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
-    (decR : zkp.DecidableRelation) (A : ZKAdversary zkp H)
-    (sim : ZKSimulator zkp H) (secParam : Nat) : ProbComp Bool :=
-  zkRun zkp H A (fun crs => zkProveSim zkp H decR sim crs) secParam
+def zkGameSim (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    (decR : zkp.DecidableRelation) (A : ZKAdversary H zkp)
+    (sim : ZKSimulator H zkp) (secParam : Nat) : ProbComp Bool :=
+  zkRun H zkp A (fun crs => zkProveSim H zkp decR sim crs) secParam
 
 /-- The zero-knowledge advantage of `A` with respect to simulator `sim`: the
 distinguishing advantage between the real and simulated worlds. Zero-knowledge
@@ -199,10 +201,20 @@ probabilities |Pr[b'=1 | b=0] − Pr[b'=1 | b=1]|.
 
 An `abbrev`, like `UF_CMVAAdv` and `qdlAdv`, so it unfolds in downstream
 reduction proofs. -/
-noncomputable abbrev ZKAdv (zkp : NIZKPSyntax ProbComp) (H : HashSpec)
-    (decR : zkp.DecidableRelation) (A : ZKAdversary zkp H)
-    (sim : ZKSimulator zkp H) (secParam : Nat) : ℝ :=
-  ProbComp.boolDistAdvantage (zkGameReal zkp H decR A secParam)
-    (zkGameSim zkp H decR A sim secParam)
+noncomputable abbrev ZKAdv (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
+    (decR : zkp.DecidableRelation) (A : ZKAdversary H zkp)
+    (sim : ZKSimulator H zkp) (secParam : Nat) : ℝ :=
+  ProbComp.boolDistAdvantage (zkGameReal H zkp decR A secParam)
+    (zkGameSim H zkp decR A sim secParam)
+
+/-- Run an oracle computation against the ZK random oracle, from the table
+`cache`, and return its result together with the updated table. This is the one
+place the `OracleComp (ZKRO H)` carrier is interpreted down to `ProbComp`, via
+`zkROImpl`; `simulateQ` is a monad morphism, so the cache is threaded by the
+`StateT` instance. The carrier reconciliation this belongs to is tracked in
+issue #118. -/
+def runRO {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
+    (c : OracleComp (ZKRO H) α) : ProbComp (α × H.spec.QueryCache) :=
+  (simulateQ (zkROImpl H) c).run cache
 
 end KVAC.Core

@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>μCMZ Security — Proof Dependencies</title>
+<style>
+  :root {
+    --bg: #eaeef4;
+    --surface: #ffffff;
+    --surface-2: #f3f6fa;
+    --ink: #16202e;
+    --muted: #55647a;
+    --line: #d2dbe8;
+    --accent: #1f5fa8;
+    --accent-2: #16436f;
+    --accent-soft: #e3edf9;
+    --done: #17794c;
+    --done-soft: #dcefe4;
+    --flight: #a4670a;
+    --flight-soft: #f8ead0;
+    --todo: #6a7688;
+    --todo-soft: #e6eaf1;
+    --sheet: #f5f8fc;
+    --sheet-line: #cdd8e8;
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0c131d; --surface: #121b28; --surface-2: #0f1723; --ink: #e7eef7;
+      --muted: #97a5ba; --line: #24313f; --accent: #6ba8e6; --accent-2: #9cc4ee;
+      --accent-soft: #16273b; --done: #4dc088; --done-soft: #112a1e; --flight: #e2a552;
+      --flight-soft: #2c2413; --todo: #8593a8; --todo-soft: #1a232f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c131d; --surface: #121b28; --surface-2: #0f1723; --ink: #e7eef7;
+    --muted: #97a5ba; --line: #24313f; --accent: #6ba8e6; --accent-2: #9cc4ee;
+    --accent-soft: #16273b; --done: #4dc088; --done-soft: #112a1e; --flight: #e2a552;
+    --flight-soft: #2c2413; --todo: #8593a8; --todo-soft: #1a232f;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: clamp(1.4rem, 4vw, 3.4rem) clamp(1rem, 4vw, 2rem) 5rem; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 1.6rem; margin-bottom: 2rem; }
+  .eyebrow { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 .7rem; }
+  h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.1; margin: 0 0 .7rem; letter-spacing: -.015em; text-wrap: balance; font-weight: 680; }
+  .lede { color: var(--muted); font-size: 1.05rem; max-width: 64ch; margin: 0; }
+  .lede code { font-size: .86em; }
+  .dateline { font-family: var(--mono); font-size: .74rem; letter-spacing: .03em; color: var(--muted); margin: 1.1rem 0 0; display: flex; align-items: center; gap: .6em; flex-wrap: wrap; }
+  .dateline .dbadge { background: var(--accent-soft); color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); border-radius: 999px; padding: .22em .7em; font-weight: 600; }
+
+  h2 { font-size: 1.28rem; letter-spacing: -.01em; margin: 3rem 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--line); text-wrap: balance; }
+  h2 .n { font-family: var(--mono); color: var(--accent); font-size: .9rem; margin-right: .6em; }
+  p { max-width: 66ch; }
+  code, .mono { font-family: var(--mono); font-size: .88em; }
+  code { background: var(--surface-2); border: 1px solid var(--line); padding: .08em .38em; border-radius: 5px; white-space: nowrap; }
+  a { color: var(--accent); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .5rem .9rem; margin: 1.2rem 0 .2rem; }
+  .pill { display: inline-flex; align-items: center; gap: .45em; font-family: var(--mono); font-size: .74rem; letter-spacing: .02em; padding: .28em .7em; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+  .pill .dot { width: .6em; height: .6em; border-radius: 50%; }
+  .p-done { background: var(--done-soft); color: var(--done); border-color: color-mix(in srgb, var(--done) 30%, transparent); }
+  .p-done .dot { background: var(--done); }
+  .p-flight { background: var(--flight-soft); color: var(--flight); border-color: color-mix(in srgb, var(--flight) 30%, transparent); }
+  .p-flight .dot { background: var(--flight); }
+  .p-todo { background: var(--todo-soft); color: var(--todo); border-color: color-mix(in srgb, var(--todo) 30%, transparent); }
+  .p-todo .dot { background: var(--todo); }
+
+  /* main theorems table */
+  .table-scroll { overflow-x: auto; margin: 1.1rem 0; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .92rem; }
+  th, td { text-align: left; padding: .8rem .95rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-family: var(--mono); font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  a.thmlink { font-family: var(--mono); font-weight: 650; font-size: 1.02rem; color: var(--accent); text-decoration: none; border-bottom: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent); }
+  a.thmlink:hover { border-bottom-style: solid; }
+  td .sub { color: var(--muted); font-size: .8rem; display: block; margin-top: .15rem; }
+  .bound { font-family: "STIX Two Math", "Cambria Math", Cambria, Georgia, "Times New Roman", serif; font-size: 1rem; color: var(--ink); background: var(--accent-soft); padding: .12em .6em; border-radius: 5px; display: inline-block; max-width: 100%; overflow-x: auto; white-space: nowrap; vertical-align: middle; letter-spacing: .01em; }
+  .bound i { font-style: italic; }
+  .bound sup, .bound sub { font-size: .66em; font-style: normal; letter-spacing: 0; }
+  .bound sub sub, .bound sup sub { font-size: .82em; }
+  .tag { font-family: var(--mono); font-size: .68rem; padding: .16em .55em; border-radius: 999px; white-space: nowrap; }
+  .t-done { background: var(--done-soft); color: var(--done); }
+  .t-flight { background: var(--flight-soft); color: var(--flight); }
+  .t-todo { background: var(--todo-soft); color: var(--todo); }
+
+  /* per-theorem block */
+  .thm-block { scroll-margin-top: 1.5rem; margin: 1.6rem 0; }
+  .thm-head { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; margin-bottom: .1rem; }
+  .thm-head h3 { margin: 0; font-size: 1.12rem; letter-spacing: -.01em; }
+  .thm-head .num { font-family: var(--mono); color: var(--accent); }
+  .thm-sub { color: var(--muted); font-size: .86rem; margin: .1rem 0 .7rem; }
+  .thm-sub .bound { margin-left: .3rem; }
+
+  .sheet {
+    background: var(--sheet);
+    background-image: linear-gradient(var(--sheet-line) 1px, transparent 1px), linear-gradient(90deg, var(--sheet-line) 1px, transparent 1px);
+    background-size: 26px 26px;
+    border: 1px solid var(--line); border-radius: 12px; padding: 1.2rem 1rem; margin: .2rem 0 .8rem; overflow-x: auto;
+  }
+  .sheet pre.mermaid { margin: 0; background: transparent; display: flex; justify-content: center; min-width: 480px; }
+
+  .tech { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: .85rem 1.1rem; }
+  .tech .k { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .tech p { margin: .35rem 0 0; color: var(--muted); font-size: .92rem; max-width: none; }
+  .tech ol { margin: .45rem 0 0; padding-left: 1.2rem; color: var(--muted); font-size: .9rem; }
+  .tech ol li { margin: .25rem 0; }
+
+  ol.phases { list-style: none; counter-reset: ph; padding: 0; margin: 1.1rem 0 0; display: flex; flex-direction: column; gap: .7rem; }
+  ol.phases > li { counter-increment: ph; position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: .85rem 1.05rem .85rem 3.3rem; }
+  ol.phases > li::before { content: counter(ph); position: absolute; left: .95rem; top: .9rem; width: 1.6rem; height: 1.6rem; border-radius: 7px; background: var(--accent); color: #fff; font-family: var(--mono); font-size: .82rem; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  ol.phases h4 { margin: 0 0 .25rem; font-size: 1rem; display: flex; align-items: baseline; gap: .55rem; flex-wrap: wrap; }
+  ol.phases p { margin: 0; color: var(--muted); font-size: .9rem; max-width: none; }
+  .h2sub { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-left: .3rem; }
+
+  .divider { height: 1px; background: var(--line); border: 0; margin: 2rem 0; }
+  .note { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 10px; padding: .9rem 1.1rem; margin: 1.4rem 0; font-size: .92rem; }
+  .note strong { color: var(--accent-2); }
+  .note p { max-width: none; margin: 0; }
+  footer { margin-top: 3.2rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; font-family: var(--mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">μCMZ · Lean 4 verification · O24 §5</p>
+    <h1>μCMZ Security — Proof Dependencies</h1>
+    <p class="lede">Where the machine-checked proof stands today: the cryptographic foundations are on <code>main</code>, μCMZ unforgeability (Theorem&nbsp;5.1) is in review, and the credential anonymity and extractability theorems are not yet stated — each waiting on the μCMZ instance.</p>
+    <p class="dateline"><span class="dbadge">17 August 2026</span> This snapshot reflects the state of the proof on this date.</p>
+  </header>
+
+  <div class="legend">
+    <span class="pill p-done"><span class="dot"></span>proved · on main</span>
+    <span class="pill p-flight"><span class="dot"></span>in flight · open PR</span>
+    <span class="pill p-todo"><span class="dot"></span>not written</span>
+  </div>
+
+  <h2><span class="n">01</span>The main theorems</h2>
+  <p>The four named results of O24 §5. Theorem&nbsp;5.2 is the umbrella — μCMZ is a secure keyed-verification credential — and it splits into the anonymity (5.8) and extractability (5.10) bounds, both resting on unforgeability (5.1). Follow a theorem's number for its dependency map.</p>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Theorem</th><th>Claim &amp; bound</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a class="thmlink" href="#thm-51">5.1</a><span class="sub">§5.3 · UF-CMVA</span></td>
+          <td>μCMZ is an algebraic MAC — unforgeable in the AGM. Supplies the <code>ufcmva</code> leaf of 5.10.</td>
+          <td><span class="tag t-flight">#88 merged · #129 open</span></td>
+        </tr>
+        <tr>
+          <td><a class="thmlink" href="#thm-52">5.2</a><span class="sub">§5 · secure KVAC</span></td>
+          <td>μCMZ is a secure keyed-verification credential. Bundles the anonymity and extractability bounds below.</td>
+          <td><span class="tag t-todo">not written</span></td>
+        </tr>
+        <tr>
+          <td><a class="thmlink" href="#thm-58">5.8</a><span class="sub">§5.4 · anonymity</span></td>
+          <td><span class="bound"><i>Adv</i><sup>anon</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ)</span></td>
+          <td><span class="tag t-todo">not written</span></td>
+        </tr>
+        <tr>
+          <td><a class="thmlink" href="#thm-510">5.10</a><span class="sub">§5.5 · extractability</span></td>
+          <td><span class="bound"><i>Adv</i><sup>ext</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>ufcmva</sup><sub>μCMZ</sub>(λ,&thinsp;n) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ)</span></td>
+          <td><span class="tag t-todo">not written</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2><span class="n">02</span>Build phases<span class="h2sub">all four theorems</span></h2>
+  <p>The order in which the four theorems become provable. Foundations and Theorem 5.1 are Semar's algebraic-MAC track; the framework games, the μCMZ instance, and the credential theorems (5.8, 5.10, 5.2) are the credential track. These are engineering steps — the maps below show which node each phase produces.</p>
+  <ol class="phases">
+    <li>
+      <h4>Foundations <span class="pill p-done"><span class="dot"></span>on main</span></h4>
+      <p>NIZKP §3.3 (zero-knowledge #47, knowledge-soundness / SE #54), the algebraic-MAC and μCMZ MAC with the AGM UF-CMVA(+Help) game, and the Schnorr relations — all merged.</p>
+    </li>
+    <li>
+      <h4>Theorem 5.1 — UF-CMVA <span class="pill p-flight"><span class="dot"></span>in flight</span></h4>
+      <p>The AGM reduction — Lemma 5.4 (n=1) lifted by Lemma 5.5 (n=poly). The reduction core (#88) is now merged on main. The coupling + Schwartz–Zippel PR (#129) is the only one still open; sign-coupling and the remaining auxiliary lemmas are tracked as issues #106–#116 and are not yet merged. Then, for 5.10 to cite, the <code>sorry</code>-able AGM bound <code>agm_ufcmva_le</code> — plus a decision on the AGM ↔ standard UF-CMVA gap (below). Semar's track.</p>
+    </li>
+    <li>
+      <h4>Framework games — Def 4.5 &amp; Def 4.4 <span class="pill p-flight"><span class="dot"></span>partial</span></h4>
+      <p>The extraction game (Def 4.5, the #119→#126 stack, merging) for 5.10, and the anonymity game (Def 4.4, <code>Anonymity.lean</code>, not written) for 5.8 — abstract games over any <code>KVACSyntax</code>.</p>
+    </li>
+    <li>
+      <h4>μCMZ as a KVAC instance — <code>Credential.lean</code> <span class="pill p-todo"><span class="dot"></span>not written</span></h4>
+      <p>Instantiate <code>KVACSyntax (OracleComp (ZKRO H))</code> for μCMZ — <code>setup</code>/<code>keygen</code> from the base MAC, <code>issue*</code>/<code>present*</code> from the Schnorr sub-proofs through an abstract ZKP. The single shared unblocker: without it, neither 5.8 nor 5.10 can be stated.</p>
+    </li>
+    <li>
+      <h4>Credential theorems — 5.10, 5.8, then 5.2 <span class="pill p-todo"><span class="dot"></span>not written</span></h4>
+      <p>State each over its hypotheses and prove its reduction — three game hops for extractability (5.10), simulation for anonymity (5.8). Theorem 5.2 is then their conjunction.</p>
+    </li>
+  </ol>
+
+  <div class="note">
+    <p><strong>Critical path.</strong> The single unblocker is the μCMZ KVAC instance (<code>Credential.lean</code>, step&nbsp;4 above) — until it exists, neither 5.8 nor 5.10 can even be <em>stated</em>. Once it lands, both credential reductions build on pieces already merged: the μCMZ MAC and the UF-CMVA games are on <code>main</code>. Extractability (5.10) closes its <code>ufcmva</code> leaf through Theorem 5.1, which needs two still-missing pieces on Semar's side — the <strong>AGM → UF-CMVA bridge</strong> (standard vs AGM-instrumented game) and the <code>sorry</code>-able AGM bound <code>agm_ufcmva_le</code>, both in no PR — but <em>not</em> the full AGM reduction proof (#129 + issues #106–#116; core #88 already merged), which stays <code>sorry</code>'d behind the bound. Anonymity (5.8) additionally needs the Def&nbsp;4.4 anonymity game, still unwritten. Two blockers sit underneath, and they are model mismatches, not mere postponements: the <code>ProbComp</code> vs <code>OracleComp (ZKRO H)</code> carrier bridge (issue&nbsp;#118) — the concrete instance may not even inhabit the framework type 5.2 uses — and the abstract <code>isPPT</code> predicate, which carries no closure and could be instantiated vacuously. Until both are settled, the honest deliverable is a <em>pointwise, finite-parameter</em> advantage inequality, not asymptotic "μCMZ is secure".</p>
+  </div>
+
+  <h2><span class="n">03</span>Dependency maps</h2>
+
+  <div class="thm-block" id="thm-51">
+    <div class="thm-head"><h3><span class="num">Theorem 5.1</span> — μCMZ UF-CMVA</h3><span class="tag t-flight">in flight</span></div>
+    <p class="thm-sub">μCMZ is an algebraic MAC (unforgeable) in the AGM. <span class="bound"><i>Adv</i><sup>ufcmva</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>3-dl</sup><sub>GrGen</sub>(λ) + <i>Adv</i><sup>dl</sup><sub>GrGen</sub>(λ) + 3/<i>p</i></span></p>
+    <div class="sheet">
+      <pre class="mermaid">
+graph TD
+  T51["Theorem 5.1 · UF-CMVA<br/>n=poly · standard notion"]:::todo
+  BR["AGM ↔ UF-CMVA gap<br/>modeling decision"]:::todo
+  AGMB["AGM_UF-CMVA bound · agm_ufcmva_le<br/>to state (sorry)"]:::todo
+  L55["Lemma 5.5<br/>n=poly → n=1"]:::todo
+  L54["Lemma 5.4<br/>n=1 · AGM"]:::flight
+  C129["Coupling + Schwartz–Zippel<br/>#129 · only open PR"]:::flight
+  RC["Reduction core<br/>#88 · on main"]:::done
+  AUX["Sign-coupling + aux lemmas<br/>issues #106–#116"]:::todo
+  MACg["MAC + AGM game<br/>§3.2 · on main"]:::done
+  T51 --> BR
+  T51 --> MACg
+  BR --> AGMB
+  AGMB --> L55
+  L55 --> L54
+  L54 --> C129
+  L54 --> RC
+  L54 --> AUX
+  classDef done fill:#dcefe4,stroke:#17794c,color:#0f3d27;
+  classDef flight fill:#f8ead0,stroke:#a4670a,color:#6a4205;
+  classDef todo fill:#eef1f6,stroke:#9aa7b8,color:#3a4757,stroke-dasharray:4 3;
+      </pre>
+    </div>
+    <div class="tech">
+      <span class="k">technique · algebraic group model</span>
+      <p>Represent the adversary's group elements as generator combinations and reduce a forgery to a non-zero degree-≤3 polynomial identity in the exponent, bounded by Schwartz–Zippel (the 3/p root bound) over the 3-DL and DL assumptions. The n=1 case is Lemma 5.4 (the reduction core #88 is merged; coupling + Schwartz–Zippel is the open PR #129; sign-coupling and the auxiliary lemmas are issues #106–#116, not yet merged); Lemma 5.5 lifts to n=poly. This bounds the <em>AGM-instrumented</em> game <code>AGM_UF_CMVA</code>, where the adversary must supply algebraic representations. Connecting it to the standard <code>UF_CMVA</code> is a modeling decision, not a free lemma: an unrestricted adversary need not supply representations, so 5.10 must either be stated over generic <code>UF_CMVA</code> or restricted to algebraic credential adversaries (Semar's flag; sharpened by the cross-model review).</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="thm-block" id="thm-52">
+    <div class="thm-head"><h3><span class="num">Theorem 5.2</span> — μCMZ secure KVAC</h3><span class="tag t-todo">not written</span></div>
+    <p class="thm-sub">The umbrella — the conjunction of the anonymity (5.8) and extractability (5.10) bounds below.</p>
+    <div class="sheet">
+      <pre class="mermaid">
+graph TD
+  T52["Theorem 5.2<br/>μCMZ secure KVAC"]:::todo
+  T58["Theorem 5.8<br/>Anonymity"]:::todo
+  T510["Theorem 5.10<br/>Extractability"]:::todo
+  T52 --> T58
+  T52 --> T510
+  classDef todo fill:#eef1f6,stroke:#9aa7b8,color:#3a4757,stroke-dasharray:4 3;
+      </pre>
+    </div>
+    <div class="tech">
+      <span class="k">technique · conjunction</span>
+      <p>No new reduction — 5.2 is the anonymity bound (5.8) and the extractability bound (5.10) together. In particular, μCMZ[ZKP = Σ] has statistical anonymity when Σ is statistically knowledge-sound.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="thm-block" id="thm-58">
+    <div class="thm-head"><h3><span class="num">Theorem 5.8</span> — anonymity</h3><span class="tag t-todo">not written</span></div>
+    <p class="thm-sub"><span class="bound"><i>Adv</i><sup>anon</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ)</span></p>
+    <div class="sheet">
+      <pre class="mermaid">
+graph TD
+  T58["Theorem 5.8<br/>Anonymity"]:::todo
+  ZK["ZKP Zero-knowledge<br/>§3.3 · #47"]:::done
+  KS["ZKP KS extractor<br/>§3.3 · #54"]:::done
+  AG["Anonymity game<br/>Def 4.4"]:::todo
+  P2["μCMZ KVAC instance"]:::todo
+  T58 --> ZK
+  T58 --> KS
+  T58 --> AG
+  T58 --> P2
+  classDef done fill:#dcefe4,stroke:#17794c,color:#0f3d27;
+  classDef todo fill:#eef1f6,stroke:#9aa7b8,color:#3a4757,stroke-dasharray:4 3;
+      </pre>
+    </div>
+    <div class="tech">
+      <span class="k">technique · simulation</span>
+      <p>Simulate the issuance and presentation proofs (zero-knowledge), so the adversary's view becomes independent of the honest secret attributes; the distance is the sum of the three <code>zk</code> terms. The simulator recovers the secret <code>x0</code> by running the issuance extractor on <code>πis</code>, so 5.8 also consumes the KS extractor (#54) — even though the bound stays zero-knowledge only. Blocked on the anonymity game (Def 4.4, unwritten) and the μCMZ instance.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="thm-block" id="thm-510">
+    <div class="thm-head"><h3><span class="num">Theorem 5.10</span> — extractability</h3><span class="tag t-todo">not written</span></div>
+    <p class="thm-sub"><span class="bound"><i>Adv</i><sup>ext</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>ufcmva</sup><sub>μCMZ</sub>(λ,&thinsp;n) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ)</span></p>
+    <div class="sheet">
+      <pre class="mermaid">
+graph TD
+  T510["Theorem 5.10<br/>Extractability"]:::todo
+  UF["μCMZ + UF-CMVA game<br/>§3.2 · on main"]:::done
+  BR["AGM ↔ UF-CMVA gap<br/>modeling decision"]:::todo
+  UFB["agm_ufcmva_le (AGM bound)<br/>to state (sorry)"]:::todo
+  KS["ZKP KS / SE<br/>§3.3 · #54"]:::done
+  ZK["ZKP Zero-knowledge<br/>§3.3 · #47"]:::done
+  EG["Extraction game<br/>Def 4.5 · Fig 8"]:::flight
+  P2["μCMZ KVAC instance"]:::todo
+  T510 --> UF
+  UF --> BR
+  BR --> UFB
+  T510 --> KS
+  T510 --> ZK
+  T510 --> EG
+  T510 --> P2
+  classDef done fill:#dcefe4,stroke:#17794c,color:#0f3d27;
+  classDef flight fill:#f8ead0,stroke:#a4670a,color:#6a4205;
+  classDef todo fill:#eef1f6,stroke:#9aa7b8,color:#3a4757,stroke-dasharray:4 3;
+      </pre>
+    </div>
+    <div class="tech">
+      <span class="k">technique · three game hops</span>
+      <p>The extraction game's winning cases split across the <em>four</em> bound terms — one hybrid step (<code>zk_is</code>) plus three terminal events — so the mapping is not a clean one-to-one. The partition must be proved to cover every win (aborts, replays, malformed proofs, extractor failures) with a union bound:</p>
+      <ol>
+        <li>Replace real proofs with simulated ones — drift bounded by <code>zk_is</code>.</li>
+        <li>Extract witnesses via the ZKP extractors — the <code>Issue</code> abort and a non-opening presentation bounded by <code>ksnd_iu</code> / <code>ksnd_p</code>. Because extraction happens after simulated proofs are exposed, this likely needs <em>simulation-extractability</em> (<code>seGame</code>, #54), not plain knowledge-soundness.</li>
+        <li>A verifying presentation whose extracted attributes were never issued is a forgery — bounded by <code>ufcmva</code> (Theorem 5.1).</li>
+      </ol>
+      <p>The reduction machinery is buildable on <code>main</code> today — the μCMZ MAC instance and the UF-CMVA games are merged. Closing the <code>ufcmva</code> leaf then needs two things on the 5.1 side: a <strong>decision on the AGM ↔ standard UF-CMVA gap</strong> (restrict 5.10 to algebraic adversaries, or state it over generic <code>UF_CMVA</code> — a soundness question, not a free lemma), and the <code>sorry</code>-able AGM bound <code>agm_ufcmva_le</code>. Neither waits on the full AGM reduction proof (#129 + issues #106–#116; core #88 already merged), which stays <code>sorry</code>'d behind the bound.</p>
+    </div>
+  </div>
+
+  <footer>μCMZ security proof dependencies · Orrù 2024/1552 §5 · Beneficial AI Foundation</footer>
+</div>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, securityLevel: 'loose', theme: 'neutral' });
+</script>
+</body>
+</html>
