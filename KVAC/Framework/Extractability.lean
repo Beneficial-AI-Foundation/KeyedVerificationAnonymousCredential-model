@@ -328,4 +328,21 @@ def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
       (SecurityGame.mk (fun A secParam => EXTAdv H kvac ext A secParam (n secParam))
         : SecurityGame (EXTAdversary H kvac)).secureAgainst isPPT
 
+/-- Obligation generator for O24 Theorem 5.10 (extractability with the `n ≤ poly(λ)`
+side condition). Stated over an abstract scheme `kvac` and adversary-efficiency
+predicate `isPPT`; the premises the paper uses — scheme correctness and a
+knowledge-sound ZKP supplying straight-line extractors (O24 §5.5) — are not yet
+formalized, so they are elided here and this stands as a deferred obligation.
+
+The `sorry` is the point: it turns `ExtractablePoly` from a latent definition into a
+real open goal, so `PolyBounded n` and the negligibility of `EXTAdv` become subgoals
+that the μCMZ extractability proof must discharge. Full proof (and the missing
+premises) belong to Track CMZ-E (issue #11), where the concrete μCMZ `KVACSyntax`
+instantiates `kvac`. -/
+theorem extractablePoly_obligation (H : HashSpec)
+    (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (isPPT : EXTAdversary H kvac → Prop) :
+    ExtractablePoly H kvac isPPT := by
+  sorry
+
 end KVAC.Framework

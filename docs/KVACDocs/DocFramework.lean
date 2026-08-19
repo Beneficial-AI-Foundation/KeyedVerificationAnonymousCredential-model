@@ -165,7 +165,7 @@ credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.
 :::
 
-:::definition "kvac_extractability" (lean := "KVAC.Framework.Extractable, KVAC.Framework.PolyBounded, KVAC.Framework.ExtractablePoly") (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
+:::definition "kvac_extractability" (lean := "KVAC.Framework.Extractable, KVAC.Framework.PolyBounded, KVAC.Framework.ExtractablePoly, KVAC.Framework.extractablePoly_obligation") (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
 *O24 Definition 4.5.* Extractability for a KVAC scheme {uses "kvac_syntax"}[]:
 an extractor recovers the certified attributes from any accepting
 presentation, in the game of {uses "extractability_game"}[].
