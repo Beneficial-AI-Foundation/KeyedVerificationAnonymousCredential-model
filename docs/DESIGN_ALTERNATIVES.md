@@ -271,18 +271,37 @@ correctness grounds rather than fidelity.
 **Rejected alternative.** O24 Eq. 16 states the bound as `1/p`.
 
 **Fidelity argument.** The paper invokes Schwartz–Zippel to bound `ψ ≡ 0`, and
-for a degree-`d` polynomial that bound is `d/p`, not `1/p`. Writing
-`ψ(χ) = ϕ(a + χ·b)`, the coefficient of `χ^d` in `ψ` (with `d = totalDegree ϕ
-≤ 3`) is exactly `ϕ_d(b)`, the top-degree homogeneous part of `ϕ` evaluated at
-the mask vector `b`: only the degree-`d` monomials of `ϕ` can reach `χ^d`, and
-each contributes the product of its `b`-masks. Since `ϕ ≠ 0` we have `ϕ_d ≠ 0`,
-so `ψ ≡ 0 ⟹ ϕ_d(b) = 0`, and Schwartz–Zippel on the nonzero degree-`d` form
-`ϕ_d` in the uniform independent masks gives `Pr_b[ϕ_d(b) = 0] ≤ d/p ≤ 3/p`.
-The `1/p` would be correct only for a degree-1 form; the degree-3 verification
-polynomial needs `3/p`. The deviation loosens the concrete additive term
-(`1/p → 3/p`) but leaves the asymptotic bound, and hence the security
-statement, unchanged. The full derivation is documented at the head of the
-Eq. 16 section in `AGMPolynomial.lean`.
+for a degree-`d` polynomial that bound is `d/p`, not `1/p`. The `1/p` would be
+correct only for a degree-1 form; the degree-3 verification polynomial needs
+`3/p`. The deviation loosens the concrete additive term (`1/p → 3/p`) but leaves
+the asymptotic bound, and hence the security statement, unchanged.
+
+*The route taken.* `ψ ≡ 0` implies `ψ(x + 1) = 0` in particular, and by
+`AGMPoly.eval_affineSubst` that is `ϕ` evaluated at the real-log point shifted
+by the `b`-side masks, `v ↦ (a v + x·b v) + b v` — the `C★` step
+(`eval_shift_eq_zero_of_affineSubst_eq_zero`,
+`AGMReduction/Coupling.lean`, branch `microCMZ-agmreduction-coupling`). For a
+fixed `x` that shifted point ranges uniformly with the masks, so Schwartz–Zippel
+applies to the *multivariate* `ϕ` of total degree `≤ 3` directly
+(`card_filter_eval_eq_zero_le`, `probEvent_eval_shift_eq_zero_le`), giving
+`3/p`.
+
+*The route not taken.* The same `3/p` follows from the top-degree homogeneous
+part: writing `ψ(χ) = ϕ(a + χ·b)`, the coefficient of `χ^d` in `ψ` (with
+`d = totalDegree ϕ ≤ 3`) is exactly `ϕ_d(b)`, since only the degree-`d`
+monomials of `ϕ` can reach `χ^d` and each contributes the product of its
+`b`-masks. From `ϕ ≠ 0` we get `ϕ_d ≠ 0`, so `ψ ≡ 0 ⟹ ϕ_d(b) = 0` and
+Schwartz–Zippel on the nonzero degree-`d` form gives `Pr_b[ϕ_d(b) = 0] ≤ d/p`.
+Rejected as a *formalization* route only: it needs the top-homogeneous-component
+extraction lemma and its coefficient identity, where `C★` is one rewrite off an
+already-proven evaluation law.
+
+Either way the `3` is `totalDegree_verifPoly_le` — the only rung of the Eq. 16
+degree tower the `C★` route consults. The other two serve different steps:
+`natDegree_affineSubst_le` bounds the *univariate* `ψ` for `exponentEval`, and
+`card_roots_affineSubst_verifPoly_le` is the at-most-3-roots bound the
+*extraction* step uses. The full tower is documented at the head of the Eq. 16
+section in `AGMPolynomial.lean`.
 
 ## Eq. 13: X₀'s `X`-coefficient (O24 p. 37)
 
