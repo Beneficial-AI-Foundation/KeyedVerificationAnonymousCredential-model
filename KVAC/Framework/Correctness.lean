@@ -41,11 +41,11 @@ obligation to exhibit them is discharged by the concrete scheme's
 predicate-family instance — μCMZ Figure 9, where `KVAC.M / KVAC.V` are actually
 invoked — not by this abstract layer.
 
--- TODO: When a scheme instantiates `KVACSyntax` (μCMZ track), discharge O24
-Definition 4.3's `φ ⊇ {φ_a⃗ : a⃗ ∈ (M ∪ {?})ⁿ}` clause: exhibit the
-partial-disclosure predicates in that scheme's `PredicateFamily` instance and
-show they lie in the family. This obligation is not visible to the abstract
-`Correct` above and must not be lost.
+This obligation is now formal rather than a comment: it is the predicate
+`CoversPartialDisclosure` (`KVAC/Schemes/MicroCMZ/Anonymity.lean`), and it is
+discharged as a premise of `mucmz_anonymity` (O24 Theorem 5.8), so a scheme
+cannot be proved anonymous without exhibiting its partial-disclosure family.
+Tracked in issue #104.
 -/
 
 namespace KVAC.Framework
