@@ -155,11 +155,10 @@ secure-messaging landing page.
   `ksnd_game` and `se_game` milestone nodes under `core_zkproof`, update the
   `zk_arguments` element (then complete), and drop the two "#54 in review"
   TODO notes (Core and Preliminaries).
-- **`AGMReduction`** (PR #88, issue #89, in review): delivers the Lemma 5.4
-  reduction core only (the probability bound and the security theorems come
-  later, #80/#81). On merge, add a reduction-core `milestone` node, extend
-  `partial_evaluation_psi` with the restored ≤3-roots bound, and update the
-  CMZ-M TODO; `single_attribute_mac` stays unanchored until the full lemma
+- **`AGMReduction` follow-ups** (#80/#81): the merged reduction core (PR #88)
+  defers the probability bound and the security theorems. When they land,
+  extend `partial_evaluation_psi` with the restored ≤3-roots bound and update
+  the CMZ-M TODO; `single_attribute_mac` stays unanchored until the full lemma
   lands (anchoring honesty rule).
 - **Upstream nits found by the docs build**: stale docstring at
   `AGMPolynomial.lean:412` citing the removed
