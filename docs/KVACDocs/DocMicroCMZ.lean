@@ -29,18 +29,15 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Five files landed under `KVAC/Schemes/MicroCMZ/`:
+Six files landed under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
-
-One is in review:
-
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`) — Section 5.3,
-  Lemma 5.4 reduction core — Track CMZ-M (PR #88).
+  Lemma 5.4 reduction core — Track CMZ-M.
 
 Three more are planned:
 
@@ -79,12 +76,14 @@ scope note in `Construction.lean`'s module docs.
 *TODO (Track CMZ-C).* Implement Issue and Present following Section 5.1,
 on top of the merged base MAC.
 
-:::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
+:::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.mem_support_keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.uniformUnits, KVAC.Schemes.MicroCMZ.mem_support_uniformUnits, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
 The μCMZ base MAC over an abstract prime-order group
-({uses "sampleable_group"}[]): key sampling, the scalar-side MAC
-`V = (x₀ + xᵣ + m·x₁)·U` with a nonvanishing tag base, deterministic
-verification, and the packaging as an algebraic MAC
-({uses "algebraic_mac"}[]) with its correctness proof.
+({uses "sampleable_group"}[]): key sampling with its support
+characterization, the scalar-side MAC `V = (x₀ + xᵣ + m·x₁)·U` with a
+nonvanishing tag base, deterministic verification, the packaging as an
+algebraic MAC ({uses "algebraic_mac"}[]) with its correctness proof, and
+the punctured samplers (`uniformNonzero` for `G×`, its scalar-field
+wrapper `uniformUnits` for `ℤ_p^×`) the scheme layers draw from.
 :::
 
 :::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
