@@ -148,6 +148,16 @@ secure-messaging landing page.
   and records the gap in its body. Alternative (an unanchored §3.4 node plus
   a milestone) rejected: it would misreport the formalized syntax and OMUF
   game as absent.
+- **`mucmz_at_core` is a milestone deviating from Figure 9's printed boxes**
+  (2026-08). O24 boxes only the user proof `π_iu` as removable for the
+  anonymous-token variant, but the Theorem 5.11 proof answers Sign queries
+  with the bare `(U', V')` and its bound carries no zero-knowledge term, so
+  the scheme it analyzes also drops the server proof `π_is`. The merged
+  instance formalizes that `π_is`-less core under an honest name
+  (`μCMZATCore`); the printed Theorem 5.3 element stays an unanchored
+  stub until the upstream erratum (keep `π_is`, add one zero-knowledge term
+  via a lifting lemma) is settled. Alternative (anchoring the core to the
+  Figure 9 element or to Theorem 5.3) rejected by the anchoring honesty rule.
 
 ## Pending updates ledger
 
