@@ -432,13 +432,23 @@ into a root of {uses "partial_evaluation_psi"}[] for
 {uses "dlog_root_recovery"}[].
 :::
 
-:::theorem "transcript_invariants" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The properties of a whole reduction transcript that the bad-event analysis
-reads: every logged record carries the embedded base shape and the honest
-tag relation of {uses "reduction_coupling_bricks"}[], and the represented
-forgery is bounded in degree by {uses "agm_verification_polynomial"}[].
-The per-query invariant of {uses "sign_oracle_coupling"}[] iterated over a
-run.
+:::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")
+The per-query invariant of {uses "sign_oracle_coupling"}[] read off a whole
+run: at any log reachable from {uses "simulated_sign_oracle"}[], every logged
+tag is honest and every logged tag base has the embedded `U`-form
+`Uⱼ = auⱼ·g + buⱼ·X`. Both are projections of one invariant preserved by the
+simulated oracle, and both are stated in the same key-scalar form as
+{uses "reduction_coupling_bricks"}[]'s state invariant, so a caller holding
+the state invariant and a caller holding only support membership produce
+interchangeable facts.
+:::
+
+:::proof "transcript_invariants"
+An induction over the simulated oracle's arms, of which only `sign` appends
+to the log; that arm appends an honest entry by the `embedTag_eq` of
+{uses "simulated_sign_oracle"}[], retyped through
+{uses "masked_key_normal_form_bridge"}[], while `verify` and `help` leave the
+log alone.
 :::
 
 :::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
