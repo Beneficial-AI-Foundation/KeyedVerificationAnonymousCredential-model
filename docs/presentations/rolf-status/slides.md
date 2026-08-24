@@ -160,6 +160,24 @@ noncomputable def setup {G : Type}
 
 ---
 
+## Base MAC · µCMZ.S (setup) · erratum
+
+<!-- label: setup-erratum -->
+<!-- figzoom: 1.4 -->
+
+<!-- figwidth: 25% -->
+![Base MAC, procedure µCMZ.S](assets/cell_s.png)
+
+### Erratum to the <a href="#setup">setup</a> slide
+
+> Erratum of August 24, 2026, an outcome of the presentation to the BAIF team on Tuesday, August 18, 2026, where the claim below was made.
+
+- **The overstated claim.** The <a href="#setup">setup</a> slide presents groups becoming data, and the loss of the ambient typeclass reuse, as the technical cost of λ itself. That cost belongs only to the paper's randomized generation Γ ← GrGen(1<sup>λ</sup>), where the group is a sampled value rather than a type.
+- **The correction.** Indexing by λ needs only a deterministic type family `GrGen : ℕ → Type`, where each `GrGen λ` is an ordinary type carrying the `SampleableGroup` structure. Groups remain types, every Mathlib instance and every proved lemma applies at `GrGen λ` by instantiation, and no indexed universes appear.
+- **Tracking.** <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/148">Issue #148</a> tracks the deterministic formalization and assesses its impact on the code base. The randomized model, group element encodings, uniform PPT adversaries, negligibility, and the bound n(λ) ≤ poly(λ) remain layers of a full solution, out of scope there.
+
+---
+
 ## Base MAC · µCMZ.K (keygen)
 
 <!-- figzoom: 1.4 -->
