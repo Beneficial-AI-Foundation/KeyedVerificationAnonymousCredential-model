@@ -407,14 +407,21 @@ producing the univariate partial evaluation `ψ(χ)` of Eq. 16. This section
 provides the deterministic skeleton of that case:
 
 - `deg ψ ≤ totalDegree ϕ ≤ 3` (`natDegree_affineSubst_le`,
-  `totalDegree_verifPoly_le`), and
-- a nonzero `ψ` has at most 3 roots in `F`
-  (`card_roots_affineSubst_verifPoly_le`) — the reduction finds `log_G X`
-  among them.
+  `totalDegree_verifPoly_le`).
 
-The probabilistic ingredient — `ψ ≠ 0` except with probability `1/p` over the
-uniform masks `b` — is consumed at the game layer together with the reduction
-(TODO(CMZ-M)).
+A nonzero `ψ` of degree `≤ 3` has at most 3 roots in `F`, among which the
+reduction finds `log_G X`; that root-count bound is **not formalized** here (it
+was removed — see the `AGMReduction` entry in `docs/BLUEPRINT_MAINTENANCE.md`)
+and is **not needed** for extraction: `recoverDlog_eq` requires only `ψ ≠ 0`
+and that the challenge exponent is a root, not a bound on how many other roots
+exist.
+
+The probabilistic ingredient — `ψ ≠ 0` except with probability `3/p` over the
+uniform masks `b` — has a static (view-independent) form formalized as
+`probEvent_eval_shift_eq_zero_le` in `AGMReduction/Coupling.lean`, which bounds
+the bad event for a **fixed** polynomial and **fixed** offset. The adaptive,
+game-layer bad event — where `φ` and the offset depend on the adversary's view
+— remains deferred (`TODO(CMZ-M)`).
 
 **NB — the bound is `3/p`, not the `1/p` stated in O24 Eq. 16.** The paper
 invokes Schwartz–Zippel to bound the bad event `ψ ≡ 0`, but for a degree-`d`
@@ -425,10 +432,11 @@ of `ϕ` evaluated at the mask vector `b` — because only the degree-`d` monomia
 of `ϕ` can reach `χ^d`, and each contributes the product of its `b`-masks.
 Since `ϕ ≠ 0` we have `ϕ_d ≠ 0`, and `ψ ≡ 0 ⟹ ϕ_d(b) = 0`. As `ϕ_d` is a
 nonzero polynomial of degree `d ≤ 3` in the uniform, independent masks `b`,
-Schwartz–Zippel gives `Pr_b[ϕ_d(b) = 0] ≤ d/p ≤ 3/p`. The paper's `1/p` would
-be correct only for a degree-1 form; the deg-3 verification polynomial needs
-`3/p`. This loosens the concrete additive term (`1/p → 3/p`) but leaves the
-asymptotic bound — and hence the security statement — unchanged.
+Schwartz–Zippel gives `Pr_b[ϕ_d(b) = 0] ≤ d/p ≤ 3/p`. The paper's `1/p` is
+immediate only for a degree-1 form; what the paper is missing for the deg-3
+verification polynomial is the justification, not necessarily the value. This
+loosens the concrete additive term (`1/p → 3/p`) but leaves the asymptotic
+bound — and hence the security statement — unchanged.
 -/
 
 /-- O24 Eq. 12 as a single polynomial — the polynomial `ϕ` of the
@@ -501,8 +509,10 @@ lemma totalDegree_toPoly_le (ρ : ReprCoeffs F q) (msgs : Fin q → F) :
   · exact le_trans (totalDegree_finsetSum _ _) (Finset.sup_le fun j _ => hterm j)
 
 /-- `totalDegree ϕ ≤ 3` — the multivariate half of the paper's
-`deg ψ ≤ totalDegree ϕ ≤ 3` bound (O24 Eq. 16); feeds
-`natDegree_affineSubst_verifPoly_le`. -/
+`deg ψ ≤ totalDegree ϕ ≤ 3` bound (O24 Eq. 16); has no consumer here — its
+destination is the `hdeg : φ.totalDegree ≤ 3` hypothesis of
+`card_filter_eval_eq_zero_le` / `probEvent_eval_shift_eq_zero_le`
+(`AGMReduction/Coupling.lean`). -/
 lemma totalDegree_verifPoly_le (msgs : Fin q → F) (mStar : F)
     (α β : ReprCoeffs F q) :
     (verifPoly msgs mStar α β).totalDegree ≤ 3 := by

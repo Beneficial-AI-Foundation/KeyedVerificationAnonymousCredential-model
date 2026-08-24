@@ -152,9 +152,7 @@ secure-messaging landing page.
   `partial_evaluation_psi` with the restored ≤3-roots bound, and update the
   CMZ-M TODO; `single_attribute_mac` stays unanchored until the full lemma
   lands (anchoring honesty rule).
-- **Upstream nits found by the docs build**: stale docstring at
-  `AGMPolynomial.lean:412` citing the removed
-  `card_roots_affineSubst_verifPoly_le`; anchored structure fields and
+- **Upstream nits found by the docs build**: anchored structure fields and
   constructors lacking docstrings (`UFQuery.sign`, `AGMQuery.help`, …)
   produce build warnings.
 

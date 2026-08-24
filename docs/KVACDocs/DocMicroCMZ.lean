@@ -296,17 +296,17 @@ Schwartz–Zippel good event — yields the discrete logarithm.
 :::
 
 :::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
-The pieces the proof that {uses "simulated_sign_oracle"}[] is
+The pieces from which the proof that {uses "simulated_sign_oracle"}[] is
 indistinguishable from the honest oracle of {uses "agm_model"}[] is
-assembled from.
+assembled.
 
 Six normal forms bridge the packaged forms the oracle and the reduction
 emit to the per-index lambdas and bare substitution that the coupling, the
 shift lemma below and {uses "dlog_root_recovery"}[] are stated in. Two
 uniformity lemmas say the embedding hides its masks — a uniform scalar
 multiple of the generator is a uniform group element, and so is an affine
-shift of one — which is what makes the simulated parameters and tags of
-{uses "challenge_embedding"}[] identically distributed to honest ones. A
+shift of one — so each of the affine parameters of
+{uses "challenge_embedding"}[] has that form taken by itself. A
 deterministic-map coupling brick lifts an equality of evaluation
 distributions to a relation between two computations, the form the `sign`
 arm needs on top of {uses "sign_masks"}[].

@@ -14,12 +14,19 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
 
 - `RedLog` normal forms — `rfl` bridges from `Core`'s packaged mask projections
   and substitution down to the per-index lambdas the coupling lemmas use;
-- uniformity of the embedded group elements (`evalDist_{smul,affine}_gen_uniform`);
+- marginal uniformity of the affine embedded elements
+  (`evalDist_{smul,affine}_gen_uniform`);
 - `relTriple_map_eq`, the deterministic-map coupling brick for the `sign` arm;
 - `redLogHonestInv`, the reduction ↔ honest state invariant, and its `maskedKey`;
 - the **static** (view-independent) Schwartz–Zippel bound: the `C★` shift lemma,
   the cardinality core `card_filter_eval_eq_zero_le`, and its probability form
   `probEvent_eval_shift_eq_zero_le`.
+
+A *coupling* pairs the two runs — the reduction's simulated oracle and the
+honest one — on a single probability space, so that a state invariant relating
+their logs survives each query; the payoff is that the two views then have the
+same distribution. What lands here are the ingredients for that argument, not
+the conclusion itself.
 
 The distribution-layer bad-event bound built on these lives further down the
 stack; see `AGMReduction.lean`.
@@ -96,15 +103,17 @@ end RedLog
 
 /-! ## Uniformity of the embedded elements (coupling bricks) -/
 
-/-- `(· • gen)` is a bijection, so it pushes `$ᵗ F` to `$ᵗ G`. The unshifted case, for the
-issued tag base `Uⱼ = (auⱼ + x·buⱼ) • gen`. -/
+/-- `(· • gen)` is a bijection, so it pushes `$ᵗ F` to `$ᵗ G`. -/
 lemma evalDist_smul_gen_uniform :
     evalDist ((fun a : F => a • gen) <$> ($ᵗ F : ProbComp F)) =
       evalDist ($ᵗ G : ProbComp G) :=
   evalDist_map_bijective_uniform_cross (α := F) _ hgen.out
 
-/-- Shift by `c`, then scale the generator: a composition of bijections. The reduction's `H`,
-`Xᵣ`, `X₁` all have this affine form, so they are uniform just like `AGM_UF_CMVAGame`'s. -/
+/-- Shift by `c`, then scale the generator: a composition of bijections. Each of the
+reduction's `H`, `Xᵣ`, `X₁` has this affine form taken by itself — one ingredient of
+the inline claim after `O24 Eq. 13`, namely the marginal uniformity of each affine
+parameter, not the joint law that claim asserts. `X₀` is separate: it is not of this
+single-mask affine form (`embedX0_eq`). -/
 lemma evalDist_affine_gen_uniform (c : F) :
     evalDist ((fun a : F => (a + c) • gen) <$> ($ᵗ F : ProbComp F)) =
       evalDist ($ᵗ G : ProbComp G) := by
@@ -170,7 +179,10 @@ reduction log with the masks projected away. Second: per entry, the embedded bas
 `Uⱼ = auⱼ·g + buⱼ·X` (`Core`'s `embedMask_eq`) and `MicroCMZ.verify`'s own tag relation read at
 `maskedKey`. The tag relation is stated through `macScalar` rather than expanded by hand, so it
 stays in step with `Construction.lean` and is literally what the honest `sign` arm emits;
-`macScalar_maskedKey_eq` converts it to the `keyCoeff` form `embedTag_eq` consumes. -/
+`macScalar_maskedKey_eq` converts it to the `keyCoeff` form `embedTag_eq` consumes.
+
+Stated here only: the per-oracle preservation lemmas for `sign`/`verify`/`help` and the
+run-level view equality that consume this invariant are deferred. -/
 def redLogHonestInv (x : F) (aM bM : FixedMasks F) (L : RedLog F G) (log : AGMLog F G 1) : Prop :=
   log = L.map (fun e => (e.msg, e.tag)) ∧
   ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen) ∧
@@ -289,11 +301,7 @@ private lemma card_filter_div_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0)
         rw [mul_assoc, ENNReal.mul_inv_cancel hcF (ENNReal.natCast_ne_top _), mul_one]
     _ ≤ 3 * (Fintype.card F : ℝ≥0∞) ^ N * (Fintype.card F : ℝ≥0∞)⁻¹ := by gcongr
 
--- `[DecidableEq F]` does not survive into the elaborated type, but it is load-bearing while
--- elaborating it: it is what lets the `DecidablePred` behind `Pr[…]` be found directly. `omit`ting
--- it (as `linter.unusedDecidableInType` suggests) sends that search into this module's documented
--- instance loop and the declaration times out. Scoped to this one declaration.
-set_option linter.unusedDecidableInType false in
+omit [DecidableEq F] in
 /-- **C-SZ (probability form).** For a *fixed* offset `θ`, a uniform shift `b` makes the point
 `w v = θ v + b (e v)` uniform over `Var q → F` (reindexing by `e := Fintype.equivFin` and
 translating by `θ` are both bijections), so `card_filter_eval_eq_zero_le` bounds the vanishing
@@ -313,6 +321,11 @@ lemma probEvent_eval_shift_eq_zero_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ �
         ($ᵗ (Fin (Fintype.card (AGMPoly.Var q)) → F))]
       ≤ 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
   classical
+  -- `classical` alone only decides individual propositions on demand; the `DecidablePred` behind
+  -- `probEvent_uniformSample` needs a `DecidableEq F` *instance*, whose structural derivation
+  -- from `Field F` loops in this `MvPolynomial`-heavy import context. Supplying it as a local
+  -- classical instance short-circuits that search.
+  haveI := Classical.decEq F
   rw [probEvent_uniformSample, Fintype.card_fun, Fintype.card_fin]
   have hbij : Function.Bijective
       (fun b : Fin (Fintype.card (AGMPoly.Var q)) → F =>
