@@ -27,15 +27,10 @@ namespace KVAC.Schemes.MicroCMZ
 
 open KVAC.Core KVAC.Preliminaries OracleSpec OracleComp ENNReal
 
-variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
-variable {G : Type} [DecidableEq G] [SampleableGroup F G]
-/- The generator `G₀` (O24's `G₀ ∈ Γ`); see the note in `AGMReduction/Core.lean`. -/
-variable (gen : G)
-variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
+variable {F : Type} [Field F]
 
 /-! ## Deterministic core (Piece A) -/
 
-omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
 /-- **The masked key scalar, expanded.** `Coupling`'s `macScalar_maskedKey_eq` in the *other* normal
 form: `redLogHonestInv`, and everything stated in this file, speak
 `macScalar (maskedKey x aM bM)`, while the abstract-arity consistency lemmas — `Core`'s
