@@ -331,6 +331,56 @@ degree-≤2 representation (`totalDegree_toPoly_le`, degree 2 reached by the
 verify arm needs `X''` exactly as the help arm does. Also recorded as item 4
 of `docs/presentations/rolf-status/errata.md`.
 
+## The μCMZ_AT core removes both issuance proofs, not only the boxed π_iu
+
+**Decision.** The formalized anonymous-token scheme is the *core* with both
+issuance proofs removed, and is named accordingly (`μCMZATCore`,
+`ATVariant.lean`). The `π_is`-carrying variant, together with a lifting lemma
+bounding its one-more unforgeability by the core's plus one zero-knowledge
+term for `ZKP_cmz.is`, is deferred until the upstream erratum settles; the
+printed Theorem 5.3 blueprint node stays an unanchored stub meanwhile.
+
+**Rejected alternatives.** (i) Formalizing the printed variant, which keeps
+`π_is` — Figure 9's caption boxes only the user proof `π_iu` as removable.
+(ii) Reading Theorem 5.3 as a statement about a `π_is`-less scheme outright,
+dropping `π_is` from the variant.
+
+**Fidelity argument.** The Theorem 5.11 proof answers its Sign queries with
+the bare `(U′, V′)` and its bound carries no zero-knowledge term, so the
+scheme the printed proof analyzes is the `π_is`-less core: a reduction
+holding no secret key cannot produce real `π_is` proofs, and a
+`π_is`-carrying scheme forces a simulation hybrid — hence a `zk_cmz.is`
+term — into any correct bound. That rules out (i) as the object of the
+printed proof. Removing `π_is` from the theorem instead is not viable
+because the anonymity clause needs it (the user verifies `π_is`, protecting
+against a key-substituting issuer; the anonymity simulator checks and
+extracts it), ruling out (ii). The proposed erratum keeps `π_is` in the
+scheme and adds one zero-knowledge term to the OMUF bound, obtained from the
+core via the lifting lemma; reported upstream alongside the earlier errata.
+
+## Punctured issuance nonces `u, r ←$ ℤ_p^×` where Figure 9 prints `ℤ_p`
+
+**Decision.** Both μCMZ_AT issuance nonces — the server nonce `u` and the
+user re-randomizer `r` — are sampled from the punctured field `F ∖ {0}` via
+`uniformUnits` (`ATVariant.lean`; the sampler lives beside `uniformNonzero`
+in `Construction.lean`).
+
+**Rejected alternative.** Figure 9's literal `u ←$ ℤ_p` and `r ←$ ℤ_p`.
+
+**Fidelity argument.** The two nonces have different justifications. For
+`u`, the puncture is the perfect-correctness convention, exactly as for the
+base MAC's tag base (Eq. (1) samples `U ←$ 𝔾^×` while the figure writes the
+looser `U ←$ 𝔾`): with `u = 0` the honest run aborts at the user's
+`U′ ≠ 0` check, a `1/p` correctness-failure mass the support-based
+`Correct` cannot absorb. For `r`, the figure appears to be in error rather
+than loose: §5.1 states the re-randomization property "for r ≠ 0", the
+presentation step samples the same operation with `r ←$ ℤ_p^×`, and an
+honest run with `r = 0` would emit the token `(0, 0)`, which the scheme's
+own verifier rejects. Under the literal samplers honest issuance fails with
+probability `2/p − 1/p²`. Reductions replaying issuance must account for
+the per-nonce `1/p` distribution deltas, as the AGM track already does for
+the tag base (*Conditioned sign masks* above).
+
 ## Open alternatives
 
 None at present.
