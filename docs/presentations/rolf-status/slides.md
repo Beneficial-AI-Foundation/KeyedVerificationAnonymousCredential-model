@@ -170,11 +170,12 @@ noncomputable def setup {G : Type}
 
 ### Erratum to the <a href="#setup">setup</a> slide
 
-> Erratum of August 24, 2026, an outcome of the presentation to the BAIF team on Tuesday, August 18, 2026, where the claim below was made.
+> August 24, 2026. Outcome of the discussion at the BAIF team presentation of August 18, 2026.
 
-- **The overstated claim.** The <a href="#setup">setup</a> slide presents groups becoming data, and the loss of the ambient typeclass reuse, as the technical cost of λ itself. That cost belongs only to the paper's randomized generation Γ ← GrGen(1<sup>λ</sup>), where the group is a sampled value rather than a type.
-- **The correction.** Indexing by λ needs only a deterministic type family `GrGen : ℕ → Type`, where each `GrGen λ` is an ordinary type carrying the `SampleableGroup` structure. Groups remain types, every Mathlib instance and every proved lemma applies at `GrGen λ` by instantiation, and no indexed universes appear.
-- **Tracking.** <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/148">Issue #148</a> tracks the deterministic formalization and assesses its impact on the code base. The randomized model, group element encodings, uniform PPT adversaries, negligibility, and the bound n(λ) ≤ poly(λ) remain layers of a full solution, out of scope there.
+- **What the talk claimed.** That parameterizing the formalization by λ would force groups to stop being types and become data, drawn from a universe of descriptions indexed by λ, losing the group theory of Mathlib.
+- **Why it is wrong.** That cost belongs only to the paper's randomized generation Γ ← GrGen(1<sup>λ</sup>), where the group is a sampled value rather than a type. Indexing by λ alone does not force it.
+- **The correction.** A deterministic family suffices, a type family `GrGen : ℕ → Type` where each `GrGen λ` is an ordinary type carrying the `SampleableGroup` structure. Groups remain types, every instance and every proved lemma applies at `GrGen λ` by instantiation, and no indexed universes appear.
+- **Tracking.** <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/148">Issue #148</a> tracks the deterministic formalization and assesses its impact on the code base. Randomized generation, group element encodings, uniform PPT adversaries, negligibility, and the bound n(λ) ≤ poly(λ) are layers of a full solution above the family.
 
 ---
 
