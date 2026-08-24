@@ -309,5 +309,4 @@ lemma represented_value_eq_affineSubst_eval {q : ℕ} (ρ : AGMRepr F 1)
     gamePoint_eq_embed_affine gen x aM bM
       (aM.eta • gen + bM.eta • (x • gen)) tags ca cb rfl htf.2,
     AGMPoly.eval_affineSubst]
-
 end KVAC.Schemes.MicroCMZ

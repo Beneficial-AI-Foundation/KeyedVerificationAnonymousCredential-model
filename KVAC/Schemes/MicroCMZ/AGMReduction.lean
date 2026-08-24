@@ -20,8 +20,12 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 - `Coupling` — the first probability-layer slice: the uniformity and relational
   coupling bricks, the reduction ↔ honest state invariant, and the **static**
   Schwartz–Zippel core;
-- `SignCoupling` — the deterministic sign-arm coupling and the state invariant
-  it preserves.
+- `SignCoupling` — the deterministic core of the coupling: the sign-step
+  coupling triple (Eq. 14) and the transcript log invariants it establishes,
+  plus the two arity-clean bricks read off the embedding — the
+  consistency⇒vanishing step (Eq. 12 evaluated in the relative discrete
+  logarithms) and the represented-value bridge the `verify`/`help` arms
+  consume.
 
 This file is the aggregator: the reduction lives in the `AGMReduction/`
 subdirectory. `SecurityN1` states the Lemma 5.4 target bound
