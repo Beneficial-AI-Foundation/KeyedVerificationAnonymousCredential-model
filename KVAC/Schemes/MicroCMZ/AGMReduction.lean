@@ -5,6 +5,7 @@ Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
 import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
+import KVAC.Schemes.MicroCMZ.AGMReduction.SignCoupling
 
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
@@ -17,10 +18,13 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   branch, the reduction adversary and its simulated oracle, and root recovery;
 - `Coupling` — the first probability-layer slice: the uniformity and relational
   coupling bricks, the reduction ↔ honest state invariant, and the **static**
-  Schwartz–Zippel core.
+  Schwartz–Zippel core;
+- `SignCoupling` — the deterministic sign-arm coupling and the transcript
+  invariants it establishes.
 
-The planned remaining parts (DeterministicCore, Assembly, Shear, ShearShift,
-Security) will be added to the import list above as they land. The
+The planned remaining parts (the verify/help halves of the deterministic core,
+Assembly, Shear, ShearShift, Security) will be added to the import list above
+as they land. The
 distribution-layer bad-event bound and the security theorems are assembled
 there; Lemma 5.4 is untagged here until that bound lands.
 
