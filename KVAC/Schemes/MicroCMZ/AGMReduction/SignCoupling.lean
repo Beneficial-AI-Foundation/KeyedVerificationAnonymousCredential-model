@@ -7,16 +7,18 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 import VCVio.OracleComp.SimSemantics.StateT.PreservesInv
 
 /-!
-# μCMZ AGM unforgeability — the deterministic core, sign arm (Piece A)
+# μCMZ AGM unforgeability — the deterministic core, sign arm
 
 The *deterministic* half of the reduction ↔ honest-game coupling, for the `sign`
 oracle arm and the log invariants it establishes:
 
-- **B2 (sign), O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
-  the reduction's `sign` step and the honest one are coupled and preserve
+- `reductionSignStep_relTriple` — the reduction's `sign` step and the honest 
+one are coupled and preserve
   `Coupling`'s `redLogHonestInv`;
-- **A1** `redLog_honest` / `redLog_U_form` / `redLog_transcript_facts` — the log
-  invariants that feed the eval bridge, packaged for the coupling proofs.
+- `redLog_honest` / `redLog_U_form` / `redLog_transcript_facts` — the log
+  invariants that feed the eval bridge, packaged for the coupling proofs;
+- `verifPoly_eval_embed_eq_zero` — the arity-clean brick that reads the
+  vanishing fact off a `RedEmbedding` hypothesis rather than the raw equations.
 
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
 masked key scalar. What this file states speaks the `macScalar (maskedKey …)`
@@ -62,7 +64,7 @@ lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F
 section B2SignCoupling
 open OracleComp.ProgramLogic.Relational
 
-/-- **Sign-step coupling** (the novel core; the fidelity sentence of Eq. 14). The
+/-- **Sign-step coupling** (the novel core; the fidelity sentence of O24 Eq. 14). The
 reduction's `sign` step (`reductionSignStep`) and the honest `sign` step
 (`agmOracleImpl (.sign _)` at `Coupling`'s `maskedKey x aM bM`, the honest key read at the
 masked secrets `(a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)`) produce identically-distributed tags and preserve
@@ -257,5 +259,38 @@ lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
       simpa only [macScalar_maskedKey_expand] using hhon (L.get j) (List.get_mem L j),
    fun j => by
       rw [redLog_tags_get_cast htags hlen j]; exact hUform (L.get j) (List.get_mem L j)⟩
+
+/-- Packages `verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` at 
+an *abstract* arity `q` tied to the transcript by `hq : tags.length = q`. 
+Stating the arity as a variable lets us `subst hq` 
+(which collapses the `Fin.cast`s the transcript log forces), so the caller can
+instantiate `q := L.length` and read off the verification polynomial vanishing at the
+embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping. -/
+lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
+    (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
+    (hemb : RedEmbedding gen x aM bM ep)
+    (ca cb msgs : Fin q → F) (mStar0 : F)
+    (tags : List (G × G)) (hq : tags.length = q)
+    (htf : (∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).2
+        = macScalar (maskedKey x aM bM) (fun _ => msgs j)
+          • (tags.get (Fin.cast hq.symm j)).1)
+      ∧ ∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).1
+        = ca j • gen + cb j • (x • gen))
+    (hkey : ρV.evalAt gen ep tags
+      = macScalar (maskedKey x aM bM) (fun _ => mStar0) • ρU.evalAt gen ep tags) :
+    MvPolynomial.eval
+        (fun v => FixedMasks.embed aM ca v
+          + x * FixedMasks.embed bM cb v)
+        (AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q)) = 0 := by
+  rw [AGMRepr.evalAt_of_redEmbedding gen hemb, AGMRepr.evalAt_of_redEmbedding gen hemb]
+    at hkey
+  subst hq
+  -- Trade the `macScalar` key for the spelled-out one the abstract-arity lemma takes.
+  simp only [macScalar_maskedKey_expand] at htf hkey
+  have key := verifPoly_eval_eq_zero_of_keySmul gen ρU ρV
+    (aM.eta • gen + bM.eta • (x • gen)) (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr)
+    (fun _ => aM.x1 + x * bM.x1) mStar0 tags msgs htf.1 hkey
+  rwa [gamePoint_eq_embed_affine gen x aM bM
+    (aM.eta • gen + bM.eta • (x • gen)) tags ca cb rfl htf.2] at key
 
 end KVAC.Schemes.MicroCMZ

@@ -226,6 +226,37 @@ def AGMRepr.evalAt (ρ : AGMRepr F 1) (gen : G) (ep : EmbeddedParams G)
     (tags : List (G × G)) : G :=
   ρ.eval gen ep.h ep.x0 ep.xr (fun _ => ep.x1) tags
 
+/-- **Embedding of the reduction's public elements** (O24 Eq. 13), factored out so a
+consumer takes it as one hypothesis instead of re-spelling each embedded element inside
+every `ρ.eval` argument. These are the reduction's definitions of `H, X0, Xr, X1`
+(see `microCMZ3DLReduction`) read at the genuine challenge powers `X = x·gen`,
+`X' = x²·gen` — `H`, `Xᵣ`, `X₁` up to `module`-provable regrouping, and `X₀` via
+`embedX0_eq`'s ring identity, since the reduction cannot compute `x` and so builds `X₀`
+expanded over `(gen, X, X')`. That gap is why this is a `Prop` bundle of four equations
+rather than an `ep = f aM bM x` definition. -/
+structure RedEmbedding (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) : Prop where
+  /-- `H` is the `η`-mask combination of `gen` and the challenge `X = x·gen`. -/
+  hH : ep.h = aM.eta • gen + bM.eta • (x • gen)
+  /-- `X₀` is the real `x₀ = a₀ + x·b₀` acting on `H`. -/
+  hX0 : ep.x0 = (aM.x0 + x * bM.x0) • ep.h
+  /-- `Xᵣ` is the real `xᵣ = aᵣ + x·bᵣ` acting on `gen`. -/
+  hXr : ep.xr = (aM.xr + x * bM.xr) • gen
+  /-- `X₁` is the real `x₁ = a₁ + x·b₁` acting on `gen`. -/
+  hX1 : ep.x1 = (aM.x1 + x * bM.x1) • gen
+
+omit hgen in
+/-- Rewrite an `evalAt` against a `RedEmbedding`-certified `ep` into the explicit embedded
+form (`H = aη·g + bη·X`, `X₀ = (a₀+x·b₀)·H`, `Xᵣ = (aᵣ+x·bᵣ)·g`, `X₁ = (a₁+x·b₁)·g`) —
+the shape the consistency-core lemmas take their `H, x0, xr, x1` arguments in.
+`verifPoly_eval_embed_eq_zero` opens with this rewrite. -/
+lemma AGMRepr.evalAt_of_redEmbedding {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
+    (hemb : RedEmbedding gen x aM bM ep) (ρ : AGMRepr F 1) (tags : List (G × G)) :
+    ρ.evalAt gen ep tags
+      = ρ.eval gen (aM.eta • gen + bM.eta • (x • gen))
+          ((aM.x0 + x * bM.x0) • (aM.eta • gen + bM.eta • (x • gen)))
+          ((aM.xr + x * bM.xr) • gen) (fun _ => (aM.x1 + x * bM.x1) • gen) tags := by
+  rw [AGMRepr.evalAt, hemb.hX0, hemb.hH, hemb.hXr, hemb.hX1]
+
 /-- One Sign-query record: the message vector, the issued tag `(Uⱼ, Vⱼ)`, and the
 `u`-masks used to build it (needed to assemble the `affineSubst` point on the
 forgery). -/
