@@ -160,6 +160,25 @@ noncomputable def setup {G : Type}
 
 ---
 
+## Base MAC · µCMZ.S (setup) · erratum
+
+<!-- label: setup-erratum -->
+<!-- figzoom: 1.4 -->
+
+<!-- figwidth: 25% -->
+![Base MAC, procedure µCMZ.S](assets/cell_s.png)
+
+### Erratum to the <a href="#setup">setup</a> slide
+
+> August 24, 2026. Outcome of the discussion at the BAIF team presentation of August 18, 2026.
+
+- **What the talk claimed.** That parameterizing the formalization by λ would force groups to stop being types and become data, drawn from a universe of descriptions indexed by λ, losing the group theory of Mathlib.
+- **Why it is wrong.** That cost belongs only to the paper's randomized generation Γ ← GrGen(1<sup>λ</sup>), where the group is a sampled value rather than a type. Indexing by λ alone does not force it.
+- **The correction.** A deterministic family suffices, a type family `GrGen : ℕ → Type` where each `GrGen λ` is an ordinary type carrying the `SampleableGroup` structure. Groups remain types, every instance and every proved lemma applies at `GrGen λ` by instantiation, and no indexed universes appear.
+- **Tracking.** <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/148">Issue #148</a> tracks the deterministic formalization and assesses its impact on the code base. Randomized generation, group element encodings, uniform PPT adversaries, negligibility, and the bound n(λ) ≤ poly(λ) are layers of a full solution above the family.
+
+---
+
 ## Base MAC · µCMZ.K (keygen)
 
 <!-- figzoom: 1.4 -->
