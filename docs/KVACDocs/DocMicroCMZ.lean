@@ -11,6 +11,7 @@ import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.Anonymity
 
 open Verso.Genre Manual
 open Informal
@@ -437,7 +438,7 @@ simulators.
 `SampleableGroup` typeclass (the game-construction variant of the
 prime-order-group typeclass).
 
-:::theorem "mucmz_anonymity" (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
+:::theorem "mucmz_anonymity" (lean := "KVAC.Schemes.MicroCMZ.CoversPartialDisclosure, KVAC.Schemes.MicroCMZ.Anonymous, KVAC.Schemes.MicroCMZ.ProvesRcmz, KVAC.Schemes.MicroCMZ.mucmz_anonymity") (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
 *O24 Theorem 5.8.* If ZKP proves the relation `R ⊇ R_cmz`
 ({uses "zk_arguments"}[]), then μCMZ ({uses "mucmz_construction"}[]) is anonymous in the
 sense of {uses "kvac_anonymity"}[]: issuance and presentation are simulatable.
