@@ -8,8 +8,9 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 /-!
 # μCMZ AGM unforgeability — the deterministic core, sign arm (Piece A)
 
-The *deterministic* half of the reduction ↔ honest-game coupling, for the `sign`
-oracle arm and the transcript invariants it establishes.
+The first slice of the deterministic half of the reduction ↔ honest-game
+coupling for the `sign` oracle arm: the normal-form bridge its lemmas will
+consume.
 
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
 masked key scalar. What this file states speaks the `macScalar (maskedKey …)`
@@ -24,8 +25,6 @@ Everything here is `evalDist`-free algebra; the probability layer sits above it.
 set_option autoImplicit false
 
 namespace KVAC.Schemes.MicroCMZ
-
-open KVAC.Core KVAC.Preliminaries OracleSpec OracleComp ENNReal
 
 variable {F : Type} [Field F]
 

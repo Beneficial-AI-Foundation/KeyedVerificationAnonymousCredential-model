@@ -321,14 +321,14 @@ rather than expanded, so it is literally what the signing oracle of
 :::
 
 :::theorem "sign_arm_coupling" (lean := "KVAC.Schemes.MicroCMZ.macScalar_maskedKey_expand") (parent := "cmz_amac") (tags := "milestone")
-The deterministic half of the reduction ↔ honest-game coupling for the
-`sign` arm of {uses "simulated_sign_oracle"}[], built on the bricks of
+The masked-key normal-form bridge for the `sign` arm of
+{bpref "simulated_sign_oracle"}[], built on the bricks of
 {uses "reduction_coupling_bricks"}[].
 
 The masked key scalar has two normal forms. The state invariant of
-{uses "reduction_coupling_bricks"}[] states it through the scheme's own
+{bpref "reduction_coupling_bricks"}[] states it through the scheme's own
 key scalar, so that it is literally what the signing oracle emits; the
-abstract-arity lemmas of {uses "agm_eval_bridge"}[] instead take it
+abstract-arity lemmas of {bpref "agm_eval_bridge"}[] instead take it
 spelled out as `x₀ + xᵣ + m·x₁` at the masked secrets. One lemma trades
 one form for the other, and it also witnesses that at a single attribute
 the scalar reads its message only at index `0`.

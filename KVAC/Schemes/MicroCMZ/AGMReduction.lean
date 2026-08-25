@@ -19,8 +19,8 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 - `Coupling` — the first probability-layer slice: the uniformity and relational
   coupling bricks, the reduction ↔ honest state invariant, and the **static**
   Schwartz–Zippel core;
-- `SignCoupling` — the deterministic sign-arm coupling and the transcript
-  invariants it establishes.
+- `SignCoupling` — the masked-key normal-form bridge that the deterministic
+  sign-arm coupling will consume.
 
 The planned remaining parts (the verify/help halves of the deterministic core,
 Assembly, Shear, ShearShift, Security) will be added to the import list above
