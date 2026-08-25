@@ -111,7 +111,7 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
     rw [htag j, ← hu, glog_smul_self]
     module
 
-/-! ## The identity branch -/
+/-! ## The identity and consistency branches -/
 
 /--
 **Identity branch of Lemma 5.4** (O24 §5.3). If a consistent forgery for a *fresh*
@@ -134,6 +134,40 @@ theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F
     AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero msgs mStar hfresh
       (ρU.toReprCoeffs tags.length) (ρV.toReprCoeffs tags.length) hverif]
   simp only [map_zero, zero_smul]
+
+/-- **Consistency branch (O24 Eq. 12 at the discrete logs).** The companion of
+`agm_n1_identity_Ustar_eq_zero` above: where that one reads off `U* = 0` from a *vanishing*
+verification polynomial, this one produces the vanishing — at the transcript's discrete-log point
+`gamePoint`, not as a polynomial identity. This is the paper's "Equation (12) does not hold over
+`Z_p[…]` but does hold when evaluated in the relative discrete logarithms" step.
+
+The only hypotheses are log-honesty of the transcript (`htag`) and the verification relation
+`hkey`: `ρV`'s group value is the key at `m*` times `ρU`'s. No freshness of `m*`, no `U* ≠ 0`,
+no win predicate — those enter in the case split the caller performs; the lemma holds for any
+`mStar`. -/
+theorem verifPoly_eval_eq_zero_of_keySmul (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F)
+    (x : Fin 1 → F) (mStar : F) (tags : List (G × G))
+    (msgs : Fin tags.length → F)
+    (htag : ∀ j : Fin tags.length,
+      (tags.get j).2 = (x0 + xr + msgs j * x 0) • (tags.get j).1)
+    (hkey : ρV.eval gen H (x0 • H) (xr • gen) (fun i => x i • gen) tags
+      = (x0 + xr + mStar * x 0)
+        • ρU.eval gen H (x0 • H) (xr • gen) (fun i => x i • gen) tags) :
+    MvPolynomial.eval (gamePoint gen H x0 xr (x 0) tags)
+        (AGMPoly.verifPoly msgs mStar (ρU.toReprCoeffs tags.length)
+          (ρV.toReprCoeffs tags.length)) = 0 := by
+  rw [agmRepr_eval_eq_eval_toPoly gen ρU H x0 xr x tags msgs htag,
+    agmRepr_eval_eq_eval_toPoly gen ρV H x0 xr x tags msgs htag, smul_smul] at hkey
+  set pt := gamePoint gen H x0 xr (x 0) tags with hpt
+  have hscalar : MvPolynomial.eval pt ((ρV.toReprCoeffs tags.length).toPoly msgs)
+      = (x0 + xr + mStar * x 0)
+        * MvPolynomial.eval pt ((ρU.toReprCoeffs tags.length).toPoly msgs) :=
+    smul_left_injective F (gen_ne_zero gen) hkey
+  have hkp : MvPolynomial.eval pt (AGMPoly.keyPoly mStar) = x0 + xr + mStar * x 0 := by
+    rw [AGMPoly.keyPoly_eval, hpt]
+    simp only [gamePoint]
+  rw [AGMPoly.verifPoly_eval, hkp, hscalar]
+  ring
 
 /-! ## The reduction adversary -/
 
@@ -298,6 +332,28 @@ counterparts are `η • gen`, `xᵣ • gen`, `x₁ • gen` (`MicroCMZ.keygen`
 `uⱼ • gen`. -/
 lemma embedMask_eq (a b x : F) : a • gen + b • (x • gen) = (a + x * b) • gen := by
   module
+
+/-- **The transcript's discrete-log point is the masked point.** Under the embedding above —
+`H = aη·g + bη·X` with `X = x·g`, the secrets read at `v ↦ a_v + x·b_v`, and each logged tag
+`Uⱼ = aᵤⱼ·g + bᵤⱼ·X` — `gamePoint` *is* `FixedMasks.embed a ca + x · FixedMasks.embed b cb`.
+
+This is the hinge between the two halves of the extraction: `verifPoly_eval_eq_zero_of_keySmul`
+delivers vanishing at `gamePoint`, while `recoverDlog_verifPoly_eq` below wants it at
+`fun v => a v + x·b v`. The `eta` and `u` branches are `embedMask_eq` followed by reading the
+log off the generator; the fixed-secret branches (`x0`, `xr`, `x1`) are definitional. -/
+lemma gamePoint_eq_embed_affine (x : F) (aM bM : FixedMasks F) (H : G) (tags : List (G × G))
+    (ca cb : Fin tags.length → F)
+    (hH : H = aM.eta • gen + bM.eta • (x • gen))
+    (htag : ∀ j : Fin tags.length,
+      (tags.get j).1 = ca j • gen + cb j • (x • gen)) :
+    gamePoint gen H (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (aM.x1 + x * bM.x1) tags
+      = fun v => FixedMasks.embed aM ca v
+        + x * FixedMasks.embed bM cb v := by
+  funext v
+  cases v with
+  | eta => simp only [gamePoint, FixedMasks.embed, hH, embedMask_eq, glog_smul_self]
+  | x0 | xr | x1 => simp only [gamePoint, FixedMasks.embed]
+  | u j => simp only [gamePoint, FixedMasks.embed, htag j, embedMask_eq, glog_smul_self]
 
 omit hgen in
 /-- **Eq. 13's `X₀` is honest.** The three-term embedded `X₀` equals `x₀ • H` — the

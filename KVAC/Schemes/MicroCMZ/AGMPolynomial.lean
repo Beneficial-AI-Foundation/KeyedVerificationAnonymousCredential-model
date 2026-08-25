@@ -452,6 +452,14 @@ lemma verifPoly_eq_zero_iff (msgs : Fin q → F) (mStar : F)
       α.toPoly msgs * keyPoly mStar = β.toPoly msgs :=
   sub_eq_zero
 
+/-- Evaluation of `keyPoly` reads the key scalar off the point: `x₀ + xᵣ + m·x₁` at the
+coordinates `pt` assigns to those three variables. Stated here for the same reason as
+`verifPoly_eval` below — distributing `MvPolynomial.eval` through `map_add`/`map_mul` needs an
+import context with no `F`-module `G` in it. -/
+lemma keyPoly_eval (pt : Var q → F) (m : F) :
+    eval pt (keyPoly m) = pt .x0 + pt .xr + m * pt .x1 := by
+  simp only [keyPoly, x₀, xᵣ, x₁, map_add, map_mul, eval_X, eval_C]
+
 /-- Evaluation of `verifPoly` distributes over its `α.toPoly · keyPoly − β.toPoly` structure.
 Stated and proved here rather than in `AGMReduction`: distributing `MvPolynomial.eval` through
 `map_sub`/`map_mul` sends instance search into a loop once an `F`-module `G` is in scope (the
