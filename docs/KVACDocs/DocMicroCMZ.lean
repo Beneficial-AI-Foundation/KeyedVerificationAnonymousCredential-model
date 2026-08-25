@@ -239,7 +239,7 @@ key multiple of `Uⱼ`. The identity corollary then rewrites through the
 bridge and the polynomial-layer identity case, leaving `0 • gen`.
 :::
 
-:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
+:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.RedEmbedding, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt_of_redEmbedding, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
 *O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
 parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
 `X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
@@ -250,6 +250,11 @@ reduction adversary runs the AGM adversary against
 {uses "dlog_root_recovery"}[]. Its experiment and advantage fix the
 challenge base to the generator by construction, so the reduction can
 never be run at a base where it is unsound.
+
+`RedEmbedding` restates the same four equations as one `Prop` bundle, so a
+consumer takes a single hypothesis rather than four separate ones;
+`AGMRepr.evalAt_of_redEmbedding` rewrites `evalAt` into the explicit embedded
+form the consistency-core lemmas take their arguments in.
 
 Against genuine challenge powers the embedding is *honest* at the challenge
 exponent: `H`, `Xᵣ` and `X₁` are the masked scalars' generator multiples,
@@ -453,14 +458,23 @@ identity, which the verification polynomial's `α · keyPoly − β` shape reads
 off against the key polynomial's evaluation.
 :::
 
-:::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+:::theorem "embedded_consistency_bricks" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
 {uses "consistency_case_lem54"}[] restated against the embedding bundle of
 {uses "challenge_embedding"}[] instead of the raw equations, at an abstract
 arity where the transcript's index casts are discharged, together with the
 matching represented-value bridge giving each represented value as the
 affinely substituted evaluation of its own polynomial — the form
 {uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
-couplings take their hypotheses in.
+couplings take their hypotheses in. The abstract arity is tied to the
+transcript by its length, so the index casts collapse and the caller reads
+the vanishing with no dependent bookkeeping.
+:::
+
+:::proof "embedded_consistency_bricks"
+The transcript facts of {uses "transcript_invariants"}[] feed
+{uses "consistency_case_lem54"}[]; substituting the arity away collapses the
+`Fin.cast`s, and the embedding bundle rewrites the game point into the
+embedded one.
 :::
 
 :::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.reductionOracleImpl_preservesInv, KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")
