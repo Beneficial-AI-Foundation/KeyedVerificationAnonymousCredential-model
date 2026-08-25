@@ -410,10 +410,9 @@ provides the deterministic skeleton of that case:
   `totalDegree_verifPoly_le`).
 
 A nonzero `ψ` of degree `≤ 3` has at most 3 roots in `F`, among which the
-reduction finds `log_G X`; that root-count bound is **not formalized** here (it
-was removed — see the `AGMReduction` entry in `docs/BLUEPRINT_MAINTENANCE.md`)
-and is **not needed** for extraction: `recoverDlog_eq` requires only `ψ ≠ 0`
-and that the challenge exponent is a root, not a bound on how many other roots
+reduction finds `log_G X`; that root-count bound is **not formalized** here and
+is **not needed** for extraction: `recoverDlog_eq` requires only `ψ ≠ 0` and
+that the challenge exponent is a root, not a bound on how many other roots
 exist.
 
 The probabilistic ingredient — `ψ ≠ 0` except with probability `3/p` over the

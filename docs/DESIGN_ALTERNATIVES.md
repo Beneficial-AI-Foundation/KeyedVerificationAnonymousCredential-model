@@ -299,8 +299,8 @@ already-proven evaluation law.
 
 Either way the `3` is `totalDegree_verifPoly_le`, the only rung of the Eq. 16
 degree tower the `C★` route consults; `natDegree_affineSubst_le` bounds the
-`RedLog.maskedRepr` polynomials fed to `exponentEval`, a different step. Both 
-rungs are documented at the head of the Eq. 16 section in `AGMPolynomial.lean`, 
+`RedLog.maskedRepr` polynomials fed to `exponentEval`, a different step. Both
+rungs are documented at the head of the Eq. 16 section in `AGMPolynomial.lean`,
 which also records why the at-most-3-roots bound extraction was once cited for is
 neither needed — `recoverDlog_eq` requires only `ψ ≠ 0` and that the challenge
 exponent is a root — nor formalized here.

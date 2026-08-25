@@ -24,9 +24,9 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
 
 A *coupling* pairs the two runs — the reduction's simulated oracle and the
 honest one — on a single probability space, so that a state invariant relating
-their logs survives each query; the payoff is that the two views then have the
-same distribution. What lands here are the ingredients for that argument, not
-the conclusion itself.
+their logs survives each query; the consequence is that the two views then have
+the same distribution. What lands here are the supporting lemmas for that
+argument, not the conclusion itself.
 
 The distribution-layer bad-event bound built on these lives further down the
 stack; see `AGMReduction.lean`.
@@ -110,7 +110,7 @@ lemma evalDist_smul_gen_uniform :
   evalDist_map_bijective_uniform_cross (α := F) _ hgen.out
 
 /-- Shift by `c`, then scale the generator: a composition of bijections. Each of the
-reduction's `H`, `Xᵣ`, `X₁` has this affine form taken by itself — one ingredient of
+reduction's `H`, `Xᵣ`, `X₁` has this affine form taken by itself — one part of
 the inline claim after `O24 Eq. 13`, namely the marginal uniformity of each affine
 parameter, not the joint law that claim asserts. `X₀` is separate: it is not of this
 single-mask affine form (`embedX0_eq`). -/
@@ -182,7 +182,12 @@ stays in step with `Construction.lean` and is literally what the honest `sign` a
 `macScalar_maskedKey_eq` converts it to the `keyCoeff` form `embedTag_eq` consumes.
 
 Stated here only: the per-oracle preservation lemmas for `sign`/`verify`/`help` and the
-run-level view equality that consume this invariant are deferred. -/
+run-level view equality that consume this invariant are deferred.
+
+-- NOTE: Open point: this invariant admits a zero logged base — `au = bu = 0`
+satisfies both conjuncts — so `U ≠ 0` is not recoverable from it. The deferred
+shear/Schwartz–Zippel step must carry `reductionMaskSample`'s `U ≠ 0` conditioning
+separately. -/
 def redLogHonestInv (x : F) (aM bM : FixedMasks F) (L : RedLog F G) (log : AGMLog F G 1) : Prop :=
   log = L.map (fun e => (e.msg, e.tag)) ∧
   ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen) ∧

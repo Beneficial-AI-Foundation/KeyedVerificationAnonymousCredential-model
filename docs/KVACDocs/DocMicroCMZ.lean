@@ -296,17 +296,18 @@ Schwartz–Zippel good event — yields the discrete logarithm.
 :::
 
 :::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
-The pieces from which the proof that {uses "simulated_sign_oracle"}[] is
-indistinguishable from the honest oracle of {uses "agm_model"}[] is
-assembled.
+The supporting lemmas from which the proof that
+{uses "simulated_sign_oracle"}[] is indistinguishable from the honest
+oracle of {uses "agm_model"}[] will be assembled.
 
 Six normal forms bridge the packaged forms the oracle and the reduction
 emit to the per-index lambdas and bare substitution that the coupling, the
 shift lemma below and {uses "dlog_root_recovery"}[] are stated in. Two
 uniformity lemmas say the embedding hides its masks — a uniform scalar
 multiple of the generator is a uniform group element, and so is an affine
-shift of one — so each of the affine parameters of
-{uses "challenge_embedding"}[] has that form taken by itself. A
+shift of one — so each of `H`, `Xᵣ` and `X₁` in
+{uses "challenge_embedding"}[] is uniform taken by itself. `X₀` is
+excluded: it is not of this single-mask affine form. A
 deterministic-map coupling brick lifts an equality of evaluation
 distributions to a relation between two computations, the form the `sign`
 arm needs on top of {uses "sign_masks"}[].
@@ -414,8 +415,10 @@ would force this identity in the secret exponents
 polynomial {uses "agm_verification_polynomial"}[]: collapsing the perfectly-hidden mask pairs
 onto one fresh variable `χ` leaves a nonzero polynomial of degree at
 most 3 that vanishes at the challenge's discrete logarithm. The affine
-substitution and its degree bound are merged; the ≤3-roots bound
-returns with the `AGMReduction` assembly.
+substitution and its degree bound are what this node covers; the
+at-most-3-roots count is not formalized, and root recovery does not need
+it — only that `ψ` is nonzero and the challenge exponent is one of its
+roots.
 :::
 
 # Anonymity (Section 5.4)
