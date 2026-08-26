@@ -23,7 +23,7 @@ behind them.
    `lake build KVACDocs`
    `python3 scripts/blueprint_coverage_check.py /tmp/manifest.tsv`
 6. Preview locally:
-   `lake env lean --run docs/Main.lean --output docs/_out/site`
+   `lake env lean --run BlueprintMain.lean --output docs/_out/site`
    (`docs/_out/` is gitignored; do not output to an unignored path.)
 
 ## Conventions
@@ -128,6 +128,12 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
   pins below, then run `lake build KVACDocs` explicitly. Plain `lake build`
   validates only `KVAC` (the default target) and will not notice an
   incompatible Verso.
+- **`BlueprintMain.lean` stays in the repository root.** verso-blueprint's
+  `lake exe vbp build` finds the generator only as a root-level
+  `BlueprintMain.lean`, `Main.lean` or `KVACMain.lean`, and downstream tooling
+  relies on that zero-configuration command. Moving the file would break it
+  even though CI (which names the file explicitly) would still pass. Its
+  default output `_out/site` is git-ignored.
 - **Keep the `versoBlueprint` require above `mathlib`** in `lakefile.toml`.
   Lake gives later requires precedence for shared transitive pins; with the
   order reversed, verso-blueprint's `proofwidgets` and `plausible` revisions

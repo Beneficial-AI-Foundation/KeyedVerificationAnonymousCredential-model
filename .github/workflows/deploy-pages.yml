@@ -65,13 +65,13 @@ jobs:
       # Build only the KVACDocs library (a lean_lib of the root package). No
       # executable is defined for the docs: linking one would pull in VCV-io's
       # post-quantum C/FFI sources, which need git submodules and extra compile
-      # flags. The HTML is produced by `lean --run docs/Main.lean` below, which
+      # flags. The HTML is produced by `lean --run BlueprintMain.lean` below, which
       # only needs the .olean artifacts.
       - name: Build Verso docs (library only)
         run: lake build KVACDocs
 
       - name: Generate documentation site
-        run: lake env lean --run docs/Main.lean --output site
+        run: lake env lean --run BlueprintMain.lean --output site
 
       - name: Set up Python
         uses: actions/setup-python@v5

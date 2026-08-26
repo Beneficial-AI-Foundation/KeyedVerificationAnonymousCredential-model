@@ -55,12 +55,19 @@ lake build KVACDocs
 
 `lake build` on its own still builds only `KVAC` (the default target).
 
+The site generator is `BlueprintMain.lean` in the repository root rather than
+under `docs/`: verso-blueprint's `lake exe vbp build` discovers the generator
+only as a root-level `BlueprintMain.lean`/`Main.lean`/`KVACMain.lean`, and
+downstream tooling relies on that zero-configuration entry point. `lake exe
+vbp build` writes to `_out/site` (git-ignored); the `--output` flag overrides
+that, as below.
+
 ## Render
 
 From the repository root:
 
 ```bash
-lake env lean --run docs/Main.lean --output docs/_out/site
+lake env lean --run BlueprintMain.lean --output docs/_out/site
 python3 -m http.server 8000 -d docs/_out/site/html-multi
 ```
 

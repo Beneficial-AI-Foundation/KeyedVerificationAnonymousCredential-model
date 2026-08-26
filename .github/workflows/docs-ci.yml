@@ -81,7 +81,7 @@ jobs:
         run: lake build KVACDocs
 
       - name: Generate documentation site
-        run: lake env lean --run docs/Main.lean --output "$RUNNER_TEMP/site"
+        run: lake env lean --run BlueprintMain.lean --output "$RUNNER_TEMP/site"
 
       - name: Declaration manifest
         run: lake env lean --run scripts/blueprint_decl_manifest.lean > "$RUNNER_TEMP/decl-manifest.tsv"
