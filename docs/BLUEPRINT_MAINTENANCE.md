@@ -139,6 +139,13 @@ secure-messaging landing page.
   it states the correctness experiment in full and never needs those members
   to exist; the obligation is carried by the scheme instances and recorded in
   the node's Tracks CMZ-C / BBS-C TODO.
+- **`partial_evaluation_psi` anchors the substitution and its degree bound
+  only**. Extraction needs `ψ ≠ 0` and the challenge exponent among
+  its roots; it never needs a bound on how many roots `ψ` has. So the node
+  anchors `affineSubst`, `eval_affineSubst` and `natDegree_affineSubst_le`, and
+  the at-most-3-roots count stays unformalized — not because it is false, but
+  because nothing in the reduction consumes it. The Eq. 16 section head in
+  `AGMPolynomial.lean` states the same thing at the source.
 
 ## Pending updates ledger
 
@@ -146,15 +153,7 @@ secure-messaging landing page.
   `ksnd_game` and `se_game` milestone nodes under `core_zkproof`, update the
   `zk_arguments` element (then complete), and drop the two "#54 in review"
   TODO notes (Core and Preliminaries).
-- **`AGMReduction`** (PR #88, issue #89, in review): delivers the Lemma 5.4
-  reduction core only (the probability bound and the security theorems come
-  later, #80/#81). On merge, add a reduction-core `milestone` node, extend
-  `partial_evaluation_psi` with the restored ≤3-roots bound, and update the
-  CMZ-M TODO; `single_attribute_mac` stays unanchored until the full lemma
-  lands (anchoring honesty rule).
-- **Upstream nits found by the docs build**: stale docstring at
-  `AGMPolynomial.lean:412` citing the removed
-  `card_roots_affineSubst_verifPoly_le`; anchored structure fields and
+- **Upstream nits found by the docs build**: anchored structure fields and
   constructors lacking docstrings (`UFQuery.sign`, `AGMQuery.help`, …)
   produce build warnings.
 
