@@ -20,10 +20,10 @@ behind them.
    body; proof dependencies inside the node's `:::proof` block. Prose links
    that must not create an edge use `{bpref "label"}[]`.
 5. Build and check:
-   `lake -d docs build KVACDocs`
+   `lake build KVACDocs`
    `python3 scripts/blueprint_coverage_check.py /tmp/manifest.tsv`
 6. Preview locally:
-   `cd docs && lake env lean --run Main.lean --output _out/site`
+   `lake env lean --run docs/Main.lean --output docs/_out/site`
    (`docs/_out/` is gitignored; do not output to an unignored path.)
 
 ## Conventions
@@ -110,6 +110,41 @@ secure-messaging landing page.
   `python3 scripts/blueprint_progress_history.py update --site docs/_out/site`
   and `python3 scripts/blueprint_dashboard.py --site docs/_out/site`, then
   serve `docs/_out/site`.
+
+## Build layout and pins
+
+The docs are a `lean_lib` (`KVACDocs`, `srcDir = "docs"`) of the root Lake
+package rather than a separate workspace, so Mathlib, VCV-io and the Verso
+family are resolved by the root `lake-manifest.json` and built once. CI caches
+`.lake/packages` under one key derived from `lake-manifest.json` and
+`lean-toolchain`, shared by all three workflows.
+
+- **`versoBlueprint` tracks `lean-toolchain`.** Upstream keeps one release
+  *branch* per Lean version (`v4.28.0` ... `v4.34.0`; there are no tags), so
+  `rev = "v4.30.0"` follows that branch and a bare `lake update` may advance
+  it within the branch. A Verso built for another Lean version does not
+  compile. Toolchain bump procedure: change `lean-toolchain`, the Mathlib
+  `rev` and the `versoBlueprint` `rev` together, run `lake update`, check the
+  pins below, then run `lake build KVACDocs` explicitly. Plain `lake build`
+  validates only `KVAC` (the default target) and will not notice an
+  incompatible Verso.
+- **Keep the `versoBlueprint` require above `mathlib`** in `lakefile.toml`.
+  Lake gives later requires precedence for shared transitive pins; with the
+  order reversed, verso-blueprint's `proofwidgets` and `plausible` revisions
+  replace Mathlib's, forcing a large rebuild and breaking `lake exe cache get`.
+  After any `lake update`, check that both are still on Mathlib's revisions.
+- **Verso is a transitive dependency of KVAC.** Anything that `require`s KVAC
+  also pulls in verso, subverso, verso-slides, illuminate and MD4Lean. This was
+  accepted for the single build tree; the fallback, should it become a
+  problem, is a separate `docs/lakefile.toml` with
+  `packagesDir = "../.lake/packages"`, which shares the packages without the
+  dependency.
+- The scheduled `update.yml` workflow (currently disabled) would also move
+  the Verso pins if re-enabled, and it validates with plain `lake build`
+  only. Before re-enabling it, add a `lake build KVACDocs` step and the
+  `proofwidgets`/`plausible` check above.
+- Contributors with a pre-existing `docs/.lake/` directory from the old
+  separate workspace can delete it; it is unused and still git-ignored.
 
 ## Decision records
 

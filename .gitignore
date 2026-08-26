@@ -1,4 +1,6 @@
 /.lake
+# docs/ is no longer a separate Lake workspace; this only keeps pre-existing
+# local docs/.lake trees (obsolete, safe to delete) out of `git status`.
 docs/.lake/
 docs/_out/
 

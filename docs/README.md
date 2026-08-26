@@ -43,20 +43,24 @@ stages.
 
 ## Build
 
-From the repository root:
+The docs are the `KVACDocs` library of the root Lake package (`srcDir =
+"docs"` in `lakefile.toml`), so they share the root `lake-manifest.json`,
+`.lake/packages` and Mathlib cache with the `KVAC` library. There is no
+separate workspace under `docs/`. From the repository root:
 
 ```bash
-lake -d docs update
-lake -d docs exe cache get
-lake -d docs build KVACDocs Main
+lake exe cache get
+lake build KVACDocs
 ```
+
+`lake build` on its own still builds only `KVAC` (the default target).
 
 ## Render
 
 From the repository root:
 
 ```bash
-lake -d docs env lean --run docs/Main.lean --output docs/_out/site
+lake env lean --run docs/Main.lean --output docs/_out/site
 python3 -m http.server 8000 -d docs/_out/site/html-multi
 ```
 
@@ -66,10 +70,10 @@ The docs import live VCV-io / KVAC modules; if a Lean declaration in a
 referenced module is renamed or removed, the documentation build should fail
 rather than silently drift.
 
-Avoid `lake -d docs build docs` on checkouts without the vendored native
-sources of any dependency that links extern libraries. Building the executable
-links the root package's extern libraries; `lake -d docs build KVACDocs Main`
-and `lean --run` avoid that link step.
+Do not add a `lean_exe` for the docs. Linking an executable pulls in the extern
+libraries of every dependency (VCV-io's post-quantum C/FFI sources need git
+submodules and extra compile flags); `lake build KVACDocs` plus `lean --run`
+avoids that link step.
 
 ## Adding a new chapter
 
