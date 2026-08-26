@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
+import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
@@ -25,9 +26,11 @@ The `Core` part here provides:
   simulated oracle: runs `A` with no `sk`, then extracts `x` from `ψ`'s roots.
 
 This file is the aggregator: the reduction lives in the `AGMReduction/`
-subdirectory, and `Core` is its only part so far. The probability bound (3-DL +
-Schwartz–Zippel) and the security theorems land in later parts, so Lemma 5.4 is
-untagged here until that bound arrives.
+subdirectory. `SecurityN1` states the Lemma 5.4 target bound
+(`agm_ufcmva_le_n1_nonIdentityBound_explicit`, currently `sorry`d — the visible
+target the remaining parts prove). The probability layer (3-DL + Schwartz–Zippel)
+lands in later parts, discharging that `sorry`; Lemma 5.4 stays untagged here
+until it is sorry-free.
 
 The module is separate from `AlgebraicMAC` because importing `AGMPolynomial` arms
 the order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
