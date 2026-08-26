@@ -64,7 +64,7 @@ lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F
 section B2SignCoupling
 open OracleComp.ProgramLogic.Relational
 
-/-- **Sign-step coupling** (B2, the novel core; the fidelity sentence of O24 Eq. 14). The
+/-- **Sign-step coupling** (the novel core; the fidelity sentence of Eq. 14). The
 reduction's `sign` step (`reductionSignStep`) and the honest `sign` step
 (`agmOracleImpl (.sign _)` at `Coupling`'s `maskedKey x aM bM`, the honest key read at the
 masked secrets `(a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)`) produce identically-distributed tags and preserve
@@ -141,9 +141,9 @@ lemma reductionSignStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedP
 
 end B2SignCoupling
 
-/-! ## A1: log invariants -/
+/-! ## log invariants -/
 
-/-- **A1 (log-honesty invariant), shared core.** `redLog_honest` and `redLog_U_form` are two
+/-- **(log-honesty invariant), shared core.** `redLog_honest` and `redLog_U_form` are two
 projections of the same `simulateQ`-preserved invariant, so their identical case split is proved
 once here. -/
 private lemma redLog_honest_and_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
@@ -186,7 +186,7 @@ private lemma redLog_honest_and_U_form (x : F) (aM bM : FixedMasks F) (ep : Embe
   exact simulateQ_run_preservesInv _ _ hInv oa [] ⟨fun _ h => absurd h List.not_mem_nil,
     fun _ h => absurd h List.not_mem_nil⟩ out hout
 
-/-- **A1 (log-honesty invariant).** With the genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
+/-- **(log-honesty invariant).** With the genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
 every tag the reduction's simulated oracle logs is honest — `Vⱼ = macScalar (maskedKey …) mⱼ · Uⱼ`,
 the same `macScalar` form `redLogHonestInv` states the relation in, so a caller can move between
 the two without a conversion. The `sign` branch appends only honest tags (`embedTag_eq`, retyped
