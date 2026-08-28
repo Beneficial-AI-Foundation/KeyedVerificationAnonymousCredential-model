@@ -24,8 +24,8 @@ reviews against a visible target. The proof arrives incrementally:
 2. each subsequent part discharges one sub-lemma, sorry-free, until the theorem
    is kernel-verified with no remaining `sorry`.
 
-Until then the theorem below carries the only `sorry` of this subtree and stays
-untagged in the blueprint (coverage marks require sorry-freedom).
+Until then the theorem below carries the only `sorry` of this subtree; its
+blueprint node (`single_attribute_mac`) shows "contains sorry" until proven.
 
 **Two departures from O24's printed bound** (Lemma 5.4, p. 36, states
 `Adv^{3-dl} + Adv^{dl} + 1/p`):

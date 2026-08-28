@@ -304,7 +304,7 @@ Factors through the single-attribute case {uses "single_attribute_mac"}[], lifte
 {uses "forgery_case_gap_dl"}[] and {uses "forgery_case_mac"}[].
 :::
 
-:::theorem "single_attribute_mac" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4") (effort := "large") (priority := "high")
+:::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_nonIdentityBound_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4") (effort := "large") (priority := "high")
 *O24 Lemma 5.4.* Base case of {bpref "mucmz_mac_security"}[]: in the algebraic group
 model, single-attribute μCMZ is an algebraic MAC over `ℤ_p`, UF-CMVA
 secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]).
