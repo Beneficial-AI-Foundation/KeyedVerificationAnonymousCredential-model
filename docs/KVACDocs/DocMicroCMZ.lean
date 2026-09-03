@@ -208,7 +208,7 @@ distribution matches the honest sign oracle's; the mask coordinate stays
 uniform on every fiber.
 :::
 
-:::theorem "agm_eval_bridge" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.toReprCoeffs, KVAC.Schemes.MicroCMZ.gamePoint, KVAC.Schemes.MicroCMZ.sum_zipWith_eq_fin_sum_getD, KVAC.Schemes.MicroCMZ.agmRepr_eval_eq_eval_toPoly, KVAC.Schemes.MicroCMZ.agm_n1_identity_Ustar_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "agm_eval_bridge" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.toReprCoeffs, KVAC.Schemes.MicroCMZ.gamePoint, KVAC.Schemes.MicroCMZ.sum_zipWith_eq_fin_sum_getD, KVAC.Schemes.MicroCMZ.agmRepr_eval_eq_eval_toPoly, KVAC.Schemes.MicroCMZ.agm_n1_identity_Ustar_eq_zero, KVAC.Schemes.MicroCMZ.verifPoly_eval_eq_zero_of_keySmul") (parent := "cmz_amac") (tags := "milestone")
 The dictionary joining the AGM game {uses "agm_model"}[] to the
 polynomial layer {uses "agm_verification_polynomial"}[]: a game-layer
 representation's coefficients read as polynomial coefficients, the
@@ -218,6 +218,15 @@ point, scaled onto the generator. Its corollary carries
 {uses "identity_case_lem54"}[] across the bridge: a fresh forgery whose
 verification polynomial vanishes identically forces `U* = 0`, which
 {uses "mucmz_construction"}[] rejects.
+
+The consistency branch runs the other way, and produces the vanishing rather
+than consuming it: given only a log-honest transcript and the verification
+relation between the two representations, the verification polynomial
+evaluates to `0` at that same point.
+This is the paper's Equation (12), which does not hold over the polynomial
+ring but does hold once evaluated in the relative discrete logarithms.
+Neither freshness of `m*` nor `U* ≠ 0` is assumed here; those belong to the
+case split its caller performs.
 :::
 
 :::proof "agm_eval_bridge"
@@ -227,10 +236,13 @@ reconciled by a `zipWith`-to-`Fin`-sum lemma reading the shorter
 coefficient list with a zero default, matching the truncation in the
 game's evaluation; the honest-tag hypothesis rewrites each `Vⱼ` into its
 key multiple of `Uⱼ`. The identity corollary then rewrites through the
-bridge and the polynomial-layer identity case, leaving `0 • gen`.
+bridge and the polynomial-layer identity case, leaving `0 • gen`. The
+consistency branch pushes both representations through the bridge and cancels
+the generator by injectivity, turning the group relation into the scalar
+identity that the verification polynomial's `α · keyPoly − β` shape reads off.
 :::
 
-:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
+:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.gamePoint_eq_embed_affine, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
 *O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
 parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
 `X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
@@ -248,6 +260,13 @@ exponent: `H`, `Xᵣ` and `X₁` are the masked scalars' generator multiples,
 {uses "mucmz_construction"}[]. These are named identities rather than
 arithmetic in a comment, because the deferred proof that the simulated and
 real games are distributed identically has to cite exactly them.
+
+The same masking identifies the two evaluation points. A logged transcript's
+discrete-log point of {uses "agm_eval_bridge"}[] *is* the masked point
+`v ↦ a v + χ·b v`, once every tag is in embedded form. That is the hinge the
+extraction turns on: the verification polynomial vanishes at the transcript
+point, and the substitution {bpref "dlog_root_recovery"}[] inverts is stated
+at the masked one.
 
 O24 prints `X₀`'s `X`-coefficient as `(a_h·b₀ + b_h)`, dropping the `a₀`
 factor; the correct coefficient `a₀·b_h + b₀·a_h` is the one used here.
@@ -510,7 +529,7 @@ case is bounded by the single-attribute MAC's UF-CMVA advantage
 ({uses "ufcmva_game"}[]).
 :::
 
-:::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
+:::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
 *O24 Equation 12.* The AGM verification polynomial identity for μCMZ
 unforgeability at `n = 1`: a winning forgery against {uses "mucmz_construction"}[]
 would force this identity in the secret exponents
