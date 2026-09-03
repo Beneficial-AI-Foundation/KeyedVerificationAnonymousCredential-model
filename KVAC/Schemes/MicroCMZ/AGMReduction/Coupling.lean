@@ -132,7 +132,8 @@ are coupled by `f x = y`. Witness: the graph coupling `evalDist a >>= fun x => p
 The per-query brick for the `sign` arm (`reductionSignStep` vs `agmOracleImpl (.sign _)`):
 `embedTag_eq` puts the reduction's tag in the honest shape `(U, key·U)` and
 `sign_masked_tag_dist_eq` matches its distribution to `mac`'s; this lifts that equality to
-“computed tag = sampled tag”, for `relTriple_bind` to thread through the log append. -/
+“computed tag = sampled tag”, which `relTriple_post_mono` and `relTriple_map` then thread
+through the log append (`SignCoupling`'s `reductionSignStep_relTriple`). -/
 lemma relTriple_map_eq {α β : Type} (a : OracleComp specR₁ α) (f : α → β)
     (b : OracleComp specR₂ β) (h : evalDist (f <$> a) = evalDist b) :
     RelTriple a b (fun x y => f x = y) := by
