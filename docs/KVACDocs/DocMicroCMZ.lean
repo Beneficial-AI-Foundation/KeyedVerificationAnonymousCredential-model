@@ -320,6 +320,25 @@ rather than expanded, so it is literally what the signing oracle of
 {uses "mucmz_construction"}[] emits.
 :::
 
+:::theorem "masked_key_normal_form_bridge" (lean := "KVAC.Schemes.MicroCMZ.macScalar_maskedKey_expand") (parent := "cmz_amac") (tags := "milestone")
+The masked-key normal-form bridge for the `sign` arm of
+{bpref "simulated_sign_oracle"}[], built on the bricks of
+{uses "reduction_coupling_bricks"}[].
+
+The masked key scalar has two normal forms. The state invariant of
+{bpref "reduction_coupling_bricks"}[] states it through the scheme's own
+key scalar, so that it is literally what the signing oracle emits; the
+eval bridge lemmas of {bpref "agm_eval_bridge"}[] instead take it
+spelled out as `x₀ + xᵣ + m·x₁` at the masked secrets. One lemma trades
+one form for the other, and it also witnesses that at a single attribute
+the scalar reads its message only at index `0`.
+:::
+
+:::proof "masked_key_normal_form_bridge"
+Unfolding the key scalar at one attribute leaves a polynomial identity in
+the masks, closed by ring normalisation.
+:::
+
 :::theorem "sz_static_core" (lean := "KVAC.Schemes.MicroCMZ.eval_shift_eq_zero_of_affineSubst_eq_zero, KVAC.Schemes.MicroCMZ.card_filter_eval_eq_zero_le, KVAC.Schemes.MicroCMZ.probEvent_eval_shift_eq_zero_le") (parent := "cmz_amac") (tags := "milestone")
 The view-independent half of the Schwartz–Zippel argument. The shift
 lemma turns "the partial evaluation {uses "partial_evaluation_psi"}[]
