@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
+import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 
 /-!
@@ -19,7 +20,14 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   coupling bricks, the reduction ↔ honest state invariant, and the **static**
   Schwartz–Zippel core.
 
-The planned remaining parts (DeterministicCore, Assembly, Shear, ShearShift,
+This file is the aggregator: the reduction lives in the `AGMReduction/`
+subdirectory. `SecurityN1` states the Lemma 5.4 target bound
+(`agm_ufcmva_le_n1_nonIdentityBound_explicit`, currently `sorry`d — the visible
+target the remaining parts prove). The probability layer (3-DL + Schwartz–Zippel)
+lands in later parts, discharging that `sorry`; Lemma 5.4 stays untagged here
+until it is sorry-free.
+
+The planned remaining parts (SignCoupling, Assembly, Shear, ShearShift,
 Security) will be added to the import list above as they land. The
 distribution-layer bad-event bound and the security theorems are assembled
 there; Lemma 5.4 is untagged here until that bound lands.
