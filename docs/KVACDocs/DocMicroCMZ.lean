@@ -267,7 +267,10 @@ combination of `g, X, X', X''` that agrees with evaluation at the
 unknown exponent. As with {uses "challenge_embedding"}[], the two
 identities the coupling will cite are named: each issued tag is the honest
 key multiple of its own base at the challenge exponent, and each
-mask-derived univariate evaluates there to the mask it lifts.
+mask-derived univariate evaluates there to the mask it lifts. The
+fidelity sentence — each issued tag honestly distributed — is discharged
+per query in {bpref "sign_oracle_coupling"}[]; the run-level view equality
+that lifts it across a whole transcript is {bpref "run_level_coupling"}[].
 
 Two departures from O24. Equation 14 prints `Vⱼ`'s `G`-coefficient with a
 spurious `a_h` factor; the correct key coefficient `a₀ + aᵣ + a₁mⱼ` is
@@ -339,6 +342,23 @@ Unfolding the key scalar at one attribute leaves a polynomial identity in
 the masks, closed by ring normalisation.
 :::
 
+:::theorem "sign_oracle_coupling" (lean := "KVAC.Schemes.MicroCMZ.reductionSignStep_relTriple") (parent := "cmz_amac") (tags := "milestone")
+The deterministic half of the reduction ↔ honest-game coupling for the
+`sign` arm of {uses "simulated_sign_oracle"}[], built on the bricks of
+{uses "reduction_coupling_bricks"}[] and stated through the normal form of
+{uses "masked_key_normal_form_bridge"}[]. The reduction's `sign` step is
+coupled with the honest one, preserving the state invariant across the log
+append — the first arm to establish this, because it is the only one that
+extends the log. Per-query honesty itself is the `embedTag_eq` of
+{uses "simulated_sign_oracle"}[], read at the masked key.
+:::
+
+:::proof "sign_oracle_coupling"
+Per-query honesty is module algebra at the real discrete logs; the coupling
+triple lifts it through the mask sampling, which {uses "sign_masks"}[] shows
+is honestly distributed, and threads the invariant through the log append.
+:::
+
 :::theorem "sz_static_core" (lean := "KVAC.Schemes.MicroCMZ.eval_shift_eq_zero_of_affineSubst_eq_zero, KVAC.Schemes.MicroCMZ.card_filter_eval_eq_zero_le, KVAC.Schemes.MicroCMZ.probEvent_eval_shift_eq_zero_le") (parent := "cmz_amac") (tags := "milestone")
 The view-independent half of the Schwartz–Zippel argument. The shift
 lemma turns "the partial evaluation {uses "partial_evaluation_psi"}[]
@@ -372,6 +392,63 @@ shift space gives the probability form. No top-coefficient or
 homogeneous-component lemma is needed.
 :::
 
+Unanchored stubs for the rest of the Lemma 5.4 chain. Each is registered
+now so the summary's denominator is honest, and each is anchored by the pull
+request of the stack that lands it.
+
+:::theorem "verify_help_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The `verify` and `help` arms of {uses "simulated_sign_oracle"}[] answer as
+the honest oracle of {uses "agm_model"}[] does, the counterpart of
+{uses "sign_oracle_coupling"}[] for the two arms that leave the log
+untouched. Both evaluate the represented check in the exponent, so the
+statement is an equality of answers rather than of distributions.
+:::
+
+:::theorem "verification_polynomial_consistency" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The consistency step for {uses "agm_verification_polynomial"}[]: on the
+non-identity branch a represented transcript that passes the reduction's
+check has its verification polynomial vanishing at the embedded point, and
+its tag base component vanishes there too. What turns a winning forgery
+into a root of {uses "partial_evaluation_psi"}[] for
+{uses "dlog_root_recovery"}[].
+:::
+
+:::theorem "transcript_invariants" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The properties of a whole reduction transcript that the bad-event analysis
+reads: every logged record carries the embedded base shape and the honest
+tag relation of {uses "reduction_coupling_bricks"}[], and the represented
+forgery is bounded in degree by {uses "agm_verification_polynomial"}[].
+The per-query invariant of {uses "sign_oracle_coupling"}[] iterated over a
+run.
+:::
+
+:::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+The run-level view equality: the adversary's view in the game of
+{uses "agm_model"}[] and its view against {uses "simulated_sign_oracle"}[]
+are identically distributed. Lifts the per-step couplings of
+{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[]
+across a whole transcript by induction on the oracle calls, over the
+keygen reparametrization that trades the honest key for the masks of
+{uses "challenge_embedding"}[].
+:::
+
+:::theorem "sz_adaptive_bound" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+The Schwartz–Zippel bad event at `3/p` for the adversary's *own*
+polynomial. Upgrades the fixed-polynomial statement of
+{uses "sz_static_core"}[] to the adaptive one by decoupling the offset from
+the shift — O24's "the `b`'s are uniformly random and perfectly hidden by
+the respective `a`'s" — surviving the nonzero-`U` conditioning of
+{uses "sign_masks"}[].
+:::
+
+:::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The union bound that assembles {bpref "single_attribute_mac"}[]: outside
+the identity branch of {uses "identity_case_lem54"}[], a win is either a
+3-DL extraction through {uses "dlog_root_recovery"}[] or the bad event of
+{uses "sz_adaptive_bound"}[], so the advantage is at most
+`Adv^{3-dl} + 3/p`.
+:::
+
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
 *O24 Theorem 5.1.* In the algebraic group model, μCMZ is an
 `n`-attribute algebraic MAC ({uses "algebraic_mac"}[]), UF-CMVA secure in the
@@ -403,6 +480,17 @@ queries without a key (masked through {uses "sign_masks"}[]), and the
 partial evaluation {uses "partial_evaluation_psi"}[] has the challenge's
 discrete logarithm among at most 3 roots, recovered by
 {uses "dlog_root_recovery"}[].
+
+The steps this decomposes into, in the order the stack lands them: the
+per-step couplings {uses "sign_oracle_coupling"}[] and
+{uses "verify_help_oracle_coupling"}[], stated through
+{uses "masked_key_normal_form_bridge"}[]; the consistency step
+{uses "verification_polynomial_consistency"}[] and the
+{uses "transcript_invariants"}[] it reads; the run-level view equality
+{uses "run_level_coupling"}[]; the bad-event bound
+{uses "sz_adaptive_bound"}[] over the static core
+{uses "sz_static_core"}[]; and the union bound
+{uses "lem54_bound_assembly"}[].
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
