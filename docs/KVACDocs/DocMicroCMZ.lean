@@ -394,7 +394,7 @@ homogeneous-component lemma is needed.
 
 Unanchored stubs for the rest of the Lemma 5.4 chain. Each is registered
 now so the summary's denominator is honest, and each is anchored by the pull
-request of the stack that lands it.
+request of the stack that delivers it.
 
 :::theorem "verify_help_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The `verify` and `help` arms of {uses "simulated_sign_oracle"}[] answer as
@@ -411,6 +411,25 @@ check has its verification polynomial vanishing at the embedded point, and
 its tag base component vanishes there too. What turns a winning forgery
 into a root of {uses "partial_evaluation_psi"}[] for
 {uses "dlog_root_recovery"}[].
+:::
+
+:::theorem "consistency_case_lem54" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+Case 2 of Lemma 5.4, the companion of {uses "identity_case_lem54"}[]: where
+that one reads `U* = 0` off a verification polynomial that vanishes over the
+polynomial ring, this one *produces* a vanishing, at the transcript's
+discrete-log point of {uses "agm_eval_bridge"}[]. O24 §5.3's "Equation (12)
+does not hold over `Z_p[…]` but does hold when evaluated in the relative
+discrete logarithms", for {uses "agm_verification_polynomial"}[].
+:::
+
+:::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+{uses "consistency_case_lem54"}[] restated against the embedding bundle of
+{uses "challenge_embedding"}[] instead of the raw equations, at an abstract
+arity where the transcript's index casts are discharged, together with the
+matching represented-value bridge giving each represented value as the
+affinely substituted evaluation of its own polynomial — the form
+{uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
+couplings take their hypotheses in.
 :::
 
 :::theorem "transcript_invariants" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
@@ -481,12 +500,14 @@ partial evaluation {uses "partial_evaluation_psi"}[] has the challenge's
 discrete logarithm among at most 3 roots, recovered by
 {uses "dlog_root_recovery"}[].
 
-The steps this decomposes into, in the order the stack lands them: the
+The steps this decomposes into, in the order the stack delivers them: the
 per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[], stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
-{uses "verification_polynomial_consistency"}[] and the
-{uses "transcript_invariants"}[] it reads; the run-level view equality
+{uses "consistency_case_lem54"}[], its embedded restatements
+{uses "embedded_consistency_bricks"}[] and
+{uses "verification_polynomial_consistency"}[], and the
+{uses "transcript_invariants"}[] they read; the run-level view equality
 {uses "run_level_coupling"}[]; the bad-event bound
 {uses "sz_adaptive_bound"}[] over the static core
 {uses "sz_static_core"}[]; and the union bound
