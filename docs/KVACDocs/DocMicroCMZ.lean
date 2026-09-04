@@ -242,7 +242,7 @@ the generator by injectivity, turning the group relation into the scalar
 identity that the verification polynomial's `α · keyPoly − β` shape reads off.
 :::
 
-:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.gamePoint_eq_embed_affine, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
+:::definition "challenge_embedding" (lean := "KVAC.Schemes.MicroCMZ.FixedMasks, KVAC.Schemes.MicroCMZ.FixedMasks.embed, KVAC.Schemes.MicroCMZ.FixedMasks.keyCoeff, KVAC.Schemes.MicroCMZ.EmbeddedParams, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt, KVAC.Schemes.MicroCMZ.RedEmbedding, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt_of_redEmbedding, KVAC.Schemes.MicroCMZ.embedMask_eq, KVAC.Schemes.MicroCMZ.embedX0_eq, KVAC.Schemes.MicroCMZ.gamePoint_eq_embed_affine, KVAC.Schemes.MicroCMZ.macScalar_eq_keyCoeff, KVAC.Schemes.MicroCMZ.microCMZ3DLReduction, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZ3DLReductionAdv") (parent := "cmz_amac") (tags := "paper, O24 Eq 13")
 *O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
 parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
 `X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
@@ -253,6 +253,11 @@ reduction adversary runs the AGM adversary against
 {uses "dlog_root_recovery"}[]. Its experiment and advantage fix the
 challenge base to the generator by construction, so the reduction can
 never be run at a base where it is unsound.
+
+`RedEmbedding` restates the same four equations as one `Prop` bundle, so a
+consumer takes a single hypothesis rather than four separate ones;
+`AGMRepr.evalAt_of_redEmbedding` rewrites `evalAt` into the explicit embedded
+form the consistency-core lemmas take their arguments in.
 
 Against genuine challenge powers the embedding is *honest* at the challenge
 exponent: `H`, `Xᵣ` and `X₁` are the masked scalars' generator multiples,
@@ -423,13 +428,22 @@ untouched. Both evaluate the represented check in the exponent, so the
 statement is an equality of answers rather than of distributions.
 :::
 
-:::theorem "verification_polynomial_consistency" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The consistency step for {uses "agm_verification_polynomial"}[]: on the
-non-identity branch a represented transcript that passes the reduction's
-check has its verification polynomial vanishing at the embedded point, and
-its tag base component vanishes there too. What turns a winning forgery
-into a root of {uses "partial_evaluation_psi"}[] for
-{uses "dlog_root_recovery"}[].
+:::theorem "verification_polynomial_consistency" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+The consistency step for {uses "agm_verification_polynomial"}[]: a represented
+transcript that passes the reduction's check has its verification polynomial
+vanishing at the embedded point `v ↦ a v + x·b v`. Read off the embedding
+bundle of {uses "challenge_embedding"}[] rather than the raw equations, and
+stated at an abstract arity tied to the transcript by its length, so the
+index casts collapse and the caller reads the vanishing with no dependent
+bookkeeping. What turns a winning forgery into a root of
+{uses "partial_evaluation_psi"}[] for {uses "dlog_root_recovery"}[].
+:::
+
+:::proof "verification_polynomial_consistency"
+The transcript facts of {uses "transcript_invariants"}[] feed the consistency
+core of {uses "agm_eval_bridge"}[]; substituting the arity away collapses the
+`Fin.cast`s, and the embedding bundle rewrites the game point into the
+embedded one.
 :::
 
 :::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form, KVAC.Schemes.MicroCMZ.redLog_transcript_facts") (parent := "cmz_amac") (tags := "milestone")
