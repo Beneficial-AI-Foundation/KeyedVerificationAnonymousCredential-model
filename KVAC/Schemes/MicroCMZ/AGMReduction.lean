@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
+import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 import KVAC.Schemes.MicroCMZ.AGMReduction.SignCoupling
 
@@ -22,11 +23,18 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 - `SignCoupling` — the deterministic sign-arm coupling and the state invariant
   it preserves.
 
+This file is the aggregator: the reduction lives in the `AGMReduction/`
+subdirectory. `SecurityN1` states the Lemma 5.4 target bound
+(`agm_ufcmva_le_n1_explicit`, currently `sorry`d — the visible target the
+remaining parts prove). The probability layer (3-DL + Schwartz–Zippel) is added
+in later parts, discharging that `sorry`; Lemma 5.4 stays untagged here until it
+is sorry-free.
+
 The planned remaining parts (the verify/help halves of the deterministic core,
 Assembly, Shear, ShearShift, Security) will be added to the import list above
-as they land. The
-distribution-layer bad-event bound and the security theorems are assembled
-there; Lemma 5.4 is untagged here until that bound lands.
+as they are added. The distribution-layer bad-event bound and the security
+theorems are assembled there; Lemma 5.4 is untagged here until that bound is
+proved.
 
 **Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` arms the
 order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
@@ -39,7 +47,7 @@ only *use* the sealed `glog`.
 - The bad-event bound is `3/p`, not the `1/p` O24 prints: Schwartz–Zippel is
   applied to the degree-`≤ 3` *multivariate* `verifPoly` — the `C★` shift lemma
   in `Coupling` routes around the univariate `ψ` — so the bad event costs
-  `deg verifPoly / p = 3/p` (`docs/DESIGN_ALTERNATIVES.md`).
+  `deg verifPoly / p ≤ 3/p` (`docs/DESIGN_ALTERNATIVES.md`).
 - The `Adv^dl` summand is dropped: Lemma 5.4's proof (pp. 36–38) builds only the
   3-DL reduction and no DL reduction, so the summand is left unjustified — in
   O24 it survives only as nonnegative slack. Lemma 5.5's gap-DL term is *not*
