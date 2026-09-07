@@ -131,11 +131,9 @@ and the user's unblinding, chained. `none` propagates either the issuer's
 rejection or the user's abort. The paper's shorthand `KVAC.M(sk, m⃗)` (O24 §4.1)
 is the special case `φ = φ_m⃗`. -/
 def issue (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
-    (m : kvac.MsgVec crs) (φ : kvac.Pred crs) : M (Option (kvac.Cred crs)) := do
-  let (stU, μ) ← kvac.issueUsr₁ crs pp m φ
-  match ← kvac.issueSrv crs sk φ μ with
-  | none => pure none
-  | some σ' => kvac.issueUsr₂ crs stU σ'
+    (m : kvac.MsgVec crs) (φ : kvac.Pred crs) : M (Option (kvac.Cred crs)) :=
+  KVAC.Core.issueChain (kvac.issueUsr₁ crs pp m φ) (kvac.issueSrv crs sk φ)
+    (kvac.issueUsr₂ crs)
 
 /--
 The full one-round presentation interaction `⟨P.Srv(sk, φ) ⇌ P.Usr(pp, m⃗, σ, φ)⟩`
