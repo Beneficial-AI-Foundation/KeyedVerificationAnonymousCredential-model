@@ -281,12 +281,10 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
 /-- **Represented value as a univariate evaluation (oracle-coupling brick).** Under the 3-DL
 embedding (`H = aη·g + bη·X`, `X₀ = (a₀+x·b₀)·H`, `Xᵣ = (aᵣ+x·bᵣ)·g`, `X₁ = (a₁+x·b₁)·g`) and a
 log-honest transcript, a consistent representation `ρ` (i.e. `ρ.evalAt … tags = A₀`) satisfies
-`A₀ = (affineSubst a b ((ρ.toReprCoeffs q).toPoly msgs)).eval x • g`. So the reduction's
-`exponentEval … (p · affineSubst a b (toPoly))` (its `verify`/`help` answer) equals
-`(p.eval x) · A₀` for any univariate `p` of natDegree `≤ 1` — exactly the honest oracle's check.
-This is the deterministic core of the `verify`/`help` arms of the oracle coupling. -/
+`A₀ = (affineSubst a b ((ρ.toReprCoeffs q).toPoly msgs)).eval x • g`. This is the shape the
+deferred `verify`/`help` step couplings consume. -/
 lemma represented_value_eq_affineSubst_eval {q : ℕ} (ρ : AGMRepr F 1)
-    (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
+    {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
     (ca cb msgs : Fin q → F) (A₀ : G)
     (tags : List (G × G)) (hq : tags.length = q)
@@ -304,9 +302,8 @@ lemma represented_value_eq_affineSubst_eval {q : ℕ} (ρ : AGMRepr F 1)
   -- Trade the `macScalar` key for the spelled-out one the eval bridge takes.
   simp only [macScalar_maskedKey_expand] at htf
   rw [← hcons, AGMRepr.evalAt_of_redEmbedding gen hemb,
-    agmRepr_eval_eq_eval_toPoly gen ρ (aM.eta • gen + bM.eta • (x • gen))
-      (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) tags msgs htf.1,
-    gamePoint_eq_embed_affine gen x aM bM
-      (aM.eta • gen + bM.eta • (x • gen)) tags ca cb rfl htf.2,
+    agmRepr_eval_eq_eval_toPoly gen ρ _ (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr)
+      (fun _ => aM.x1 + x * bM.x1) tags msgs htf.1,
+    gamePoint_eq_embed_affine gen x aM bM _ tags ca cb rfl htf.2,
     AGMPoly.eval_affineSubst]
 end KVAC.Schemes.MicroCMZ
