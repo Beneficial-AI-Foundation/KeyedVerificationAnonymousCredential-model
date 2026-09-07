@@ -438,7 +438,7 @@ into a root of {uses "partial_evaluation_psi"}[] for
 {uses "dlog_root_recovery"}[].
 :::
 
-:::theorem "consistency_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_eq_zero_of_keySmul") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "consistency_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_eq_zero_of_keySmul, KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
 Case 2 of Lemma 5.4, the companion of {uses "identity_case_lem54"}[]: where
 that one reads `U* = 0` off a verification polynomial that vanishes over the
 polynomial ring, this one *produces* a vanishing, at the transcript's
