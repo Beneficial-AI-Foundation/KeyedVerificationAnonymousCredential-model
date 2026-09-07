@@ -6,12 +6,12 @@ Authors: Semar Augusto
 import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 
 /-!
-# μCMZ AGM unforgeability — the deterministic core, sign arm (Piece A)
+# μCMZ AGM unforgeability — the deterministic core, sign arm
 
 The *deterministic* half of the reduction ↔ honest-game coupling, for the `sign`
 oracle arm and the state invariant it preserves:
 
-- **B2 (sign), O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
+- **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
   `Coupling`'s `redLogHonestInv`.
 
@@ -41,7 +41,7 @@ variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable (secParam : ℕ)
 
-/-! ## Deterministic core (Piece A) -/
+/-! ## Deterministic core -/
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- **The masked key scalar, expanded.** `Coupling`'s `macScalar_maskedKey_eq` in the *other* normal
@@ -61,7 +61,7 @@ lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F
 section B2SignCoupling
 open OracleComp.ProgramLogic.Relational
 
-/-- **Sign-step coupling** (B2, the novel core; the fidelity sentence of O24 Eq. 14). The
+/-- **Sign-step coupling** (the novel core; the fidelity sentence of O24 Eq. 14). The
 reduction's `sign` step (`reductionSignStep`) and the honest `sign` step
 (`agmOracleImpl (.sign _)` at `Coupling`'s `maskedKey x aM bM`, the honest key read at the
 masked secrets `(a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)`) produce identically-distributed tags and preserve

@@ -280,13 +280,21 @@ degree-1 key against a degree-`≤ 2` representation, so both arms need
 `X''`.
 :::
 
-:::theorem "dlog_root_recovery" (lean := "KVAC.Schemes.MicroCMZ.recoverDlog, KVAC.Schemes.MicroCMZ.recoverDlog_eq, KVAC.Schemes.MicroCMZ.recoverDlog_verifPoly_eq") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "dlog_root_recovery" (lean := "KVAC.Schemes.MicroCMZ.gamePoint_eq_embed_affine, KVAC.Schemes.MicroCMZ.recoverDlog, KVAC.Schemes.MicroCMZ.recoverDlog_eq, KVAC.Schemes.MicroCMZ.recoverDlog_verifPoly_eq") (parent := "cmz_amac") (tags := "milestone")
 The reduction's extraction step: given the masked univariate `ψ` of
 {uses "partial_evaluation_psi"}[] and the challenge `X`, return the root
 of `ψ` whose generator-multiple is `X`. Honest extraction — it consults
 only `ψ`'s root multiset and a decidable equality test, never the
 noncomputable discrete logarithm. When `ψ` is nonzero and the challenge
 exponent is one of its roots, the step returns exactly that exponent.
+
+The step is reached by a change of evaluation point. Under the masking of
+{uses "challenge_embedding"}[], and once every logged tag is in embedded
+form, the transcript's discrete-log point of {uses "agm_eval_bridge"}[] *is*
+the masked point `v ↦ a v + χ·b v`. That equality is what lets the vanishing
+{bpref "consistency_case_lem54"}[] delivers at the transcript point meet the
+substitution of {uses "partial_evaluation_psi"}[], which is stated at the
+masked one.
 :::
 
 :::proof "dlog_root_recovery"
@@ -295,7 +303,10 @@ succeeds; injectivity of `(· • g)` for a nonzero `g` makes the root it
 finds equal to the challenge exponent. Composed with the evaluation law
 of {uses "partial_evaluation_psi"}[], a forgery whose verification
 polynomial vanishes at the embedded point and whose `ψ` is nonzero — the
-Schwartz–Zippel good event — yields the discrete logarithm.
+Schwartz–Zippel good event — yields the discrete logarithm. The change of
+evaluation point is a case split over the variables: the `η` and tag
+coordinates are the embedded-mask identity read off the generator, and the
+three fixed-secret coordinates hold by definition.
 :::
 
 :::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
@@ -413,13 +424,24 @@ into a root of {uses "partial_evaluation_psi"}[] for
 {uses "dlog_root_recovery"}[].
 :::
 
-:::theorem "consistency_case_lem54" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+:::theorem "consistency_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_eq_zero_of_keySmul") (parent := "cmz_amac") (tags := "milestone")
 Case 2 of Lemma 5.4, the companion of {uses "identity_case_lem54"}[]: where
 that one reads `U* = 0` off a verification polynomial that vanishes over the
 polynomial ring, this one *produces* a vanishing, at the transcript's
 discrete-log point of {uses "agm_eval_bridge"}[]. O24 §5.3's "Equation (12)
 does not hold over `Z_p[…]` but does hold when evaluated in the relative
 discrete logarithms", for {uses "agm_verification_polynomial"}[].
+
+The hypotheses are exactly log-honesty of the transcript and the verification
+relation between the two representations. Neither freshness of `m*` nor
+`U* ≠ 0` is assumed; those belong to the case split the caller performs.
+:::
+
+:::proof "consistency_case_lem54"
+Push both representations through the bridge of {uses "agm_eval_bridge"}[] and
+cancel the generator by injectivity, turning the group relation into a scalar
+identity, which the verification polynomial's `α · keyPoly − β` shape reads
+off against the key polynomial's evaluation.
 :::
 
 :::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
@@ -531,7 +553,7 @@ case is bounded by the single-attribute MAC's UF-CMVA advantage
 ({uses "ufcmva_game"}[]).
 :::
 
-:::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
+:::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
 *O24 Equation 12.* The AGM verification polynomial identity for μCMZ
 unforgeability at `n = 1`: a winning forgery against {uses "mucmz_construction"}[]
 would force this identity in the secret exponents
