@@ -131,6 +131,15 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
 `.lake/packages` under one key derived from `lake-manifest.json` and
 `lean-toolchain`, shared by all three workflows.
 
+- **A cold CI run after an idle week is expected, not a regression.** GitHub
+  removes a cache entry that has not been accessed for 7 days, and a pull
+  request run reads only the entries of its own branch, its base branch and
+  `main`. Any run that restores the `main` entry keeps it alive (a pull
+  request restore counts), so the entry only expires when no CI runs at all
+  for a week. After that, every pull request runs the cold path (about
+  13 minutes, one Mathlib download and the Verso family from source) until the
+  next push to `main` writes a new entry; a pull request's own save is scoped
+  to that pull request and does not help the others.
 - **`versoBlueprint` tracks `lean-toolchain`.** Upstream keeps one release
   *branch* per Lean version (`v4.28.0` ... `v4.34.0`; there are no tags), so
   `rev = "v4.30.0"` follows that branch and a bare `lake update` may advance

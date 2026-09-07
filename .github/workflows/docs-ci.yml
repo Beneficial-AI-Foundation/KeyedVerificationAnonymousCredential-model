@@ -11,6 +11,7 @@ on:
     paths:
       - "KVAC/**"
       - "KVAC.lean"
+      - "BlueprintMain.lean"
       - "docs/**"
       - "scripts/blueprint_decl_manifest.lean"
       - "scripts/blueprint_coverage_check.py"
