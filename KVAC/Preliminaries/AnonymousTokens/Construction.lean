@@ -64,7 +64,7 @@ structure ATSyntax (M : Type → Type) [Monad M]
   /-- User issuance-request message `µ`, selected by the CRS. -/
   IssueMsg : {secParam n : Nat} → Crs secParam n → Type
   /-- Server blinded-token response `σ'`, selected by the CRS. -/
-  BlindTok : {secParam n : Nat} → Crs secParam n → Type
+  BlindToken : {secParam n : Nat} → Crs secParam n → Type
   /-- Issuance, user's first move: `(st, µ) ← AT.I.Usr₁(pp, m⃗)`. -/
   issueUsr₁ : {secParam n : Nat} → (crs : Crs secParam n) → Pp crs →
     (Fin n → Msg crs) → M (UsrState crs × IssueMsg crs)
@@ -73,11 +73,11 @@ structure ATSyntax (M : Type → Type) [Monad M]
   unconditionally, but μBBS_AT's keeps its `C′ ≠ 0_G` check (O24 Figure 10),
   so the interface carries rejection like `KVACSyntax.issueSrv`. -/
   issueSrv : {secParam n : Nat} → (crs : Crs secParam n) → Sk crs →
-    IssueMsg crs → M (Option (BlindTok crs))
+    IssueMsg crs → M (Option (BlindToken crs))
   /-- Issuance, user's second move: `σ ← AT.I.Usr₂(st, σ')`. Returns `none`
   when the user's checks on the server's response fail. -/
   issueUsr₂ : {secParam n : Nat} → (crs : Crs secParam n) → UsrState crs →
-    BlindTok crs → M (Option (Token crs))
+    BlindToken crs → M (Option (Token crs))
   /-- Verification `0/1 ← AT.V(sk, m⃗, σ)`. -/
   verify : {secParam n : Nat} → (crs : Crs secParam n) → Sk crs →
     (Fin n → Msg crs) → Token crs → Bool
@@ -90,15 +90,12 @@ variable {secParam n : Nat}
 /--
 The full one-round issuance interaction `⟨I.Usr(pp, m⃗) ⇌ I.Srv(sk)⟩`:
 the user's request, the server's response, and the user's unblinding,
-chained. `none` propagates either the server's rejection or the user's
-abort.
+chained through the shared `issueChain`. `none` propagates either the
+server's rejection or the user's abort.
 -/
 def issue (crs : tok.Crs secParam n) (sk : tok.Sk crs) (pp : tok.Pp crs)
-    (m : tok.MsgVec crs) : M (Option (tok.Token crs)) := do
-  let (st, μ) ← tok.issueUsr₁ crs pp m
-  match ← tok.issueSrv crs sk μ with
-  | none => pure none
-  | some resp => tok.issueUsr₂ crs st resp
+    (m : tok.MsgVec crs) : M (Option (tok.Token crs)) :=
+  issueChain (tok.issueUsr₁ crs pp m) (tok.issueSrv crs sk) (tok.issueUsr₂ crs)
 
 end ATSyntax
 
