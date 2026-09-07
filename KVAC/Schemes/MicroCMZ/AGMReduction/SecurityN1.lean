@@ -13,13 +13,16 @@ subdirectory exists to prove:
 
   `AGM_UF_CMVAAdv gen A secParam ≤ microCMZ3DLReductionAdv gen A + 3/p`.
 
-The statement is deliberately landed first, `sorry`d, so that every part of the
-reduction (`Core`, `Coupling`, `SignCoupling`, and the parts still to land)
+The bound speaks of the instrumented AGM game `AGM_UF_CMVAGame` of
+`AlgebraicMAC.lean`; the bridge to the plain `UF_CMVAGame` is tracked in #81.
+
+The statement is deliberately added first, `sorry`d, so that every part of the
+reduction (`Core`, `Coupling`, `SignCoupling`, and the parts still to be added)
 reviews against a visible target. The proof arrives incrementally:
 
 1. the proof *skeleton* replaces the `sorry` here with an assembly over named,
    individually-`sorry`d sub-lemmas (the reparametrized experiment `redFull`,
-   the game ↔ `redFull` distribution equality, the win-implies-extract glue,
+   the game ↔ `redFull` distribution equality, the change of evaluation point,
    and the Schwartz–Zippel bad-event bound `3/p`);
 2. each subsequent part discharges one sub-lemma, sorry-free, until the theorem
    is kernel-verified with no remaining `sorry`.
@@ -30,14 +33,17 @@ blueprint node (`single_attribute_mac`) shows "contains sorry" until proven.
 **Two departures from O24's printed bound** (Lemma 5.4, p. 36, states
 `Adv^{3-dl} + Adv^{dl} + 1/p`):
 
-- The bad-event bound is `deg ψ / p = 3/p` (Schwartz–Zippel on the degree-≤3
-  `ψ`), not the `1/p` O24 prints (`docs/DESIGN_ALTERNATIVES.md`).
-- The `Adv^dl` summand is dropped: Lemma 5.4's proof (pp. 36–38) builds only the
-  3-DL reduction and no DL reduction, so the summand is left unjustified — in
-  O24 it survives only as nonnegative slack. Lemma 5.5's gap-DL term is *not*
-  this term: it is a separate `n = poly` argument (its case (i) collision branch,
-  via Thm 5.6), and there is no collision branch at `n = 1`. See
-  `docs/presentations/rolf-status/errata.md` §6.
+- The bad-event bound is `deg ψ / p ≤ 3/p` (Schwartz–Zippel on the degree-≤3
+  `ψ`), not the `1/p` O24 prints (`docs/DESIGN_ALTERNATIVES.md`). With `d` the
+  total degree of `φ`, the `χ^d` coefficient of `ψ` is the degree-`d`
+  homogeneous part of `φ` at the `b` masks, so the bound is `d/p ≤ 3/p`, with
+  equality only when `φ` has total degree 3.
+- The `Adv^dl` summand is dropped, on the proof of Lemma 5.4 itself (pp. 36–38):
+  it builds one reduction, to 3-DL, and no DL reduction, so the summand is left
+  unjustified — in O24 it survives only as nonnegative slack
+  (`docs/presentations/rolf-status/errata.md` §2). Lemma 5.5's gap-DL term is
+  *not* this term: it is a separate `n = poly` argument (its case (i) collision
+  branch, via Thm 5.6), and there is no collision branch at `n = 1` (errata §6).
 -/
 
 set_option autoImplicit false
@@ -53,7 +59,7 @@ variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable (secParam : ℕ)
 
 /--
-**Non-identity branch of O24 Lemma 5.4** (statement; the proof lands across the
+**O24 Lemma 5.4, `n = 1`** (statement; the proof is added across the
 Lemma 5.4 PR series — see the module docstring). Bounds the AGM advantage by the
 3-DL term plus `3/p`, with the `dlogAdv` term dropped (slack for `n = 1`).
 (O24 prints `1/p`; the bad event is a degree-≤3 Schwartz–Zippel restriction, so
@@ -97,10 +103,10 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
    - *distribution equivalence*: the simulated game is identically distributed to
      `AGM_UF_CMVAGame` (the masks make `H, X₀, Xᵣ, X₁, Uⱼ` uniform; Sign matches
      `mac`);
-   - *bad event*: `ψ = 0` despite `verifPoly ≠ 0` only with probability `3/p`
+   - *bad event*: `ψ = 0` despite `verifPoly ≠ 0` only with probability `≤ 3/p`
      (Schwartz–Zippel over the masks: `ψ` restricts a degree-≤3 polynomial to a
-     random line, so `Pr[ψ ≡ 0] ≤ deg ψ / p = 3/p`). -/
-theorem agm_ufcmva_le_n1_nonIdentityBound_explicit (A : AGMUFAdversary F G 1) :
+     random line, so `Pr[ψ ≡ 0] ≤ deg ψ / p ≤ 3/p`). -/
+theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZ3DLReductionAdv gen A + 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
   sorry
