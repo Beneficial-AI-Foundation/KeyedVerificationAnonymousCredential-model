@@ -236,14 +236,16 @@ def AGMRepr.evalAt (ρ : AGMRepr F 1) (gen : G) (ep : EmbeddedParams G)
 consumer takes it as one hypothesis instead of re-spelling each embedded element inside
 every `ρ.eval` argument. These are the reduction's definitions of `H, X0, Xr, X1`
 (see `microCMZ3DLReduction`) read at the genuine challenge powers `X = x·gen`,
-`X' = x²·gen` — `H`, `Xᵣ`, `X₁` up to `module`-provable regrouping, and `X₀` via
-`embedX0_eq`'s ring identity, since the reduction cannot compute `x` and so builds `X₀`
-expanded over `(gen, X, X')`. That gap is why this is a `Prop` bundle of four equations
-rather than an `ep = f aM bM x` definition. -/
+`X' = x²·gen`: `H` literally, `Xᵣ` and `X₁` via `embedMask_eq`, and `X₀` via `embedX0_eq`,
+since the reduction cannot compute `x` and so builds `X₀` expanded over `(gen, X, X')`.
+The reduction's `ep` is only propositionally, never definitionally, equal to any closed
+form in `x`, so the four rewrites are hypotheses either way; bundling them as a `Prop`
+structure is what lets a consumer take them as one argument. -/
 structure RedEmbedding (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) : Prop where
   /-- `H` is the `η`-mask combination of `gen` and the challenge `X = x·gen`. -/
   hH : ep.h = aM.eta • gen + bM.eta • (x • gen)
-  /-- `X₀` is the real `x₀ = a₀ + x·b₀` acting on `H`. -/
+  /-- `X₀` is the real `x₀ = a₀ + x·b₀` acting on `H`. Stated over `ep.h`, not the expanded
+  `H`, so a consumer rewrites with `hX0` before `hH`. -/
   hX0 : ep.x0 = (aM.x0 + x * bM.x0) • ep.h
   /-- `Xᵣ` is the real `xᵣ = aᵣ + x·bᵣ` acting on `gen`. -/
   hXr : ep.xr = (aM.xr + x * bM.xr) • gen
@@ -253,8 +255,7 @@ structure RedEmbedding (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) : 
 omit hgen in
 /-- Rewrite an `evalAt` against a `RedEmbedding`-certified `ep` into the explicit embedded
 form (`H = aη·g + bη·X`, `X₀ = (a₀+x·b₀)·H`, `Xᵣ = (aᵣ+x·bᵣ)·g`, `X₁ = (a₁+x·b₁)·g`) —
-the shape the consistency-core lemmas take their `H, x0, xr, x1` arguments in.
-`verifPoly_eval_embed_eq_zero` opens with this rewrite. -/
+the shape the consistency-core lemmas take their `H, x0, xr, x1` arguments in. -/
 lemma AGMRepr.evalAt_of_redEmbedding {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep) (ρ : AGMRepr F 1) (tags : List (G × G)) :
     ρ.evalAt gen ep tags

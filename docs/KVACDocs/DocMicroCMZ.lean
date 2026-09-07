@@ -458,23 +458,14 @@ identity, which the verification polynomial's `α · keyPoly − β` shape reads
 off against the key polynomial's evaluation.
 :::
 
-:::theorem "embedded_consistency_bricks" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 {uses "consistency_case_lem54"}[] restated against the embedding bundle of
 {uses "challenge_embedding"}[] instead of the raw equations, at an abstract
 arity where the transcript's index casts are discharged, together with the
 matching represented-value bridge giving each represented value as the
 affinely substituted evaluation of its own polynomial — the form
 {uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
-couplings take their hypotheses in. The abstract arity is tied to the
-transcript by its length, so the index casts collapse and the caller reads
-the vanishing with no dependent bookkeeping.
-:::
-
-:::proof "embedded_consistency_bricks"
-The transcript facts of {uses "transcript_invariants"}[] feed
-{uses "consistency_case_lem54"}[]; substituting the arity away collapses the
-`Fin.cast`s, and the embedding bundle rewrites the game point into the
-embedded one.
+couplings take their hypotheses in.
 :::
 
 :::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.reductionOracleImpl_preservesInv, KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")

@@ -234,14 +234,18 @@ lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
   · simpa only [macScalar_maskedKey_eq] using hhon (L.get j) (List.get_mem L j)
   · exact hUform (L.get j) (List.get_mem L j)
 
-/-- Packages `verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` at 
-an *abstract* arity `q` tied to the transcript by `hq : tags.length = q`. 
-Stating the arity as a variable lets us `subst hq` 
-(which collapses the `Fin.cast`s the transcript log forces), so the caller can
+/-- **Vanishing at the masked point, arity-clean.** Packages
+`verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` at an *abstract* arity `q`
+tied to the transcript by `hq : tags.length = q`. Stating the arity as a variable lets us
+`subst hq` (which collapses the `Fin.cast`s the transcript log forces), so the caller can
 instantiate `q := L.length` and read off the verification polynomial vanishing at the
-embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping. -/
+embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping.
+
+The verification relation enters as the single equation `hkey` between the two represented
+values. The extraction assembly (a later PR) rebuilds it from the win predicate's three
+equations `ρU.evalAt … = U*`, `ρV.evalAt … = V*`, `V* = key • U*`. -/
 lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
-    (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
+    {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
     (ca cb msgs : Fin q → F) (mStar0 : F)
     (tags : List (G × G)) (hq : tags.length = q)
@@ -256,15 +260,13 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
         (fun v => FixedMasks.embed aM ca v
           + x * FixedMasks.embed bM cb v)
         (AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q)) = 0 := by
-  rw [AGMRepr.evalAt_of_redEmbedding gen hemb, AGMRepr.evalAt_of_redEmbedding gen hemb]
-    at hkey
   subst hq
-  -- Trade the `macScalar` key for the spelled-out one the abstract-arity lemma takes.
-  simp only [macScalar_maskedKey_expand] at htf hkey
-  have key := verifPoly_eval_eq_zero_of_keySmul gen ρU ρV
-    (aM.eta • gen + bM.eta • (x • gen)) (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr)
-    (fun _ => aM.x1 + x * bM.x1) mStar0 tags msgs htf.1 hkey
-  rwa [gamePoint_eq_embed_affine gen x aM bM
-    (aM.eta • gen + bM.eta • (x • gen)) tags ca cb rfl htf.2] at key
+  -- Open the embedding and trade the `macScalar` key for the spelled-out one the
+  -- abstract-arity lemma takes.
+  simp only [AGMRepr.evalAt_of_redEmbedding gen hemb, macScalar_maskedKey_expand] at htf hkey
+  simpa only [gamePoint_eq_embed_affine gen x aM bM _ tags ca cb rfl htf.2] using
+    verifPoly_eval_eq_zero_of_keySmul gen ρU ρV (aM.eta • gen + bM.eta • (x • gen))
+      (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) mStar0 tags msgs
+      htf.1 hkey
 
 end KVAC.Schemes.MicroCMZ
