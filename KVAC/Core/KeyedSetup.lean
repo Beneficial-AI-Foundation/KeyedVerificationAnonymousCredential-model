@@ -70,4 +70,20 @@ abbrev MsgVec (crs : ks.Crs secParam n) : Type := Fin n → ks.Msg crs
 
 end KeyedSetupSyntax
 
+/--
+The three-move issuance plumbing shared by every keyed scheme with blind
+issuance: the user's first move yields private state and a request, the
+server answers the request or rejects (`none`), and the user finalizes from
+its state and the response, or aborts (`none`). `KVACSyntax.issue`
+(O24 Definition 4.2) and `ATSyntax.issue` (O24 §3.4) are both instances;
+`none` propagates either party's failure.
+-/
+def issueChain {M : Type → Type} [Monad M] {St Req Resp Out : Type}
+    (usr₁ : M (St × Req)) (srv : Req → M (Option Resp))
+    (usr₂ : St → Resp → M (Option Out)) : M (Option Out) := do
+  let (st, μ) ← usr₁
+  match ← srv μ with
+  | none => pure none
+  | some resp => usr₂ st resp
+
 end KVAC.Core

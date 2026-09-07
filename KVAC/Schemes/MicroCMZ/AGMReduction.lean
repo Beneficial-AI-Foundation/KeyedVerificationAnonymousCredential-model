@@ -6,6 +6,7 @@ Authors: Semar Augusto
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
 import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
+import KVAC.Schemes.MicroCMZ.AGMReduction.SignCoupling
 
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
@@ -18,7 +19,9 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   branch, the reduction adversary and its simulated oracle, and root recovery;
 - `Coupling` — the first probability-layer slice: the uniformity and relational
   coupling bricks, the reduction ↔ honest state invariant, and the **static**
-  Schwartz–Zippel core.
+  Schwartz–Zippel core;
+- `SignCoupling` — the deterministic sign-arm coupling and the state invariant
+  it preserves.
 
 This file is the aggregator: the reduction lives in the `AGMReduction/`
 subdirectory. `SecurityN1` states the Lemma 5.4 target bound
@@ -27,10 +30,10 @@ target the remaining parts prove). The probability layer (3-DL + Schwartz–Zipp
 lands in later parts, discharging that `sorry`; Lemma 5.4 stays untagged here
 until it is sorry-free.
 
-The planned remaining parts (SignCoupling, Assembly, Shear, ShearShift,
-Security) will be added to the import list above as they land. The
-distribution-layer bad-event bound and the security theorems are assembled
-there; Lemma 5.4 is untagged here until that bound lands.
+The planned remaining parts (the verify/help halves of the deterministic core,
+Assembly, Shear, ShearShift, Security) will be added to the import list above
+as they land. The distribution-layer bad-event bound and the security theorems
+are assembled there; Lemma 5.4 is untagged here until that bound lands.
 
 **Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` arms the
 order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
