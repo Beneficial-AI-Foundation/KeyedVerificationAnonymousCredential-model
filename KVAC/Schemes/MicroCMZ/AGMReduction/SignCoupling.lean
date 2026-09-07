@@ -173,8 +173,7 @@ every tag the reduction's simulated oracle logs is honest — `Vⱼ = macScalar 
 the same `macScalar` form `redLogHonestInv` states the relation in, so a caller can move between
 the two without a conversion. The `sign` branch appends only honest tags (`embedTag_eq`, retyped
 by `macScalar_maskedKey_eq`); `verify`/`help` leave the log unchanged. Restated from
-`reductionOracleImpl_preservesInv` by `simulateQ_run_preservesInv`; an input of
-`redLog_transcript_facts`. -/
+`reductionOracleImpl_preservesInv` by `simulateQ_run_preservesInv`. -/
 lemma redLog_honest (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
     {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
@@ -200,51 +199,37 @@ lemma redLog_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
 
 omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G]
   [SampleableGroup F G] in
-/-- **Index bridge.** With `tags` the log's tag list, the `Fin.cast`-indexed `j`-th game tag is
-the `j`-th log entry's tag `(Uⱼ, Vⱼ)`. This is what transports per-log-entry invariants onto
-`tags`-indexed statements. -/
-private lemma redLog_tags_get_cast {L : RedLog F G} {tags : List (G × G)}
-    (htags : tags = L.map (fun e : SignRecord F G => e.tag))
-    (hlen : tags.length = L.length) (j : Fin L.length) :
-    tags.get (Fin.cast hlen.symm j) = (L.get j).tag := by
-  subst htags
-  simp only [List.get_eq_getElem, List.getElem_map, Fin.val_cast]
+/-- The issued-tag list has one entry per log entry; names the `Fin.cast` proof the
+transcript-indexed statements below go through. -/
+lemma RedLog.length_tags (L : RedLog F G) : L.tags.length = L.length :=
+  List.length_map _
 
 omit hgen in
 /-- **Transcript facts, index-transported.** Log-honesty (`Vⱼ = keyⱼ·Uⱼ` at the real logs
 `xₖ = aₖ + x·bₖ`) and the embedded `U`-form (`Uⱼ = auⱼ·g + buⱼ·X`), carried from their
-per-log-entry forms onto the transcript along `redLog_tags_get_cast` — the content from which
-the eval bridge lemmas' `htag`/`U`-form hypotheses are assembled. The conclusion
-stays indexed by `Fin L.length` (reaching `tags` entries through the cast) and keeps the
-`macScalar (maskedKey …)` key spelling; a caller still trades the index type and the key
-spelling at the use site.
+per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the tag list `L.tags`
+indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`, the masks
+`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` spelling; a caller
+reaching for `Core`'s eval bridge trades the index type and the key spelling at the use site.
 
 Its inputs are the two components of `redLogHonestInv`'s per-entry conjunction — split as
 `fun e he => (hR.2 e he).2` and `fun e he => (hR.2 e he).1` — which are also exactly the
 conclusions of `redLog_honest` / `redLog_U_form`, so one lemma serves both a caller holding the
-state invariant and a caller holding only support membership of a `simulateQ` run. Both sides
-speak `macScalar (maskedKey …)`, so nothing is converted here; `macScalar_maskedKey_expand` appears
-only to see that at arity 1 the key reads its message at `0` alone, which is what lets an entry's
-own `msg` match the `fun _ => msgs j` the transcript-indexed consumers take.
-
-Returned as a conjunction rather than a structure, matching `redLog_honest_and_U_form`'s shape
-and avoiding a single-use type. -/
+state invariant and a caller holding only support membership of a `simulateQ` run. At arity 1
+the key reads its message at `0` alone (`macScalar_maskedKey_eq`), which is what lets an entry's
+own `msg` match the `fun _ => L.msg j` the transcript-indexed consumers take. -/
 lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
     (hhon : ∀ e ∈ L, e.tag.2 = macScalar (maskedKey x aM bM) e.msg • e.tag.1)
-    (hUform : ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen))
-    {tags : List (G × G)} (htags : tags = L.map (fun e : SignRecord F G => e.tag))
-    (hlen : tags.length = L.length) :
-    (∀ j : Fin L.length, (tags.get (Fin.cast hlen.symm j)).2
-        = macScalar (maskedKey x aM bM) (fun _ => (L.get j).msg 0)
-          • (tags.get (Fin.cast hlen.symm j)).1)
-      ∧ ∀ j : Fin L.length, (tags.get (Fin.cast hlen.symm j)).1
-        = (L.get j).au • gen + (L.get j).bu • (x • gen) :=
-  ⟨fun j => by
-      rw [redLog_tags_get_cast htags hlen j]
-      -- `macScalar` at arity 1 reads its message only at `0`, so the entry's own `msg` and the
-      -- `fun _ => msg 0` the transcript-indexed consumers take agree; `_expand` sees that.
-      simpa only [macScalar_maskedKey_expand] using hhon (L.get j) (List.get_mem L j),
-   fun j => by
-      rw [redLog_tags_get_cast htags hlen j]; exact hUform (L.get j) (List.get_mem L j)⟩
+    (hUform : ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen)) :
+    (∀ j : Fin L.length, (L.tags.get (Fin.cast L.length_tags.symm j)).2
+        = macScalar (maskedKey x aM bM) (fun _ => L.msg j)
+          • (L.tags.get (Fin.cast L.length_tags.symm j)).1)
+      ∧ ∀ j : Fin L.length, (L.tags.get (Fin.cast L.length_tags.symm j)).1
+        = L.aMask j • gen + L.bMask j • (x • gen) := by
+  have hget : ∀ j : Fin L.length, L.tags.get (Fin.cast L.length_tags.symm j) = (L.get j).tag :=
+    fun j => by simp only [RedLog.tags, List.get_eq_getElem, List.getElem_map, Fin.val_cast]
+  refine ⟨fun j => ?_, fun j => ?_⟩ <;> rw [hget]
+  · simpa only [macScalar_maskedKey_eq] using hhon (L.get j) (List.get_mem L j)
+  · exact hUform (L.get j) (List.get_mem L j)
 
 end KVAC.Schemes.MicroCMZ
