@@ -34,16 +34,16 @@ behind them.
   it via `uses`. Example: Lemma 5.4 stays unanchored while its identity case,
   AGM game, and sign-mask milestones are done.
 - **Never half-anchor a milestone.** A milestone counts as formalized as soon
-  as it carries *any* anchor, so a node whose steps land in different pull
-  requests reads as complete from the first one. Bundle freely within a node
-  as long as the whole bundle lands together; split along the boundary where
-  it doesn't, and name each node for its content. Steps still to come are
-  registered as unanchored stubs, listed through `uses` in the `:::proof`
-  block of the element they serve, so the denominator stays honest and each
-  PR of a stack anchors its own stub. Example: the scalar identity
+  as it carries *any* anchor, so a node whose steps are delivered by different
+  pull requests reads as complete from the first one. Bundle freely within a
+  node as long as the whole bundle is delivered together; split along the
+  boundary where it is not, and name each node for its content. Steps still
+  to come are registered as unanchored stubs, listed through `uses` in the
+  `:::proof` block of the element they serve, so the denominator stays honest
+  and each PR of a stack anchors its own stub. Example: the scalar identity
   (`masked_key_normal_form_bridge`) and the sign-arm coupling
-  (`sign_oracle_coupling`) shipped in different PRs, so they are separate
-  nodes, and the rest of the Lemma 5.4 chain sits as stubs under
+  (`sign_oracle_coupling`) are delivered by different pull requests, so they
+  are separate nodes, and the rest of the Lemma 5.4 chain sits as stubs under
   `single_attribute_mac`.
 - **One node per tracker element** (Definition/Theorem/Lemma/Claim/Corollary/
   Figure/Equation/§-interface), labels are descriptive snake_case
