@@ -471,15 +471,24 @@ tag is honest and every logged tag base has the embedded `U`-form
 simulated oracle, and both are stated in the same key-scalar form as
 {uses "reduction_coupling_bricks"}[]'s state invariant, so a caller holding
 the state invariant and a caller holding only support membership produce
-interchangeable facts.
+interchangeable facts. The degree bound on the represented forgery is
+{uses "partial_evaluation_psi"}[]'s.
 :::
 
 :::proof "transcript_invariants"
 An induction over the simulated oracle's arms, of which only `sign` appends
 to the log; that arm appends an honest entry by the `embedTag_eq` of
-{uses "simulated_sign_oracle"}[], retyped through
-{uses "masked_key_normal_form_bridge"}[], while `verify` and `help` leave the
-log alone.
+{uses "simulated_sign_oracle"}[], retyped through the `macScalar_maskedKey_eq`
+of {uses "reduction_coupling_bricks"}[], while `verify` and `help` leave the
+log alone. Reading these facts off the transcript index is
+{uses "transcript_index_transport"}[].
+:::
+
+:::theorem "transcript_index_transport" (parent := "cmz_amac") (tags := "milestone") (effort := "small") (priority := "high")
+The facts of {bpref "transcript_invariants"}[] transported from the log's
+entries onto the transcript index: for every position `j`, the `j`-th logged
+tag is honest and has the embedded `U`-form, stated against the tag list the
+consumers of {uses "reduction_coupling_bricks"}[] index by `Fin`.
 :::
 
 :::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")

@@ -15,7 +15,7 @@ oracle arm and the state invariant it preserves:
 - **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
   `Coupling`'s `redLogHonestInv`;
-- **A1** `redLog_honest` / `redLog_U_form` — the log invariants that feed the
+- `redLog_honest` / `redLog_U_form` — the log invariants that feed the
   eval bridge, proved once as a `simulateQ`-preserved invariant.
 
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
@@ -64,7 +64,7 @@ lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F
 section B2SignCoupling
 open OracleComp.ProgramLogic.Relational
 
-/-- **Sign-step coupling** (the novel core; the fidelity sentence of Eq. 14). The
+/-- **Sign-step coupling** (the novel core; the fidelity sentence of O24 Eq. 14). The
 reduction's `sign` step (`reductionSignStep`) and the honest `sign` step
 (`agmOracleImpl (.sign _)` at `Coupling`'s `maskedKey x aM bM`, the honest key read at the
 masked secrets `(a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)`) produce identically-distributed tags and preserve
@@ -141,7 +141,7 @@ lemma reductionSignStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedP
 
 end B2SignCoupling
 
-/-! ## log invariants -/
+/-! ## Log invariants -/
 
 /-- **(log-honesty invariant), shared core.** `redLog_honest` and `redLog_U_form` are two
 projections of the same `simulateQ`-preserved invariant, so their identical case split is proved
@@ -162,29 +162,20 @@ private lemma redLog_honest_and_U_form (x : F) (aM bM : FixedMasks F) (ep : Embe
     cases t with
     | sign m =>
         simp only [reductionOracleImpl, reductionSignStep] at hz
-        -- `rw`/`simp` keyed on `?mx >>= ?my` no longer matches do-desugared binds (Lean 4.29+
-        -- picks a syntactically different `Bind`), so apply the iff as a term: `_` placeholders
-        -- unify up to defeq and see through `StateT.mk`/`StateT.run` as well.
-        replace hz := (mem_support_bind_iff _ _ _).1 hz
-        obtain ⟨aubu, -, hz⟩ := hz
+        -- `rw`/`simp` keyed on `?mx >>= ?my` does not match the do-desugared bind here, so
+        -- apply the iff as a term: `_` placeholders unify up to defeq and see through
+        -- `StateT.mk`/`StateT.run` as well.
+        obtain ⟨aubu, -, hz⟩ := (mem_support_bind_iff _ _ _).1 hz
         subst hz
-        refine ⟨fun e he => ?_, fun e he => ?_⟩ <;>
-          simp only [List.mem_append, List.mem_singleton] at he
-        · rcases he with he | rfl
-          · exact hσ0.1 e he
-          · rw [macScalar_maskedKey_eq]
-            exact embedTag_eq gen aM bM x (m 0) aubu.val.1 aubu.val.2
-        · rcases he with he | rfl
-          · exact hσ0.2 e he
-          · rfl
-    | verify m σ ρU ρV =>
-        simp only [reductionOracleImpl, reductionVerifyStep] at hz
+        simp only [List.forall_mem_append, List.forall_mem_singleton]
+        exact ⟨⟨hσ0.1, by rw [macScalar_maskedKey_eq]
+                          exact embedTag_eq gen aM bM x (m 0) aubu.val.1 aubu.val.2⟩,
+          hσ0.2, trivial⟩
+    | verify m σ ρU ρV | help A₀ Av Z ρ₀ ρA ρZ =>
+        simp only [reductionOracleImpl, reductionVerifyStep, reductionHelpStep] at hz
         subst hz; exact hσ0
-    | help A₀ Av Z ρ₀ ρA ρZ =>
-        simp only [reductionOracleImpl, reductionHelpStep] at hz
-        subst hz; exact hσ0
-  exact simulateQ_run_preservesInv _ _ hInv oa [] ⟨fun _ h => absurd h List.not_mem_nil,
-    fun _ h => absurd h List.not_mem_nil⟩ out hout
+  exact simulateQ_run_preservesInv _ _ hInv oa [] ⟨List.forall_mem_nil _, List.forall_mem_nil _⟩
+    out hout
 
 /-- **(log-honesty invariant).** With the genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
 every tag the reduction's simulated oracle logs is honest — `Vⱼ = macScalar (maskedKey …) mⱼ · Uⱼ`,
@@ -201,8 +192,8 @@ lemma redLog_honest (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
   (redLog_honest_and_U_form gen x aM bM ep oa out hout).1
 
 /-- Companion to `redLog_honest`: every logged tag's `Uⱼ` is `auⱼ·g + buⱼ·X` (`X = x·g`) — the
-oracle builds it that way and records `(auⱼ, buⱼ)`, so the `sign` case is `rfl`. Supplies the tag
-form `gamePoint_eq_embed_affine` needs. -/
+oracle builds it that way and records `(auⱼ, buⱼ)`, so the `sign` case is definitional. Supplies
+the tag form `gamePoint_eq_embed_affine` needs. -/
 lemma redLog_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
     {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
