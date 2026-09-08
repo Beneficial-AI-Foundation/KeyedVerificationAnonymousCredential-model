@@ -17,7 +17,8 @@ credential (no rejection, no abort) and honest presentation accepts it.
 ## Carrier-generic skeleton
 
 The statement is factored so that it can be made at more than one carrier.
-`GenCorrect sem kvac` is Definition 4.3 over a run semantics `sem : RunSem M`,
+`GenCorrect sem kvac` is the support-based form of Definition 4.3 (see below)
+over a run semantics `sem : RunSem M`,
 which fixes a state type `S`, an initial state, and a relation
 `Runs c s a s'` saying that the computation `c` can produce `a` while moving
 the state `s → s'`. The conclusion is `CorrectOutcome`, the two halves below
@@ -139,7 +140,7 @@ def Correct (kvac : KVACSyntax ProbComp) : Prop :=
   GenCorrect probRunSem kvac
 
 /--
-Correctness lifted to the `OracleComp (ZKRO H)` carrier (issue #118): the same
+Correctness stated at the `OracleComp (ZKRO H)` carrier (issue #118): the same
 `GenCorrect` skeleton, but with `setup`/`keygen`/`issue`/`present` run through the
 shared random oracle via `runRO`, threading one cache `∅ → s₀ → s₁ → s₂ → s₃`, so
 a Fiat–Shamir credential's proofs share the oracle. Mirrors

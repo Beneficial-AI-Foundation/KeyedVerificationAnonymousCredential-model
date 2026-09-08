@@ -140,7 +140,7 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
   -- user's index).
   -- The `none` arm below is the honest-issuance failure. For a correct scheme
-  -- it never fires: issuance under the exact-attribute predicate `φ_m` always
+  -- it never fires. Issuance under the exact-attribute predicate `φ_m` always
   -- yields `some` (`CorrectRO` specialised at `φ = φ_m` via `holds_exactPred`),
   -- so `usrs` always grows and the counter matches the paper's unconditional
   -- `ctr := ctr + 1`. `CorrectRO` states correctness at the `OracleComp (ZKRO H)`
