@@ -380,11 +380,11 @@ lemma newUsr_mac_isSome (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- `kvac.mac … = kvac.issue … (exactPred m)`, so `hmac` is an issuance outcome.
   have hmac' : (σ?, c₂) ∈
       support (runRO H c₁ (kvac.issue crs sk pp m (kvac.exactPred crs m))) := by
-    simpa [KVACSyntax.mac] using hmac
+    simpa only [KVACSyntax.mac] using hmac
   -- Specialise `CorrectRO` at this run and `φ = φ' = exactPred m`.
   have hout := hcorr secParam n hn crs c₀ hsetup (sk, pp) c₁ hkeys m
     (kvac.exactPred crs m) (kvac.exactPred crs m) hφ hφ
   obtain ⟨σ, hσ, _⟩ := hout σ? c₂ hmac'
-  simp [hσ]
+  simp only [hσ, Option.isSome_some]
 
 end KVAC.Framework
