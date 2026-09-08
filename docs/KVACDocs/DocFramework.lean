@@ -114,6 +114,15 @@ the predicates they satisfy. Stated as two halves, issuance never
 rejects or aborts and presentation always accepts, so downstream proofs
 can cite each. The bundled object `KVAC` pairs the syntactic algorithms
 over `ProbComp` with a correctness proof, as O24 Definition 4.2 closes.
+
+The statement is carrier generic. `GenCorrect` is Definition 4.3 over a run
+semantics `RunSem`, which fixes the state an algorithm threads and the
+relation "computation `c` can produce `a` from state `s` to `s'`", with the
+conclusion `CorrectOutcome`. `Correct` is `GenCorrect` at `probRunSem`, the
+stateless support-based semantics. `CorrectRO` is `GenCorrect` at
+`roRunSem`, which threads one random-oracle cache through `setup`, `keygen`,
+`issue` and `present` by `runRO`, the statement a Fiat–Shamir scheme over
+the oracle carrier proves and the extraction game's `NewUsr` oracle consumes.
 :::
 
 # Anonymity (Definition 4.4)
