@@ -31,35 +31,47 @@ jobs:
           curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
-      - name: Cache Lake packages
+      # One dependency cache (Mathlib included) shared with docs-ci.yml and
+      # lean_action_ci.yml. The two docs workflows build the superset (KVAC,
+      # KVACDocs and the Verso family) and are the only writers; lean_action_ci
+      # is restore-only, so a KVAC-only build can never claim a key first and
+      # freeze an entry without the Verso artifacts (entries are immutable once
+      # saved). The key covers OS, architecture, a schema version (bump it to
+      # invalidate everything, e.g. after a runner image change), toolchain and
+      # manifest, but not the commit: a new ~2.5 GiB entry is written only when
+      # dependencies change, and the entry saved on main is what every PR
+      # restores. The fallback prefix keeps the toolchain, so a Lean bump never
+      # restores artifacts built by another Lean. KVAC's own build (.lake/build)
+      # is not cached; it costs about a minute.
+      - name: Cache Lake dependencies
+        id: lake-cache
         uses: actions/cache@v4
         with:
-          path: |
-            .lake
-            docs/.lake
-          key: ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json', 'docs/lean-toolchain') }}-${{ github.sha }}
+          path: .lake/packages
+          key: ${{ runner.os }}-${{ runner.arch }}-lake-deps-v1-${{ hashFiles('lean-toolchain') }}-${{ hashFiles('lake-manifest.json') }}
           restore-keys: |
-            ${{ runner.os }}-lake-docs-${{ hashFiles('lake-manifest.json', 'lean-toolchain', 'docs/lake-manifest.json', 'docs/lean-toolchain') }}-
-            ${{ runner.os }}-lake-docs-
+            ${{ runner.os }}-${{ runner.arch }}-lake-deps-v1-${{ hashFiles('lean-toolchain') }}-
 
-      - name: Download Mathlib cache (docs)
-        continue-on-error: true
-        run: lake -d docs exe cache get
-
-      - name: Download Mathlib cache (root)
-        continue-on-error: true
+      # Skipped on an exact hit: the restored tree already holds Mathlib's
+      # .oleans, and `cache get` would otherwise re-download every archive (it
+      # only looks in ~/.cache/mathlib, not in .lake). On a prefix hit it fetches
+      # just the changed files; on a miss, everything. Failures are real (network,
+      # or proofwidgets/plausible pins diverging from Mathlib's) and must fail the
+      # job rather than fall through to compiling Mathlib from source.
+      - name: Download Mathlib cache
+        if: steps.lake-cache.outputs.cache-hit != 'true'
         run: lake exe cache get
 
-      # Build only the KVACDocs library. The `docs` executable is no longer
-      # defined; linking it would pull in VCV-io's post-quantum C/FFI sources,
-      # which need git submodules and extra compile flags. The HTML is produced
-      # by `lean --run Main.lean` below, which only needs the .olean artifacts.
+      # Build only the KVACDocs library (a lean_lib of the root package). No
+      # executable is defined for the docs: linking one would pull in VCV-io's
+      # post-quantum C/FFI sources, which need git submodules and extra compile
+      # flags. The HTML is produced by `lean --run BlueprintMain.lean` below, which
+      # only needs the .olean artifacts.
       - name: Build Verso docs (library only)
-        run: lake -d docs build KVACDocs
+        run: lake build KVACDocs
 
       - name: Generate documentation site
-        working-directory: docs
-        run: lake env lean --run Main.lean --output ../site
+        run: lake env lean --run BlueprintMain.lean --output site
 
       - name: Set up Python
         uses: actions/setup-python@v5

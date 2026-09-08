@@ -159,12 +159,16 @@ The Lemma 5.4 workshop is merged: the AGM game, the verification
 polynomial with its identity case, and the sign-mask distribution
 lemmas. The `AGMReduction` core is merged on top — the game-polynomial
 eval bridge, the challenge embedding, the simulated oracle, and
-discrete-log root recovery. What remains for Lemma 5.4 itself is the
-probability bound: the coupling of the simulated oracle to the honest
-game, and the Schwartz–Zippel argument for `ψ ≠ 0`.
+discrete-log root recovery — and with it the first slice of the
+probability bound: the coupling bricks the oracle-fidelity argument is
+built from, and the static Schwartz–Zippel bound for a fixed
+verification polynomial. What remains for Lemma 5.4 itself is to run the
+coupling over the whole game and to carry Schwartz–Zippel over to the
+adversary's own polynomial, which depends on its view.
 
-*TODO (Track CMZ-M).* Bound the reduction's success probability, then
-assemble Lemma 5.4 and state Lemma 5.5 and Theorem 5.1.
+*TODO (Track CMZ-M).* Finish the reduction's success-probability bound
+from these pieces, then assemble Lemma 5.4 and state Lemma 5.5 and
+Theorem 5.1.
 
 :::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] specialised to algebraic
@@ -263,7 +267,10 @@ combination of `g, X, X', X''` that agrees with evaluation at the
 unknown exponent. As with {uses "challenge_embedding"}[], the two
 identities the coupling will cite are named: each issued tag is the honest
 key multiple of its own base at the challenge exponent, and each
-mask-derived univariate evaluates there to the mask it lifts.
+mask-derived univariate evaluates there to the mask it lifts. The
+fidelity sentence — each issued tag honestly distributed — is discharged
+per query in {bpref "sign_oracle_coupling"}[]; the run-level view equality
+that lifts it across a whole transcript is {bpref "run_level_coupling"}[].
 
 Two departures from O24. Equation 14 prints `Vⱼ`'s `G`-coefficient with a
 spurious `a_h` factor; the correct key coefficient `a₀ + aᵣ + a₁mⱼ` is
@@ -273,13 +280,21 @@ degree-1 key against a degree-`≤ 2` representation, so both arms need
 `X''`.
 :::
 
-:::theorem "dlog_root_recovery" (lean := "KVAC.Schemes.MicroCMZ.recoverDlog, KVAC.Schemes.MicroCMZ.recoverDlog_eq, KVAC.Schemes.MicroCMZ.recoverDlog_verifPoly_eq") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "dlog_root_recovery" (lean := "KVAC.Schemes.MicroCMZ.gamePoint_eq_embed_affine, KVAC.Schemes.MicroCMZ.recoverDlog, KVAC.Schemes.MicroCMZ.recoverDlog_eq, KVAC.Schemes.MicroCMZ.recoverDlog_verifPoly_eq") (parent := "cmz_amac") (tags := "milestone")
 The reduction's extraction step: given the masked univariate `ψ` of
 {uses "partial_evaluation_psi"}[] and the challenge `X`, return the root
 of `ψ` whose generator-multiple is `X`. Honest extraction — it consults
 only `ψ`'s root multiset and a decidable equality test, never the
 noncomputable discrete logarithm. When `ψ` is nonzero and the challenge
 exponent is one of its roots, the step returns exactly that exponent.
+
+The step is reached by a change of evaluation point. Under the masking of
+{uses "challenge_embedding"}[], and once every logged tag is in embedded
+form, the transcript's discrete-log point of {uses "agm_eval_bridge"}[] *is*
+the masked point `v ↦ a v + χ·b v`. That equality is what lets the vanishing
+{bpref "consistency_case_lem54"}[] delivers at the transcript point meet the
+substitution of {uses "partial_evaluation_psi"}[], which is stated at the
+masked one.
 :::
 
 :::proof "dlog_root_recovery"
@@ -288,7 +303,191 @@ succeeds; injectivity of `(· • g)` for a nonzero `g` makes the root it
 finds equal to the challenge exponent. Composed with the evaluation law
 of {uses "partial_evaluation_psi"}[], a forgery whose verification
 polynomial vanishes at the embedded point and whose `ψ` is nonzero — the
-Schwartz–Zippel good event — yields the discrete logarithm.
+Schwartz–Zippel good event — yields the discrete logarithm. The change of
+evaluation point is a case split over the variables: the `η` and tag
+coordinates are the embedded-mask identity read off the generator, and the
+three fixed-secret coordinates hold by definition.
+:::
+
+:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
+The supporting lemmas from which the proof that
+{uses "simulated_sign_oracle"}[] is indistinguishable from the honest
+oracle of {uses "agm_model"}[] will be assembled.
+
+Six normal forms bridge the packaged forms the oracle and the reduction
+emit to the per-index lambdas and bare substitution that the coupling, the
+shift lemma below and {uses "dlog_root_recovery"}[] are stated in. Two
+uniformity lemmas say the embedding hides its masks — a uniform scalar
+multiple of the generator is a uniform group element, and so is an affine
+shift of one — so each of `H`, `Xᵣ` and `X₁` in
+{uses "challenge_embedding"}[] is uniform taken by itself. `X₀` is
+excluded: it is not of this single-mask affine form. A
+deterministic-map coupling brick lifts an equality of evaluation
+distributions to a relation between two computations, the form the `sign`
+arm needs on top of {uses "sign_masks"}[].
+
+Finally the reduction ↔ honest state invariant: the honest log is the
+reduction log with masks projected away, and every logged entry has both
+the embedded base shape and the honest tag relation at the masked
+secrets. The tag relation is stated through the scheme's own key scalar
+rather than expanded, so it is literally what the signing oracle of
+{uses "mucmz_construction"}[] emits.
+:::
+
+:::theorem "masked_key_normal_form_bridge" (lean := "KVAC.Schemes.MicroCMZ.macScalar_maskedKey_expand") (parent := "cmz_amac") (tags := "milestone")
+The masked-key normal-form bridge for the `sign` arm of
+{bpref "simulated_sign_oracle"}[], built on the bricks of
+{uses "reduction_coupling_bricks"}[].
+
+The masked key scalar has two normal forms. The state invariant of
+{bpref "reduction_coupling_bricks"}[] states it through the scheme's own
+key scalar, so that it is literally what the signing oracle emits; the
+eval bridge lemmas of {bpref "agm_eval_bridge"}[] instead take it
+spelled out as `x₀ + xᵣ + m·x₁` at the masked secrets. One lemma trades
+one form for the other, and it also witnesses that at a single attribute
+the scalar reads its message only at index `0`.
+:::
+
+:::proof "masked_key_normal_form_bridge"
+Unfolding the key scalar at one attribute leaves a polynomial identity in
+the masks, closed by ring normalisation.
+:::
+
+:::theorem "sign_oracle_coupling" (lean := "KVAC.Schemes.MicroCMZ.reductionSignStep_relTriple") (parent := "cmz_amac") (tags := "milestone")
+The deterministic half of the reduction ↔ honest-game coupling for the
+`sign` arm of {uses "simulated_sign_oracle"}[], built on the bricks of
+{uses "reduction_coupling_bricks"}[] and stated through the normal form of
+{uses "masked_key_normal_form_bridge"}[]. The reduction's `sign` step is
+coupled with the honest one, preserving the state invariant across the log
+append — the first arm to establish this, because it is the only one that
+extends the log. Per-query honesty itself is the `embedTag_eq` of
+{uses "simulated_sign_oracle"}[], read at the masked key.
+:::
+
+:::proof "sign_oracle_coupling"
+Per-query honesty is module algebra at the real discrete logs; the coupling
+triple lifts it through the mask sampling, which {uses "sign_masks"}[] shows
+is honestly distributed, and threads the invariant through the log append.
+:::
+
+:::theorem "sz_static_core" (lean := "KVAC.Schemes.MicroCMZ.eval_shift_eq_zero_of_affineSubst_eq_zero, KVAC.Schemes.MicroCMZ.card_filter_eval_eq_zero_le, KVAC.Schemes.MicroCMZ.probEvent_eval_shift_eq_zero_le") (parent := "cmz_amac") (tags := "milestone")
+The view-independent half of the Schwartz–Zippel argument. The shift
+lemma turns "the partial evaluation {uses "partial_evaluation_psi"}[]
+vanishes identically" into "the multivariate polynomial vanishes at the
+real-log point shifted by the `b`-side masks", which is what aims
+Schwartz–Zippel at the multivariate polynomial directly — the source of
+the `3/p` in {uses "mucmz_mac_security"}[], against the `1/p` O24 prints.
+The bound is then stated for a *fixed* nonzero polynomial of total degree
+`≤ 3` and a *fixed* offset, over a uniform shift: at most a `3/p` fraction
+of shifts make it vanish. Given as a cardinality bound and then in
+probability form.
+
+Two steps remain before this becomes the bad event. The offset must be
+decoupled from the shift — the reparametrization sending the mask pair to
+(real-log point, free `b`), O24's "the `b`'s are uniformly random and
+perfectly hidden by the respective `a`'s", which must also survive the
+nonzero-`U` conditioning of {uses "sign_masks"}[]. And the polynomial is
+the adversary's, so it depends on its view.
+:::
+
+:::proof "sz_static_core"
+If the affine restriction is the zero polynomial then it vanishes at
+`χ = x + 1` in particular, so by the evaluation law of
+{uses "partial_evaluation_psi"}[] the multivariate polynomial vanishes at
+the real-log point shifted by the `b`-side masks. Reindexing and
+translating are both bijections, so for a fixed offset the shifted point
+ranges over the whole evaluation space as the shift does; the count of
+vanishing shifts is therefore the Schwartz–Zippel count for the
+multivariate polynomial, `≤ 3` times the fiber size. Dividing by the
+shift space gives the probability form. No top-coefficient or
+homogeneous-component lemma is needed.
+:::
+
+Unanchored stubs for the rest of the Lemma 5.4 chain. Each is registered
+now so the summary's denominator is honest, and each is anchored by the pull
+request of the stack that delivers it.
+
+:::theorem "verify_help_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The `verify` and `help` arms of {uses "simulated_sign_oracle"}[] answer as
+the honest oracle of {uses "agm_model"}[] does, the counterpart of
+{uses "sign_oracle_coupling"}[] for the two arms that leave the log
+untouched. Both evaluate the represented check in the exponent, so the
+statement is an equality of answers rather than of distributions.
+:::
+
+:::theorem "verification_polynomial_consistency" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The consistency step for {uses "agm_verification_polynomial"}[]: on the
+non-identity branch a represented transcript that passes the reduction's
+check has its verification polynomial vanishing at the embedded point, and
+its tag base component vanishes there too. What turns a winning forgery
+into a root of {uses "partial_evaluation_psi"}[] for
+{uses "dlog_root_recovery"}[].
+:::
+
+:::theorem "consistency_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.verifPoly_eval_eq_zero_of_keySmul") (parent := "cmz_amac") (tags := "milestone")
+Case 2 of Lemma 5.4, the companion of {uses "identity_case_lem54"}[]: where
+that one reads `U* = 0` off a verification polynomial that vanishes over the
+polynomial ring, this one *produces* a vanishing, at the transcript's
+discrete-log point of {uses "agm_eval_bridge"}[]. O24 §5.3's "Equation (12)
+does not hold over `Z_p[…]` but does hold when evaluated in the relative
+discrete logarithms", for {uses "agm_verification_polynomial"}[].
+
+The hypotheses are exactly log-honesty of the transcript and the verification
+relation between the two representations. Neither freshness of `m*` nor
+`U* ≠ 0` is assumed; those belong to the case split the caller performs.
+:::
+
+:::proof "consistency_case_lem54"
+Push both representations through the bridge of {uses "agm_eval_bridge"}[] and
+cancel the generator by injectivity, turning the group relation into a scalar
+identity, which the verification polynomial's `α · keyPoly − β` shape reads
+off against the key polynomial's evaluation.
+:::
+
+:::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+{uses "consistency_case_lem54"}[] restated against the embedding bundle of
+{uses "challenge_embedding"}[] instead of the raw equations, at an abstract
+arity where the transcript's index casts are discharged, together with the
+matching represented-value bridge giving each represented value as the
+affinely substituted evaluation of its own polynomial — the form
+{uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
+couplings take their hypotheses in.
+:::
+
+:::theorem "transcript_invariants" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The properties of a whole reduction transcript that the bad-event analysis
+reads: every logged record carries the embedded base shape and the honest
+tag relation of {uses "reduction_coupling_bricks"}[], and the represented
+forgery is bounded in degree by {uses "agm_verification_polynomial"}[].
+The per-query invariant of {uses "sign_oracle_coupling"}[] iterated over a
+run.
+:::
+
+:::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+The run-level view equality: the adversary's view in the game of
+{uses "agm_model"}[] and its view against {uses "simulated_sign_oracle"}[]
+are identically distributed. Lifts the per-step couplings of
+{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[]
+across a whole transcript by induction on the oracle calls, over the
+keygen reparametrization that trades the honest key for the masks of
+{uses "challenge_embedding"}[].
+:::
+
+:::theorem "sz_adaptive_bound" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+The Schwartz–Zippel bad event at `3/p` for the adversary's *own*
+polynomial. Upgrades the fixed-polynomial statement of
+{uses "sz_static_core"}[] to the adaptive one by decoupling the offset from
+the shift — O24's "the `b`'s are uniformly random and perfectly hidden by
+the respective `a`'s" — surviving the nonzero-`U` conditioning of
+{uses "sign_masks"}[].
+:::
+
+:::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The union bound that assembles {bpref "single_attribute_mac"}[]: outside
+the identity branch of {uses "identity_case_lem54"}[], a win is either a
+3-DL extraction through {uses "dlog_root_recovery"}[] or the bad event of
+{uses "sz_adaptive_bound"}[], so the advantage is at most
+`Adv^{3-dl} + 3/p`.
 :::
 
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
@@ -304,7 +503,7 @@ Factors through the single-attribute case {uses "single_attribute_mac"}[], lifte
 {uses "forgery_case_gap_dl"}[] and {uses "forgery_case_mac"}[].
 :::
 
-:::theorem "single_attribute_mac" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4") (effort := "large") (priority := "high")
+:::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4") (effort := "large") (priority := "high")
 *O24 Lemma 5.4.* Base case of {bpref "mucmz_mac_security"}[]: in the algebraic group
 model, single-attribute μCMZ is an algebraic MAC over `ℤ_p`, UF-CMVA
 secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]).
@@ -322,6 +521,19 @@ queries without a key (masked through {uses "sign_masks"}[]), and the
 partial evaluation {uses "partial_evaluation_psi"}[] has the challenge's
 discrete logarithm among at most 3 roots, recovered by
 {uses "dlog_root_recovery"}[].
+
+The steps this decomposes into, in the order the stack delivers them: the
+per-step couplings {uses "sign_oracle_coupling"}[] and
+{uses "verify_help_oracle_coupling"}[], stated through
+{uses "masked_key_normal_form_bridge"}[]; the consistency step
+{uses "consistency_case_lem54"}[], its embedded restatements
+{uses "embedded_consistency_bricks"}[] and
+{uses "verification_polynomial_consistency"}[], and the
+{uses "transcript_invariants"}[] they read; the run-level view equality
+{uses "run_level_coupling"}[]; the bad-event bound
+{uses "sz_adaptive_bound"}[] over the static core
+{uses "sz_static_core"}[]; and the union bound
+{uses "lem54_bound_assembly"}[].
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
@@ -341,7 +553,7 @@ case is bounded by the single-attribute MAC's UF-CMVA advantage
 ({uses "ufcmva_game"}[]).
 :::
 
-:::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
+:::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
 *O24 Equation 12.* The AGM verification polynomial identity for μCMZ
 unforgeability at `n = 1`: a winning forgery against {uses "mucmz_construction"}[]
 would force this identity in the secret exponents
@@ -353,8 +565,10 @@ would force this identity in the secret exponents
 polynomial {uses "agm_verification_polynomial"}[]: collapsing the perfectly-hidden mask pairs
 onto one fresh variable `χ` leaves a nonzero polynomial of degree at
 most 3 that vanishes at the challenge's discrete logarithm. The affine
-substitution and its degree bound are merged; the ≤3-roots bound
-returns with the `AGMReduction` assembly.
+substitution and its degree bound are what this node covers; the
+at-most-3-roots count is not formalized, and root recovery does not need
+it — only that `ψ` is nonzero and the challenge exponent is one of its
+roots.
 :::
 
 # Anonymity (Section 5.4)

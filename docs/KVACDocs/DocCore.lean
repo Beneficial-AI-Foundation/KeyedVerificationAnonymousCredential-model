@@ -151,13 +151,16 @@ discipline is stated once instead of being repeated. `AlgebraicMACSyntax`
 extends it directly; the framework's `KVACSyntax` extends it through the
 credential predicate family.
 
-:::definition "keyed_setup" (lean := "KVAC.Core.KeyedSetupSyntax, KVAC.Core.KeyedSetupSyntax.MsgVec, KVAC.Core.KeyedSetupSyntax.instDecidableEqMsg") (parent := "core_keyed_setup") (tags := "milestone")
+:::definition "keyed_setup" (lean := "KVAC.Core.KeyedSetupSyntax, KVAC.Core.KeyedSetupSyntax.MsgVec, KVAC.Core.KeyedSetupSyntax.instDecidableEqMsg, KVAC.Core.issueChain") (parent := "core_keyed_setup") (tags := "milestone")
 The CRS and key-generation skeleton common to every keyed scheme: the
 CRS family `Crs secParam n`, the carriers `Msg`, `Sk`, and `Pp` selected
 by a CRS, and the algorithms `setup` and `keygen`. `MsgVec` abbreviates
 the attribute vector `Fin n → Msg crs`, the paper's `m⃗ ∈ M^n`.
 `DecidableEqMsg` carries decidable equality on the message space, which
-the security games need for their freshness checks.
+the security games need for their freshness checks. `issueChain` is the
+three-move blind-issuance plumbing (user request, optional server
+response, user finalize) that the credential and anonymous-token
+`issue` algorithms both instantiate.
 :::
 
 # Algebraic MAC

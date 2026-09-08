@@ -260,37 +260,67 @@ scheme-level obligation (the TODO recorded in `Framework/Correctness.lean`).
 ## Schwartz–Zippel bound `3/p`, not the paper's `1/p`
 
 **Decision.** The Eq. 16 root bound for the non-identity case of Lemma 5.4 is
-`3/p`. The degree tower gives `deg ψ ≤ totalDegree ϕ ≤ 3`
-(`totalDegree_verifPoly_le`, `natDegree_affineSubst_le`), and a nonzero `ψ`
-has at most 3 roots in `F` (`card_roots_affineSubst_verifPoly_le`), so the bad
-event `ψ ≡ 0` over the uniform masks is bounded by `3/p`
-(`AGMPolynomial.lean`, branch `microCMZ-agm-polynomial`). Unlike the other
-entries, the rejected alternative here is the paper's own value, dropped on
-correctness grounds rather than fidelity.
+`3/p`, established via Schwartz–Zippel on the *multivariate* verification
+polynomial `ϕ` (see "The route taken" below). Unlike the other entries, the
+rejected alternative here is the paper's own printed value — but it is not
+shown to be wrong. The direct Schwartz–Zippel argument this file formalizes
+only reaches `3/p`; whether the paper's `1/p` is itself achievable via a
+sharper, structure-aware argument is left open (see "Not claimed tight"
+below).
 
 **Rejected alternative.** O24 Eq. 16 states the bound as `1/p`.
 
 **Fidelity argument.** The paper invokes Schwartz–Zippel to bound `ψ ≡ 0`, and
-for a degree-`d` polynomial that bound is `d/p`, not `1/p`. Writing
-`ψ(χ) = ϕ(a + χ·b)`, the coefficient of `χ^d` in `ψ` (with `d = totalDegree ϕ
-≤ 3`) is exactly `ϕ_d(b)`, the top-degree homogeneous part of `ϕ` evaluated at
-the mask vector `b`: only the degree-`d` monomials of `ϕ` can reach `χ^d`, and
-each contributes the product of its `b`-masks. Since `ϕ ≠ 0` we have `ϕ_d ≠ 0`,
-so `ψ ≡ 0 ⟹ ϕ_d(b) = 0`, and Schwartz–Zippel on the nonzero degree-`d` form
-`ϕ_d` in the uniform independent masks gives `Pr_b[ϕ_d(b) = 0] ≤ d/p ≤ 3/p`.
-The `1/p` would be correct only for a degree-1 form; the degree-3 verification
-polynomial needs `3/p`. The deviation loosens the concrete additive term
-(`1/p → 3/p`) but leaves the asymptotic bound, and hence the security
-statement, unchanged. The full derivation is documented at the head of the
-Eq. 16 section in `AGMPolynomial.lean`.
+for a degree-`d` polynomial that bound is `d/p`, not `1/p`. The `1/p` would be
+immediate only for a degree-1 form; for the degree-3 verification polynomial the
+bound Schwartz–Zippel gives is `3/p`. The deviation loosens the concrete additive
+term (`1/p → 3/p`) but leaves the asymptotic bound, and hence the security
+statement, unchanged.
+
+*The route taken.* `ψ ≡ 0` implies `ψ(x + 1) = 0` in particular, and by
+`AGMPoly.eval_affineSubst` that is `ϕ` evaluated at the real-log point shifted
+by the `b`-side masks, `v ↦ (a v + x·b v) + b v` — the `C★` step
+(`eval_shift_eq_zero_of_affineSubst_eq_zero`,
+`AGMReduction/Coupling.lean`, branch `microCMZ-agmreduction-coupling`). For a
+fixed `x` that shifted point ranges uniformly with the masks, so Schwartz–Zippel
+applies to the *multivariate* `ϕ` of total degree `≤ 3` directly
+(`card_filter_eval_eq_zero_le`, `probEvent_eval_shift_eq_zero_le`), giving
+`3/p`.
+
+*The route not taken.* The same `3/p` follows from the top-degree homogeneous
+part: writing `ψ(χ) = ϕ(a + χ·b)`, the coefficient of `χ^d` in `ψ` (with
+`d = totalDegree ϕ ≤ 3`) is exactly `ϕ_d(b)`, since only the degree-`d`
+monomials of `ϕ` can reach `χ^d` and each contributes the product of its
+`b`-masks. From `ϕ ≠ 0` we get `ϕ_d ≠ 0`, so `ψ ≡ 0 ⟹ ϕ_d(b) = 0` and
+Schwartz–Zippel on the nonzero degree-`d` form gives `Pr_b[ϕ_d(b) = 0] ≤ d/p`.
+Rejected as a *formalization* route only: it needs the top-homogeneous-component
+extraction lemma and its coefficient identity, where `C★` is one rewrite off an
+already-proven evaluation law.
+
+Either way the `3` is `totalDegree_verifPoly_le`, the only rung of the Eq. 16
+degree tower the `C★` route consults; `natDegree_affineSubst_le` bounds the
+`RedLog.maskedRepr` polynomials fed to `exponentEval`, a different step. Both
+rungs are documented at the head of the Eq. 16 section in `AGMPolynomial.lean`,
+which also records why the at-most-3-roots bound extraction was once cited for is
+neither needed — `recoverDlog_eq` requires only `ψ ≠ 0` and that the challenge
+exponent is a root — nor formalized here.
+
+*Not claimed tight.* `3/p` is the **generic** Schwartz–Zippel bound for a
+degree-`≤ 3` polynomial, and nothing here rules out a sharper one. The event is
+structured — `ϕ` is a verification polynomial, not an arbitrary cubic — so `1/p`
+may well follow from that structure; we have not looked. What the paper is
+missing is therefore the *justification* for `1/p`, not necessarily the value:
+the deviation recorded above is to the bound we can prove, and it would be
+narrowed, not contradicted, by a structural argument.
 
 ## Eq. 13: X₀'s `X`-coefficient (O24 p. 37)
 
 **Decision.** The challenge embedding builds `X₀`'s `X`-coefficient as
 `a₀·b_h + b₀·a_h` (`AGMReduction/Core.lean`, PR #88, the Eq. 13 block of
-`microCMZ3DLReduction`). As with the `3/p` entry above, the rejected
-alternative is the paper's own value, dropped on correctness grounds rather
-than fidelity.
+`microCMZ3DLReduction`). Like the `3/p` entry above, the rejected alternative
+here is the paper's own printed value rather than a formalization ambiguity —
+but unlike that entry, this one is a definite error: the printed coefficient
+breaks the identity `X₀ = x₀·H` outright (see the Fidelity argument below).
 
 **Rejected alternative.** O24 Eq. 13 (p. 37) prints
 `X₀ = a_h a₀ G + (a_h b₀ + b_h) X + b_h b₀ X'`.
