@@ -2,6 +2,15 @@ import VersoManual
 import VersoBlueprint
 import KVACDocs.Contents
 
+/-!
+Site generator for the KVAC Verso blueprint. It lives in the repository root
+under this name because verso-blueprint's `lake exe vbp build` discovers the
+generator only as a root-level `BlueprintMain.lean`, `Main.lean` or
+`KVACMain.lean`, and downstream tooling relies on that zero-configuration
+entry point. CI invokes it as `lake env lean --run BlueprintMain.lean --output
+<dir>`; `vbp build` writes to `_out/site`.
+-/
+
 open Verso.Genre Manual
 open Informal
 

@@ -14,6 +14,23 @@ import VCVio.OracleComp.ProbComp
 predicate `φ'` hold on the attribute vector, honest issuance produces a
 credential (no rejection, no abort) and honest presentation accepts it.
 
+## Carrier-generic skeleton
+
+The statement is factored so that it can be made at more than one carrier.
+`GenCorrect sem kvac` is the support-based form of Definition 4.3 (see below)
+over a run semantics `sem : RunSem M`,
+which fixes a state type `S`, an initial state, and a relation
+`Runs c s a s'` saying that the computation `c` can produce `a` while moving
+the state `s → s'`. The conclusion is `CorrectOutcome`, the two halves below
+abstracted over how issuance and presentation outcomes are drawn. Two
+semantics are provided. `probRunSem` has no state (`S = Unit`) and reads
+`Runs` as support membership, and `Correct := GenCorrect probRunSem`.
+`roRunSem H` threads the random-oracle cache of `runRO` through `setup`,
+`keygen`, `issue` and `present`, and `CorrectRO H := GenCorrect (roRunSem H)`
+is the statement a Fiat–Shamir scheme over `OracleComp (ZKRO H)` proves
+(issue #118). The two notions are the same skeleton at two semantics; no
+lemma relates them, and none is needed by their consumers.
+
 ## Support-based form
 
 Definition 4.3 asks the experiment to succeed with overwhelming probability;
@@ -123,12 +140,12 @@ def Correct (kvac : KVACSyntax ProbComp) : Prop :=
   GenCorrect probRunSem kvac
 
 /--
-Correctness lifted to the `OracleComp (ZKRO H)` carrier (issue #118): the same
+Correctness stated at the `OracleComp (ZKRO H)` carrier (issue #118): the same
 `GenCorrect` skeleton, but with `setup`/`keygen`/`issue`/`present` run through the
 shared random oracle via `runRO`, threading one cache `∅ → s₀ → s₁ → s₂ → s₃`, so
 a Fiat–Shamir credential's proofs share the oracle. Mirrors
-`KVAC.Core.PerfectlyComplete`. The `ProbComp` `Correct` is the oracle-free special
-case, recovered through the `ProbComp ↪ OracleComp (ZKRO H)` lift. -/
+`KVAC.Core.PerfectlyComplete`. The `ProbComp` `Correct` is the same skeleton at
+`probRunSem`; no lift or bridge lemma between the two is stated. -/
 def CorrectRO (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop :=
   GenCorrect (roRunSem H) kvac
 
