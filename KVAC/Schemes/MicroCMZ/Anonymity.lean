@@ -12,8 +12,10 @@ import KVAC.Core.NIZKP.Security
 Statement scaffold for Track CMZ-A (issue #10), and the formal home of the
 predicate-family obligation that the `Correctness.lean` docstring used to record
 as a TODO (issue #104). Only the theorem *statement* lands here; the proof is
-`sorry`. The notions it depends on do not exist yet, so each is a `True`-valued
-stub, to be replaced by the real definition:
+`sorry`. The notions it depends on do not exist yet, so each is a stub whose body
+is `sorry`, to be replaced by the real definition. A `True` body would make the
+theorem trivially provable and hide the gap; a `sorry` body keeps every stub
+visible as incomplete in the blueprint:
 
 - `CoversPartialDisclosure` — O24 Definition 4.1/4.2's requirement that the
   predicate family contains every partial-disclosure predicate `φ_a⃗` (issue
@@ -35,19 +37,19 @@ open OracleComp KVAC.Framework KVAC.Core
 variable {M : Type → Type} [Monad M]
 
 /-- STUB (O24 Definition 4.1/4.2, issue #104): the predicate family contains every
-partial-disclosure predicate `φ_a⃗`. `True` placeholder until #104 defines the
+partial-disclosure predicate `φ_a⃗`. `sorry` placeholder until #104 defines the
 `φ_a⃗` machinery; then this becomes the real membership statement. Consumed by
 `mucmz_anonymity`, which is how the Definition 4.2 obligation is enforced. -/
-def CoversPartialDisclosure (_pf : PredicateFamily M) : Prop := True
+def CoversPartialDisclosure (_pf : PredicateFamily M) : Prop := sorry
 
-/-- STUB (O24 Definition 4.4): the KVAC anonymity notion. `True` placeholder until
+/-- STUB (O24 Definition 4.4): the KVAC anonymity notion. `sorry` placeholder until
 the anonymity game lands (Track CMZ-A, issue #10); then this moves to
 `Framework/Anonymity.lean`. -/
-def Anonymous (H : HashSpec) (_kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop := True
+def Anonymous (H : HashSpec) (_kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop := sorry
 
-/-- STUB: the attached ZKP proves the relation `R ⊇ R_cmz` (O24 §5). `True`
+/-- STUB: the attached ZKP proves the relation `R ⊇ R_cmz` (O24 §5). `sorry`
 placeholder until the μCMZ relations/proof-system hookup lands. -/
-def ProvesRcmz (H : HashSpec) (_kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop := True
+def ProvesRcmz (H : HashSpec) (_kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop := sorry
 
 /--
 O24 Theorem 5.8. If μCMZ's predicate family covers the partial-disclosure
