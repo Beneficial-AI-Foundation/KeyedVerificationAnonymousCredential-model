@@ -12,7 +12,21 @@ weak.linter.mathlibStandardSet = true
 weak.linter.style.header = false
 maxSynthPendingDepth = 3
 
-# Mathlib pinned to v4.28.0 to match the toolchain and the revision required
+# Verso blueprint docs are a library of this package (`[[lean_lib]] KVACDocs`
+# below) so that Mathlib, VCV-io and the Verso family are resolved and built
+# once, in this workspace. Declared BEFORE mathlib on purpose: Lake gives later
+# requires precedence for shared transitive pins, and Mathlib's proofwidgets /
+# plausible revisions must win or `lake exe cache get` computes wrong hashes.
+# `v4.30.0` is upstream's release BRANCH for Lean v4.30 (there are no tags), so
+# `lake update` may advance it within that branch. It must track lean-toolchain:
+# a Verso built for another Lean version does not compile, so bump the rev,
+# the toolchain and Mathlib together and rebuild `KVACDocs` to validate.
+[[require]]
+name = "versoBlueprint"
+git = "https://github.com/leanprover/verso-blueprint"
+rev = "v4.30.0"
+
+# Mathlib pinned to v4.30.0 to match the toolchain and the revision required
 # by VCV-io and the PQXDH formalisation. When the Curve25519Dalek dependency
 # is added later (alongside the Examples/ track), this pin should match the
 # revision Curve25519Dalek transitively uses, to avoid version conflicts.
@@ -41,3 +55,11 @@ rev = "5ed119b1f0fa8b69975ad2b45bd9e7680056f404"
 
 [[lean_lib]]
 name = "KVAC"
+
+# Verso chapter files are prose, not Mathlib-style Lean: the Mathlib linter set
+# (hashCommand on `#doc`, longLine, docBlame) does not apply to them. The dotted
+# key must stay unquoted; a quoted key is passed to Lean as one atomic name.
+[[lean_lib]]
+name = "KVACDocs"
+srcDir = "docs"
+leanOptions = { weak.linter.mathlibStandardSet = false }

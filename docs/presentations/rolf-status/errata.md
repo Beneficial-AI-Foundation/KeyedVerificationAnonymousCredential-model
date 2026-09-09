@@ -5,9 +5,9 @@ Companion note to the status presentation (2026-07-30). Paper: Orrù,
 ("O24"), as `docs/Orru_2024.pdf`. Each item below is a discrepancy between the
 paper's printed §5.3 material and what the reduction, worked in full detail,
 actually requires. Every item is checkable by hand against the paper; none
-weakens the result — the assumptions are the paper's own, and only the
-additive constant changes (3/p → 5/p, both ≈ 2<sup>−250</sup> at
-ristretto255).
+weakens the result — the assumptions are the paper's own; one unjustified
+summand is dropped (item 2) and the additive constant changes (3/p → 5/p,
+both ≈ 2<sup>−250</sup> at ristretto255).
 
 ## 1. The 1/p non-vanishing bound should be 3/p (p. 38)
 
@@ -25,6 +25,18 @@ degree 3: its top monomials come from
 term times the degree-1 key polynomial. Schwartz–Zippel over the uniform
 shift therefore gives 3/p; a bare 1/p is the bound a degree-1 polynomial
 would give.
+
+## 2. Lemma 5.4's printed Adv<sup>dl</sup> summand has no reduction behind it (pp. 36–38)
+
+Lemma 5.4 (p. 36) states the single-attribute bound as
+Adv<sup>3-dl</sup> + Adv<sup>dl</sup> + 1/p. Its proof (pp. 36–38) builds
+one reduction, to 3-DL: the public parameters and the signing responses are
+embedded off the 3-DL instance (Eqs. 13–14), and the forgery is turned into a
+root of the affinely-substituted polynomial ψ, which is the 3-DL solution.
+No DL reduction appears, so the Adv<sup>dl</sup> summand is unjustified by the
+proof and survives only as nonnegative slack. The formalized statement
+(`agm_ufcmva_le_n1_explicit`) bounds the advantage by
+Adv<sup>3-dl</sup> + 3/p, with the constant from item 1.
 
 ## 3. Eq. 13: X₀'s X-coefficient (typo)
 

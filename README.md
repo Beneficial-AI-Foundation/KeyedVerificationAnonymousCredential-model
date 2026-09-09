@@ -32,31 +32,39 @@ Contributions are very welcome. Start by reading [`CONTRIBUTING.md`](CONTRIBUTIN
 
 ## Status
 
-When a track is split into sub-issues, list them as nested bullets under the track (as Track 0 is below).
+When a track is split into sub-issues, list them as nested bullets under the track. A checked track means its issue is closed and its deliverables are on `main`. Declaration-level progress is computed by the [blueprint](https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/). This list tracks issues only.
 
-- [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
-  - [X] `Core/Group.lean` ([#18])
-  - [X] `Core/Hash.lean` ([#19])
-  - [X] `Core/ZKProof.lean` ([#20])
-  - [X] `Core/NIZKP/Basic.lean` ([#20])
-  - [X] `Core/AlgebraicMAC.lean` ([#21])
+- [x] **Wave 0** — `KVAC/Core/` typeclasses ([#1])
+  - [x] `Core/Group.lean` ([#18])
+  - [x] `Core/Hash.lean` ([#19])
+  - [x] `Core/ZKProof.lean` ([#20])
+  - [x] `Core/NIZKP/Basic.lean` ([#20])
+  - [x] `Core/AlgebraicMAC.lean` ([#21])
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
-  - [ ] Track Pre — Preliminaries ([#2])
-  - [ ] Track Σ — ProofSystems ([#3])
-  - [ ] Track F1 — Framework syntax and correctness ([#4])
+  - [x] Track Pre — Preliminaries ([#2]); the §3.4 anonymous-token items continue under Track CMZ-OMUF ([#144], [#145])
+  - [ ] Track Σ — Proof systems ([#3]); being rescoped: the concrete Σ-protocols landed under Track CMZ-C and the NIZKP games under `Core/NIZKP/`, the Fiat–Shamir transform and §9 straight-line extraction remain
+  - [x] Track F1 — Framework syntax and correctness ([#4])
 - [ ] **Wave 2** — framework anonymity/extractability, scheme constructions
   - [ ] Track F2 — Framework anonymity and extractability ([#5])
+    - [x] Extraction game, Definition 4.5 and Figure 8 ([#117])
+    - [ ] Partial-disclosure predicate family, Definition 4.2 ([#104])
+    - [ ] Anonymity game, Definition 4.4
   - [ ] Track CMZ-C — μCMZ construction ([#6])
-  - [ ] Track BBS-C — μBBS construction ([#7])
-- [ ] **Wave 3** — security tracks (μCMZ and μBBS)
-  - [ ] Track CMZ-M — μCMZ as algebraic MAC (Theorem 5.1) ([#8])
-  - [ ] Track CMZ-A — μCMZ anonymity (Theorem 5.8) ([#10])
-  - [ ] Track CMZ-E — μCMZ extractability (Theorem 5.2) ([#11])
-  - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability (Theorem 5.3) ([#12])
-  - [ ] Track BBS-M — μBBS as algebraic MAC ([#13])
-  - [ ] Track BBS-A — μBBS anonymity ([#14])
-  - [ ] Track BBS-E — μBBS extractability ([#15])
-  - [ ] Track BBS-OMUF — μBBS one-more unforgeability (Theorem 6.12) ([#16])
+    - [x] Base MAC ([#39])
+    - [x] R_iu Σ-protocol, Eq. 9 ([#40])
+    - [x] R_is and R_p Σ-protocols, Eqs. 10 and 11 ([#41])
+    - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p ([#163])
+  - ~~Track BBS-C~~ — μBBS descoped from v1 ([#7], closed as not planned)
+- [ ] **Wave 3** — security tracks (μCMZ)
+  - [ ] Track CMZ-M — μCMZ as algebraic MAC, Theorem 5.1 ([#8]); AGM game, polynomial backbone, reduction core and coupling merged, Lemma 5.4 bound stated (PR #155), open sub-issues [#80], [#81], [#107] to [#116]
+  - [ ] Track CMZ-A — μCMZ anonymity, Theorem 5.8 ([#10])
+  - [ ] Track CMZ-E — μCMZ extractability, Theorem 5.2 ([#11])
+  - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability, Theorem 5.3 ([#12])
+    - [x] Anonymous-token syntax and correctness, §3.4 ([#144])
+    - [ ] One-more unforgeability game, Figure 6 ([#145], PR #143)
+    - [ ] Base MAC utilities for the core scheme ([#164], PR #146)
+    - [ ] μCMZ_AT core scheme, §5.6 ([#165], PR #147)
+  - ~~Tracks BBS-M, BBS-A, BBS-E, BBS-OMUF~~ — μBBS descoped from v1 ([#13], [#14], [#15], [#16], closed as not planned; see the future tracks in [`docs/TRACKS.md`](docs/TRACKS.md))
 - [ ] **Wave 4** — concrete μCMZ run with Ristretto255
   - [ ] Track Ex — Concrete μCMZ run + Ristretto binding + Lake dependency ([#17])
 
@@ -85,3 +93,18 @@ Per-track status and dependency graph in [`docs/TRACKS.md`](docs/TRACKS.md).
 [#19]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/19
 [#20]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/20
 [#21]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/21
+[#1]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/1
+[#39]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/39
+[#40]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/40
+[#41]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/41
+[#80]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/80
+[#81]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/81
+[#104]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/104
+[#107]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/107
+[#116]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/116
+[#117]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/117
+[#144]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/144
+[#145]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/145
+[#163]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/163
+[#164]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/164
+[#165]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/165

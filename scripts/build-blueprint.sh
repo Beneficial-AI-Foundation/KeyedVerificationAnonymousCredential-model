@@ -13,9 +13,9 @@ Defaults:
 
 Steps:
   1. Download the Mathlib olean cache. Without this, Mathlib builds from source.
-  2. Build the `KVACDocs` library. The `docs` executable is not defined, so
-     nothing links VCV-io's post-quantum C/FFI sources.
-  3. Run `Main.lean` to render the static site into OUTPUT_ROOT.
+  2. Build the `KVACDocs` library (a lean_lib of the root package). No docs
+     executable is defined, so nothing links VCV-io's post-quantum C/FFI sources.
+  3. Run `BlueprintMain.lean` to render the static site into OUTPUT_ROOT.
 EOF
 }
 
@@ -38,13 +38,13 @@ out_root="${1:-docs/_out/site}"
 mkdir -p "$out_root"
 
 echo "[build-blueprint] downloading Mathlib cache"
-lake -d docs exe cache get
+lake exe cache get
 
 echo "[build-blueprint] building KVACDocs library"
-lake -d docs build KVACDocs
+lake build KVACDocs
 
 echo "[build-blueprint] rendering blueprint -> ${out_root}"
-lake -d docs env lean --run docs/Main.lean --output "$out_root"
+lake env lean --run BlueprintMain.lean --output "$out_root"
 
 echo "[build-blueprint] done"
 echo "[build-blueprint] output:"

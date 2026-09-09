@@ -17,4 +17,36 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      # elan is installed up front so the conditional Mathlib-cache step below
+      # can run before lean-action (whose own installer is idempotent).
+      - name: Install elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      # Restore-only view of the dependency cache written by docs-ci.yml and
+      # deploy-pages.yml (see the comment there). This job builds only KVAC and
+      # must never save an entry, or it could claim a new key first and freeze
+      # it without the Verso artifacts the docs jobs need.
+      - name: Restore Lake dependencies
+        id: lake-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .lake/packages
+          key: ${{ runner.os }}-${{ runner.arch }}-lake-deps-v1-${{ hashFiles('lean-toolchain') }}-${{ hashFiles('lake-manifest.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-lake-deps-v1-${{ hashFiles('lean-toolchain') }}-
+
+      # Same rule as in the docs workflows: on an exact hit the .oleans are
+      # already in place and `cache get` would only re-download every archive.
+      - name: Download Mathlib cache
+        if: steps.lake-cache.outputs.cache-hit != 'true'
+        run: lake exe cache get
+
+      # lean-action's own GitHub cache and Mathlib-cache steps are replaced by
+      # the two steps above; auto-config still runs `lake build` (KVAC only).
       - uses: leanprover/lean-action@v1
+        with:
+          use-github-cache: "false"
+          use-mathlib-cache: "false"

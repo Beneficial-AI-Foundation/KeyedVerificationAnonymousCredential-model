@@ -93,6 +93,12 @@
   .t-flight { background: var(--flight-soft); color: var(--flight); }
   .t-todo { background: var(--todo-soft); color: var(--todo); }
 
+  /* sub-theorem rows, grouped under their umbrella theorem */
+  tr.subthm td { background: var(--surface-2); }
+  tr.subthm td:first-child { padding-left: 2.1rem; }
+  tr.subthm a.thmlink { font-size: .92rem; }
+  .subarrow { color: var(--muted); margin-right: .3rem; font-family: var(--mono); }
+
   /* per-theorem block */
   .thm-block { scroll-margin-top: 1.5rem; margin: 1.6rem 0; }
   .thm-head { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; margin-bottom: .1rem; }
@@ -134,8 +140,8 @@
   <header>
     <p class="eyebrow">μCMZ · Lean 4 verification · O24 §5</p>
     <h1>μCMZ Security — Proof Dependencies</h1>
-    <p class="lede">Where the machine-checked proof stands today: the cryptographic foundations are on <code>main</code>, μCMZ unforgeability (Theorem&nbsp;5.1) is in review, and the credential anonymity and extractability theorems are not yet stated — each waiting on the μCMZ instance.</p>
-    <p class="dateline"><span class="dbadge">17 August 2026</span> This snapshot reflects the state of the proof on this date.</p>
+    <p class="lede">Where the machine-checked proof stands today: the cryptographic foundations are on <code>main</code>, μCMZ unforgeability (Theorem&nbsp;5.1) is in review, the credential theorem (5.2, via 5.8 and 5.10) is not yet stated — waiting on the μCMZ instance — and the anonymous-token theorem (5.3, via 5.11) is unstarted but independent of that instance.</p>
+    <p class="dateline"><span class="dbadge">19 August 2026</span> This snapshot reflects the state of the proof on this date.</p>
   </header>
 
   <div class="legend">
@@ -145,7 +151,7 @@
   </div>
 
   <h2><span class="n">01</span>The main theorems</h2>
-  <p>The four named results of O24 §5. Theorem&nbsp;5.2 is the umbrella — μCMZ is a secure keyed-verification credential — and it splits into the anonymity (5.8) and extractability (5.10) bounds, both resting on unforgeability (5.1). Follow a theorem's number for its dependency map.</p>
+  <p>O24 states its core theorems up front (§5.2) and proves them later in the section: <strong>5.1</strong> (the MAC), <strong>5.2</strong> (the credential) and <strong>5.3</strong> (the anonymous token). Theorem&nbsp;5.2 is an umbrella — its two displayed bounds are verbatim Theorems 5.8 (anonymity) and 5.10 (extractability), so those are grouped beneath it, with 5.1 supplying the <code>ufcmva</code> leaf inside 5.10. Theorem&nbsp;5.3 is likewise a bundle — the 5.8 simulator argument on the token variant plus one-more unforgeability, proved as Theorem&nbsp;5.11. Follow a theorem's number for its dependency map.</p>
   <div class="table-scroll">
     <table>
       <thead>
@@ -154,30 +160,40 @@
       <tbody>
         <tr>
           <td><a class="thmlink" href="#thm-51">5.1</a><span class="sub">§5.3 · UF-CMVA</span></td>
-          <td>μCMZ is an algebraic MAC — unforgeable in the AGM. Supplies the <code>ufcmva</code> leaf of 5.10.</td>
+          <td>μCMZ is an algebraic MAC — unforgeable in the AGM. Proved by Lemma&nbsp;5.4 (n&nbsp;=&nbsp;1) and Lemma&nbsp;5.5 (n&nbsp;=&nbsp;poly). Supplies the <code>ufcmva</code> leaf of 5.10.</td>
           <td><span class="tag t-flight">#88 merged · #129 open</span></td>
         </tr>
         <tr>
-          <td><a class="thmlink" href="#thm-52">5.2</a><span class="sub">§5 · secure KVAC</span></td>
-          <td>μCMZ is a secure keyed-verification credential. Bundles the anonymity and extractability bounds below.</td>
+          <td><a class="thmlink" href="#thm-52">5.2</a><span class="sub">§5.2 · secure KVAC</span></td>
+          <td>μCMZ is a keyed-verification extractable credential. The conjunction of 5.8 and 5.10 below — no further reduction.</td>
           <td><span class="tag t-todo">not written</span></td>
         </tr>
-        <tr>
-          <td><a class="thmlink" href="#thm-58">5.8</a><span class="sub">§5.4 · anonymity</span></td>
-          <td><span class="bound"><i>Adv</i><sup>anon</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ)</span></td>
+        <tr class="subthm">
+          <td><span class="subarrow">↳</span><a class="thmlink" href="#thm-58">5.8</a><span class="sub">§5.4 · anonymity</span></td>
+          <td><span class="bound"><i>Adv</i><sup>anon</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ)</span></td>
           <td><span class="tag t-todo">not written</span></td>
         </tr>
-        <tr>
-          <td><a class="thmlink" href="#thm-510">5.10</a><span class="sub">§5.5 · extractability</span></td>
+        <tr class="subthm">
+          <td><span class="subarrow">↳</span><a class="thmlink" href="#thm-510">5.10</a><span class="sub">§5.5 · extractability</span></td>
           <td><span class="bound"><i>Adv</i><sup>ext</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>ufcmva</sup><sub>μCMZ</sub>(λ,&thinsp;n) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ)</span></td>
+          <td><span class="tag t-todo">not written</span></td>
+        </tr>
+        <tr>
+          <td><a class="thmlink" href="#thm-53">5.3</a><span class="sub">§5.6 · anonymous token</span></td>
+          <td>μCMZ<sub>AT</sub> (Figure&nbsp;9 with the issuance proof π<sub>iu</sub> removed) is an anonymous token. The 5.8 simulator argument plus 5.11 below. Track CMZ-OMUF.</td>
+          <td><span class="tag t-todo">not written</span></td>
+        </tr>
+        <tr class="subthm">
+          <td><span class="subarrow">↳</span><a class="thmlink" href="#thm-511">5.11</a><span class="sub">§5.6 · one-more unforgeability</span></td>
+          <td><span class="bound"><i>Adv</i><sup>omuf</sup><sub>μCMZ<sub>AT</sub></sub>(λ,&thinsp;n) ≤ (<i>q</i>+6)/<i>p</i> + (<i>q</i>+1)·<i>Adv</i><sup>dl</sup><sub>GrGen</sub>(λ) + 3·<i>Adv</i><sup>2-dl</sup><sub>GrGen</sub>(λ) + <i>Adv</i><sup>gapdl</sup><sub>GrGen</sub>(λ)</span></td>
           <td><span class="tag t-todo">not written</span></td>
         </tr>
       </tbody>
     </table>
   </div>
 
-  <h2><span class="n">02</span>Build phases<span class="h2sub">all four theorems</span></h2>
-  <p>The order in which the four theorems become provable. Foundations and Theorem 5.1 are Semar's algebraic-MAC track; the framework games, the μCMZ instance, and the credential theorems (5.8, 5.10, 5.2) are the credential track. These are engineering steps — the maps below show which node each phase produces.</p>
+  <h2><span class="n">02</span>Build phases<span class="h2sub">all three core theorems</span></h2>
+  <p>The order in which the theorems become provable. Foundations and Theorem 5.1 are Semar's algebraic-MAC track; the framework games, the μCMZ instance, and the credential theorems (5.8, 5.10, 5.2) are the credential track; the anonymous-token theorems (5.11, 5.3) are Track CMZ-OMUF and run on a separate path. These are engineering steps — the maps below show which node each phase produces.</p>
   <ol class="phases">
     <li>
       <h4>Foundations <span class="pill p-done"><span class="dot"></span>on main</span></h4>
@@ -199,10 +215,14 @@
       <h4>Credential theorems — 5.10, 5.8, then 5.2 <span class="pill p-todo"><span class="dot"></span>not written</span></h4>
       <p>State each over its hypotheses and prove its reduction — three game hops for extractability (5.10), simulation for anonymity (5.8). Theorem 5.2 is then their conjunction.</p>
     </li>
+    <li>
+      <h4>Anonymous-token track — 5.11, then 5.3 <span class="pill p-todo"><span class="dot"></span>not written</span></h4>
+      <p>The anonymous-token syntax and OMUF game (§3.4, Fig&nbsp;6), the μCMZ<sub>AT</sub> core instance (Fig&nbsp;9 minus π<sub>iu</sub>), and the AGM analysis of Theorem&nbsp;5.11 (Eq&nbsp;17–23, Claims 5.12–5.14). Runs in parallel to phases 3–5: the OMUF half needs neither the μCMZ KVAC instance nor Theorem&nbsp;5.1. Theorem&nbsp;5.3's anonymity half waits on 5.8. Track CMZ-OMUF, issue&nbsp;#12.</p>
+    </li>
   </ol>
 
   <div class="note">
-    <p><strong>Critical path.</strong> The single unblocker is the μCMZ KVAC instance (<code>Credential.lean</code>, step&nbsp;4 above) — until it exists, neither 5.8 nor 5.10 can even be <em>stated</em>. Once it lands, both credential reductions build on pieces already merged: the μCMZ MAC and the UF-CMVA games are on <code>main</code>. Extractability (5.10) closes its <code>ufcmva</code> leaf through Theorem 5.1, which needs two still-missing pieces on Semar's side — the <strong>AGM → UF-CMVA bridge</strong> (standard vs AGM-instrumented game) and the <code>sorry</code>-able AGM bound <code>agm_ufcmva_le</code>, both in no PR — but <em>not</em> the full AGM reduction proof (#129 + issues #106–#116; core #88 already merged), which stays <code>sorry</code>'d behind the bound. Anonymity (5.8) additionally needs the Def&nbsp;4.4 anonymity game, still unwritten. Two blockers sit underneath, and they are model mismatches, not mere postponements: the <code>ProbComp</code> vs <code>OracleComp (ZKRO H)</code> carrier bridge (issue&nbsp;#118) — the concrete instance may not even inhabit the framework type 5.2 uses — and the abstract <code>isPPT</code> predicate, which carries no closure and could be instantiated vacuously. Until both are settled, the honest deliverable is a <em>pointwise, finite-parameter</em> advantage inequality, not asymptotic "μCMZ is secure".</p>
+    <p><strong>Critical path.</strong> The single unblocker is the μCMZ KVAC instance (<code>Credential.lean</code>, step&nbsp;4 above) — until it exists, neither 5.8 nor 5.10 can even be <em>stated</em>. Once it lands, both credential reductions build on pieces already merged: the μCMZ MAC and the UF-CMVA games are on <code>main</code>. Extractability (5.10) closes its <code>ufcmva</code> leaf through Theorem 5.1, which needs two still-missing pieces on Semar's side — the <strong>AGM → UF-CMVA bridge</strong> (standard vs AGM-instrumented game) and the <code>sorry</code>-able AGM bound <code>agm_ufcmva_le</code>, both in no PR — but <em>not</em> the full AGM reduction proof (#129 + issues #106–#116; core #88 already merged), which stays <code>sorry</code>'d behind the bound. Anonymity (5.8) additionally needs the Def&nbsp;4.4 anonymity game, still unwritten. Two blockers sit underneath, and they are model mismatches, not mere postponements: the <code>ProbComp</code> vs <code>OracleComp (ZKRO H)</code> carrier bridge (issue&nbsp;#118) — the concrete instance may not even inhabit the framework type 5.2 uses — and the abstract <code>isPPT</code> predicate, which carries no closure and could be instantiated vacuously. Until both are settled, the honest deliverable is a <em>pointwise, finite-parameter</em> advantage inequality, not asymptotic "μCMZ is secure". The anonymous-token theorem (5.3) sits on a separate path: its OMUF half (5.11) needs neither the μCMZ KVAC instance nor Theorem&nbsp;5.1 — only its anonymity half waits on 5.8.</p>
   </div>
 
   <h2><span class="n">03</span>Dependency maps</h2>
@@ -267,7 +287,7 @@ graph TD
 
   <div class="thm-block" id="thm-58">
     <div class="thm-head"><h3><span class="num">Theorem 5.8</span> — anonymity</h3><span class="tag t-todo">not written</span></div>
-    <p class="thm-sub"><span class="bound"><i>Adv</i><sup>anon</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ)</span></p>
+    <p class="thm-sub"><span class="bound"><i>Adv</i><sup>anon</sup><sub>μCMZ</sub>(λ,&thinsp;n) ≤ <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub>(λ) + <i>Adv</i><sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub>(λ) + <i>Adv</i><sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub></sub>(λ)</span></p>
     <div class="sheet">
       <pre class="mermaid">
 graph TD
@@ -286,7 +306,7 @@ graph TD
     </div>
     <div class="tech">
       <span class="k">technique · simulation</span>
-      <p>Simulate the issuance and presentation proofs (zero-knowledge), so the adversary's view becomes independent of the honest secret attributes; the distance is the sum of the three <code>zk</code> terms. The simulator recovers the secret <code>x0</code> by running the issuance extractor on <code>πis</code>, so 5.8 also consumes the KS extractor (#54) — even though the bound stays zero-knowledge only. Blocked on the anonymity game (Def 4.4, unwritten) and the μCMZ instance.</p>
+      <p>Simulate the issuance and presentation proofs (zero-knowledge), so the adversary's view becomes independent of the honest secret attributes — two <code>zk</code> terms. The simulator recovers the secret <code>x0</code> by running the issuance extractor on <code>πis</code> (hybrid H<sub>3</sub>), which pays the third term: the <em>knowledge-soundness</em> advantage <code>ksnd_is</code>, per the paper's Theorem 5.8 statement (p.&nbsp;40) — so the KS extractor (#54) appears in the bound itself, not just the proof. Blocked on the anonymity game (Def 4.4, unwritten) and the μCMZ instance.</p>
     </div>
   </div>
 
@@ -327,6 +347,71 @@ graph TD
         <li>A verifying presentation whose extracted attributes were never issued is a forgery — bounded by <code>ufcmva</code> (Theorem 5.1).</li>
       </ol>
       <p>The reduction machinery is buildable on <code>main</code> today — the μCMZ MAC instance and the UF-CMVA games are merged. Closing the <code>ufcmva</code> leaf then needs two things on the 5.1 side: a <strong>decision on the AGM ↔ standard UF-CMVA gap</strong> (restrict 5.10 to algebraic adversaries, or state it over generic <code>UF_CMVA</code> — a soundness question, not a free lemma), and the <code>sorry</code>-able AGM bound <code>agm_ufcmva_le</code>. Neither waits on the full AGM reduction proof (#129 + issues #106–#116; core #88 already merged), which stays <code>sorry</code>'d behind the bound.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="thm-block" id="thm-53">
+    <div class="thm-head"><h3><span class="num">Theorem 5.3</span> — μCMZ<sub>AT</sub> anonymous token</h3><span class="tag t-todo">not written</span></div>
+    <p class="thm-sub">The paper's third core theorem — μCMZ<sub>AT</sub> (Figure&nbsp;9 with the issuance proof π<sub>iu</sub> removed) is an anonymous token: the 5.8 anonymity bound plus one-more unforgeability (5.11). Track CMZ-OMUF, issue&nbsp;#12.</p>
+    <div class="sheet">
+      <pre class="mermaid">
+graph TD
+  T53["Theorem 5.3<br/>μCMZ_AT anonymous token"]:::todo
+  T58["Theorem 5.8<br/>Anonymity · simulator reused"]:::todo
+  T511["Theorem 5.11<br/>One-more unforgeability"]:::todo
+  T53 --> T58
+  T53 --> T511
+  classDef todo fill:#eef1f6,stroke:#9aa7b8,color:#3a4757,stroke-dasharray:4 3;
+      </pre>
+    </div>
+    <div class="tech">
+      <span class="k">technique · conjunction</span>
+      <p>Like 5.2, no new reduction — correctness is by inspection, anonymity specializes the 5.8 simulator argument to the token variant (removing π<sub>iu</sub> removes a hybrid, so the bound only shrinks), and one-more unforgeability is Theorem&nbsp;5.11. The anonymity half therefore waits on 5.8; the OMUF half is independent of the whole credential track. NB the paper's §5.2 headline bound for 5.3 — (<i>q</i>+5)/<i>p</i> + <i>q</i>·dl + 2-dl — does not match what its own proof gives (Theorem&nbsp;5.11 below); the formalization states the proof-derived bounds.</p>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="thm-block" id="thm-511">
+    <div class="thm-head"><h3><span class="num">Theorem 5.11</span> — one-more unforgeability</h3><span class="tag t-todo">not written</span></div>
+    <p class="thm-sub"><span class="bound"><i>Adv</i><sup>omuf</sup><sub>μCMZ<sub>AT</sub></sub>(λ,&thinsp;n) ≤ (<i>q</i>+6)/<i>p</i> + (<i>q</i>+1)·<i>Adv</i><sup>dl</sup><sub>GrGen</sub>(λ) + 3·<i>Adv</i><sup>2-dl</sup><sub>GrGen</sub>(λ) + <i>Adv</i><sup>gapdl</sup><sub>GrGen</sub>(λ)</span></p>
+    <div class="sheet">
+      <pre class="mermaid">
+graph TD
+  T511["Theorem 5.11 · OMUF<br/>n=poly · standard notion"]:::todo
+  BRO["AGM ↔ plain OMUF gap<br/>modeling decision · #81 pattern"]:::todo
+  N1["n = 1 case · Eq 23<br/>AGM monomial analysis"]:::todo
+  GDL["n &gt; 1 lift · collision case<br/>gap-DL · Lemma 5.5 technique"]:::todo
+  AGMO["AGM OMUF game<br/>Eq 17–19 · gated representations"]:::todo
+  POLY["OMUF polynomials c_j, φ_i<br/>Eq 18 / Eq 22"]:::todo
+  CLM["Claims 5.12–5.14<br/>DL / DL / 2-DL embeddings"]:::todo
+  ATC["μCMZ_AT core instance<br/>Fig 9 minus π_iu"]:::todo
+  ATG["AT syntax + OMUF game<br/>§3.4 · Fig 6"]:::todo
+  APOL["AGM polynomial layer<br/>§5.3 · on main"]:::done
+  MACn["μCMZ base MAC<br/>§5.1 · on main"]:::done
+  ASM["dl · 2-dl · gap-dl advantages<br/>§3.1 · on main"]:::done
+  T511 --> BRO
+  T511 --> GDL
+  T511 --> N1
+  N1 --> AGMO
+  N1 --> POLY
+  N1 --> CLM
+  AGMO --> ATC
+  AGMO --> ATG
+  ATC --> ATG
+  ATC --> MACn
+  POLY --> APOL
+  CLM --> ASM
+  GDL --> ASM
+  classDef done fill:#dcefe4,stroke:#17794c,color:#0f3d27;
+  classDef todo fill:#eef1f6,stroke:#9aa7b8,color:#3a4757,stroke-dasharray:4 3;
+      </pre>
+    </div>
+    <div class="tech">
+      <span class="k">technique · AGM monomial analysis</span>
+      <p>A direct AGM argument parallel to Lemma&nbsp;5.4, with <em>no</em> <code>ufcmva</code> term — 5.11 does not route through Theorem&nbsp;5.1, and its Sign oracle is the server side of issuance only, so it needs neither the μCMZ KVAC instance nor the credential track. Each Sign query carries an algebraic representation of C<sub>j</sub> (Eq&nbsp;17); the associated polynomials c<sub>j</sub> (Eq&nbsp;18) and forgery polynomials φ<sub>i</sub> (Eq&nbsp;22) live on the merged <code>AGMPolynomial</code> variable ring. Coefficient bookkeeping plus a pigeonhole over the q+1 distinct forged messages forces some φ<sub>i</sub> ≠ 0, and three claims turn a surviving monomial into an assumption break: u<sub>ι</sub> → DL (5.12), η → DL (5.13), x-monomials → 2-DL (5.14); the n&nbsp;&gt;&nbsp;1 collision case adds the gap-DL argument of Lemma&nbsp;5.5 (shared with #80). Open modeling points, mirroring 5.1's: the AGM ↔ plain-game bridge (the #81 pattern) and whether issuance carries π<sub>is</sub> — Figure&nbsp;9 keeps it, but the §5.6 proof answers Sign with (U<sub>j</sub>,&thinsp;V<sub>j</sub>) alone and the bound has no zk term, so the formalization targets the π<sub>is</sub>-less core and records the delta. Constants are provisional pending the degree audit (the paper's total-degree claim for φ<sub>i</sub> fails at q&nbsp;=&nbsp;1, and the 1/p terms share the documented 3/p Schwartz–Zippel pattern).</p>
     </div>
   </div>
 

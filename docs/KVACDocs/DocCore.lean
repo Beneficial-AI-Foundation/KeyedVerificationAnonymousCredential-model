@@ -115,7 +115,7 @@ statement, witness, and proof families with monad-polymorphic `setup`,
 of the relation family, and the syntax-plus-completeness bundle.
 :::
 
-:::definition "zk_game" (lean := "KVAC.Core.ZKQuery, KVAC.Core.ZKProveSpec, KVAC.Core.ZKRO, KVAC.Core.ZKAdvSpec, KVAC.Core.ZKAdversary, KVAC.Core.ZKSimulator, KVAC.Core.zkROImpl, KVAC.Core.zkProveReal, KVAC.Core.zkProveSim, KVAC.Core.zkRun, KVAC.Core.zkGameReal, KVAC.Core.zkGameSim, KVAC.Core.ZKAdv") (parent := "core_zkproof") (tags := "milestone")
+:::definition "zk_game" (lean := "KVAC.Core.ZKQuery, KVAC.Core.ZKProveSpec, KVAC.Core.ZKRO, KVAC.Core.ZKAdvSpec, KVAC.Core.ZKAdversary, KVAC.Core.ZKSimulator, KVAC.Core.zkROImpl, KVAC.Core.zkProveReal, KVAC.Core.zkProveSim, KVAC.Core.zkRun, KVAC.Core.zkGameReal, KVAC.Core.zkGameSim, KVAC.Core.ZKAdv, KVAC.Core.runRO") (parent := "core_zkproof") (tags := "milestone")
 The two-world zero-knowledge game of O24 Section 3.3 on a
 {uses "nizkp_syntax"}[] carrier: a Proveᵦ oracle answering with the real
 prover or the simulator behind the `(x, w) ∈ R` guard, the lazy random
@@ -151,13 +151,16 @@ discipline is stated once instead of being repeated. `AlgebraicMACSyntax`
 extends it directly; the framework's `KVACSyntax` extends it through the
 credential predicate family.
 
-:::definition "keyed_setup" (lean := "KVAC.Core.KeyedSetupSyntax, KVAC.Core.KeyedSetupSyntax.MsgVec, KVAC.Core.KeyedSetupSyntax.instDecidableEqMsg") (parent := "core_keyed_setup") (tags := "milestone")
+:::definition "keyed_setup" (lean := "KVAC.Core.KeyedSetupSyntax, KVAC.Core.KeyedSetupSyntax.MsgVec, KVAC.Core.KeyedSetupSyntax.instDecidableEqMsg, KVAC.Core.issueChain") (parent := "core_keyed_setup") (tags := "milestone")
 The CRS and key-generation skeleton common to every keyed scheme: the
 CRS family `Crs secParam n`, the carriers `Msg`, `Sk`, and `Pp` selected
 by a CRS, and the algorithms `setup` and `keygen`. `MsgVec` abbreviates
 the attribute vector `Fin n → Msg crs`, the paper's `m⃗ ∈ M^n`.
 `DecidableEqMsg` carries decidable equality on the message space, which
-the security games need for their freshness checks.
+the security games need for their freshness checks. `issueChain` is the
+three-move blind-issuance plumbing (user request, optional server
+response, user finalize) that the credential and anonymous-token
+`issue` algorithms both instantiate.
 :::
 
 # Algebraic MAC

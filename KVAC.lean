@@ -14,4 +14,5 @@ import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.Anonymity
 import KVAC.Preliminaries.Assumptions
+import KVAC.Preliminaries.AnonymousTokens
 import KVAC.Framework

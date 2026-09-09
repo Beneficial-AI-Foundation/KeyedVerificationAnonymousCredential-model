@@ -6,6 +6,7 @@ Released under MIT license as described in the file LICENSE.
 import VersoManual
 import VersoBlueprint
 import KVAC.Preliminaries.Assumptions
+import KVAC.Preliminaries.AnonymousTokens
 
 open Verso.Genre Manual
 open Informal
@@ -106,13 +107,23 @@ O24 Section 3.4. Anonymous tokens are the headline application of the
 OMUF notion — used in the `μCMZ_AT` and `μBBS_AT` chapters of the two
 scheme directories.
 
-*TODO (Track Pre).* Define the anonymous-token syntax and the OMUF
-security game, mirroring Section 3.4.
+*TODO (Track Pre).* Define the OMUF security game (Figure 6).
 
-:::definition "anonymous_tokens" (parent := "pre_anontoken") (tags := "paper, O24 §3.4")
-*O24 Section 3.4.* Syntax and security of anonymous token schemes with
-non-interactive issuance: a "blind MAC" with setup, key generation, an
-issuance protocol, and verification.
+:::definition "anonymous_tokens" (lean := "KVAC.Preliminaries.ATSyntax, KVAC.Preliminaries.ATSyntax.issue, KVAC.Preliminaries.ATSyntax.Correct, KVAC.Preliminaries.AnonymousToken") (parent := "pre_anontoken") (tags := "paper, O24 §3.4")
+*O24 Section 3.4.* Syntax and correctness of anonymous token schemes
+with non-interactive issuance: a "blind MAC" `AT = (S, K, I, V)`. The
+setup half is inherited from {uses "keyed_setup"}[]; this layer adds the
+one-round blind issuance split into its moves (`issueUsr₁`, `issueSrv`,
+`issueUsr₂`, with both the server's rejection and the user's abort
+carried by `Option` — the server of `μBBS_AT` keeps its `C′ ≠ 0` check
+even without the issuance proof) and the deterministic keyed verification
+`V`. The derived `issue` chains the moves, `Correct` states
+support-based (probability-one) correctness with the `0 < n` domain of
+Section 3.4, and `AnonymousToken` bundles syntax with correctness at the
+paper level. Section 3.4 also demands *unlinkability* but omits its
+formal definition (deferring to the literature, with keyed-verification
+token systems satisfying the stronger §4 anonymity instead); it is
+accordingly not formalized here.
 :::
 
 :::definition "omuf_game" (parent := "pre_anontoken") (tags := "paper, O24 Fig 6")

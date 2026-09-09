@@ -107,13 +107,23 @@ it never needs them to exist. Exhibiting them is a scheme-level
 obligation, discharged when μCMZ and μBBS build their predicate-family
 instances.
 
-:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
+:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
 *O24 Definition 4.3.* Correctness for a KVAC scheme {uses "kvac_syntax"}[]:
 honestly issued credentials always produce accepting presentations for
 the predicates they satisfy. Stated as two halves, issuance never
 rejects or aborts and presentation always accepts, so downstream proofs
 can cite each. The bundled object `KVAC` pairs the syntactic algorithms
 over `ProbComp` with a correctness proof, as O24 Definition 4.2 closes.
+
+The statement is carrier generic. `GenCorrect` is the support-based form of
+Definition 4.3 over a run semantics `RunSem`, which fixes the state an algorithm threads and the
+relation "computation `c` can produce `a` from state `s` to `s'`", with the
+conclusion `CorrectOutcome`. `Correct` is `GenCorrect` at `probRunSem`, the
+stateless support-based semantics. `CorrectRO` is `GenCorrect` at
+`roRunSem`, which threads one random-oracle cache through `setup`, `keygen`,
+`issue` and `present` by `runRO`, the statement a Fiat–Shamir scheme over
+the oracle carrier proves. Its first consumer is the proof that the extraction
+game's `NewUsr` oracle never takes its `none` arm, in the stacked PR #140.
 :::
 
 # Anonymity (Definition 4.4)
@@ -159,13 +169,13 @@ single-user unforgeability is included as a sanity check.
 *TODO (Track F2).* Define the extractability game (Definition 4.5) and
 prove the reduction to CMZ14 unforgeability as a corollary.
 
-:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
+:::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty, KVAC.Framework.EXTComp, KVAC.Framework.liftRO, KVAC.Framework.getEXTState, KVAC.Framework.modifyEXTState, KVAC.Framework.extOracleImpl, KVAC.Framework.EXTAdvSpec, KVAC.Framework.EXTAdversary, KVAC.Framework.extROImpl, KVAC.Framework.EXTGame, KVAC.Framework.extSecurityGame, KVAC.Framework.EXTAdv") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
 *O24 Figure 8.* The extractability game for a keyed-verification
 credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.
 :::
 
-:::definition "kvac_extractability" (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
+:::definition "kvac_extractability" (lean := "KVAC.Framework.Extractable, KVAC.Framework.PolyBounded, KVAC.Framework.ExtractablePoly, KVAC.Framework.extractablePoly_obligation") (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
 *O24 Definition 4.5.* Extractability for a KVAC scheme {uses "kvac_syntax"}[]:
 an extractor recovers the certified attributes from any accepting
 presentation, in the game of {uses "extractability_game"}[].

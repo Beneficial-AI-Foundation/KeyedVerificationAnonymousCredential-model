@@ -14,23 +14,17 @@ graph TD
 
   T0["Track 0<br/>Core/Group, Hash,<br/>ZKProof, AlgebraicMAC"]:::w0
 
-  TPre["Track Pre<br/>Preliminaries/<br/>Assumptions, ZKArguments,<br/>AnonymousTokens"]:::w1
-  TΣ["Track Σ<br/>ProofSystems/<br/>Sigma, FiatShamir,<br/>StraightLineExtraction"]:::w1
+  TPre["Track Pre<br/>Preliminaries/<br/>Assumptions,<br/>AnonymousTokens"]:::w1
+  TΣ["Track Σ<br/>Fiat–Shamir transform,<br/>§9 straight-line extraction<br/>(rescope proposed, #3)"]:::w1
   TF1["Track F1<br/>Framework/<br/>Syntax, Correctness"]:::w1
 
   TF2["Track F2<br/>Framework/<br/>Anonymity, Extractability"]:::w2
   TCMZ_C["Track CMZ-C<br/>μCMZ Construction"]:::w2
-  TBBS_C["Track BBS-C<br/>μBBS Construction"]:::w2
 
   TCMZ_M["Track CMZ-M<br/>μCMZ AlgebraicMAC"]:::w3
   TCMZ_A["Track CMZ-A<br/>μCMZ Anonymity"]:::w3
   TCMZ_E["Track CMZ-E<br/>μCMZ Extractability"]:::w3
   TCMZ_OMUF["Track CMZ-OMUF<br/>μCMZ OneMoreUnforgeability"]:::w3
-
-  TBBS_M["Track BBS-M<br/>μBBS AlgebraicMAC"]:::w3
-  TBBS_A["Track BBS-A<br/>μBBS Anonymity"]:::w3
-  TBBS_E["Track BBS-E<br/>μBBS Extractability"]:::w3
-  TBBS_OMUF["Track BBS-OMUF<br/>μBBS OneMoreUnforgeability"]:::w3
 
   TEx["Track Ex<br/>Examples/ConcreteRun<br/>+ Instances/Ristretto<br/>+ lakefile dalek dep"]:::w4
 
@@ -42,29 +36,23 @@ graph TD
 
   TPre --> TF1
   TPre --> TCMZ_C
-  TPre --> TBBS_C
   TΣ --> TCMZ_C
-  TΣ --> TBBS_C
-  TΣ --> TF2
+  TΣ --> TCMZ_A
+  TΣ --> TCMZ_E
 
   TF1 --> TF2
   TF1 --> TCMZ_C
-  TF1 --> TBBS_C
 
   TCMZ_C --> TCMZ_M
   TCMZ_C --> TCMZ_A
   TCMZ_C --> TCMZ_E
   TCMZ_C --> TCMZ_OMUF
 
-  TBBS_C --> TBBS_M
-  TBBS_C --> TBBS_A
-  TBBS_C --> TBBS_E
-  TBBS_C --> TBBS_OMUF
-
   TF2 --> TCMZ_A
   TF2 --> TCMZ_E
-  TF2 --> TBBS_A
-  TF2 --> TBBS_E
+
+  TCMZ_M --> TCMZ_E
+  TCMZ_M --> TCMZ_OMUF
 
   TCMZ_C --> TEx
 
@@ -80,93 +68,94 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
 
 ## Wave 0 — foundational, start immediately
 
-- [ ] **Track 0** — Shared API contract (`KVAC/Core/`)
+- [x] **Track 0** — Shared API contract (`KVAC/Core/`)
   - Modules: `KVAC/Core/Group.lean`, `KVAC/Core/Hash.lean`, `KVAC/Core/ZKProof.lean`, `KVAC/Core/AlgebraicMAC.lean`
   - Depends on: nothing
-  - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
+  - **Critical path:** Tracks Pre, Σ, F1, CMZ-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
   - **Status** (split into sub-issues #18–#21):
     - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`.
     - [x] `Hash.lean` — landed (#19): `HashSpec` (taken over from PR #47) + the lazy `randomOracle` binding, with `transcriptHashSpec` (`H_p`) and `curveHashSpec` (`H_𝔾`).
-    - [ ] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 (externalized extractor + completeness) in review.
+    - [x] `ZKProof.lean` / `NIZKP/*.lean` — landed (#20): model-agnostic NIZKP spec with `NIZKPSyntax` (`NIZKP/Construction.lean`), completeness (`NIZKP/Completeness.lean`), security (`NIZKP/Security.lean`), and straight-line extraction (`NIZKP/Extraction.lean`).
     - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
+    - Follow-up from the #57 review: `HashSpec.programFresh` (#60) is tracked under Track Σ, its first consumer.
 
 ## Wave 1 — start once Track 0 lands
 
 These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merged.
 
-- [ ] **Track Pre** — Preliminaries
-  - Modules: `KVAC/Preliminaries/Assumptions.lean`, `KVAC/Preliminaries/ZKArguments.lean`, `KVAC/Preliminaries/AnonymousTokens.lean`
+- [x] **Track Pre** — Preliminaries
+  - Modules: `KVAC/Preliminaries/Assumptions.lean`, `KVAC/Preliminaries/AnonymousTokens.lean` with `AnonymousTokens/Construction.lean`, `Correctness.lean`, `Security.lean`
   - Depends on: Track 0
   - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
-  - **Status** (partial):
-    - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30).
-    - [ ] Remaining with #2: `ZKArguments.lean`, `AnonymousTokens.lean`, and q-DDHI (only needed by the §8.2 rate-limiting extension, Track Ext-RL).
+  - **Status:** #2 closed. The §3.4 anonymous-token items were re-homed as sub-issues of #12 (#144 landed, #145 in review) and their checkboxes live under Track CMZ-OMUF.
+    - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30). q-DDHI deferred with the §8.2 rate-limiting extension (Track Ext-RL).
+    - [x] `ZKArguments.lean` — superseded. The abstract NIZK syntax and its security games live in `KVAC/Core/NIZKP/` (#20).
+    - [x] `AnonymousTokens/Construction.lean`, `Correctness.lean` — anonymous-token syntax and correctness landed (#144; PR #142).
+    - The OMUF game of Figure 6 (`AnonymousTokens/Security.lean`, #145) is a sub-issue of #12 and is tracked under Track CMZ-OMUF.
 - [ ] **Track Σ** — Proof systems
-  - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
-  - Depends on: Track 0
+  - Modules: originally `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`; the rescope proposes `KVAC/Core/NIZKP/FiatShamir.lean` and `KVAC/Core/NIZKP/StraightLine.lean` instead
+  - Depends on: Track 0, #60 (`programFresh`)
   - Σ-protocol meta-theory (completeness, special soundness, HVZK), the Fiat–Shamir transformation in the random oracle model, and straight-line extraction in the AGM (Sec. 9 of O24). Critical infrastructure for both schemes' security proofs.
-  - **Status:** not started as a generic layer. Concrete per-relation Σ-protocol instances for μCMZ (Eqs. 9–11) are being delivered under Track CMZ-C (#40, #41) directly on VCV-io's `SigmaProtocol`; this track remains the home for the generic meta-theory (Fiat–Shamir, straight-line extraction).
-- [ ] **Track F1** — Framework: syntax and correctness
+  - **Status:** rescope proposed on #3. Nothing under `KVAC/ProofSystems/` was created. Of the original scope, the Σ-protocol meta-theory is consumed from VCV-io's `SigmaProtocol`, the concrete μCMZ Σ-protocols (Eqs. 9–11) landed under Track CMZ-C in `Relations.lean` (#40, #41), and the knowledge-soundness and simulation-extractability games live in `KVAC/Core/NIZKP/Extraction.lean` (#20). What remains, and what the security tracks need, is the Fiat–Shamir transform from a `SigmaProtocol` to a `NIZKPSyntax (OracleComp (ZKRO H))` and O24 Theorem 9.2 (strong simulation extractability of the transformed protocol in the AGM with a random oracle), which supplies the zk and ksnd advantage terms of Theorems 5.2, 5.8, and 5.10.
+    - [ ] `HashSpec.programFresh` in `Core/Hash.lean` (abort-on-collision reprogramming, monotonicity and collision-bound lemmas) — remaining (#60). Prerequisite for the Theorem 9.2 simulator and for the anonymity simulators.
+    - [ ] Fiat–Shamir transform `SigmaProtocol → NIZKPSyntax (OracleComp (ZKRO H))` — not started.
+    - [ ] O24 Theorem 9.2, strong simulation extractability of the transformed protocol — not started.
+- [x] **Track F1** — Framework: syntax and correctness
   - Modules: `KVAC/Framework/Syntax.lean`, `KVAC/Framework/Correctness.lean`
   - Depends on: Track 0, Track Pre
   - Definitions 4.2 and 4.3 of O24. Scheme-agnostic by construction — both μCMZ and μBBS will instantiate this same surface.
+  - **Status:** landed (#77). `KVACSyntax` (`Framework/Syntax.lean`) and the correctness predicate `Correct` (`Framework/Correctness.lean`). Follow-up #118 (correctness at the `OracleComp (ZKRO H)` carrier, `CorrectRO`) is in review as PR #138.
 
 ## Wave 2 — Framework security and scheme constructions
 
 - [ ] **Track F2** — Framework: anonymity and extractability
   - Modules: `KVAC/Framework/Anonymity.lean`, `KVAC/Framework/Extractability.lean`
-  - Depends on: Track F1, Track Σ
+  - Depends on: Track F1, #104 (partial-disclosure predicate family)
   - Definitions 4.4 (anonymity, statistical / everlasting-forward variants) and 4.5 (multi-user MITM extractability) of O24.
+  - **Status** (partial):
+    - [x] Extraction game, Definition 4.5 and Figure 8 — landed (#117; PRs #119 to #126, merged 2026-08-19) in `Framework/Extractability.lean`: `Extractor`, `EXTState`, `extOracleImpl`, `EXTAdversary`, `EXTGame`, `EXTAdv`, `Extractable`, `ExtractablePoly`. The `NewUsr` never-fails lemma is in review (PR #140).
+    - [ ] Partial-disclosure predicate family `{φ_a⃗}`, Definition 4.2 — not started (#104). Prerequisite for the anonymity game.
+    - [ ] Anonymity game, Definition 4.4 (`Framework/Anonymity.lean`) — not started, the module does not exist.
 - [ ] **Track CMZ-C** — μCMZ construction
-  - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`
-  - Depends on: Track 0, Track Pre, Track Σ, Track F1
+  - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`, `KVAC/Schemes/MicroCMZ/Credential.lean` (planned)
+  - Depends on: Track 0, Track F1, Track Σ (Fiat–Shamir proofs), #104, #118
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
-  - **Status** (split into sub-issues #39–#41 under #6):
+  - **Status** (split into sub-issues #39–#41 and #163 under #6; #6 was closed on 2026-07-21 before Part 4 landed and is reopened):
     - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
-    - [ ] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — in review (#40; PR #32).
-    - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32).
-    - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
-- [ ] **Track BBS-C** — μBBS construction
-  - Modules: `KVAC/Schemes/MicroBBS/Construction.lean`
-  - Depends on: Track 0, Track Pre, Track Σ, Track F1
-  - The protocol description from §6.1 of O24. Independent of CMZ-C — the two scheme tracks proceed in parallel.
+    - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40): `riuRel` / `riuSigma` with completeness and special soundness.
+    - [x] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — landed (#41): `risRel` / `risSigma` and `rpRel` / `rpSigma`.
+    - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p (`Credential.lean`) — not started (#163). `Construction.lean` provides the base MAC only.
 
 ## Wave 3 — security tracks (per scheme)
 
 The security tracks for each scheme are mostly independent of the other scheme. They depend on their own `Construction.lean` and on Track F2's framework definitions; game-based reductions use VCV-io's `OracleComp` / `OracleSpec` machinery directly (VCV-io is a Wave-0 Lake dep, no separate binding track needed).
 
 - [ ] **Track CMZ-M** — μCMZ as algebraic MAC (§5.3)
-  - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`
-  - Depends on: Track CMZ-C
-  - Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n). Uses straight-line extraction from Track Σ.
+  - Modules: `KVAC/Schemes/MicroCMZ/AlgebraicMAC.lean`, `AGMPolynomial.lean`, `SignMask.lean`, `AGMReduction.lean` with `AGMReduction/Core.lean`, `Coupling.lean`, `SignCoupling.lean`
+  - Depends on: Track CMZ-C (base MAC only)
+  - Theorem 5.1: μCMZ is an algebraic MAC (UF-CMVA in AGM under 3-DL), proved via Lemmas 5.4 (n=1 case) and 5.5 (general n).
+  - **Status** (partial): merged so far, the AGM game (`AGM_UF_CMVAGame`, `AGMUFAdversary`, `AGMRepr`), the polynomial backbone, the sign-mask distribution lemmas, the reduction core (#89; PR #88), the coupling and Schwartz–Zippel bricks (#106; PR #129), the sign-coupling scaffold and the sign-step triple (PRs #151, #152, toward #107), the consistency core of Lemma 5.4 (PR #153), and the Lemma 5.4 target bound stated with `sorry` (PR #155). Open: the 3-DL/gap-DL embedding (#80), the bridge to plain `UF_CMVA` (#81), and the granular reduction lemmas (#107 to #116), with PRs #156 to #158 in review.
 - [ ] **Track CMZ-A** — μCMZ anonymity (§5.4)
   - Modules: `KVAC/Schemes/MicroCMZ/Anonymity.lean`
-  - Depends on: Track CMZ-C, Track F2
+  - Depends on: Track CMZ-C (#163), Track F2 (anonymity game, #104), Track Σ (zk and ksnd terms)
   - Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZKP. Statistical anonymity result.
+  - **Status:** not started. A statement scaffold is proposed in PR #139 (in review).
 - [ ] **Track CMZ-E** — μCMZ extractability (§5.5)
   - Modules: `KVAC/Schemes/MicroCMZ/Extractability.lean`
-  - Depends on: Track CMZ-C, Track F2, Track CMZ-M
+  - Depends on: Track CMZ-C (#163), Track F2, Track CMZ-M, Track Σ, the #118 cache-extension bridge (see PR #140)
   - Theorem 5.2: μCMZ is extractable in AGM. Reduces to MAC unforgeability + ZKP simulation-extractability.
+  - **Status:** not started.
 - [ ] **Track CMZ-OMUF** — μCMZ one-more unforgeability (§5.6)
-  - Modules: `KVAC/Schemes/MicroCMZ/OneMoreUnforgeability.lean`
-  - Depends on: Track CMZ-C, Track CMZ-M
-  - Theorem 5.3: μCMZ$_{AT}$ (the anonymous-token variant, with $\pi_{iu}$ removed) is one-more unforgeable in AGM under 2-DL. Reduces non-tightly to DL.
-- [ ] **Track BBS-M** — μBBS as algebraic MAC (§6.3)
-  - Modules: `KVAC/Schemes/MicroBBS/AlgebraicMAC.lean`
-  - Depends on: Track BBS-C
-  - Theorems 6.6, 6.8, 6.9: μBBS is an algebraic MAC in AGM under (q+2)-DL.
-- [ ] **Track BBS-A** — μBBS anonymity (§6.4)
-  - Modules: `KVAC/Schemes/MicroBBS/Anonymity.lean`
-  - Depends on: Track BBS-C, Track F2
-  - The anonymity analogue of Theorem 5.8 for μBBS, with the technical caveat around messages satisfying $\sum_i m_i G_i = -G_0$ (Equation 7).
-- [ ] **Track BBS-E** — μBBS extractability (§6.5)
-  - Modules: `KVAC/Schemes/MicroBBS/Extractability.lean`
-  - Depends on: Track BBS-C, Track F2, Track BBS-M
-  - μBBS is extractable in AGM. Requires the DDH oracle augmentation in the algebraic-MAC unforgeability game (this is one of the technical contributions of the paper).
-- [ ] **Track BBS-OMUF** — μBBS one-more unforgeability (§6.6)
-  - Modules: `KVAC/Schemes/MicroBBS/OneMoreUnforgeability.lean`
-  - Depends on: Track BBS-C, Track BBS-M
-  - Theorem 6.12: μBBS$_{AT}$ is one-more unforgeable. Best attack is $O(\sqrt{q})$ via Cheon's attack; ~20 bits of security loss.
+  - Modules: `KVAC/Preliminaries/AnonymousTokens/*.lean` (§3.4 syntax, correctness, OMUF game), `KVAC/Schemes/MicroCMZ/ATVariant.lean` (the μCMZ$_{AT}$ core scheme), further files for the AGM-instrumented OMUF game and the Theorem 5.11 bound
+  - Depends on: Track CMZ-M (AGM machinery), Track CMZ-C and Track CMZ-A (anonymity clause only)
+  - Theorem 5.3: μCMZ$_{AT}$ (the anonymous-token variant, with $\pi_{iu}$ removed) is one-more unforgeable in AGM under 2-DL. Reduces non-tightly to DL. The proof (§5.6, Theorem 5.11) analyses a scheme without π_is as well, so the formalization states the core scheme without both issuance proofs first and treats the π_is-carrying variant as a lifting lemma; the printed Theorem 5.3 bound differs from the proof-derived Theorem 5.11 bound and stays unanchored.
+  - **Status** (sub-issues under #12):
+    - [x] Anonymous-token syntax and correctness, §3.4 — landed (#144; PR #142).
+    - [ ] One-more unforgeability game, Figure 6 — in review (#145; PR #143).
+    - [ ] Base MAC utilities for the core scheme (`mem_support_keygen`, `uniformUnits`) — in review (#164; PR #146).
+    - [ ] μCMZ$_{AT}$ core scheme, §5.6 Figure 9 (`ATVariant.lean`) — in review (#165; PR #147).
+    - [ ] AGM-instrumented OMUF game, Theorem 5.11 statements, and the bound — not started.
+    - [ ] Anonymity clause — blocked on Track CMZ-A.
 
 ## Wave 4 — final integration
 
@@ -186,6 +175,7 @@ The tracks below are deferred — see [`PLAN.md`](PLAN.md) (section "Future work
 - **Track Ext-RL** — Rate-limiting (O24 §8.2). Combines a Dodis–Yampolskiy PRF with the OMUF property of the underlying KVAC. ~3–4 weeks.
 - **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has landed first.
 - **Track DV** — Designated-verifier SNARKs / dvKZG (O24 §7). Substantial cryptographic content; probably warrants a separate repository. Indefinitely deferred.
+- **μBBS scheme** — the μBBS construction (§6.1) and its whole security stack: algebraic-MAC unforgeability (§6.3, Theorems 6.6/6.8/6.9), anonymity (§6.4), extractability (§6.5), and one-more unforgeability (§6.6, Theorem 6.12). Deferred out of v1. μBBS needs a curve larger than Ristretto255 for 128-bit security, so no verified instance can exercise it yet, and its AGM security stack (including the DDH-oracle augmentation of §6.5) is a large body of work orthogonal to the μCMZ v1 goal. The former Wave 2/3 tracks BBS-C, BBS-M, BBS-A, BBS-E, and BBS-OMUF, with issues #7, #13, #14, #15, and #16, are closed as not planned.
 - **μBBS Examples** — concrete μBBS run on a ≈300–384-bit curve. Out of scope until a verified larger-curve instance is available.
 
 ## Updating this file
