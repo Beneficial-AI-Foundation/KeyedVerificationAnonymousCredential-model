@@ -139,13 +139,13 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- return (ctr := ctr + 1). Runs the honest MAC `kvac.mac`; on a credential it
   -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
   -- user's index).
-  -- The `none` arm below is the honest-issuance failure. On the happy trace it
-  -- never fires: for a correct scheme, issuance under the exact-attribute
-  -- predicate `φ_m` always yields `some` (`Correct` specialised at `φ = φ_m` via
-  -- `holds_exactPred`), so `usrs` always grows and the counter matches the
-  -- paper's unconditional `ctr := ctr + 1`. Proving the `none` case unreachable
-  -- (hence that the happy trace is the only outcome) needs `Correct` lifted to
-  -- the `OracleComp (ZKRO H)` carrier (issue #118) and is deferred to PR #138.
+  -- The `none` arm below is the honest-issuance failure. For a correct scheme
+  -- it never fires. Issuance under the exact-attribute predicate `φ_m` always
+  -- yields `some` (`CorrectRO` specialised at `φ = φ_m` via `holds_exactPred`),
+  -- so `usrs` always grows and the counter matches the paper's unconditional
+  -- `ctr := ctr + 1`. `CorrectRO` states correctness at the `OracleComp (ZKRO H)`
+  -- carrier (issue #118); the proof that the `none` case is unreachable is
+  -- `newUsr_mac_isSome` in the stacked PR #140.
   | .newUsr m => do
       match ← liftRO H (kvac.mac crs sk pp m) with
       | none   => return (← getEXTState H).usrs.length

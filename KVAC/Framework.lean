@@ -40,7 +40,9 @@ security properties import the game modules for their own use.
 
 - `Syntax.lean` — `KVACSyntax M` (Definitions 4.1, 4.2), polymorphic over
   the randomness monad.
-- `Correctness.lean` — `Correct` predicate, support-based (Definition 4.3).
+- `Correctness.lean` — the carrier-generic `GenCorrect` skeleton (Definition 4.3)
+  with `Correct` at `ProbComp` (support-based) and `CorrectRO` at the
+  random-oracle carrier `OracleComp (ZKRO H)`.
 - `Anonymity.lean` — anonymity game + advantage (Definition 4.4), opt-in.
 - `Extractability.lean` — extractability game (Definition 4.5, Figure 8),
   opt-in.
