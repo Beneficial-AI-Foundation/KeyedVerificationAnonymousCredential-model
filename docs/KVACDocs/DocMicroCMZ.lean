@@ -461,9 +461,9 @@ off against the key polynomial's evaluation.
 four equations of {uses "challenge_embedding"}[] as one `RedEmbedding`
 hypothesis, its `evalAt` rewrite into the explicit embedded form, and the
 vanishing lemma at an abstract arity `q` tied to the transcript by
-`tags.length = q`. It takes the transcript facts in the indexed form of
-{bpref "transcript_index_transport"}[] and the key in the `macScalar`
-spelling of {uses "masked_key_normal_form_bridge"}[]. The first half of
+`tags.length = q`. It takes the transcript facts of
+{uses "transcript_index_transport"}[] as hypotheses, and the key in the `macScalar`
+form of {uses "masked_key_normal_form_bridge"}[]. The first half of
 {bpref "embedded_consistency_bricks"}[].
 :::
 :::proof "embedded_vanishing_lem54"
@@ -484,9 +484,8 @@ transcript by its length, so the index casts collapse.
 :::proof "embedded_consistency_bricks"
 Substituting the arity away collapses the `Fin.cast`s. The
 `macScalar_maskedKey_expand` of {uses "masked_key_normal_form_bridge"}[]
-converts the transcript facts, taken in the indexed form of
-{bpref "transcript_index_transport"}[], into the key spelling the bridge
-takes; the `evalAt` rewrite of {uses "embedded_vanishing_lem54"}[] puts the
+converts the transcript facts of {uses "transcript_index_transport"}[],
+which enter as hypotheses, into the key form the bridge takes; the `evalAt` rewrite of {uses "embedded_vanishing_lem54"}[] puts the
 represented value into the explicit embedded form; {uses "agm_eval_bridge"}[]
 then evaluates it, the `U`-form transcript fact turning the game point into
 the masked point `v ↦ a v + χ·b v`, and the evaluation law of

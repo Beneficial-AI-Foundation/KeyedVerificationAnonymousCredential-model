@@ -10,8 +10,8 @@ import VCVio.OracleComp.SimSemantics.StateT.PreservesInv
 # μCMZ AGM unforgeability — the deterministic core
 
 The *deterministic* half of the reduction ↔ honest-game coupling: the `sign`
-oracle arm, the transcript invariants it establishes, and the arity-clean
-bricks the remaining arms consume:
+oracle arm, the transcript invariants it establishes, and the lemmas at
+abstract arity the remaining arms consume:
 
 - **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
@@ -26,13 +26,13 @@ bricks the remaining arms consume:
   restating each represented value as the `affineSubst` evaluation of its own
   polynomial.
 
-`macScalar_maskedKey_expand` is the hinge between the two normal forms of the
-masked key scalar. What this file states speaks the `macScalar (maskedKey …)`
+`macScalar_maskedKey_expand` is the conversion lemma between the two normal forms of
+the masked key scalar. What is stated in this file is the `macScalar (maskedKey …)`
 form that `Coupling`'s `redLogHonestInv` uses, so a caller holding the state
 invariant never has to convert; the evaluation bridge lemmas underneath — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` and `verifPoly_eval_eq_zero_of_keySmul` — want the
-key spelled out as `x₀ + xᵣ + m·x₁` instead, and this is the lemma that converts
-one form to the other; each abstract-arity lemma converts in its own proof, at
+key in the explicit form `x₀ + xᵣ + m·x₁` instead, and this is the lemma that converts
+one form to the other; each lemma at abstract arity converts in its own proof, at
 the boundary.
 
 The `verify` and `help` oracle arms, and the run-level view equality, are
@@ -61,9 +61,9 @@ variable (secParam : ℕ)
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- **The masked key scalar, expanded.** `Coupling`'s `macScalar_maskedKey_eq` in the *other* normal
-form: `redLogHonestInv`, and everything stated in this file, speak
+form: `redLogHonestInv`, and everything stated in this file, are stated in
 `macScalar (maskedKey x aM bM)`, while the evaluation bridge lemmas — `Core`'s
-`agmRepr_eval_eq_eval_toPoly` and its companions — take their `htag` with the key spelled out as
+`agmRepr_eval_eq_eval_toPoly` and its companions — take their `htag` with the key in the explicit form
 `x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that converts one
 form to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
 which is what makes the `Fin 1` transcript index and an `F`-valued message list agree. -/
@@ -98,7 +98,7 @@ lemma reductionSignStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedP
   let X : G := x • gen
   let Mask := {p : F × F // p.1 • gen + p.2 • X ≠ 0}
   let Uf (aubu : Mask) : G := aubu.val.1 • gen + aubu.val.2 • X
-  -- `Vf` is spelled in `keyCoeff` form, which is literally how `reductionSignStep` builds `V`.
+  -- `Vf` is stated in `keyCoeff` form, which is literally how `reductionSignStep` builds `V`.
   let Vf (aubu : Mask) : G :=
     (aM.keyCoeff (m 0) * aubu.val.1) • gen
       + (aM.keyCoeff (m 0) * aubu.val.2 + bM.keyCoeff (m 0) * aubu.val.1) • X
@@ -270,7 +270,7 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
           + x * FixedMasks.embed bM cb v)
         (AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q)) = 0 := by
   subst hq
-  -- Open the embedding and convert the `macScalar` key to the spelled-out one the
+  -- Open the embedding and convert the `macScalar` key to the explicit one the
   -- abstract-arity lemma takes.
   simp only [AGMRepr.evalAt_of_redEmbedding gen hemb, macScalar_maskedKey_expand] at htf hkey
   simpa only [gamePoint_eq_embed_affine gen x aM bM _ tags ca cb rfl htf.2] using
@@ -278,11 +278,14 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
       (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) mStar0 tags msgs
       htf.1 hkey
 
-/-- **Represented value as a univariate evaluation (oracle-coupling brick).** Under the 3-DL
+/-- **Represented value as a univariate evaluation (oracle-coupling lemma).** Under the 3-DL
 embedding (`H = aη·g + bη·X`, `X₀ = (a₀+x·b₀)·H`, `Xᵣ = (aᵣ+x·bᵣ)·g`, `X₁ = (a₁+x·b₁)·g`) and a
 log-honest transcript, a consistent representation `ρ` (i.e. `ρ.evalAt … tags = A₀`) satisfies
 `A₀ = (affineSubst a b ((ρ.toReprCoeffs q).toPoly msgs)).eval x • g`. This is the shape the
-deferred `verify`/`help` step couplings consume. -/
+deferred `verify`/`help` step couplings consume. `A₀` is quantified and the consistency
+equation `ρ.evalAt … tags = A₀` taken as a hypothesis, rather than concluding about `ρ.evalAt`
+directly, because those couplings hold the equation in this orientation and rewrite `A₀` with
+the result. -/
 lemma represented_value_eq_affineSubst_eval {q : ℕ} (ρ : AGMRepr F 1)
     {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
@@ -299,7 +302,7 @@ lemma represented_value_eq_affineSubst_eval {q : ℕ} (ρ : AGMRepr F 1)
           (FixedMasks.embed bM cb)
           ((ρ.toReprCoeffs q).toPoly msgs)) • gen := by
   subst hq
-  -- Trade the `macScalar` key for the spelled-out one the eval bridge takes.
+  -- Convert the `macScalar` key to the explicit one the evaluation bridge takes.
   simp only [macScalar_maskedKey_expand] at htf
   rw [← hcons, AGMRepr.evalAt_of_redEmbedding gen hemb,
     agmRepr_eval_eq_eval_toPoly gen ρ _ (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr)

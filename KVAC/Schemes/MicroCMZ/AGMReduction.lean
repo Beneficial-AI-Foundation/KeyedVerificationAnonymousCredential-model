@@ -22,7 +22,7 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   Schwartz–Zippel core;
 - `SignCoupling` — the deterministic core of the coupling: the sign-step
   coupling triple (Eq. 14) and the transcript log invariants it establishes,
-  plus the two arity-clean bricks read off the embedding — the
+  plus the two lemmas at abstract arity derived from the embedding — the
   consistency⇒vanishing step (Eq. 12 evaluated in the relative discrete
   logarithms) and the represented-value bridge the `verify`/`help` arms
   consume.
