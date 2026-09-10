@@ -318,7 +318,7 @@ coordinates are the embedded-mask identity read off the generator, and the
 three fixed-secret coordinates hold by definition.
 :::
 
-:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
+:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogInv, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
 The supporting lemmas from which the proof that
 {uses "simulated_sign_oracle"}[] is indistinguishable from the honest
 oracle of {uses "agm_model"}[] will be assembled.
@@ -412,9 +412,9 @@ shift space gives the probability form. No top-coefficient or
 homogeneous-component lemma is needed.
 :::
 
-Unanchored stubs for the rest of the Lemma 5.4 chain. Each is registered
-now so the summary's denominator is honest, and each is anchored by the pull
-request of the stack that delivers it.
+The rest of the Lemma 5.4 chain. The nodes without a `lean :=` anchor are
+stubs, registered now so the summary's denominator is honest; each is
+anchored by the pull request of the stack that delivers it.
 
 :::theorem "verify_help_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The `verify` and `help` arms of {uses "simulated_sign_oracle"}[] answer as
@@ -463,13 +463,33 @@ affinely substituted evaluation of its own polynomial — the form
 couplings take their hypotheses in.
 :::
 
-:::theorem "transcript_invariants" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The properties of a whole reduction transcript that the bad-event analysis
-reads: every logged record carries the embedded base shape and the honest
-tag relation of {uses "reduction_coupling_bricks"}[], and the represented
-forgery is bounded in degree by {uses "agm_verification_polynomial"}[].
-The per-query invariant of {uses "sign_oracle_coupling"}[] iterated over a
-run.
+:::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.reductionOracleImpl_preservesInv, KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")
+The per-entry half of the state invariant of {uses "sign_oracle_coupling"}[],
+established for a whole run: at any log reachable from
+{uses "simulated_sign_oracle"}[], every logged tag is honest and every logged
+tag base has the embedded `U`-form `Uⱼ = auⱼ·g + buⱼ·X`. Both are conjuncts of
+one predicate preserved by the simulated oracle, stated in the same key-scalar
+form as {uses "reduction_coupling_bricks"}[]'s state invariant, so a caller
+holding the state invariant and a caller holding only support membership
+produce interchangeable facts; the honest-log correspondence conjunct is not
+carried here. The represented forgery is bounded in degree by
+{uses "agm_verification_polynomial"}[].
+:::
+
+:::proof "transcript_invariants"
+An induction over the simulated oracle's arms, of which only `sign` appends
+to the log; that arm appends an honest entry by the `embedTag_eq` of
+{uses "simulated_sign_oracle"}[], retyped through the `macScalar_maskedKey_eq`
+of {uses "reduction_coupling_bricks"}[], while `verify` and `help` leave the
+log unchanged. Restating these facts by index is
+{bpref "transcript_index_transport"}[].
+:::
+
+:::theorem "transcript_index_transport" (parent := "cmz_amac") (tags := "milestone") (effort := "small") (priority := "high")
+The facts of {uses "transcript_invariants"}[] transported from the log's
+entries onto the transcript index: for every position `j`, the `j`-th logged
+tag is honest and has the embedded `U`-form, stated against the tag list the
+consumers of {uses "reduction_coupling_bricks"}[] index by `Fin`.
 :::
 
 :::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
@@ -538,7 +558,8 @@ per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "consistency_case_lem54"}[], its embedded restatements
 {uses "embedded_consistency_bricks"}[] and
 {uses "verification_polynomial_consistency"}[], and the
-{uses "transcript_invariants"}[] they read; the run-level view equality
+{uses "transcript_invariants"}[] they read, restated by index in
+{uses "transcript_index_transport"}[]; the run-level view equality
 {uses "run_level_coupling"}[]; the bad-event bound
 {uses "sz_adaptive_bound"}[] over the static core
 {uses "sz_static_core"}[]; and the union bound
