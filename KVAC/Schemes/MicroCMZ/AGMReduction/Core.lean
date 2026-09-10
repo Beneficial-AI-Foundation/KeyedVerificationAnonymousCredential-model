@@ -19,7 +19,7 @@ variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable {n : ℕ}
 
-/-! # AGMReduction Core — dictionary, eval bridge, reduction adversary, root recovery -/
+/-! # AGMReduction Core — dictionary, evaluation bridge, reduction adversary, root recovery -/
 
 /-! ## The game ↔ polynomial dictionary -/
 
@@ -81,10 +81,10 @@ theorem sum_zipWith_eq_fin_sum_getD {α β M : Type*} [AddCommMonoid M] (f : α 
   rw [List.get_eq_getElem, List.getD_eq_getElem?_getD, List.getElem?_eq_getElem j.isLt]
   rfl
 
-/-! ## The eval bridge -/
+/-! ## The evaluation bridge -/
 
 /--
-**Eval bridge.** Over an honest transcript (`htag`: each tag satisfies
+**Evaluation bridge.** Over an honest transcript (`htag`: each tag satisfies
 `Vⱼ = (x₀+xᵣ+mⱼx₁)·Uⱼ`), a representation's group evaluation `AGMRepr.eval` equals
 `ReprCoeffs.toPoly` evaluated at the transcript's discrete-log point, scaled onto
 `gen` — the glue between the group and polynomial layers. -/
@@ -118,7 +118,7 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
 message has an identically-vanishing verification polynomial, then `U* = 0`. With
 the `U* ≠ 0` check in `MicroCMZ.verify`, the identity case contributes nothing to
 the win probability — O24's coefficient-matching contradiction, here via
-`toPoly_eq_zero_of_verifPoly_eq_zero` through the eval bridge. -/
+`toPoly_eq_zero_of_verifPoly_eq_zero` through the evaluation bridge. -/
 theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F)
     (x : Fin 1 → F) (UStar : G) (mStar : F) (tags : List (G × G))
     (msgs : Fin tags.length → F)
@@ -136,7 +136,7 @@ theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F
   simp only [map_zero, zero_smul]
 
 /-- **Consistency branch (O24 Eq. 12 at the discrete logs).** The companion of
-`agm_n1_identity_Ustar_eq_zero` above: where that one reads off `U* = 0` from a *vanishing*
+`agm_n1_identity_Ustar_eq_zero` above: where that one restates `U* = 0` from a *vanishing*
 verification polynomial, this one produces the vanishing — at the transcript's discrete-log point
 `gamePoint`, not as a polynomial identity. This is the paper's "Equation (12) does not hold over
 `Z_p[…]` but does hold when evaluated in the relative discrete logarithms" step.
@@ -253,7 +253,7 @@ structure RedEmbedding (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) : 
   hX1 : ep.x1 = (aM.x1 + x * bM.x1) • gen
 
 omit hgen in
-/-- Rewrite an `evalAt` against a `RedEmbedding`-certified `ep` into the explicit embedded
+/-- Rewrite an `evalAt` against an `ep` satisfying RedEmbedding into the explicit embedded
 form (`H = aη·g + bη·X`, `X₀ = (a₀+x·b₀)·H`, `Xᵣ = (aᵣ+x·bᵣ)·g`, `X₁ = (a₁+x·b₁)·g`) —
 the shape the consistency-core lemmas take their `H, x0, xr, x1` arguments in. -/
 lemma AGMRepr.evalAt_of_redEmbedding {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
@@ -306,7 +306,7 @@ noncomputable def RedLog.maskedSubst {F G : Type} [Field F] (L : RedLog F G)
   AGMPoly.affineSubst (aM.embed L.aMask) (bM.embed L.bMask)
 
 /-- A representation's transcript polynomial pushed through `maskedSubst` — the
-`pU`/`p0`/`p1` the `verify`/`help` steps feed to `exponentEval`. -/
+`pU`/`p0`/`p1` the `verify`/`help` steps supply to `exponentEval`. -/
 noncomputable def RedLog.maskedRepr {F G : Type} [Field F] (L : RedLog F G)
     (aM bM : FixedMasks F) (ρ : AGMRepr F 1) : Polynomial F :=
   L.maskedSubst aM bM ((ρ.toReprCoeffs L.length).toPoly L.msg)
@@ -314,7 +314,7 @@ noncomputable def RedLog.maskedRepr {F G : Type} [Field F] (L : RedLog F G)
 /-! ## Exponent evaluation (oracle simulation via the 3-DL powers) -/
 
 /-- The univariate lift of an affine mask pair: `a + b·X`. Every mask-derived
-univariate the reduction feeds to `exponentEval` (its `keyUniv`/`x1Univ`) has this
+univariate the reduction supplies to `exponentEval` (its `keyUniv`/`x1Univ`) has this
 shape — the `a`-side mask as the constant coefficient, the `b`-side as the
 `X`-coefficient — so evaluating at the challenge exponent `x` recovers the real
 mask `a + x·b`. A `def` rather than an `abbrev`: the opaque head is what lets a
@@ -335,13 +335,13 @@ but the represented check is degree-1 key × degree-≤2 representation = degree
 Coefficients past the third are **dropped, not rejected**, so a hypothetical
 degree-≥4 argument would be answered wrongly rather than loudly. Nothing silent
 survives into a proof: `exponentEval_eq` is the only way to relate this to a real
-evaluation and it takes `p.natDegree ≤ 3`, so every feed site owes that bound —
+evaluation and it takes `p.natDegree ≤ 3`, so every call site owes that bound —
 `maskLift` is degree `≤ 1` and `RedLog.maskedRepr` degree `≤ 2`
 (`AGMPoly.totalDegree_toPoly_le`, `AGMPoly.natDegree_affineSubst_le`), giving
 `≤ 3` for the products the two arms build. A degree-bounded carrier (a `Fin 4 → F`
 vector, or a `natDegree ≤ 3` subtype) would move that obligation into the type; it
 is not worth the arithmetic it would add to every use site while the bound is
-discharged once per feed anyway. -/
+discharged once per call anyway. -/
 def exponentEval (g X X' X'' : G) (p : Polynomial F) : G :=
   p.coeff 0 • g + p.coeff 1 • X + p.coeff 2 • X' + p.coeff 3 • X''
 
@@ -431,7 +431,7 @@ lemma macScalar_eq_keyCoeff (aM bM : FixedMasks F) (x m : F) :
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- What makes `maskLift` a lift: at the challenge exponent it returns the real mask
-`a + x·b`. The `keyUniv`/`x1Univ` arguments the verify and help arms feed to
+`a + x·b`. The `keyUniv`/`x1Univ` arguments the verify and help arms supply to
 `exponentEval` are read through this. -/
 lemma maskLift_eval (a b x : F) : (maskLift a b).eval x = a + x * b := by
   simp only [maskLift, Polynomial.eval_add, Polynomial.eval_C, Polynomial.eval_mul,

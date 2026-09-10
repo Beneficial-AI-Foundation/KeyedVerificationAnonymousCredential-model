@@ -19,7 +19,7 @@ oracle arm and the log invariants it establishes:
   `Coupling`'s `redLogInv`; `redLog_honest` / `redLog_U_form` restate its two
   conjuncts at any reachable log, supplying hypotheses to the evaluation bridge;
   `redLog_transcript_facts` carries them onto the transcript index;
-- `verifPoly_eval_embed_eq_zero` — the arity-clean brick that restates the
+- `verifPoly_eval_embed_eq_zero` — the lemma at abstract arity that restates the
   vanishing fact from a `RedEmbedding` hypothesis rather than the raw equations.
 
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
@@ -238,7 +238,7 @@ lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
 `verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` at an *abstract* arity `q`
 tied to the transcript by `hq : tags.length = q`. Stating the arity as a variable lets us
 `subst hq` (which collapses the `Fin.cast`s the transcript log forces), so the caller can
-instantiate `q := L.length` and read off the verification polynomial vanishing at the
+instantiate `q := L.length` and restate the verification polynomial vanishing at the
 embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping.
 
 The verification relation enters as the single equation `hkey` between the two represented
@@ -261,7 +261,7 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
           + x * FixedMasks.embed bM cb v)
         (AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q)) = 0 := by
   subst hq
-  -- Open the embedding and trade the `macScalar` key for the spelled-out one the
+  -- Open the embedding and convert the `macScalar` key to the spelled-out one the
   -- abstract-arity lemma takes.
   simp only [AGMRepr.evalAt_of_redEmbedding gen hemb, macScalar_maskedKey_expand] at htf hkey
   simpa only [gamePoint_eq_embed_affine gen x aM bM _ tags ca cb rfl htf.2] using
