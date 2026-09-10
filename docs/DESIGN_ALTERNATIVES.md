@@ -386,29 +386,29 @@ because the anonymity clause needs it (the user verifies `π_is`, protecting
 against a key-substituting issuer; the anonymity simulator checks and
 extracts it), ruling out (ii). The proposed erratum keeps `π_is` in the
 scheme and adds one zero-knowledge term to the OMUF bound, obtained from the
-core via the lifting lemma; reported upstream alongside the earlier errata.
+core via the lifting lemma.
 
-## Punctured issuance nonces `u, r ←$ ℤ_p^×` where Figure 9 prints `ℤ_p`
+## Nonzero issuance nonces `u, r ←$ ℤ_p^×` where Figure 9 prints `ℤ_p`
 
 **Decision.** Both μCMZ_AT issuance nonces — the server nonce `u` and the
-user re-randomizer `r` — are sampled from the punctured field `F ∖ {0}` via
+user re-randomizer `r` — are sampled from the nonzero scalars `F ∖ {0}` via
 `uniformUnits` (`ATVariant.lean`; the sampler lives beside `uniformNonzero`
 in `Construction.lean`).
 
 **Rejected alternative.** Figure 9's literal `u ←$ ℤ_p` and `r ←$ ℤ_p`.
 
 **Fidelity argument.** The two nonces have different justifications. For
-`u`, the puncture is the perfect-correctness convention, exactly as for the
+`u`, the nonzero draw is the perfect-correctness convention, exactly as for the
 base MAC's tag base (Eq. (1) samples `U ←$ 𝔾^×` while the figure writes the
 looser `U ←$ 𝔾`): with `u = 0` the honest run aborts at the user's
 `U′ ≠ 0` check, a `1/p` correctness-failure mass the support-based
-`Correct` cannot absorb. For `r`, the figure appears to be in error rather
+`Correct` cannot account for. For `r`, the figure appears to be in error rather
 than loose: §5.1 states the re-randomization property "for r ≠ 0", the
 presentation step samples the same operation with `r ←$ ℤ_p^×`, and an
 honest run with `r = 0` would emit the token `(0, 0)`, which the scheme's
 own verifier rejects. Under the literal samplers honest issuance fails with
 probability `2/p − 1/p²`. Reductions replaying issuance must account for
-the per-nonce `1/p` distribution deltas, as the AGM track already does for
+the per-nonce `1/p` distribution differences, as the AGM track already does for
 the tag base (*Conditioned sign masks* above).
 
 ## Open alternatives

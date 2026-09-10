@@ -28,7 +28,7 @@ proofs, because the π_is-less scheme is the one the Theorem 5.11 proof
 actually analyzes: its Sign oracle answers with the bare `(U', V')` and
 its one-more unforgeability bound carries no zero-knowledge term (a
 reduction holding no secret key cannot produce real `π_is` proofs). The
-name `μCMZATCore` records this honestly. The π_is-carrying variant and
+name `μCMZATCore` records this. The π_is-carrying variant and
 the lifting lemma — schematically
 `OMUF(π_is scheme) ≤ OMUF(core) + Adv^zk_cmz.is`, with the precise
 adversary transformation and query dependence part of that future
@@ -43,7 +43,7 @@ On public parameters `(X₀, Xᵣ, X⃗)` and attributes `m⃗`:
   `C' = Σᵢ mᵢ·Xᵢ + s·G₀`, keeping `s` as state.
 - **Server**: sample `u ←$ F×`; answer `U' = u·G₀`,
   `V' = x₀·U' + u·(C' + Xᵣ)` — unconditionally (`some` always; the
-  abstract interface carries rejection only for μBBS_AT's sake).
+  abstract interface carries rejection only for μBBS_AT).
 - **User, second move**: check `U' ≠ 0`; sample `r ←$ F×`; unblind to
   the token `σ = (r·U', r·(V' − s·U'))`.
 
@@ -51,10 +51,10 @@ The unblinded token is `(U, macScalar·U)` for `U = (r·u)·G₀`: the
 verification equation of the base MAC holds by construction, so
 `verify` *is* the base MAC's `verify`.
 
-## Punctured sampling and perfect correctness
+## Nonzero sampling and perfect correctness
 
 The printed Figure 9 samples *both* issuance nonces from the full field
-(`u ←$ ℤ_p` and `r ←$ ℤ_p`). We sample both from the punctured field
+(`u ←$ ℤ_p` and `r ←$ ℤ_p`). We sample both from the nonzero scalars
 `F× = F ∖ {0}` (via `uniformUnits`, definitionally `uniformNonzero F`),
 the same convention as the base MAC's tag base `U ←$ G×`
 (`Construction.lean`, *Nonzero `U` and perfect correctness*):
@@ -66,9 +66,9 @@ the same convention as the base MAC's tag base `U ←$ G×`
 
 Under the literal samplers an honest issuance thus fails with
 probability `2/p − 1/p²` — mass that the repo's support-based
-(probability-one) `ATSyntax.Correct` cannot absorb. Reductions
+(probability-one) `ATSyntax.Correct` cannot account for. Reductions
 replaying the server or the user must account for these per-nonce `1/p`
-distribution deltas, exactly as they do for the base MAC's tag base.
+distribution differences, exactly as they do for the base MAC's tag base.
 
 Correctness additionally needs the generator to be nonzero
 (`hgen : gen ≠ 0`): the honest token base is `(r·u)·gen`, which the
@@ -80,10 +80,13 @@ the AGM layer, which is only needed once discrete logs are taken.
 ## Out of scope
 
 - The one-more unforgeability analysis (O24 Theorem 5.11, Claims
-  5.12–5.14) — the AGM-instrumented game and the polynomial layer land
-  in `OneMoreUnforgeability.lean` (Track CMZ-OMUF).
+  5.12–5.14) — the AGM-instrumented game and the polynomial layer are
+  planned for the Track CMZ-OMUF files under #12.
 - The anonymity clause of Theorem 5.3 — blocked on the Definition 4.4
-  game and Theorem 5.8 (Track CMZ-A).
+  game and Theorem 5.8 (Track CMZ-A), and stated only for the
+  `π_is`-carrying variant: the anonymity simulator extracts from `π_is`
+  and the Theorem 5.3 bound carries its knowledge-soundness term, so the
+  core defined here cannot carry that clause.
 -/
 
 namespace KVAC.Schemes.MicroCMZ
@@ -113,8 +116,8 @@ noncomputable def atIssueUsr₁ {n : ℕ} (gen : G) (pp : Params G n) (m : Fin n
 
 /--
 Issuance, server's move (O24 Figure 9, π_is removed — see the module
-docstring): sample `u ←$ F×` (punctured, where the paper writes
-`u ←$ ℤ_p` — see *Punctured sampling* in the module docstring) and
+docstring): sample `u ←$ F×` (nonzero, where the paper writes
+`u ←$ ℤ_p` — see *Nonzero sampling* in the module docstring) and
 answer `U' = u·G₀`, `V' = x₀·U' + u·(C' + Xᵣ)` with `Xᵣ = xᵣ·G₀`
 recomputed from the secret key. Never rejects (`some` always): the
 `Option` is the abstract interface's, carried for μBBS_AT's `C' ≠ 0`
@@ -130,10 +133,10 @@ noncomputable def atIssueSrv {n : ℕ} (gen : G) (sk : Key F n) (C' : G) :
 Issuance, user's second move (O24 Figure 9): check `U' ≠ 0` (abort
 otherwise), sample `r ←$ F×`, and unblind the server's response to
 the token `σ = (r·U', r·(V' − s·U'))` using the blinding scalar `s` kept
-from the first move. The re-randomizer is punctured where the figure
-prints `r ←$ ℤ_p` — a repair, not just a convention: `r = 0` would emit
+from the first move. The re-randomizer is drawn from the nonzero scalars where the figure
+prints `r ←$ ℤ_p` — a correction, not just a convention: `r = 0` would emit
 the invalid token `(0, 0)`, and §5.1's rerandomization property demands
-`r ≠ 0` (see *Punctured sampling* in the module docstring).
+`r ≠ 0` (see *Nonzero sampling* in the module docstring).
 -/
 noncomputable def atIssueUsr₂ (s : F) (resp : G × G) : ProbComp (Option (Code G)) :=
   if resp.1 = 0 then pure none
@@ -184,7 +187,7 @@ in the support-based (probability-one) sense of `ATSyntax.Correct`.
 
 The generator must be nonzero (`hgen`): the honest token base is
 `(r·u)·G₀`, which verification rejects when `G₀ = 0`. With `u`, `r`
-drawn from the punctured field, the base is then nonzero and the MAC
+drawn from the nonzero scalars, the base is then nonzero and the MAC
 equation `V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U` holds by the unblinding algebra
 `V' − s·U' = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U'`.
 -/
@@ -192,7 +195,7 @@ theorem μCMZATCore_correct (gen : G) (hgen : gen ≠ 0) :
     (μCMZATCoreSyntax F gen).Correct := by
   intro secParam n _hn crs _hcrs keys hkeys m σ? hσ?
   obtain ⟨⟨x₀, xᵣ, x⟩, pp⟩ := keys
-  -- The keygen support pins `pp` to the secret key.
+  -- The keygen support determines `pp` from the secret key.
   have hpp := (mem_support_keygen (F := F) (G := G) crs gen x₀ xᵣ x pp).mp hkeys
   subst hpp
   -- Unfold the issuance chain: the user's `(s, C')`, the server's

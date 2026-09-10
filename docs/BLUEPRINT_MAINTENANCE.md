@@ -222,7 +222,7 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
   anonymous-token variant, but the Theorem 5.11 proof answers Sign queries
   with the bare `(U', V')` and its bound carries no zero-knowledge term, so
   the scheme it analyzes also drops the server proof `π_is`. The merged
-  instance formalizes that `π_is`-less core under an honest name
+  instance formalizes that `π_is`-less core under a name that records this
   (`μCMZATCore`); the printed Theorem 5.3 element stays an unanchored
   stub until the upstream erratum (keep `π_is`, add one zero-knowledge term
   via a lifting lemma) is settled. Alternative (anchoring the core to the
