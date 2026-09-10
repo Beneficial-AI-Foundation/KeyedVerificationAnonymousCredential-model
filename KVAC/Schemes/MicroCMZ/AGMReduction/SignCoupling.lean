@@ -56,7 +56,7 @@ form: `redLogHonestInv`, and everything stated in this file, speak
 `macScalar (maskedKey x aM bM)`, while the evaluation bridge lemmas — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` and its companions — take their `htag` with the key spelled out as
 `x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that converts one
-spelling to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
+form to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
 which is what makes the `Fin 1` transcript index and an `F`-valued message list agree. -/
 lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
     macScalar (maskedKey x aM bM) m
@@ -103,7 +103,7 @@ lemma reductionSignStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedP
       evalDist (mac (maskedKey x aM bM) m) := by
     have h2 := sign_masked_tag_dist_eq (G := G) gen x key
     -- State the bridge in `uniformNonzero` form — the shape `sign_masked_tag_dist_eq` uses.
-    -- Spelling it as the raw subtype sample (`$ᵗ {g // g ≠ 0}` + `.val`) used to unify with `h2`
+    -- form it as the raw subtype sample (`$ᵗ {g // g ≠ 0}` + `.val`) used to unify with `h2`
     -- by cross-associativity defeq; that silent unification is gone, so keep `uniformNonzero`
     -- folded and only unfold `mac`.
     have h3 : mac (maskedKey x aM bM) m =
@@ -211,8 +211,8 @@ omit hgen in
 `xₖ = aₖ + x·bₖ`) and the embedded `U`-form (`Uⱼ = auⱼ·g + buⱼ·X`), carried from their
 per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the tag list `L.tags`
 indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`, the masks
-`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` spelling; a caller
-using `Core`'s evaluation bridge converts the index type and the key spelling at the use site.
+`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` form; a caller
+using `Core`'s evaluation bridge converts the index type and the key form at the use site.
 
 Its inputs are the two components of `redLogHonestInv`'s per-entry conjunction — split as
 `fun e he => (hR.2 e he).2` and `fun e he => (hR.2 e he).1` — which are also exactly the
@@ -234,7 +234,7 @@ lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
   · simpa only [macScalar_maskedKey_eq] using hhon (L.get j) (List.get_mem L j)
   · exact hUform (L.get j) (List.get_mem L j)
 
-/-- **Vanishing at the masked point, arity-clean.** Packages
+/-- **Vanishing at the masked point, at abstract arity.** Packages
 `verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` at an *abstract* arity `q`
 tied to the transcript by `hq : tags.length = q`. Stating the arity as a variable lets us
 `subst hq` (which collapses the `Fin.cast`s the transcript log forces), so the caller can
