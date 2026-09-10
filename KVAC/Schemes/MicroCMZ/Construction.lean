@@ -142,21 +142,21 @@ sampled `U` without ever destructuring the subtype. -/
   · intro h; exact ⟨u, h, rfl⟩
 
 /--
-Uniform sampling from the punctured scalar field `F× = F ∖ {0}`,
+Uniform sampling from the nonzero scalars of `F`, `F× = F ∖ {0}`,
 returned as a plain `F` — `uniformNonzero` above specialized to the
 scalar field, realizing the paper's `ℤ_p^×` samplers (the presentation
 rerandomizer `r ←$ ℤ_p^×` of §5.1, and the μCMZ_AT issuance nonces of
-`ATVariant.lean`).
+the follow-up PR, #147).
 
 A named wrapper rather than a plain use of `uniformNonzero F` because of
-an instance-search hazard: in downstream import contexts, synthesizing
+an instance-search problem: in downstream import contexts, synthesizing
 `uniformNonzero`'s `AddCommGroup F` / `Nontrivial F` binders from
-`Field F` by typeclass search does not terminate (the search spirals
-through `OrderDual` candidates — the same family of derailments
-documented in `AlgebraicMAC.lean` and `SignMask.lean`). The wrapper
-supplies both instances once, as explicit projection terms, so no
-runaway search is ever started; its body is definitionally
-`uniformNonzero F`.
+`Field F` by typeclass search exceeds the typeclass heartbeat limit (the
+search runs through `OrderDual` candidates, similar to the
+instance-search failures noted in `AlgebraicMAC.lean` and
+`SignMask.lean`). The wrapper supplies both instances once, as explicit
+projection terms, so that search is never started; its body is
+definitionally `uniformNonzero F`.
 -/
 noncomputable def uniformUnits (F : Type) [Field F] [Fintype F] [DecidableEq F] :
     ProbComp F :=
@@ -211,17 +211,17 @@ noncomputable def keygen {n : ℕ} (H : G) (gen : G) : ProbComp (Key F n × Para
 
 
 /--
-The support of `keygen` pins the public parameters to the secret key:
+The support of `keygen` determines the public parameters from the secret key:
 `((x₀, xᵣ, x⃗), pp)` is a possible output of `keygen H gen` iff
 `pp = (x₀·H, xᵣ·gen, (xᵢ·gen)ᵢ)` — the secret key itself is unconstrained
 (every scalar triple is sampled uniformly). Lets downstream proofs recover the
 discrete-log relations between `pp` and `sk` from a support hypothesis, e.g.
-the μCMZ_AT correctness proof (`ATVariant.lean`), whose user move reads the
-attribute bases `Xᵢ` from `pp`.
+the μCMZ_AT correctness proof of the follow-up PR (#147), whose user move
+reads the attribute bases `Xᵢ` from `pp`.
 -/
 theorem mem_support_keygen {n : ℕ} (H gen : G) (x₀ xᵣ : F) (x : Fin n → F)
     (pp : Params G n) :
-    ((x₀, xᵣ, x), pp) ∈ support (keygen (n := n) H gen) ↔
+    ((x₀, xᵣ, x), pp) ∈ support (keygen H gen) ↔
       pp = (x₀ • H, xᵣ • gen, fun i => x i • gen) := by
   simp only [keygen, support_bind, support_uniformSample, support_pure,
     Set.mem_iUnion, Set.mem_singleton_iff, Set.mem_univ, Prod.mk.injEq,
