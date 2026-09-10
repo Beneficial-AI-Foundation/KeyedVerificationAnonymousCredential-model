@@ -1,10 +1,10 @@
-# Errata to O24 §5.3, found while constructing the Theorem 5.1 reduction
+# Errata to O24 §5.3 and §5.6, found while constructing the Theorem 5.1 and Theorem 5.3 reductions
 
 Companion note to the status presentation (2026-07-30). Paper: Orrù,
 *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552
 ("O24"), as `docs/Orru_2024.pdf`. Each item below is a discrepancy between the
-paper's printed §5.3 material and what the reduction, worked in full detail,
-actually requires. Every item is checkable by hand against the paper; none
+paper's printed §5.3 or §5.6 material and what the reduction, worked in full
+detail, actually requires. Every item is checkable by hand against the paper; none
 weakens the result — the assumptions are the paper's own; one unjustified
 summand is dropped (item 2) and the additive constant changes (3/p → 5/p,
 both ≈ 2<sup>−250</sup> at ristretto255).
@@ -78,11 +78,44 @@ no-collision branch) + 1/p (the vanishing-denominator bad event in the
 gap-DL branch). The paper's Adv<sup>dl</sup> term has no reduction behind it
 in this proof plan; it survives only as nonnegative slack.
 
+## 7. Figure 9 boxes only π<sub>iu</sub>, but the Theorem 5.11 proof analyzes the scheme without π<sub>is</sub> (pp. 34–35, 40, 44)
+
+Figure 9 (p. 34) marks the user proof π<sub>iu</sub> as the part removed for
+the anonymous-token variant μCMZ<sub>AT</sub>, and Theorem 5.3 (p. 35) keeps
+the issuer proof π<sub>is</sub>, its bound carrying the knowledge-soundness
+term of π<sub>is</sub> for the anonymity clause. The proof of Theorem 5.11
+(p. 44) answers the Sign queries with the bare (U′, V′) and its bound has no
+zero-knowledge term, so the scheme that proof analyzes carries neither
+issuance proof. Removing π<sub>is</sub> from the theorem instead is not an
+option, since the anonymity simulator (p. 40) verifies and extracts from it.
+
+Proposed correction: keep π<sub>is</sub> in the scheme and add one
+Adv<sup>zk</sup><sub>cmz.is</sub> term to the one-more unforgeability bound,
+obtained from the π<sub>is</sub>-less core by a simulation hybrid (a lifting
+lemma). The formalization states the core as `μCMZATCore`
+(`Schemes/MicroCMZ/ATVariant.lean`, PR #147) and defers the
+π<sub>is</sub>-carrying variant and the lifting lemma to Phase B of the
+Theorem 5.3 plan (issue #12). Reported to the author in August 2026.
+
+## 8. Figure 9 samples r ←$ ℤ<sub>p</sub>, but §5.1 requires r ≠ 0 (pp. 33–34)
+
+Figure 9's unblinding step samples the user re-randomizer as r ←$ ℤ<sub>p</sub>.
+§5.1 (p. 33) states the re-randomization property for r ≠ 0, and the
+presentation step samples the same operation with r ←$ ℤ<sub>p</sub><sup>×</sup>.
+An honest run with r = 0 emits the token (0, 0), which the scheme's own
+verifier rejects. Same family as the U ←$ 𝔾 versus Eq. (1) U ←$ 𝔾<sup>×</sup>
+mismatch for the base MAC. Under the literal samplers honest issuance fails
+with probability 2/p − 1/p<sup>2</sup> (u = 0 aborts at the user's check,
+r = 0 mis-issues). The formalization draws both nonces from
+ℤ<sub>p</sub><sup>×</sup> (`uniformUnits`, PR #146 and PR #147).
+
 ## Status
 
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
-(module `AGMReduction/Core`); the remaining items are documented in the
+(module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the
-presentation's architecture slide. This note reports findings about the
+presentation's architecture slide. Items 7 and 8 concern §5.6 and are
+recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
+`Schemes/MicroCMZ/ATVariant.lean`. This note reports findings about the
 paper; the formal-completion status of each module is tracked on the
 project's blueprint page.

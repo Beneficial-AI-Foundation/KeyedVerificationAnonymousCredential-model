@@ -11,6 +11,7 @@ import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.ATVariant
 
 open Verso.Genre Manual
 open Informal
@@ -29,7 +30,7 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Six files delivered under `KVAC/Schemes/MicroCMZ/`:
+Seven files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
@@ -39,6 +40,7 @@ Six files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
+- `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 
 Three more are planned:
 
@@ -646,12 +648,48 @@ candidate instance `Z` checked through the auxiliary Help oracle.
 
 *Theorem 5.3.* The anonymous-token variant `μCMZ_AT` is anonymous and
 one-more unforgeable, the latter in the algebraic group model under DL
-and 2-DL. `μCMZ_AT` is the variant of μCMZ with the boxed issuance-proof
-part of Figure 9 removed, keeping all `n` attributes and yielding the
+and 2-DL. `μCMZ_AT` is the variant of μCMZ with the issuance-proof part
+of Figure 9 removed, keeping all `n` attributes and yielding the
 anonymous-token variant of the scheme.
 
-*TODO (Track CMZ-OMUF).* State and prove Theorem 5.3 against the OMUF
-game from the *Preliminaries* chapter.
+The scheme itself is merged as the core with *both* issuance proofs
+removed — the printed figure boxes only the user proof `π_iu`, but the
+Theorem 5.11 proof analyzes the scheme without the server proof `π_is`
+as well; see the deviation note in the node below. The unforgeability
+analysis on top of it is open.
+
+*TODO (Track CMZ-OMUF).* Build the AGM-instrumented OMUF game over the
+core scheme, then state and prove Theorem 5.11 and the Theorem 5.3
+clause against the OMUF game from the *Preliminaries* chapter.
+
+:::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
+The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
+both issuance proofs removed, instantiating the anonymous-token syntax
+{uses "anonymous_tokens"}[] and sharing setup, key generation, and
+verification with the base MAC {uses "mucmz_base_mac"}[] definitionally,
+and reading the key generation support of {uses "mucmz_keygen_support"}[]
+in its correctness proof.
+Blind issuance is the Pedersen commitment `C' = Σᵢ mᵢ·Xᵢ + s·G₀`, the
+unconditional server response `(U', V') = (u·G₀, x₀·U' + u·(C' + Xᵣ))`,
+and the checked unblinding `σ = (r·U', r·(V' − s·U'))`; correctness is
+proved support-based over a nonzero generator. Both issuance nonces are
+drawn from the nonzero scalars where the printed figure samples
+`ℤ_p` — `u` conditioned for probability-one correctness (the base MAC's
+tag-base convention), `r` corrected per §5.1's `r ≠ 0` rerandomization
+requirement — and the bundle certifies syntax and correctness only.
+Deviation from the printed figure's boxes: O24 marks only the user proof
+`π_iu` as removable, but the Theorem 5.11 proof answers its Sign queries
+with the bare `(U', V')` and carries no zero-knowledge term, so the
+scheme it analyzes drops the server proof `π_is` too — this core removes
+both and says so in its name. The cost of dropping `π_is` is the
+anonymity clause of Theorem 5.3: the anonymity simulator extracts from
+`π_is` and the bound carries its knowledge-soundness term, so that clause
+is stated only for the `π_is`-carrying variant, while the core is the
+scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant
+follows with a zero-knowledge lifting lemma once the upstream erratum is
+settled, and the printed Theorem 5.3 node {bpref "mucmz_at_omuf"}[] stays
+a paper-element stub meanwhile.
+:::
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
@@ -668,7 +706,11 @@ Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::theorem "mucmz_at_agm_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11") (effort := "large") (priority := "low")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
-attributes.
+attributes. To be stated over the merged core scheme
+{uses "mucmz_at_core"}[]; the core's nonzero issuance nonces condition
+the paper's `ℤ_p` samplers away from their zero cases, so the printed
+constants transfer only up to per-query `1/p` differences — the Track
+CMZ-OMUF constant audit settles the stated bound.
 :::
 
 :::proof "mucmz_at_agm_omuf"
