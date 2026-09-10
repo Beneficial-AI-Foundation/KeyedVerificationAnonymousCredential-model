@@ -489,9 +489,9 @@ log unchanged. Restating these facts by index is
 The facts of {uses "transcript_invariants"}[] transported from the log's
 entries onto the transcript index: for every position `j`, the `j`-th logged
 tag is honest and has the embedded `U`-form, stated in the tag-list, message
-and mask normal forms of {uses "reduction_coupling_bricks"}[]. The eval bridge
-of {bpref "agm_eval_bridge"}[] is reached from here by trading the index type
-and the key spelling at the use site.
+and mask normal forms of {uses "reduction_coupling_bricks"}[]. The evaluation
+bridge of {bpref "agm_eval_bridge"}[] is reached from here by converting the
+index type and the key spelling at the use site.
 :::
 
 :::proof "transcript_index_transport"

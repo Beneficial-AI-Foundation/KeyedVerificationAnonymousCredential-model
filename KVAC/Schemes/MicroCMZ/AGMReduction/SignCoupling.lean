@@ -23,9 +23,9 @@ oracle arm and the log invariants it establishes:
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
 masked key scalar. What this file states speaks the `macScalar (maskedKey …)`
 form that `Coupling`'s `redLogHonestInv` uses, so a caller holding the state
-invariant never has to convert; the eval bridge lemmas underneath — `Core`'s
+invariant never has to convert; the evaluation bridge lemmas underneath — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` — want the key spelled out as `x₀ + xᵣ + m·x₁`
-instead, and this is the lemma that trades one form for the other.
+instead, and this is the lemma that converts one form to the other.
 
 Everything here is deterministic algebra plus one distributional equality lifted
 to a relational triple; no probability *bounds* — the counting layer sits above it.
@@ -51,11 +51,11 @@ variable (secParam : ℕ)
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- **The masked key scalar, expanded.** `Coupling`'s `macScalar_maskedKey_eq` in the *other* normal
 form: `redLogHonestInv`, and everything stated in this file, speak
-`macScalar (maskedKey x aM bM)`, while the eval bridge lemmas — `Core`'s
+`macScalar (maskedKey x aM bM)`, while the evaluation bridge lemmas — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` and its companions — take their `htag` with the key spelled out as
-`x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that trades one
-spelling for the other. It also witnesses that the scalar depends on `m` only through `m 0`,
-which is what lets the `Fin 1` transcript index and an `F`-valued message list line up. -/
+`x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that converts one
+spelling to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
+which is what makes the `Fin 1` transcript index and an `F`-valued message list agree. -/
 lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
     macScalar (maskedKey x aM bM) m
       = (aM.x0 + x * bM.x0) + (aM.xr + x * bM.xr) + m 0 * (aM.x1 + x * bM.x1) := by
@@ -210,7 +210,7 @@ omit hgen in
 per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the tag list `L.tags`
 indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`, the masks
 `L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` spelling; a caller
-reaching for `Core`'s eval bridge trades the index type and the key spelling at the use site.
+using `Core`'s evaluation bridge converts the index type and the key spelling at the use site.
 
 Its inputs are the two components of `redLogHonestInv`'s per-entry conjunction — split as
 `fun e he => (hR.2 e he).2` and `fun e he => (hR.2 e he).1` — which are also exactly the
