@@ -386,7 +386,8 @@ because the anonymity clause needs it (the user verifies `π_is`, protecting
 against a key-substituting issuer; the anonymity simulator checks and
 extracts it), ruling out (ii). The proposed erratum keeps `π_is` in the
 scheme and adds one zero-knowledge term to the OMUF bound, obtained from the
-core via the lifting lemma.
+core via the lifting lemma. Recorded as item 7 of
+`docs/presentations/rolf-status/errata.md` and reported to the author.
 
 ## Nonzero issuance nonces `u, r ←$ ℤ_p^×` where Figure 9 prints `ℤ_p`
 
