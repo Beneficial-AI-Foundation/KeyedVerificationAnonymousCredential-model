@@ -158,7 +158,7 @@ lemma relTriple_map_eq {α β : Type} (a : OracleComp specR₁ α) (f : α → �
 
 end RelationalCoupling
 
-/-! ## oracle coupling (reduction ↔ honest) -/
+/-! ## Oracle coupling (reduction ↔ honest) -/
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
 /-- The honest key at the challenge exponent: each `Key F 1` component read at the masked

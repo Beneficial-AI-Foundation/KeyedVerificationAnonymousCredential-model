@@ -461,9 +461,9 @@ off against the key polynomial's evaluation.
 four equations of {uses "challenge_embedding"}[] as one `RedEmbedding`
 hypothesis, its `evalAt` rewrite into the explicit embedded form, and the
 vanishing lemma at an abstract arity `q` tied to the transcript by
-`tags.length = q`. It takes the transcript facts in the indexed form of
-{bpref "transcript_index_transport"}[] and the key in the `macScalar`
-spelling of {uses "masked_key_normal_form_bridge"}[]. The first half of
+`tags.length = q`. It takes the transcript facts of
+{uses "transcript_index_transport"}[] as hypotheses, and the key in the `macScalar`
+form of {uses "masked_key_normal_form_bridge"}[]. The first half of
 {bpref "embedded_consistency_bricks"}[].
 :::
 :::proof "embedded_vanishing_lem54"
@@ -473,11 +473,24 @@ and apply the Core lemma of {uses "consistency_case_lem54"}[] at the cast
 index.
 :::
 
-:::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The represented-value bridge companion of {uses "embedded_vanishing_lem54"}[]:
-each represented value as the affinely substituted evaluation of its own
-polynomial, the form {uses "partial_evaluation_psi"}[] reads and the
-`verify`/`help` step couplings take their hypotheses in.
+:::theorem "embedded_consistency_bricks" (lean := "KVAC.Schemes.MicroCMZ.represented_value_eq_affineSubst_eval") (parent := "cmz_amac") (tags := "milestone")
+The represented-value bridge built on the embedding bundle of
+{uses "embedded_vanishing_lem54"}[]: each represented value as the affinely
+substituted evaluation of its own polynomial, the form
+{uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
+couplings take their hypotheses in. The abstract arity is tied to the
+transcript by its length, so the index casts collapse.
+:::
+:::proof "embedded_consistency_bricks"
+Substituting the arity away collapses the `Fin.cast`s. The
+`macScalar_maskedKey_expand` of {uses "masked_key_normal_form_bridge"}[]
+converts the transcript facts of {uses "transcript_index_transport"}[],
+which enter as hypotheses, into the key form the bridge takes; the `evalAt` rewrite of {uses "embedded_vanishing_lem54"}[] puts the
+represented value into the explicit embedded form; {uses "agm_eval_bridge"}[]
+then evaluates it, the `U`-form transcript fact turning the game point into
+the masked point `v ↦ a v + χ·b v`, and the evaluation law of
+{uses "partial_evaluation_psi"}[] restates that multivariate evaluation as the
+univariate evaluation of `affineSubst` at `χ`.
 :::
 
 :::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.reductionOracleImpl_preservesInv, KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")
