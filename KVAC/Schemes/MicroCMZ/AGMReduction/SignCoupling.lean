@@ -18,7 +18,9 @@ oracle arm and the log invariants it establishes:
 - `reductionOracleImpl_preservesInv` — the simulated oracle preserves
   `Coupling`'s `redLogInv`; `redLog_honest` / `redLog_U_form` restate its two
   conjuncts at any reachable log, supplying hypotheses to the evaluation bridge;
-  `redLog_transcript_facts` carries them onto the transcript index.
+  `redLog_transcript_facts` carries them onto the transcript index;
+- `verifPoly_eval_embed_eq_zero` — the lemma at abstract arity that restates the
+  vanishing fact from a `RedEmbedding` hypothesis rather than the raw equations.
 
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
 masked key scalar. What this file states speaks the `macScalar (maskedKey …)`
@@ -54,7 +56,7 @@ form: `redLogHonestInv`, and everything stated in this file, speak
 `macScalar (maskedKey x aM bM)`, while the evaluation bridge lemmas — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` and its companions — take their `htag` with the key spelled out as
 `x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that converts one
-spelling to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
+form to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
 which is what makes the `Fin 1` transcript index and an `F`-valued message list agree. -/
 lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
     macScalar (maskedKey x aM bM) m
@@ -101,7 +103,7 @@ lemma reductionSignStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedP
       evalDist (mac (maskedKey x aM bM) m) := by
     have h2 := sign_masked_tag_dist_eq (G := G) gen x key
     -- State the bridge in `uniformNonzero` form — the shape `sign_masked_tag_dist_eq` uses.
-    -- Spelling it as the raw subtype sample (`$ᵗ {g // g ≠ 0}` + `.val`) used to unify with `h2`
+    -- form it as the raw subtype sample (`$ᵗ {g // g ≠ 0}` + `.val`) used to unify with `h2`
     -- by cross-associativity defeq; that silent unification is gone, so keep `uniformNonzero`
     -- folded and only unfold `mac`.
     have h3 : mac (maskedKey x aM bM) m =
@@ -209,8 +211,8 @@ omit hgen in
 `xₖ = aₖ + x·bₖ`) and the embedded `U`-form (`Uⱼ = auⱼ·g + buⱼ·X`), carried from their
 per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the tag list `L.tags`
 indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`, the masks
-`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` spelling; a caller
-using `Core`'s evaluation bridge converts the index type and the key spelling at the use site.
+`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` form; a caller
+using `Core`'s evaluation bridge converts the index type and the key form at the use site.
 
 Its inputs are the two components of `redLogHonestInv`'s per-entry conjunction — split as
 `fun e he => (hR.2 e he).2` and `fun e he => (hR.2 e he).1` — which are also exactly the
@@ -231,5 +233,40 @@ lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
   refine ⟨fun j => ?_, fun j => ?_⟩ <;> rw [hget]
   · simpa only [macScalar_maskedKey_eq] using hhon (L.get j) (List.get_mem L j)
   · exact hUform (L.get j) (List.get_mem L j)
+
+/-- **Vanishing at the masked point, at abstract arity.** Packages
+`verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` at an *abstract* arity `q`
+tied to the transcript by `hq : tags.length = q`. Stating the arity as a variable lets us
+`subst hq` (which collapses the `Fin.cast`s the transcript log forces), so the caller can
+instantiate `q := L.length` and restate the verification polynomial vanishing at the
+embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping.
+
+The verification relation enters as the single equation `hkey` between the two represented
+values. The extraction assembly (a later PR) rebuilds it from the win predicate's three
+equations `ρU.evalAt … = U*`, `ρV.evalAt … = V*`, `V* = key • U*`. -/
+lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
+    {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
+    (hemb : RedEmbedding gen x aM bM ep)
+    (ca cb msgs : Fin q → F) (mStar0 : F)
+    (tags : List (G × G)) (hq : tags.length = q)
+    (htf : (∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).2
+        = macScalar (maskedKey x aM bM) (fun _ => msgs j)
+          • (tags.get (Fin.cast hq.symm j)).1)
+      ∧ ∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).1
+        = ca j • gen + cb j • (x • gen))
+    (hkey : ρV.evalAt gen ep tags
+      = macScalar (maskedKey x aM bM) (fun _ => mStar0) • ρU.evalAt gen ep tags) :
+    MvPolynomial.eval
+        (fun v => FixedMasks.embed aM ca v
+          + x * FixedMasks.embed bM cb v)
+        (AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q)) = 0 := by
+  subst hq
+  -- Open the embedding and convert the `macScalar` key to the spelled-out one the
+  -- abstract-arity lemma takes.
+  simp only [AGMRepr.evalAt_of_redEmbedding gen hemb, macScalar_maskedKey_expand] at htf hkey
+  simpa only [gamePoint_eq_embed_affine gen x aM bM _ tags ca cb rfl htf.2] using
+    verifPoly_eval_eq_zero_of_keySmul gen ρU ρV (aM.eta • gen + bM.eta • (x • gen))
+      (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) mStar0 tags msgs
+      htf.1 hkey
 
 end KVAC.Schemes.MicroCMZ

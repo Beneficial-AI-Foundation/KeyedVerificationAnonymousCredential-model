@@ -251,6 +251,9 @@ reduction adversary runs the AGM adversary against
 challenge base to the generator by construction, so the reduction can
 never be run at a base where it is unsound.
 
+The four equations are bundled as one hypothesis in
+{bpref "embedded_vanishing_lem54"}[].
+
 Against genuine challenge powers the embedding is *honest* at the challenge
 exponent: `H`, `Xᵣ` and `X₁` are the masked scalars' generator multiples,
 `X₀` is `x₀·H`, and the masked key scalar is the honest one of
@@ -453,14 +456,28 @@ identity, which the verification polynomial's `α · keyPoly − β` shape reads
 off against the key polynomial's evaluation.
 :::
 
+:::theorem "embedded_vanishing_lem54" (lean := "KVAC.Schemes.MicroCMZ.RedEmbedding, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt_of_redEmbedding, KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+{uses "consistency_case_lem54"}[] restated against the embedding bundle: the
+four equations of {uses "challenge_embedding"}[] as one `RedEmbedding`
+hypothesis, its `evalAt` rewrite into the explicit embedded form, and the
+vanishing lemma at an abstract arity `q` tied to the transcript by
+`tags.length = q`. It takes the transcript facts in the indexed form of
+{bpref "transcript_index_transport"}[] and the key in the `macScalar`
+spelling of {uses "masked_key_normal_form_bridge"}[]. The first half of
+{bpref "embedded_consistency_bricks"}[].
+:::
+:::proof "embedded_vanishing_lem54"
+Open the embedding, convert the `macScalar` key to the spelled-out one with
+the `macScalar_maskedKey_expand` of {uses "masked_key_normal_form_bridge"}[],
+and apply the Core lemma of {uses "consistency_case_lem54"}[] at the cast
+index.
+:::
+
 :::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-{uses "consistency_case_lem54"}[] restated against the embedding bundle of
-{uses "challenge_embedding"}[] instead of the raw equations, at an abstract
-arity where the transcript's index casts are discharged, together with the
-matching represented-value bridge giving each represented value as the
-affinely substituted evaluation of its own polynomial — the form
-{uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
-couplings take their hypotheses in.
+The represented-value bridge companion of {uses "embedded_vanishing_lem54"}[]:
+each represented value as the affinely substituted evaluation of its own
+polynomial, the form {uses "partial_evaluation_psi"}[] reads and the
+`verify`/`help` step couplings take their hypotheses in.
 :::
 
 :::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.reductionOracleImpl_preservesInv, KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")
@@ -564,7 +581,7 @@ per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[], stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
 {uses "consistency_case_lem54"}[], its embedded restatements
-{uses "embedded_consistency_bricks"}[] and
+{uses "embedded_vanishing_lem54"}[] and {uses "embedded_consistency_bricks"}[] and
 {uses "verification_polynomial_consistency"}[], and the
 {uses "transcript_invariants"}[] they read, restated by index in
 {uses "transcript_index_transport"}[]; the run-level view equality
