@@ -5,7 +5,6 @@ Authors: Jin Xing Lim
 -/
 import KVAC.Preliminaries.AnonymousTokens.Construction
 import VCVio.CryptoFoundations.SecExp
-import VCVio.OracleComp.SimSemantics.Append
 
 /-!
 # One-more unforgeability for an anonymous token (O24 Figure 6)
@@ -36,7 +35,7 @@ pairwise-distinct message/token pairs.
 **Query count `q` is dynamic.** Figure 6 reads `q` off the run (`q := q + 1`
 in the Sign oracle); here `q` is the length of the `SignLog` at the end of
 the game, so the win condition `q + 1` moves with the adversary's behaviour.
-Security *theorems* over this game (Track CMZ-OMUF, O24 Theorem 5.11) are
+Security *theorems* over this game (Track CMZ-OMUF, Theorem 5.11) are
 expected to add a static query-budget hypothesis so their `q`-dependent
 bounds are well-formed; the game itself, like the merged UF-CMVA and AGM
 games, carries none.
@@ -86,9 +85,12 @@ def OMUFOracleSpec (tok : ATSyntax ProbComp)
 /--
 An OMUF adversary: a program that, given the CRS and the public
 parameters, queries the Sign / Verify oracles and outputs a list of
-candidate message/token pairs — Figure 6's `(m⃗ᵢ, σᵢ)_{i=1}^{q+1}`. The
-list's required length `q + 1` depends on the run (`q` = number of Sign
-queries made), so the type is a bare list and the game checks the length.
+candidate message/token pairs — Figure 6's `(m⃗ᵢ, σᵢ)_{i=1}^{q+1}`.
+Figure 6 writes `A^{Sign,Verify}(pp)` and infers the crs from `pp`. The
+crs is passed alongside `pp` here, matching `UFAdversary`, since it is
+public. The list's required length `q + 1` depends on the run (`q` =
+number of Sign queries made), so the type is a bare list and the game
+checks the length.
 -/
 structure OMUFAdversary (tok : ATSyntax ProbComp) where
   /-- The adversary's program: from `(crs, pp)`, query Sign / Verify and
@@ -158,7 +160,7 @@ O24 §3.4's `Adv^omuf_{AT,A}(λ)`.
 A scheme is one-more unforgeable if this advantage is negligible in
 `secParam` for every PPT adversary; the asymptotic / negligibility
 statement, and the static query-budget hypotheses the concrete bounds
-need, live with the security theorems (Track CMZ-OMUF, O24
+need, live with the security theorems (Track CMZ-OMUF,
 Theorem 5.11).
 -/
 noncomputable abbrev OMUFAdv (tok : ATSyntax ProbComp)
