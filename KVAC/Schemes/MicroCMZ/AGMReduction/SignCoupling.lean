@@ -10,21 +10,22 @@ import VCVio.OracleComp.SimSemantics.StateT.PreservesInv
 # μCMZ AGM unforgeability — the deterministic core, sign arm
 
 The *deterministic* half of the reduction ↔ honest-game coupling, for the `sign`
-oracle arm and the state invariant it preserves:
+oracle arm and the log invariants it establishes:
 
 - **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
   `Coupling`'s `redLogHonestInv`;
 - `reductionOracleImpl_preservesInv` — the simulated oracle preserves
   `Coupling`'s `redLogInv`; `redLog_honest` / `redLog_U_form` restate its two
-  conjuncts at any reachable log, supplying hypotheses to the evaluation bridge.
+  conjuncts at any reachable log, supplying hypotheses to the evaluation bridge;
+  `redLog_transcript_facts` carries them onto the transcript index.
 
 `macScalar_maskedKey_expand` is the hinge between the two normal forms of the
 masked key scalar. What this file states speaks the `macScalar (maskedKey …)`
 form that `Coupling`'s `redLogHonestInv` uses, so a caller holding the state
-invariant never has to convert; the eval bridge lemmas underneath — `Core`'s
+invariant never has to convert; the evaluation bridge lemmas underneath — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` — want the key spelled out as `x₀ + xᵣ + m·x₁`
-instead, and this is the lemma that trades one form for the other.
+instead, and this is the lemma that converts one form to the other.
 
 Everything here is deterministic algebra plus one distributional equality lifted
 to a relational triple; no probability *bounds* — the counting layer sits above it.
@@ -50,13 +51,11 @@ variable (secParam : ℕ)
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- **The masked key scalar, expanded.** `Coupling`'s `macScalar_maskedKey_eq` in the *other* normal
 form: `redLogHonestInv`, and everything stated in this file, speak
-`macScalar (maskedKey x aM bM)`, while the eval bridge lemmas — `Core`'s
+`macScalar (maskedKey x aM bM)`, while the evaluation bridge lemmas — `Core`'s
 `agmRepr_eval_eq_eval_toPoly` and its companions — take their `htag` with the key spelled out as
-`x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that trades one
-spelling for the other; nothing in this file calls it yet — the eval bridge `htag` feeders of
-the later slices take it by name instead of re-running `ring`. It also
-witnesses that the scalar depends on `m` only through `m 0`, which is what lets the `Fin 1`
-transcript index and an `F`-valued message list line up. -/
+`x₀ + xᵣ + m·x₁` at the masked secrets `xₖ = aₖ + x·bₖ`. This is the one lemma that converts one
+spelling to the other. It also witnesses that the scalar depends on `m` only through `m 0`,
+which is what makes the `Fin 1` transcript index and an `F`-valued message list agree. -/
 lemma macScalar_maskedKey_expand (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
     macScalar (maskedKey x aM bM) m
       = (aM.x0 + x * bM.x0) + (aM.xr + x * bM.xr) + m 0 * (aM.x1 + x * bM.x1) := by
@@ -197,5 +196,40 @@ lemma redLog_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
     ∀ e ∈ out.2, e.tag.1 = e.au • gen + e.bu • (x • gen) :=
   fun e he => (simulateQ_run_preservesInv _ _ (reductionOracleImpl_preservesInv gen x aM bM ep)
     oa [] (List.forall_mem_nil _) out hout e he).1
+
+omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G]
+  [SampleableGroup F G] in
+/-- The issued-tag list has one entry per log entry; names the `Fin.cast` proof the
+transcript-indexed statements below go through. -/
+lemma RedLog.length_tags (L : RedLog F G) : L.tags.length = L.length :=
+  List.length_map _
+
+omit hgen in
+/-- **Transcript facts, index-transported.** Log-honesty (`Vⱼ = keyⱼ·Uⱼ` at the real logs
+`xₖ = aₖ + x·bₖ`) and the embedded `U`-form (`Uⱼ = auⱼ·g + buⱼ·X`), carried from their
+per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the tag list `L.tags`
+indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`, the masks
+`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` spelling; a caller
+using `Core`'s evaluation bridge converts the index type and the key spelling at the use site.
+
+Its inputs are the two components of `redLogHonestInv`'s per-entry conjunction — split as
+`fun e he => (hR.2 e he).2` and `fun e he => (hR.2 e he).1` — which are also exactly the
+conclusions of `redLog_honest` / `redLog_U_form`, so one lemma serves both a caller holding the
+state invariant and a caller holding only support membership of a `simulateQ` run. At arity 1
+the key reads its message at `0` alone (`macScalar_maskedKey_eq`), which is what lets an entry's
+own `msg` match the `fun _ => L.msg j` the transcript-indexed consumers take. -/
+lemma redLog_transcript_facts {x : F} {aM bM : FixedMasks F} {L : RedLog F G}
+    (hhon : ∀ e ∈ L, e.tag.2 = macScalar (maskedKey x aM bM) e.msg • e.tag.1)
+    (hUform : ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen)) :
+    (∀ j : Fin L.length, (L.tags.get (Fin.cast L.length_tags.symm j)).2
+        = macScalar (maskedKey x aM bM) (fun _ => L.msg j)
+          • (L.tags.get (Fin.cast L.length_tags.symm j)).1)
+      ∧ ∀ j : Fin L.length, (L.tags.get (Fin.cast L.length_tags.symm j)).1
+        = L.aMask j • gen + L.bMask j • (x • gen) := by
+  have hget : ∀ j : Fin L.length, L.tags.get (Fin.cast L.length_tags.symm j) = (L.get j).tag :=
+    fun j => by simp only [RedLog.tags, List.get_eq_getElem, List.getElem_map, Fin.val_cast]
+  refine ⟨fun j => ?_, fun j => ?_⟩ <;> rw [hget]
+  · simpa only [macScalar_maskedKey_eq] using hhon (L.get j) (List.get_mem L j)
+  · exact hUform (L.get j) (List.get_mem L j)
 
 end KVAC.Schemes.MicroCMZ

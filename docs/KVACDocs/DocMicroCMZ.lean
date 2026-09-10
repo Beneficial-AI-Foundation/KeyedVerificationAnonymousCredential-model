@@ -485,11 +485,19 @@ log unchanged. Restating these facts by index is
 {bpref "transcript_index_transport"}[].
 :::
 
-:::theorem "transcript_index_transport" (parent := "cmz_amac") (tags := "milestone") (effort := "small") (priority := "high")
+:::theorem "transcript_index_transport" (lean := "KVAC.Schemes.MicroCMZ.RedLog.length_tags, KVAC.Schemes.MicroCMZ.redLog_transcript_facts") (parent := "cmz_amac") (tags := "milestone")
 The facts of {uses "transcript_invariants"}[] transported from the log's
 entries onto the transcript index: for every position `j`, the `j`-th logged
-tag is honest and has the embedded `U`-form, stated against the tag list the
-consumers of {uses "reduction_coupling_bricks"}[] index by `Fin`.
+tag is honest and has the embedded `U`-form, stated in the tag-list, message
+and mask normal forms of {uses "reduction_coupling_bricks"}[]. The evaluation
+bridge of {bpref "agm_eval_bridge"}[] is reached from here by converting the
+index type and the key spelling at the use site.
+:::
+
+:::proof "transcript_index_transport"
+The `j`-th tag of the mapped list is the `j`-th entry's tag, and `macScalar` at
+arity 1 reads its message only at `0`, so the entry's own message and the
+transcript-indexed one agree.
 :::
 
 :::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
