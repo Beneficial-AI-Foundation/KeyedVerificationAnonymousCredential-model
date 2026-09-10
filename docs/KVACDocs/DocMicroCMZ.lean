@@ -29,18 +29,16 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Five files landed under `KVAC/Schemes/MicroCMZ/`:
+Six files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
-
-One is in review:
-
-- `AGMReduction.lean` (with `AGMReduction/Core.lean`) — Section 5.3,
-  Lemma 5.4 reduction core — Track CMZ-M (PR #88).
+- `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
+  `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
+  lemmas, and the sign-arm coupling — Track CMZ-M.
 
 Three more are planned:
 
@@ -83,8 +81,17 @@ on top of the merged base MAC.
 The μCMZ base MAC over an abstract prime-order group
 ({uses "sampleable_group"}[]): key sampling, the scalar-side MAC
 `V = (x₀ + xᵣ + m·x₁)·U` with a nonvanishing tag base, deterministic
-verification, and the packaging as an algebraic MAC
-({uses "algebraic_mac"}[]) with its correctness proof.
+verification, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
+with its correctness proof, and the sampler of nonzero group elements
+`uniformNonzero` for `G×`.
+:::
+
+:::definition "mucmz_keygen_support" (lean := "KVAC.Schemes.MicroCMZ.mem_support_keygen, KVAC.Schemes.MicroCMZ.uniformUnits, KVAC.Schemes.MicroCMZ.mem_support_uniformUnits") (parent := "cmz_construction") (tags := "milestone")
+Support-level utilities on the base MAC of {uses "mucmz_base_mac"}[] that
+the scheme layers read: the support characterization of `keygen`, which
+determines the public parameters `(x₀·H, xᵣ·G₀, xᵢ·G₀)` from the secret
+key, and the sampler of nonzero scalars `uniformUnits` for the paper's
+`ℤ_p^×` draws, with its support lemma.
 :::
 
 :::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
