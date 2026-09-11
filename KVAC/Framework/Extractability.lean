@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
 import KVAC.Framework.Syntax
+import KVAC.Framework.Correctness
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
 import VCVio.CryptoFoundations.Asymptotics.Security
@@ -130,7 +131,15 @@ def modifyEXTState (H : HashSpec) {kvac : KVACSyntax (OracleComp (ZKRO H))}
 Each credential algorithm runs through `liftRO` on the shared table, so a
 Fiat–Shamir credential's proofs share one random oracle. The `Issue` abort of
 Figure 8 is `throw ()` in the `ExceptT Unit` layer, short-circuiting the run; the
-game reads a thrown abort as an adversary win. -/
+game reads a thrown abort as an adversary win.
+
+The `newUsr` arm keeps a `none` branch for honest-issuance failure. That branch
+is never taken on the happy trace: `newUsr_mac_isSome` shows it is unreachable
+under `CorrectRO`. The obligation is not discharged here — a definition carries no
+proof — nor by `newUsr_mac_isSome` alone, which only states the fact given
+`CorrectRO`. It is discharged at the game-reasoning site, the μCMZ extractability
+proof (O24 Thm 5.2/5.10, Track CMZ-E, issue #11), once the concrete μCMZ scheme
+supplies `CorrectRO`. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
     (sk : kvac.Sk crs) (pp : kvac.Pp crs) :
@@ -144,8 +153,9 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- yields `some` (`CorrectRO` specialised at `φ = φ_m` via `holds_exactPred`),
   -- so `usrs` always grows and the counter matches the paper's unconditional
   -- `ctr := ctr + 1`. `CorrectRO` states correctness at the `OracleComp (ZKRO H)`
-  -- carrier (issue #118); the proof that the `none` case is unreachable is
-  -- `newUsr_mac_isSome` in the stacked PR #140.
+  -- carrier (issue #118); `newUsr_mac_isSome` below proves the `none` case
+  -- unreachable from any cache the game state holds at the call, which is at
+  -- least the keygen cache.
   | .newUsr m => do
       match ← liftRO H (kvac.mac crs sk pp m) with
       | none   => return (← getEXTState H).usrs.length
@@ -344,5 +354,60 @@ theorem extractablePoly_obligation (H : HashSpec)
     (isPPT : EXTAdversary H kvac → Prop) :
     ExtractablePoly H kvac isPPT := by
   sorry
+
+/-! ## Honest issuance for `NewUsr` oracle never fails -/
+
+/-- **Cache transport for `runRO`.** Any result a computation can produce when run
+from a cache `c` was already possible from a smaller cache `c₁ ≤ c`, for some final
+cache. The lazily sampled random oracle started from `c₁` can sample exactly the
+answers `c` records, so a run from `c₁` replays the run from `c` query by query.
+A hash query cached in `c₁` answers identically on both sides. One cached only in
+`c` is a fresh sample on the `c₁` side that may return the cached value. One cached
+in neither is the same fresh sample on both sides. The proof is pending, tracked in
+issue #168. -/
+theorem runRO_support_of_le {α : Type} (H : HashSpec) {c₁ c : H.spec.QueryCache}
+    (h : c₁ ≤ c) (k : OracleComp (ZKRO H) α) {a : α} {c'' : H.spec.QueryCache}
+    (hm : (a, c'') ∈ support (runRO H c k)) :
+    ∃ c', (a, c') ∈ support (runRO H c₁ k) := by
+  sorry
+
+/-- Under `CorrectRO`, honest issuance for the `NewUsr` oracle never fails. Every
+result of `kvac.mac` run from any cache `c` at least as large as the keygen cache
+`c₁` is `some`. The game's `NewUsr` arm runs `kvac.mac` through `liftRO` from the
+cache the game state holds, which the adversary may have enlarged through direct
+oracle queries and the other three oracles, so `c₁ ≤ c` is exactly the situation
+at the call site. Hence the `none` arm of `extOracleImpl`'s `newUsr` is
+unreachable and the counter always advances, as in O24 Figure 8's unconditional
+`ctr := ctr + 1`.
+
+The proof transports the run from `c` back to `c₁` with `runRO_support_of_le`,
+rewrites `kvac.mac` to `kvac.issue … (exactPred m)`, specialises `CorrectRO` at
+`φ = φ' = exactPred m` using `holds_exactPred`, and reads `σ?.isSome` off the
+`∃ σ, σ? = some σ` in its `CorrectOutcome` conclusion. -/
+lemma newUsr_mac_isSome (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
+    (hcorr : CorrectRO H kvac)
+    {secParam n : Nat} (hn : 0 < n)
+    {crs : kvac.Crs secParam n} {c₀ : H.spec.QueryCache}
+    (hsetup : (crs, c₀) ∈ support (runRO H ∅ (kvac.setup secParam n)))
+    {sk : kvac.Sk crs} {pp : kvac.Pp crs} {c₁ : H.spec.QueryCache}
+    (hkeys : ((sk, pp), c₁) ∈ support (runRO H c₀ (kvac.keygen crs)))
+    {c : H.spec.QueryCache} (hc : c₁ ≤ c)
+    {m : kvac.MsgVec crs} {c₂ : H.spec.QueryCache} {σ? : Option (kvac.Cred crs)}
+    (hmac : (σ?, c₂) ∈ support (runRO H c (kvac.mac crs sk pp m))) :
+    σ?.isSome := by
+  -- Transport the run from `c` back to the keygen cache `c₁`.
+  obtain ⟨c₂', hmac₁⟩ := runRO_support_of_le H hc _ hmac
+  -- `φ_m` holds on `m`, the premise `CorrectRO` needs for `φ = φ' = exactPred m`.
+  have hφ : kvac.holds crs (kvac.exactPred crs m) m = true :=
+    (kvac.holds_exactPred crs m m).mpr rfl
+  -- `kvac.mac … = kvac.issue … (exactPred m)`, so `hmac₁` is an issuance outcome.
+  have hmac' : (σ?, c₂') ∈
+      support (runRO H c₁ (kvac.issue crs sk pp m (kvac.exactPred crs m))) := by
+    simpa only [KVACSyntax.mac] using hmac₁
+  -- Specialise `CorrectRO` at this run and `φ = φ' = exactPred m`.
+  have hout := hcorr secParam n hn crs c₀ hsetup (sk, pp) c₁ hkeys m
+    (kvac.exactPred crs m) (kvac.exactPred crs m) hφ hφ
+  obtain ⟨σ, hσ, _⟩ := hout σ? c₂' hmac'
+  simp only [hσ, Option.isSome_some]
 
 end KVAC.Framework

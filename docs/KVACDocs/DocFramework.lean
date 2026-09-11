@@ -175,6 +175,25 @@ credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.
 :::
 
+:::theorem "newusr_never_fails" (lean := "KVAC.Framework.runRO_support_of_le, KVAC.Framework.newUsr_mac_isSome") (parent := "framework_extract") (tags := "milestone")
+The `NewUsr` oracle of {uses "extractability_game"}[] never takes its
+failure arm. Under the oracle-carrier correctness {uses "kvac_correctness"}[],
+every result of the honest MAC code generation run from any random-oracle
+cache at least as large as the keygen cache is a credential, so the user
+counter always advances as in O24 Figure 8. The run is transported back to
+the keygen cache by a cache transport lemma for `runRO`, whose proof is
+pending.
+:::
+
+:::proof "newusr_never_fails"
+Transport the run from the game's cache `c` to the keygen cache `c₁ ≤ c`,
+rewrite `mac` as `issue` at the exact-attribute predicate, specialise
+`CorrectRO` there through `holds_exactPred`, and read `isSome` off the
+`CorrectOutcome` conclusion. The transport lemma replays the lazily sampled
+oracle query by query, a query cached in `c₁` answering identically, one
+cached only in `c` being a fresh sample that returns the cached value.
+:::
+
 :::definition "kvac_extractability" (lean := "KVAC.Framework.Extractable, KVAC.Framework.PolyBounded, KVAC.Framework.ExtractablePoly, KVAC.Framework.extractablePoly_obligation") (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
 *O24 Definition 4.5.* Extractability for a KVAC scheme {uses "kvac_syntax"}[]:
 an extractor recovers the certified attributes from any accepting
