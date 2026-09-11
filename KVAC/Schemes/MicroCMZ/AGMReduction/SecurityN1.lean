@@ -16,18 +16,26 @@ subdirectory exists to prove:
 The bound speaks of the instrumented AGM game `AGM_UF_CMVAGame` of
 `AlgebraicMAC.lean`; the bridge to the plain `UF_CMVAGame` is tracked in #81.
 
-The statement is deliberately added first, `sorry`d, so that every part of the
-reduction (`Core`, `Coupling`, `SignCoupling`, `RedFull`, and the parts still
-to be added) reviews against a visible target. The proof arrives incrementally:
+The statement is deliberately added first so that every part of the reduction
+(`Core`, `Coupling`, `SignCoupling`, `RedFull`, and the parts still to be added)
+reviews against a visible target. The theorem below is *assembled* (sorry-free: event
+split, union bound, marginal bookkeeping) over five named sub-lemmas about the
+experiment `redFull` of `AGMReduction/RedFull.lean`:
 
-1. the proof *skeleton* replaces the `sorry` here with an assembly over named
-   sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`;
-2. each remaining sub-lemma is then discharged, sorry-free, until the theorem is
-   kernel-verified with no remaining `sorry`.
+- `redFull_recBit_eq` (proven) — `redFull`'s `recBit` marginal *is* the 3-DL
+  advantage: both experiments are `redTrace` at the challenge powers;
+- `redFull_badBit_of_winBit_of_not_recBit` — win ∧ ¬extract forces the
+  Schwartz–Zippel bad event;
+- `redFull_badBit_le_szBit` — the bad event implies the shift
+  event (via `Coupling`'s shift lemma);
+- `redFull_szBit_le` — the shift event has probability ≤ `3/p`
+  (the Schwartz–Zippel keystone);
+- `AGM_UF_CMVAGame_evalDist_eq` — the real game and `redFull`'s `winBit`
+  are identically distributed.
 
-Until then this subtree's `sorry`s are the theorem below and the unproven
-sub-lemmas stated below; the theorem's blueprint node (`single_attribute_mac`)
-shows "contains sorry" until proven.
+Until the remaining sub-lemmas are discharged, this subtree's `sorry`s are
+exactly the four unproven ones above, and the theorem's blueprint node
+(`single_attribute_mac`) shows "contains sorry".
 
 **Two departures from O24's printed bound** (Lemma 5.4, p. 36, states
 `Adv^{3-dl} + Adv^{dl} + 1/p`):
@@ -57,6 +65,63 @@ variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable (secParam : ℕ)
 
 /-! ## Sub-lemmas -/
+
+/-- **Keygen + oracle reparametrization.** The real UF-CMVA game and `redFull`'s `winBit`
+marginal are *identically distributed*: the reduction's masks make the embedded public elements
+(`H, X₀, Xᵣ, X₁`) and every issued tag uniform exactly as in the real game, the reconstructed
+secret `sk = (a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)` plays the role of the real key, and the simulated oracle
+reproduces the honest oracle's observable behaviour.
+
+**Proof (via the intermediate `agmGameR`).** `hB3` in `agm_ufcmva_le_n1_explicit` below reduces
+to this single `evalDist` equality, which will be discharged by chaining the two pieces below
+through `agmGameR` (`evalDist_agmGameR_eq_agmGame` ∘ `evalDist_agmGameR_eq_redFull`). The
+deterministic `verify`/`help` arm goes through `represented_value_eq_affineSubst_eval`: the
+reduction's `exponentEval … (p · affineSubst a b (toPoly))` answer equals `(p.eval x)·A₀` = the
+honest oracle's check, on a log-honest transcript. The two composed pieces are the **keygen
+reparametrization** and the **two-implementation `simulateQ` coupling**:
+
+1. **Keygen reparametrization.** For fixed challenge `x`, the shear
+   `(aη,bη) ↦ (η:=aη+x·bη, bη)`
+   (and likewise `(a₀,b₀),(aᵣ,bᵣ),(a₁,b₁)`) is a uniform-preserving bijection on `F²`
+   (`evalDist_map_bijective_uniform_cross`); after it, `H = η·g` (uniform over `G`, matching the
+   real `H ←$ G` via `hgen.out`) and `sk = (x₀,xᵣ,x₁) := (a₀+x·b₀,…)`) is uniform —
+   exactly the real game's keygen — while the `b`-masks become free oracle randomness.
+2. **Oracle coupling.** Couple the two runs via `relTriple_simulateQ_run` (same query spec
+   `AGMOracleSpec F G 1`, impls `reductionOracleImpl` vs
+   `agmOracleImpl gen secParam sk H pp`) under the state
+   invariant `R_state L log := log = L.map (fun e => (e.msg, e.tag)) ∧ (log-honesty)`:
+   - `sign`: the masked-tag output law is proven (`sign_masked_tag_dist_eq` in `AlgebraicMAC`):
+     `(aᵤ·g+bᵤ·X, key·U) <$> $ᵗ{masks}` has the same `evalDist` as `mac`'s
+     `(U ←$ {g≠0}; (U, key·U))`. Combined with `embedTag_eq` (the reduction's degree-2 tag `V`
+     *is* `key·U`), the reduction `sign` and honest `sign` produce identical outputs; entries match
+     under `R_state`.
+   - `verify`/`help`: deterministic, equal by `represented_value_eq_affineSubst_eval` (+ the
+     embedding identities `hX0/hXr/hX1` and `keyUniv.eval x = key`), `verify`/`help` leave the log
+     fixed (`R_state` preserved).
+   Then `evalDist_eq_of_relTriple_eqRel` transports the run equality, and the `winBit` computation
+   (`verify sk`, consistency, freshness — all functions of `(mStar,σStar,ρU,ρV)` and the
+   `R_state`-matched projected log) is identical on both sides.
+
+⚠ **Why the `sign` logic lives in `AlgebraicMAC` (a resolved elaboration hazard).** Any
+`evalDist`/coupling statement that mentions `reductionOracleImpl.sign` *directly in this file*
+HANGS: forcing its `evalDist` re-elaborates the `$ᵗ {p : F × F // …}` subtype sample, whose
+`SampleableType` search loops in this module's `MvPolynomial` context (the same loop that put
+`sign_U_dist_eq`/`sign_masked_tag_dist_eq` in `AlgebraicMAC`). Even *stating*
+`evalDist (reductionOracleImpl … (.sign m)).run L) = …` here times out. Delegating just the mask
+sample to the opaque `@[irreducible]` `reductionMaskSample` (`AlgebraicMAC`) is *necessary but not
+sufficient* — the whole `sign` branch (a match over all query constructors, the `verify`/`help` arms
+carrying `MvPolynomial`/`affineSubst` terms) re-enters the loop. So the entire `sign` branch is
+factored into `AlgebraicMAC`-level definitions whose `evalDist`/output laws are established there
+(`sign_masked_tag_dist_eq`), and this file never elaborates `evalDist` of anything `sign`-related;
+`relTriple_simulateQ_run` then couples `reductionOracleImpl` vs `agmOracleImpl` using that law
+(sign) + `represented_value_eq_affineSubst_eval` (verify/help).
+
+⚠ Keep all sampling scalar / `Fin`-indexed (the `Var q → F` instance-search loop — see
+`probEvent_eval_shift_eq_zero_le` / `sign_U_dist_eq`, both deliberately routed around it). -/
+lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
+    evalDist (AGM_UF_CMVAGame gen secParam A)
+      = evalDist ((fun t : RedBits => t.winBit) <$> redFull gen A) := by
+  sorry
 
 /-- **Extraction marginal.** `redFull`'s `recBit` is distributed as
 `microCMZ3DLReductionExp gen A`: both are `redTrace` under `qdlogExp`'s challenge
@@ -116,7 +181,8 @@ lemma redFull_szBit_le (A : AGMUFAdversary F G 1) :
 /-! ## Lemma 5.4 -/
 
 /--
-**O24 Lemma 5.4, `n = 1`** (statement). Bounds the AGM advantage by the
+**O24 Lemma 5.4, `n = 1`** (assembled over the sub-lemmas above — see the module
+docstring). Bounds the AGM advantage by the
 3-DL term plus `3/p`, with the `dlogAdv` term dropped (slack for `n = 1`).
 (O24 prints `1/p`; the bad event is Schwartz–Zippel on the degree-≤3
 verification polynomial, so the provable constant is `3/p` — see the module
@@ -160,6 +226,29 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZ3DLReductionAdv gen A + 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
-  sorry
+  -- reparametrization: the AGM game's win bit is distributed as `redFull`'s `winBit`.
+  have hB3 : AGM_UF_CMVAAdv gen A secParam
+      = Pr[(fun t : RedBits => t.winBit = true) | redFull gen A] := by
+    have h : AGM_UF_CMVAAdv gen A secParam
+        = Pr[= true | (fun t : RedBits => t.winBit) <$> redFull gen A] :=
+      probOutput_congr rfl (AGM_UF_CMVAGame_evalDist_eq gen secParam A)
+    rw [h, ← probEvent_eq_eq_probOutput, probEvent_map]
+    rfl
+  -- Bad event ≤ 3/p: win ∧ ¬extract forces `badBit` (`redFull_badBit_of_winBit_of_not_recBit`);
+  -- `badBit ⟹ szBit` (`redFull_badBit_le_szBit`); and `Pr[szBit] ≤ 3/p` (`redFull_szBit_le`).
+  have hbad : Pr[(fun t : RedBits => t.winBit = true ∧ t.recBit ≠ true) | redFull gen A]
+      ≤ 3 * (Fintype.card F : ℝ≥0∞)⁻¹ :=
+    le_trans (probEvent_mono fun t ht ht' => redFull_badBit_of_winBit_of_not_recBit gen A t ht ht'.1 ht'.2)
+      ((redFull_badBit_le_szBit gen A).trans (redFull_szBit_le gen A))
+  -- Assembly: `win ⊆ rec ∪ (win ∧ ¬rec)` (a tautology), union bound, then the
+  -- extraction marginal (`redFull_recBit_eq`) rewrites `Pr[recBit]` to the 3-DL advantage.
+  have hsplit : Pr[(fun t : RedBits => t.winBit = true) | redFull gen A]
+      ≤ Pr[(fun t : RedBits => t.recBit = true) | redFull gen A]
+        + Pr[(fun t : RedBits => t.winBit = true ∧ t.recBit ≠ true) | redFull gen A] :=
+    le_trans
+      (probEvent_mono fun t _ ht1 => or_iff_not_imp_left.mpr fun ht2 => ⟨ht1, ht2⟩)
+      (probEvent_or_le (redFull gen A) _ _)
+  rw [hB3, ← redFull_recBit_eq gen A]
+  exact hsplit.trans (add_le_add le_rfl hbad)
 
 end KVAC.Schemes.MicroCMZ

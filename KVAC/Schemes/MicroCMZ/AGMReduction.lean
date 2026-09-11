@@ -31,8 +31,10 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 - `RedFull` — the analysis experiment `redFull`: the reduction's run at the
   genuine challenge powers, returning the record `RedBits` (win, extraction,
   Schwartz–Zippel bad and shift bits);
-- `SecurityN1` — the Lemma 5.4 target bound `agm_ufcmva_le_n1_explicit`
-  (still `sorry`d) and the sub-lemmas it is assembled over.
+- `SecurityN1` — the Lemma 5.4 target bound `agm_ufcmva_le_n1_explicit`,
+  assembled (sorry-free glue) over its sub-lemmas `redFull_recBit_eq`,
+  `redFull_badBit_of_winBit_of_not_recBit`, `redFull_badBit_le_szBit`, `redFull_szBit_le`
+  and `AGM_UF_CMVAGame_evalDist_eq`.
 
 Lemma 5.4 stays untagged here until the theorem is sorry-free.
 
