@@ -531,7 +531,7 @@ arity 1 reads its message only at `0`, so the entry's own message and the
 transcript-indexed one agree.
 :::
 
-:::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+:::theorem "run_level_coupling" (lean := "KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame_evalDist_eq") (parent := "cmz_amac") (tags := "milestone")
 The run-level view equality: the adversary's view in the game of
 {uses "agm_model"}[] and its view against {uses "simulated_sign_oracle"}[]
 are identically distributed. Lifts the per-step couplings of
@@ -539,6 +539,13 @@ are identically distributed. Lifts the per-step couplings of
 across a whole transcript by induction on the oracle calls, over the
 keygen reparametrization that trades the honest key for the masks of
 {uses "challenge_embedding"}[].
+:::
+
+:::proof "run_level_coupling"
+Stated as the distribution equality between the AGM game and the win-bit
+marginal of {uses "reduction_analysis_experiment"}[]; the proof chains the
+keygen reparametrization with the two-implementation `simulateQ` coupling
+through an intermediate game.
 :::
 
 :::theorem "sz_adaptive_bound" (lean := "KVAC.Schemes.MicroCMZ.redFull_szBit_le") (parent := "cmz_amac") (tags := "milestone")
