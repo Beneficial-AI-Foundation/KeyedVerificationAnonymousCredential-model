@@ -16,7 +16,8 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 (`AGMPolynomial`). Each part documents its own contents in its module docstring:
 
 - `Core` — the game ↔ polynomial dictionary, the eval bridge, the identity
-  branch, the reduction adversary and its simulated oracle, and root recovery;
+  branch, the reduction adversary with its simulated oracle and run trace, and
+  root recovery;
 - `Coupling` — the first probability-layer slice: the uniformity and relational
   coupling bricks, the reduction ↔ honest state invariant, and the **static**
   Schwartz–Zippel core;
