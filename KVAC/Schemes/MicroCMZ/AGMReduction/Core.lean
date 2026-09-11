@@ -235,7 +235,7 @@ def AGMRepr.evalAt (ρ : AGMRepr F 1) (gen : G) (ep : EmbeddedParams G)
 /-- **Embedding of the reduction's public elements** (O24 Eq. 13), factored out so a
 consumer takes it as one hypothesis instead of re-spelling each embedded element inside
 every `ρ.eval` argument. These are the reduction's definitions of `H, X0, Xr, X1`
-(see `microCMZ3DLReduction`) read at the genuine challenge powers `X = x·gen`,
+(see `redTrace`) read at the genuine challenge powers `X = x·gen`,
 `X' = x²·gen`: `H` literally, `Xᵣ` and `X₁` via `embedMask_eq`, and `X₀` via `embedX0_eq`,
 since the reduction cannot compute `x` and so builds `X₀` expanded over `(gen, X, X')`.
 The reduction's `ep` is only propositionally, never definitionally, equal to any closed
@@ -564,30 +564,29 @@ lemma recoverDlog_verifPoly_eq {q : ℕ} {a b : AGMPoly.Var q → F} {x : F}
 /-- Everything the reduction's run produces before extraction: the two mask records, the
 embedded public parameters (O24 Eq. 13), the adversary's forgery with its two AGM
 representations, and the log of issued tags with their `u`-masks. `microCMZ3DLReduction`
-keeps only `recoverDlog` of it; the Lemma 5.4 analysis experiment (a later part) reads
-the rest. -/
+keeps only `recoverDlog` of it; the Lemma 5.4 analysis experiment reads the rest. -/
 structure RedTrace (F G : Type) where
-  /-- the `a`-side fixed-variable masks -/
+  /-- The `a`-side fixed-variable masks. -/
   aM : FixedMasks F
-  /-- the `b`-side fixed-variable masks -/
+  /-- The `b`-side fixed-variable masks. -/
   bM : FixedMasks F
-  /-- the embedded public parameters `H, X₀, Xᵣ, X₁` built from the masks -/
+  /-- The embedded public parameters `H, X₀, Xᵣ, X₁` built from the masks. -/
   ep : EmbeddedParams G
-  /-- the forged message -/
+  /-- The forged message. -/
   mStar : Fin 1 → F
-  /-- the forged tag `(U*, V*)` -/
+  /-- The forged tag `(U*, V*)`. -/
   σStar : G × G
-  /-- the AGM representation of `U*` -/
+  /-- The AGM representation of `U*`. -/
   ρU : AGMRepr F 1
-  /-- the AGM representation of `V*` -/
+  /-- The AGM representation of `V*`. -/
   ρV : AGMRepr F 1
-  /-- the log of issued tags with their `u`-masks -/
-  L : RedLog F G
+  /-- The log of issued tags with their `u`-masks. -/
+  log : RedLog F G
 
 /-- The reduction's run. Given the challenge powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
 sample the fixed-variable masks, build the embedded public parameters `H, X₀, Xᵣ, X₁`
 (O24 Eq. 13), and run `A` against `reductionOracleImpl` (no `sk`). The one place the
-embedding is written down: `microCMZ3DLReduction` and the analysis experiment bind this
+embedding is built: `microCMZ3DLReduction` and the analysis experiment bind this
 and differ only in what they compute from the trace. -/
 noncomputable def redTrace (X X' X'' : G) (A : AGMUFAdversary F G 1) :
     ProbComp (RedTrace F G) := do
@@ -613,16 +612,16 @@ noncomputable def redTrace (X X' X'' : G) (A : AGMUFAdversary F G 1) :
   pure ⟨aM, bM, ep, mStar, σStar, ρU, ρV, L⟩
 
 /-- The forgery's verification polynomial `φ` (O24 Eq. 12) read off the trace. `abbrev`, so
-`rw`/`simp only` see through it (as `maskedKey`). -/
+`rw`/`simp only` see through it. -/
 noncomputable abbrev RedTrace.verifPoly {F G : Type} [Field F] (t : RedTrace F G) :
-    AGMPoly.P F t.L.length :=
-  AGMPoly.verifPoly t.L.msg (t.mStar 0) (t.ρU.toReprCoeffs t.L.length)
-    (t.ρV.toReprCoeffs t.L.length)
+    AGMPoly.P F t.log.length :=
+  AGMPoly.verifPoly t.log.msg (t.mStar 0) (t.ρU.toReprCoeffs t.log.length)
+    (t.ρV.toReprCoeffs t.log.length)
 
 /-- The masked univariate `ψ = maskedSubst aM bM φ` (O24 Eq. 16) whose roots the reduction
 searches. -/
 noncomputable abbrev RedTrace.psi {F G : Type} [Field F] (t : RedTrace F G) : Polynomial F :=
-  t.L.maskedSubst t.aM t.bM t.verifPoly
+  t.log.maskedSubst t.aM t.bM t.verifPoly
 
 /--
 **The μCMZ 3-DL reduction at `n = 1`** (O24 §5.3, Lemma 5.4), at base `gen`.

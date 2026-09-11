@@ -552,10 +552,11 @@ the respective `a`'s" — surviving the nonzero-`U` conditioning of
 :::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi") (parent := "cmz_amac") (tags := "milestone")
 The reduction's run as a record: the masks and embedded points of
 {uses "challenge_embedding"}[], the adversary's forgery with its two AGM
-representations, and the log of {bpref "simulated_sign_oracle"}[]; with the
-forgery's verification polynomial and its masked univariate read off it. The
-reduction adversary keeps only the root search on the latter; the analysis
-experiment of a later part keeps the whole record.
+representations, and the log of {uses "simulated_sign_oracle"}[]; with the
+forgery's verification polynomial {uses "agm_verification_polynomial"}[] and its
+masked univariate {uses "partial_evaluation_psi"}[] read off it. The reduction
+adversary keeps only the root search on the latter; the analysis experiment
+keeps the whole record.
 :::
 
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
@@ -599,6 +600,7 @@ discrete logarithm among at most 3 roots, recovered by
 {uses "dlog_root_recovery"}[].
 
 The steps this decomposes into, in the order the stack delivers them: the
+reduction trace {uses "reduction_trace"}[] every bound is read on; the
 per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[], stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
@@ -609,8 +611,7 @@ per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "transcript_index_transport"}[]; the run-level view equality
 {uses "run_level_coupling"}[]; the bad-event bound
 {uses "sz_adaptive_bound"}[] over the static core
-{uses "sz_static_core"}[]; the reduction trace {uses "reduction_trace"}[]
-the bound is read on; and the union bound
+{uses "sz_static_core"}[]; and the union bound
 {uses "lem54_bound_assembly"}[].
 :::
 
