@@ -363,7 +363,8 @@ cache. The lazily sampled random oracle started from `c₁` can sample exactly t
 answers `c` records, so a run from `c₁` replays the run from `c` query by query.
 A hash query cached in `c₁` answers identically on both sides. One cached only in
 `c` is a fresh sample on the `c₁` side that may return the cached value. One cached
-in neither is the same fresh sample on both sides. The proof is pending. -/
+in neither is the same fresh sample on both sides. The proof is pending, tracked in
+issue #168. -/
 theorem runRO_support_of_le {α : Type} (H : HashSpec) {c₁ c : H.spec.QueryCache}
     (h : c₁ ≤ c) (k : OracleComp (ZKRO H) α) {a : α} {c'' : H.spec.QueryCache}
     (hm : (a, c'') ∈ support (runRO H c k)) :
