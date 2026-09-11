@@ -235,7 +235,7 @@ def AGMRepr.evalAt (ρ : AGMRepr F 1) (gen : G) (ep : EmbeddedParams G)
 /-- **Embedding of the reduction's public elements** (O24 Eq. 13), factored out so a
 consumer takes it as one hypothesis instead of re-spelling each embedded element inside
 every `ρ.eval` argument. These are the reduction's definitions of `H, X0, Xr, X1`
-(see `microCMZ3DLReduction`) read at the genuine challenge powers `X = x·gen`,
+(see `redTrace`) read at the genuine challenge powers `X = x·gen`,
 `X' = x²·gen`: `H` literally, `Xᵣ` and `X₁` via `embedMask_eq`, and `X₀` via `embedX0_eq`,
 since the reduction cannot compute `x` and so builds `X₀` expanded over `(gen, X, X')`.
 The reduction's `ep` is only propositionally, never definitionally, equal to any closed
@@ -561,17 +561,72 @@ lemma recoverDlog_verifPoly_eq {q : ℕ} {a b : AGMPoly.Var q → F} {x : F}
   rw [Polynomial.IsRoot.def, AGMPoly.eval_affineSubst]
   exact hroot
 
-/--
-The **3-DL reduction adversary** for the non-identity branch of Lemma 5.4
-(O24 §5.3).
-Given the challenge `(g, X = x·g, X' = x²·g, X'' = x³·g)`, it:
+/-- Everything the reduction's run produces before extraction: the two mask records, the
+embedded public parameters (O24 Eq. 13), the adversary's forgery with its two AGM
+representations, and the log of issued tags with their `u`-masks. `microCMZ3DLReduction`
+keeps only `recoverDlog` of it; the Lemma 5.4 analysis experiment reads the rest. -/
+structure RedTrace (F G : Type) where
+  /-- The `a`-side fixed-variable masks. -/
+  aM : FixedMasks F
+  /-- The `b`-side fixed-variable masks. -/
+  bM : FixedMasks F
+  /-- The embedded public parameters `H, X₀, Xᵣ, X₁` built from the masks. -/
+  ep : EmbeddedParams G
+  /-- The forged message. -/
+  mStar : Fin 1 → F
+  /-- The forged tag `(U*, V*)`. -/
+  σStar : G × G
+  /-- The AGM representation of `U*`. -/
+  ρU : AGMRepr F 1
+  /-- The AGM representation of `V*`. -/
+  ρV : AGMRepr F 1
+  /-- The log of issued tags with their `u`-masks. -/
+  log : RedLog F G
 
-1. samples the fixed-variable masks and builds the embedded public parameters
-   `H, X₀, Xᵣ, X₁` (O24 Eq. 13);
-2. runs `A` against `reductionOracleImpl` (no `sk`), collecting the forgery and
-   the log of issued tags with their `u`-masks;
-3. forms the masked univariate `ψ = affineSubst a b (verifPoly …)` from all masks
-   and returns `recoverDlog g X ψ` — the challenge exponent `x`, among `ψ`'s roots.
+/-- The reduction's run. Given the challenge powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
+sample the fixed-variable masks, build the embedded public parameters `H, X₀, Xᵣ, X₁`
+(O24 Eq. 13), and run `A` against `reductionOracleImpl` (no `sk`). The one place the
+embedding is built: `microCMZ3DLReduction` and the analysis experiment bind this
+and differ only in what they compute from the trace. -/
+noncomputable def redTrace (X X' X'' : G) (A : AGMUFAdversary F G 1) :
+    ProbComp (RedTrace F G) := do
+  let aEta ← $ᵗ F; let bEta ← $ᵗ F
+  let a0 ← $ᵗ F; let b0 ← $ᵗ F
+  let aXr ← $ᵗ F; let bXr ← $ᵗ F
+  let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
+  let aM : FixedMasks F := ⟨aEta, a0, aXr, aX1⟩
+  let bM : FixedMasks F := ⟨bEta, b0, bXr, bX1⟩
+  -- each of H, Xᵣ, X₁ is honest at the challenge exponent: `embedMask_eq`
+  let H := aM.eta • gen + bM.eta • X
+  -- `X₀ = x₀·H` at the challenge exponent: `embedX0_eq`. O24 Eq. 13 prints X₀'s
+  -- X-coefficient as (a_h·b₀ + b_h), dropping the a₀ factor; the correct
+  -- coefficient, used here, is a₀·bη + b₀·aη (typo in the paper, p. 37).
+  let X0 := (aM.x0 * aM.eta) • gen + (aM.x0 * bM.eta + bM.x0 * aM.eta) • X +
+    (bM.x0 * bM.eta) • X'
+  let Xr := aM.xr • gen + bM.xr • X
+  let X1 := aM.x1 • gen + bM.x1 • X
+  let ep : EmbeddedParams G := ⟨H, X0, Xr, X1⟩
+  let ((mStar, σStar, ρU, ρV), L) ←
+    (simulateQ (reductionOracleImpl (gen := gen) X X' X'' aM bM ep)
+      (A.run H (X0, Xr, fun _ => X1))).run []
+  pure ⟨aM, bM, ep, mStar, σStar, ρU, ρV, L⟩
+
+/-- The forgery's verification polynomial `φ` (O24 Eq. 12) read off the trace. `abbrev`, so
+`rw`/`simp only` see through it. -/
+noncomputable abbrev RedTrace.verifPoly {F G : Type} [Field F] (t : RedTrace F G) :
+    AGMPoly.P F t.log.length :=
+  AGMPoly.verifPoly t.log.msg (t.mStar 0) (t.ρU.toReprCoeffs t.log.length)
+    (t.ρV.toReprCoeffs t.log.length)
+
+/-- The masked univariate `ψ = maskedSubst aM bM φ` (O24 Eq. 16) whose roots the reduction
+searches. -/
+noncomputable abbrev RedTrace.psi {F G : Type} [Field F] (t : RedTrace F G) : Polynomial F :=
+  t.log.maskedSubst t.aM t.bM t.verifPoly
+
+/--
+**The μCMZ 3-DL reduction at `n = 1`** (O24 §5.3, Lemma 5.4), at base `gen`.
+Runs `redTrace` on the challenge powers and returns `recoverDlog g X ψ` on the trace's masked
+univariate `ψ` (`RedTrace.psi`) — the challenge exponent `x`, among `ψ`'s roots.
 
 **Base convention, enforced by the signature.** Everything here — the embedding, the
 simulated oracle, the extraction — works relative to `gen`, so the reduction is sound
@@ -584,34 +639,8 @@ structural rather than a hypothesis on the base: `gen`'s bijectivity `Fact` is n
 available at an arbitrary base — the order-instance hazard. -/
 noncomputable def microCMZ3DLReduction (A : AGMUFAdversary F G 1)
     (pows : Fin 3 → G) : ProbComp F := do
-    let X := pows 0
-    let X' := pows 1
-    let X'' := pows 2
-    -- the fixed-variable masks and embedded public parameters (O24 Eq. 13)
-    let aEta ← $ᵗ F; let bEta ← $ᵗ F
-    let a0 ← $ᵗ F; let b0 ← $ᵗ F
-    let aXr ← $ᵗ F; let bXr ← $ᵗ F
-    let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
-    let aM : FixedMasks F := ⟨aEta, a0, aXr, aX1⟩
-    let bM : FixedMasks F := ⟨bEta, b0, bXr, bX1⟩
-    -- each of H, Xᵣ, X₁ is honest at the challenge exponent: `embedMask_eq`
-    let H := aM.eta • gen + bM.eta • X
-    -- `X₀ = x₀·H` at the challenge exponent: `embedX0_eq`. O24 Eq. 13 prints X₀'s
-    -- X-coefficient as (a_h·b₀ + b_h), dropping the a₀ factor; the correct
-    -- coefficient, used here, is a₀·bη + b₀·aη (typo in the paper, p. 37).
-    let X0 := (aM.x0 * aM.eta) • gen + (aM.x0 * bM.eta + bM.x0 * aM.eta) • X +
-      (bM.x0 * bM.eta) • X'
-    let Xr := aM.xr • gen + bM.xr • X
-    let X1 := aM.x1 • gen + bM.x1 • X
-    let ep : EmbeddedParams G := ⟨H, X0, Xr, X1⟩
-    let pp : G × G × (Fin 1 → G) := (X0, Xr, fun _ => X1)
-    let ((mStar, _σStar, ρU, ρV), L) ←
-      (simulateQ (reductionOracleImpl (gen := gen) X X' X'' aM bM ep)
-        (A.run H pp)).run []
-    let ψ := L.maskedSubst aM bM
-      (AGMPoly.verifPoly L.msg (mStar 0)
-        (ρU.toReprCoeffs L.length) (ρV.toReprCoeffs L.length))
-    pure (recoverDlog gen X ψ)
+  let t ← redTrace gen (pows 0) (pows 1) (pows 2) A
+  pure (recoverDlog gen (pows 0) t.psi)
 
 /--
 The 3-DL experiment for the reduction, with the challenge base **fixed to `gen`**.

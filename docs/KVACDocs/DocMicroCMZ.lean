@@ -549,6 +549,16 @@ the respective `a`'s" — surviving the nonzero-`U` conditioning of
 {uses "sign_masks"}[].
 :::
 
+:::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi") (parent := "cmz_amac") (tags := "milestone")
+The reduction's run as a record: the masks and embedded points of
+{uses "challenge_embedding"}[], the adversary's forgery with its two AGM
+representations, and the log of {uses "simulated_sign_oracle"}[]; with the
+forgery's verification polynomial {uses "agm_verification_polynomial"}[] and its
+masked univariate {uses "partial_evaluation_psi"}[] read off it. The reduction
+adversary keeps only the root search on the latter; the analysis experiment
+keeps the whole record.
+:::
+
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The union bound that assembles {bpref "single_attribute_mac"}[]: outside
 the identity branch of {uses "identity_case_lem54"}[], a win is either a
@@ -590,6 +600,7 @@ discrete logarithm among at most 3 roots, recovered by
 {uses "dlog_root_recovery"}[].
 
 The steps this decomposes into, in the order the stack delivers them: the
+reduction trace {uses "reduction_trace"}[] every bound is read on; the
 per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[], stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
