@@ -549,25 +549,25 @@ the respective `a`'s" — surviving the nonzero-`U` conditioning of
 {uses "sign_masks"}[].
 :::
 
-:::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi") (parent := "cmz_amac") (tags := "milestone")
+:::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi, KVAC.Schemes.MicroCMZ.RedTrace.shiftPoint") (parent := "cmz_amac") (tags := "milestone")
 The reduction's run as a record: the masks and embedded points of
 {uses "challenge_embedding"}[], the adversary's forgery with its two AGM
 representations, and the log of {uses "simulated_sign_oracle"}[]; with the
 forgery's verification polynomial {uses "agm_verification_polynomial"}[] and its
-masked univariate {uses "partial_evaluation_psi"}[] read off it. The reduction
-adversary keeps only the root search on the latter; the analysis experiment
-keeps the whole record.
+masked univariate {uses "partial_evaluation_psi"}[] and the shifted real-log
+point read off it. The reduction adversary keeps only the root search on the
+masked univariate; the analysis experiment keeps the whole record.
 :::
 
 :::definition "reduction_analysis_experiment" (lean := "KVAC.Schemes.MicroCMZ.RedBits, KVAC.Schemes.MicroCMZ.redFull") (parent := "cmz_amac") (tags := "milestone")
-{uses "reduction_trace"}[] run at the genuine challenge powers, with the
-challenge exponent in scope and the record kept, returning four bits. The win
+The run of {uses "reduction_trace"}[] at the genuine challenge powers, with
+the challenge exponent in scope and the record kept, returning four bits. The win
 bit applies the real μCMZ win predicate to the key the masks embed at the
 challenge exponent; the extraction bit is the reduction's own output test; the
 bad bit says the forgery's verification polynomial is nonzero but its partial
 evaluation {uses "partial_evaluation_psi"}[] vanishes; the shift bit says it is
-nonzero but vanishes at the shifted real-log point, the form Schwartz–Zippel
-bounds. Every sub-lemma of the skeleton is an event on these bits.
+nonzero but vanishes at the trace's shifted real-log point, the form
+Schwartz–Zippel bounds. Every Lemma 5.4 sub-lemma is an event on these bits.
 :::
 
 :::theorem "extraction_marginal" (lean := "KVAC.Schemes.MicroCMZ.redFull_recBit_eq") (parent := "cmz_amac") (tags := "milestone")
@@ -578,9 +578,9 @@ advantage.
 :::
 
 :::proof "extraction_marginal"
-Both experiments are the reduction's run under two spellings of the challenge
-powers; the monad laws identify the two `do` blocks once the powers are
-aligned.
+Both experiments are {uses "reduction_trace"}[] under two spellings of the
+challenge powers of {uses "challenge_embedding"}[]; the monad laws identify the
+two `do` blocks once the powers are aligned.
 :::
 
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
@@ -628,8 +628,9 @@ discrete logarithm among at most 3 roots, recovered by
 The steps this decomposes into, in the order the stack delivers them: the
 reduction trace {uses "reduction_trace"}[] and the analysis experiment
 {uses "reduction_analysis_experiment"}[] every bound is read on, with its
-extraction marginal {uses "extraction_marginal"}[]; the per-step couplings {uses "sign_oracle_coupling"}[] and
-{uses "verify_help_oracle_coupling"}[], stated through
+extraction marginal {uses "extraction_marginal"}[]; the per-step couplings
+{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[],
+stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
 {uses "consistency_case_lem54"}[], its embedded restatements
 {uses "embedded_vanishing_lem54"}[] and {uses "embedded_consistency_bricks"}[] and

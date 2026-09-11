@@ -22,9 +22,6 @@ reviews against a visible target. The proof arrives incrementally:
 
 1. the proof *skeleton* replaces the `sorry` here with an assembly over named
    sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`;
-   stated so far:
-   - `redFull_recBit_eq` (proven) — `redFull`'s `recBit` marginal *is* the 3-DL
-     advantage: both experiments are `redTrace` at the challenge powers;
 2. each remaining sub-lemma is then discharged, sorry-free, until the theorem is
    kernel-verified with no remaining `sorry`.
 
@@ -74,11 +71,10 @@ lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
       pow_one]
   rw [microCMZ3DLReductionAdv, ← probEvent_eq_eq_probOutput, ← hmap, probEvent_map]; rfl
 
-/-! ## Lemma 5.4, non-identity branch -/
+/-! ## Lemma 5.4 -/
 
 /--
-**O24 Lemma 5.4, `n = 1`** (statement; the proof is assembled incrementally —
-see the module docstring). Bounds the AGM advantage by the
+**O24 Lemma 5.4, `n = 1`** (statement). Bounds the AGM advantage by the
 3-DL term plus `3/p`, with the `dlogAdv` term dropped (slack for `n = 1`).
 (O24 prints `1/p`; the bad event is a degree-≤3 Schwartz–Zippel restriction, so
 the provable constant is `3/p` — see the module docstring.)
