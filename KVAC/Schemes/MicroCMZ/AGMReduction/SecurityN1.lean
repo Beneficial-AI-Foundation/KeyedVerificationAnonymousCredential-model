@@ -3,7 +3,7 @@ Copyright 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
-import KVAC.Schemes.MicroCMZ.AGMReduction.Core
+import KVAC.Schemes.MicroCMZ.AGMReduction.RedFull
 
 /-!
 # μCMZ AGM unforgeability, `n = 1` — the Lemma 5.4 target statement (O24 §5.3)
@@ -17,15 +17,13 @@ The bound speaks of the instrumented AGM game `AGM_UF_CMVAGame` of
 `AlgebraicMAC.lean`; the bridge to the plain `UF_CMVAGame` is tracked in #81.
 
 The statement is deliberately added first, `sorry`d, so that every part of the
-reduction (`Core`, `Coupling`, `SignCoupling`, and the parts still to be added)
-reviews against a visible target. The proof arrives incrementally:
+reduction (`Core`, `Coupling`, `SignCoupling`, `RedFull`, and the parts still
+to be added) reviews against a visible target. The proof arrives incrementally:
 
-1. the proof *skeleton* replaces the `sorry` here with an assembly over named,
-   individually-`sorry`d sub-lemmas (the reparametrized experiment `redFull`,
-   the game ↔ `redFull` distribution equality, the change of evaluation point,
-   and the Schwartz–Zippel bad-event bound `3/p`);
-2. each subsequent part discharges one sub-lemma, sorry-free, until the theorem
-   is kernel-verified with no remaining `sorry`.
+1. the proof *skeleton* replaces the `sorry` here with an assembly over named
+   sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`;
+2. each remaining sub-lemma is then discharged, sorry-free, until the theorem is
+   kernel-verified with no remaining `sorry`.
 
 Until then the theorem below carries the only `sorry` of this subtree; its
 blueprint node (`single_attribute_mac`) shows "contains sorry" until proven.
@@ -58,9 +56,25 @@ variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable (secParam : ℕ)
 
+/-! ## Sub-lemmas -/
+
+/-- **Extraction marginal.** `redFull`'s `recBit` is distributed as
+`microCMZ3DLReductionExp gen A`: both are `redTrace` under `qdlogExp`'s challenge
+powers `(x·g, x²·g, x³·g)`, so the marginal probability *is* the 3-DL advantage. -/
+lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
+    Pr[(fun t : RedBits => t.recBit = true) | redFull gen A]
+      = microCMZ3DLReductionAdv gen A := by
+  have hmap : (fun t : RedBits => t.recBit) <$> redFull gen A
+      = microCMZ3DLReductionExp gen A := by
+    simp only [redFull, microCMZ3DLReductionExp, qdlogExp, microCMZ3DLReduction, map_bind,
+      map_pure, bind_assoc, pure_bind, Fin.val_zero, Fin.val_one, Fin.val_two, Nat.reduceAdd,
+      pow_one]
+  rw [microCMZ3DLReductionAdv, ← probEvent_eq_eq_probOutput, ← hmap, probEvent_map]; rfl
+
+/-! ## Lemma 5.4 -/
+
 /--
-**O24 Lemma 5.4, `n = 1`** (statement; the proof is added across the
-Lemma 5.4 PR series — see the module docstring). Bounds the AGM advantage by the
+**O24 Lemma 5.4, `n = 1`** (statement). Bounds the AGM advantage by the
 3-DL term plus `3/p`, with the `dlogAdv` term dropped (slack for `n = 1`).
 (O24 prints `1/p`; the bad event is a degree-≤3 Schwartz–Zippel restriction, so
 the provable constant is `3/p` — see the module docstring.)
@@ -87,7 +101,7 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
   since a submitted `U` may use `X₀` or `Vⱼ`, both degree-2 in `x`, times the
   degree-1 `keyⱼ` — hence `exponentEval … X''`, not just `X, X'`.)
 
-**Proof outline (the skeleton the PR series fills in):**
+**Proof outline:**
 
 1. rewrite `AGM_UF_CMVAAdv gen A secParam = Pr[win]` and split the win event on
    whether the forgery's verification polynomial is identically zero;

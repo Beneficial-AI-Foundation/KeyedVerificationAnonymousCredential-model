@@ -549,20 +549,46 @@ the respective `a`'s" — surviving the nonzero-`U` conditioning of
 {uses "sign_masks"}[].
 :::
 
-:::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi") (parent := "cmz_amac") (tags := "milestone")
+:::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi, KVAC.Schemes.MicroCMZ.RedTrace.shiftPoint") (parent := "cmz_amac") (tags := "milestone")
 The reduction's run as a record: the masks and embedded points of
 {uses "challenge_embedding"}[], the adversary's forgery with its two AGM
 representations, and the log of {uses "simulated_sign_oracle"}[]; with the
 forgery's verification polynomial {uses "agm_verification_polynomial"}[] and its
-masked univariate {uses "partial_evaluation_psi"}[] read off it. The reduction
-adversary keeps only the root search on the latter; the analysis experiment
-keeps the whole record.
+masked univariate {uses "partial_evaluation_psi"}[] and the shifted real-log
+point read off it. The reduction adversary keeps only the root search on the
+masked univariate; the analysis experiment keeps the whole record.
+:::
+
+:::definition "reduction_analysis_experiment" (lean := "KVAC.Schemes.MicroCMZ.RedBits, KVAC.Schemes.MicroCMZ.redFull") (parent := "cmz_amac") (tags := "milestone")
+The run of {uses "reduction_trace"}[] at the genuine challenge powers, with
+the challenge exponent in scope and the record kept, returning four bits. The win
+bit applies the real μCMZ win predicate to the key the masks embed at the
+challenge exponent; the extraction bit is the reduction's own output test; the
+bad bit says the forgery's verification polynomial is nonzero but its partial
+evaluation {uses "partial_evaluation_psi"}[] vanishes; the shift bit says it is
+nonzero but vanishes at the trace's shifted real-log point, the form
+Schwartz–Zippel bounds. Every Lemma 5.4 sub-lemma is an event on these bits.
+:::
+
+:::theorem "extraction_marginal" (lean := "KVAC.Schemes.MicroCMZ.redFull_recBit_eq") (parent := "cmz_amac") (tags := "milestone")
+The extraction bit of {uses "reduction_analysis_experiment"}[] is distributed
+as the 3-DL experiment of {uses "challenge_embedding"}[]: both run the same
+trace at the challenge powers, so its marginal probability is the 3-DL
+advantage.
+:::
+
+:::proof "extraction_marginal"
+Both experiments are {uses "reduction_trace"}[] under two spellings of the
+challenge powers of {uses "challenge_embedding"}[]; the monad laws identify the
+two `do` blocks once the powers are aligned.
 :::
 
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The union bound that assembles {bpref "single_attribute_mac"}[]: outside
+The union bound that assembles {bpref "single_attribute_mac"}[], over
+{uses "reduction_analysis_experiment"}[]: outside
 the identity branch of {uses "identity_case_lem54"}[], a win is either a
-3-DL extraction through {uses "dlog_root_recovery"}[] or the bad event of
+3-DL extraction through {uses "dlog_root_recovery"}[] — its probability read
+by {uses "extraction_marginal"}[] — or the bad event of
 {uses "sz_adaptive_bound"}[], so the advantage is at most
 `Adv^{3-dl} + 3/p`.
 :::
@@ -600,9 +626,11 @@ discrete logarithm among at most 3 roots, recovered by
 {uses "dlog_root_recovery"}[].
 
 The steps this decomposes into, in the order the stack delivers them: the
-reduction trace {uses "reduction_trace"}[] every bound is read on; the
-per-step couplings {uses "sign_oracle_coupling"}[] and
-{uses "verify_help_oracle_coupling"}[], stated through
+reduction trace {uses "reduction_trace"}[] and the analysis experiment
+{uses "reduction_analysis_experiment"}[] every bound is read on, with its
+extraction marginal {uses "extraction_marginal"}[]; the per-step couplings
+{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[],
+stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
 {uses "consistency_case_lem54"}[], its embedded restatements
 {uses "embedded_vanishing_lem54"}[] and {uses "embedded_consistency_bricks"}[] and

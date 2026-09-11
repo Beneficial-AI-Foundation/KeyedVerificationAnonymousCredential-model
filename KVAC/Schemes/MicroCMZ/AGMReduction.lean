@@ -4,9 +4,10 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.Core
-import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 import KVAC.Schemes.MicroCMZ.AGMReduction.Coupling
 import KVAC.Schemes.MicroCMZ.AGMReduction.SignCoupling
+import KVAC.Schemes.MicroCMZ.AGMReduction.RedFull
+import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
@@ -26,20 +27,14 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   plus the two lemmas at abstract arity derived from the embedding — the
   consistency⇒vanishing step (Eq. 12 evaluated in the relative discrete
   logarithms) and the represented-value bridge the `verify`/`help` arms
-  consume.
+  consume;
+- `RedFull` — the analysis experiment `redFull`: the reduction's run at the
+  genuine challenge powers, returning the record `RedBits` (win, extraction,
+  Schwartz–Zippel bad and shift bits);
+- `SecurityN1` — the Lemma 5.4 target bound `agm_ufcmva_le_n1_explicit`
+  (still `sorry`d) and the sub-lemmas it is assembled over.
 
-This file is the aggregator: the reduction lives in the `AGMReduction/`
-subdirectory. `SecurityN1` states the Lemma 5.4 target bound
-(`agm_ufcmva_le_n1_explicit`, currently `sorry`d — the visible target the
-remaining parts prove). The probability layer (3-DL + Schwartz–Zippel) is added
-in later parts, discharging that `sorry`; Lemma 5.4 stays untagged here until it
-is sorry-free.
-
-The planned remaining parts (the verify/help halves of the deterministic core,
-Assembly, Shear, ShearShift, Security) will be added to the import list above
-as they are added. The distribution-layer bad-event bound and the security
-theorems are assembled there; Lemma 5.4 is untagged here until that bound is
-proved.
+Lemma 5.4 stays untagged here until the theorem is sorry-free.
 
 **Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` arms the
 order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
