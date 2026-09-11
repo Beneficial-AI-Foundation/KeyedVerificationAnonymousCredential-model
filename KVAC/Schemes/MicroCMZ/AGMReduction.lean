@@ -32,13 +32,9 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   genuine challenge powers, returning the record `RedBits` (win, extraction,
   Schwartz–Zippel bad and shift bits);
 - `SecurityN1` — the Lemma 5.4 target bound `agm_ufcmva_le_n1_explicit`
-  (still `sorry`d) and the sub-lemmas it is assembled over, starting with the
-  proven extraction marginal `redFull_recBit_eq`.
+  (still `sorry`d) and the sub-lemmas it is assembled over.
 
-The remaining sub-lemmas — the win-implies-bad core, the shift and
-Schwartz–Zippel bounds, the run-level coupling of the AGM game to `redFull`, and
-the union bound — arrive in later parts; Lemma 5.4 stays untagged here until the
-theorem is sorry-free.
+Lemma 5.4 stays untagged here until the theorem is sorry-free.
 
 **Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` arms the
 order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we

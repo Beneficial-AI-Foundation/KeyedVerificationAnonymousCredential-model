@@ -623,6 +623,14 @@ searches. -/
 noncomputable abbrev RedTrace.psi {F G : Type} [Field F] (t : RedTrace F G) : Polynomial F :=
   t.log.maskedSubst t.aM t.bM t.verifPoly
 
+/-- The shifted real-log point `v ↦ a v + (x + 1)·b v` at the trace's affine masks
+`a = aM.embed log.aMask`, `b = bM.embed log.bMask` (the masks `maskedSubst` substitutes):
+the point `θ + b` for `θ = a + x·b`, where Schwartz–Zippel hits `φ` directly. `abbrev`, so
+`rw`/`simp only` see through it. -/
+abbrev RedTrace.shiftPoint {F G : Type} [Field F] (t : RedTrace F G) (x : F) :
+    AGMPoly.Var t.log.length → F :=
+  fun v => t.aM.embed t.log.aMask v + (x + 1) * t.bM.embed t.log.bMask v
+
 /--
 **The μCMZ 3-DL reduction at `n = 1`** (O24 §5.3, Lemma 5.4), at base `gen`.
 Runs `redTrace` on the challenge powers and returns `recoverDlog g X ψ` on the trace's masked
