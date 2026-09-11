@@ -39,8 +39,9 @@ structure RedBits where
   recBit : Bool
   /-- The Schwartz–Zippel bad event `φ ≠ 0 ∧ ψ = 0`. -/
   badBit : Bool
-  /-- The shift event `φ ≠ 0 ∧ eval (t.shiftPoint x) φ = 0`: `φ` vanishes at the shifted
-  real-log point `a + (x + 1)·b`, the form Schwartz–Zippel bounds. -/
+  /-- The shift event `φ ≠ 0 ∧ eval (RedTrace.shiftPoint t x) φ = 0` on the trace `t` the
+  bits are read off: `φ` vanishes at the shifted real-log point `a + (x + 1)·b`, the form
+  Schwartz–Zippel bounds. -/
   szBit : Bool
 
 /-- **Reduction analysis experiment.** Samples the challenge exponent `x`, runs `redTrace`

@@ -17,8 +17,8 @@ The bound speaks of the instrumented AGM game `AGM_UF_CMVAGame` of
 `AlgebraicMAC.lean`; the bridge to the plain `UF_CMVAGame` is tracked in #81.
 
 The statement is deliberately added first, `sorry`d, so that every part of the
-reduction (`Core`, `Coupling`, `SignCoupling`, and the parts still to be added)
-reviews against a visible target. The proof arrives incrementally:
+reduction (`Core`, `Coupling`, `SignCoupling`, `RedFull`, and the parts still
+to be added) reviews against a visible target. The proof arrives incrementally:
 
 1. the proof *skeleton* replaces the `sorry` here with an assembly over named
    sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`;
