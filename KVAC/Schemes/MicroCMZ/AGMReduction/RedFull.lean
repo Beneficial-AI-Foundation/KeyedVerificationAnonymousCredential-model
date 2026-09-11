@@ -69,4 +69,25 @@ noncomputable def redFull (A : AGMUFAdversary F G 1) : ProbComp RedBits := do
         decide (t.verifPoly ≠ 0 ∧ t.psi = 0),
         decide (t.verifPoly ≠ 0 ∧ MvPolynomial.eval (t.shiftPoint x) t.verifPoly = 0)⟩
 
+/-! ## Schwartz–Zippel bad-event probability (distribution layer)
+
+The bad-event probability `Pr[badBit | redFull A] = Pr[φ ≠ 0 ∧ ψ = 0]` is bounded by `3/p`
+in two steps.
+
+1. **Shift (deterministic).** `ψ = affineSubst a b φ = 0` forces `φ` to vanish at the *shifted*
+   real-log point `w v := a v + (x+1)·b v = (a v + x·b v) + b v = θ v + b v`
+   (`eval_shift_eq_zero_of_affineSubst_eq_zero`). So `badBit ⟹ szBit` where
+   `szBit := decide (φ ≠ 0 ∧ MvPolynomial.eval (fun v => a v + (x+1)·b v) φ = 0)`.
+
+2. **Schwartz–Zippel over the shear (distributional, the keystone).** Under the change of
+   variables `(a v, b v) ↦ (θ v := a v + x·b v, b v)` — a uniform-preserving bijection on `F²`
+   for each fixed challenge `x` (for the 4 fixed mask pairs *and* the per-query `(auⱼ, buⱼ)` pairs
+   sampled inside `simulateQ`'s `sign` branch) — the entire view A sees (`H, X₀, Xᵣ, X₁`, every
+   `Uⱼ, Vⱼ`) and hence `φ`, `θ` depend only on the `θ`-masks, while the `b`-masks are uniform and
+   independent. Therefore the point `w = θ + b` is uniform over `Var L.length → F` independent of
+   `(φ, θ)`, and `card_filter_eval_eq_zero_le` (Schwartz–Zippel, cardinality form) gives
+   `Pr[szBit] ≤ 3 / |F|`.
+
+`redFull` exposes both `badBit` and `szBit`, so the two steps compose as events on one run. -/
+
 end KVAC.Schemes.MicroCMZ

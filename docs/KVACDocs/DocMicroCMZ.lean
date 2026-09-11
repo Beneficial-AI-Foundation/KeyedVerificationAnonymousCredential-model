@@ -541,13 +541,21 @@ keygen reparametrization that trades the honest key for the masks of
 {uses "challenge_embedding"}[].
 :::
 
-:::theorem "sz_adaptive_bound" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+:::theorem "sz_adaptive_bound" (lean := "KVAC.Schemes.MicroCMZ.redFull_szBit_le") (parent := "cmz_amac") (tags := "milestone")
 The Schwartz–Zippel bad event at `3/p` for the adversary's *own*
-polynomial. Upgrades the fixed-polynomial statement of
-{uses "sz_static_core"}[] to the adaptive one by decoupling the offset from
-the shift — O24's "the `b`'s are uniformly random and perfectly hidden by
-the respective `a`'s" — surviving the nonzero-`U` conditioning of
+polynomial, stated as the `3/p` bound on the shift bit of
+{uses "reduction_analysis_experiment"}[]. Upgrades the fixed-polynomial
+statement of {uses "sz_static_core"}[] to the adaptive one by decoupling the
+offset from the shift — O24's "the `b`'s are uniformly random and perfectly
+hidden by the respective `a`'s" — surviving the nonzero-`U` conditioning of
 {uses "sign_masks"}[].
+:::
+
+:::proof "sz_adaptive_bound"
+The shear `(a, b) ↦ (a + x·b, b)` is a uniform-preserving bijection for each
+challenge, under which the adversary's view and hence its polynomial depend on
+the sheared masks only; the shifted evaluation point is then uniform and
+independent of the polynomial, and the static core finishes.
 :::
 
 :::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi, KVAC.Schemes.MicroCMZ.RedTrace.shiftPoint") (parent := "cmz_amac") (tags := "milestone")
@@ -584,12 +592,42 @@ challenge powers of {uses "challenge_embedding"}[]; the monad laws identify the
 two `do` blocks once the powers are aligned.
 :::
 
+:::theorem "win_without_extraction_forces_bad" (lean := "KVAC.Schemes.MicroCMZ.redFull_win_not_rec_imp_bad") (parent := "cmz_amac") (tags := "milestone")
+On the support of {uses "reduction_analysis_experiment"}[], a win the
+reduction fails to extract from forces the bad bit: the forgery's verification
+polynomial is nonzero (a winning forgery is non-degenerate) while its partial
+evaluation vanishes (otherwise {uses "dlog_root_recovery"}[] would have
+recovered the challenge exponent).
+:::
+
+:::proof "win_without_extraction_forces_bad"
+Compose the honest-log invariant of {uses "reduction_coupling_bricks"}[] with
+the key-smul evaluation identity of {uses "consistency_case_lem54"}[] to get
+`eval (a + x·b) φ = 0`, then the two contrapositives: a non-identity forgery
+gives `φ ≠ 0` through {uses "agm_eval_bridge"}[], and failed root recovery
+gives `ψ = 0` through {uses "dlog_root_recovery"}[].
+:::
+
+:::theorem "bad_bit_forces_shift_bit" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_le_szBit") (parent := "cmz_amac") (tags := "milestone")
+In {uses "reduction_analysis_experiment"}[], the bad bit implies the shift
+bit: a polynomial whose partial evaluation {uses "partial_evaluation_psi"}[]
+vanishes also vanishes at the masks shifted by one challenge step, so the bad
+event's probability is at most the shift event's.
+:::
+
+:::proof "bad_bit_forces_shift_bit"
+The shift lemma of {uses "sz_static_core"}[] applied pointwise on the support,
+then monotonicity of the event probability.
+:::
+
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The union bound that assembles {bpref "single_attribute_mac"}[], over
 {uses "reduction_analysis_experiment"}[]: outside
 the identity branch of {uses "identity_case_lem54"}[], a win is either a
 3-DL extraction through {uses "dlog_root_recovery"}[] — its probability read
-by {uses "extraction_marginal"}[] — or the bad event of
+by {uses "extraction_marginal"}[] — or, by
+{uses "win_without_extraction_forces_bad"}[], the bad event, which by
+{uses "bad_bit_forces_shift_bit"}[] falls under the `3/p` of
 {uses "sz_adaptive_bound"}[], so the advantage is at most
 `Adv^{3-dl} + 3/p`.
 :::
@@ -629,7 +667,9 @@ discrete logarithm among at most 3 roots, recovered by
 The steps this decomposes into, in the order the stack delivers them: the
 reduction trace {uses "reduction_trace"}[] and the analysis experiment
 {uses "reduction_analysis_experiment"}[] every bound is read on, with its
-extraction marginal {uses "extraction_marginal"}[]; the per-step couplings
+extraction marginal {uses "extraction_marginal"}[], the deterministic core
+{uses "win_without_extraction_forces_bad"}[], and its bad-to-shift step
+{uses "bad_bit_forces_shift_bit"}[]; the per-step couplings
 {uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[],
 stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
