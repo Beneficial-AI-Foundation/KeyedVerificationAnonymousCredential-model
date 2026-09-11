@@ -17,7 +17,8 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
 - marginal uniformity of the affine embedded elements
   (`evalDist_{smul,affine}_gen_uniform`);
 - `relTriple_map_eq`, the deterministic-map coupling brick for the `sign` arm;
-- `redLogHonestInv`, the reduction ↔ honest state invariant, and its `maskedKey`;
+- `redLogInv` / `redLogHonestInv`, the log honesty and reduction ↔ honest state invariants, and
+  their `maskedKey`;
 - the **static** (view-independent) Schwartz–Zippel bound: the `C★` shift lemma,
   the cardinality core `card_filter_eval_eq_zero_le`, and its probability form
   `probEvent_eval_shift_eq_zero_le`.
@@ -157,7 +158,7 @@ lemma relTriple_map_eq {α β : Type} (a : OracleComp specR₁ α) (f : α → �
 
 end RelationalCoupling
 
-/-! ## B2 oracle coupling (reduction ↔ honest) -/
+/-! ## Oracle coupling (reduction ↔ honest) -/
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
 /-- The honest key at the challenge exponent: each `Key F 1` component read at the masked
@@ -173,14 +174,18 @@ lemma macScalar_maskedKey_eq (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
   simp only [macScalar, FixedMasks.keyCoeff, Fin.sum_univ_one]
   ring
 
+/-- Per-entry honesty of a reduction log: the embedded base `Uⱼ = auⱼ·g + buⱼ·X` and the tag
+relation at `maskedKey`. Second conjunct of `redLogHonestInv`; preserved by the simulated oracle
+(`reductionOracleImpl_preservesInv`). -/
+def redLogInv (x : F) (aM bM : FixedMasks F) (L : RedLog F G) : Prop :=
+  ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen) ∧
+           e.tag.2 = macScalar (maskedKey x aM bM) e.msg • e.tag.1
+
 /-- The reduction↔honest state invariant for the two-impl `simulateQ` coupling.
 
 First conjunct: both impls append one entry per `sign` query in order, so the honest log is the
-reduction log with the masks projected away. Second: per entry, the embedded base form
-`Uⱼ = auⱼ·g + buⱼ·X` (`Core`'s `embedMask_eq`) and `MicroCMZ.verify`'s own tag relation read at
-`maskedKey`. The tag relation is stated through `macScalar` rather than expanded by hand, so it
-stays in step with `Construction.lean` and is literally what the honest `sign` arm emits;
-`macScalar_maskedKey_eq` converts it to the `keyCoeff` form `embedTag_eq` consumes.
+reduction log with the masks projected away. Second: `redLogInv`, the per-entry honesty of the
+reduction log on its own.
 
 Stated here only: the per-oracle preservation lemmas for `sign`/`verify`/`help` and the
 run-level view equality that consume this invariant are deferred.
@@ -190,14 +195,12 @@ satisfies both conjuncts — so `U ≠ 0` is not recoverable from it. The deferr
 shear/Schwartz–Zippel step must carry `reductionMaskSample`'s `U ≠ 0` conditioning
 separately. -/
 def redLogHonestInv (x : F) (aM bM : FixedMasks F) (L : RedLog F G) (log : AGMLog F G 1) : Prop :=
-  log = L.map (fun e => (e.msg, e.tag)) ∧
-  ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen) ∧
-           e.tag.2 = macScalar (maskedKey x aM bM) e.msg • e.tag.1
+  log = L.map (fun e => (e.msg, e.tag)) ∧ redLogInv gen x aM bM L
 
-/-! ## Schwartz–Zippel bad-event bound (Piece C) -/
+/-! ## Schwartz–Zippel bad-event bound -/
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
-/-- **C★.** `ψ ≡ 0` ⇒ `ψ(x+1) = 0`, which by `eval_affineSubst` says `φ` vanishes at the real-log
+/-- `ψ ≡ 0` ⇒ `ψ(x+1) = 0`, which by `eval_affineSubst` says `φ` vanishes at the real-log
 point shifted by `b`. This is what lets Schwartz–Zippel hit `φ = verifPoly` *directly*, with no
 top-coefficient / homogeneous-component lemma. -/
 lemma eval_shift_eq_zero_of_affineSubst_eq_zero {q : ℕ} (a b : AGMPoly.Var q → F)
@@ -231,7 +234,7 @@ private lemma reindexMasks_bijective {q : ℕ} :
   (Equiv.arrowCongr (Fintype.equivFin (AGMPoly.Var q)).symm (Equiv.refl F)).bijective
 
 omit [SampleableType F] in
-/-- **C-SZ (cardinality form).** The combinatorial core of the `3/p` bad event: a nonzero
+/-- **SZ (cardinality form).** The combinatorial core of the `3/p` bad event: a nonzero
 degree-`≤ 3` `φ` over `Var q → F` vanishes at `card * |F| ≤ 3 * |F|^(#Var q)` points. Wrapper
 around `MvPolynomial.schwartz_zippel_totalDegree`, transported off `Fin (#Var q)` via
 `Fintype.equivFin` / `MvPolynomial.rename`.
@@ -308,7 +311,7 @@ private lemma card_filter_div_le {q : ℕ} (φ : AGMPoly.P F q) (hφ : φ ≠ 0)
     _ ≤ 3 * (Fintype.card F : ℝ≥0∞) ^ N * (Fintype.card F : ℝ≥0∞)⁻¹ := by gcongr
 
 omit [DecidableEq F] in
-/-- **C-SZ (probability form).** For a *fixed* offset `θ`, a uniform shift `b` makes the point
+/-- **SZ (probability form).** For a *fixed* offset `θ`, a uniform shift `b` makes the point
 `w v = θ v + b (e v)` uniform over `Var q → F` (reindexing by `e := Fintype.equivFin` and
 translating by `θ` are both bijections), so `card_filter_eval_eq_zero_le` bounds the vanishing
 probability by `3/|F|`.

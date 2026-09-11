@@ -11,6 +11,7 @@ import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.ATVariant
 
 open Verso.Genre Manual
 open Informal
@@ -29,18 +30,17 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Five files landed under `KVAC/Schemes/MicroCMZ/`:
+Seven files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
-
-One is in review:
-
-- `AGMReduction.lean` (with `AGMReduction/Core.lean`) — Section 5.3,
-  Lemma 5.4 reduction core — Track CMZ-M (PR #88).
+- `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
+  `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
+  lemmas, and the sign-arm coupling — Track CMZ-M.
+- `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 
 Three more are planned:
 
@@ -83,8 +83,17 @@ on top of the merged base MAC.
 The μCMZ base MAC over an abstract prime-order group
 ({uses "sampleable_group"}[]): key sampling, the scalar-side MAC
 `V = (x₀ + xᵣ + m·x₁)·U` with a nonvanishing tag base, deterministic
-verification, and the packaging as an algebraic MAC
-({uses "algebraic_mac"}[]) with its correctness proof.
+verification, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
+with its correctness proof, and the sampler of nonzero group elements
+`uniformNonzero` for `G×`.
+:::
+
+:::definition "mucmz_keygen_support" (lean := "KVAC.Schemes.MicroCMZ.mem_support_keygen, KVAC.Schemes.MicroCMZ.uniformUnits, KVAC.Schemes.MicroCMZ.mem_support_uniformUnits") (parent := "cmz_construction") (tags := "milestone")
+Support-level utilities on the base MAC of {uses "mucmz_base_mac"}[] that
+the scheme layers read: the support characterization of `keygen`, which
+determines the public parameters `(x₀·H, xᵣ·G₀, xᵢ·G₀)` from the secret
+key, and the sampler of nonzero scalars `uniformUnits` for the paper's
+`ℤ_p^×` draws, with its support lemma.
 :::
 
 :::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
@@ -242,6 +251,9 @@ reduction adversary runs the AGM adversary against
 challenge base to the generator by construction, so the reduction can
 never be run at a base where it is unsound.
 
+The four equations are bundled as one hypothesis in
+{bpref "embedded_vanishing_lem54"}[].
+
 Against genuine challenge powers the embedding is *honest* at the challenge
 exponent: `H`, `Xᵣ` and `X₁` are the masked scalars' generator multiples,
 `X₀` is `x₀·H`, and the masked key scalar is the honest one of
@@ -309,7 +321,7 @@ coordinates are the embedded-mask identity read off the generator, and the
 three fixed-secret coordinates hold by definition.
 :::
 
-:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
+:::definition "reduction_coupling_bricks" (lean := "KVAC.Schemes.MicroCMZ.RedLog.aMask_def, KVAC.Schemes.MicroCMZ.RedLog.bMask_def, KVAC.Schemes.MicroCMZ.RedLog.msg_def, KVAC.Schemes.MicroCMZ.RedLog.tags_def, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst_def, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr_def, KVAC.Schemes.MicroCMZ.evalDist_smul_gen_uniform, KVAC.Schemes.MicroCMZ.evalDist_affine_gen_uniform, KVAC.Schemes.MicroCMZ.relTriple_map_eq, KVAC.Schemes.MicroCMZ.maskedKey, KVAC.Schemes.MicroCMZ.macScalar_maskedKey_eq, KVAC.Schemes.MicroCMZ.redLogInv, KVAC.Schemes.MicroCMZ.redLogHonestInv") (parent := "cmz_amac") (tags := "milestone")
 The supporting lemmas from which the proof that
 {uses "simulated_sign_oracle"}[] is indistinguishable from the honest
 oracle of {uses "agm_model"}[] will be assembled.
@@ -403,9 +415,9 @@ shift space gives the probability form. No top-coefficient or
 homogeneous-component lemma is needed.
 :::
 
-Unanchored stubs for the rest of the Lemma 5.4 chain. Each is registered
-now so the summary's denominator is honest, and each is anchored by the pull
-request of the stack that delivers it.
+The rest of the Lemma 5.4 chain. The nodes without a `lean :=` anchor are
+stubs, registered now so the summary's denominator is honest; each is
+anchored by the pull request of the stack that delivers it.
 
 :::theorem "verify_help_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The `verify` and `help` arms of {uses "simulated_sign_oracle"}[] answer as
@@ -444,23 +456,78 @@ identity, which the verification polynomial's `α · keyPoly − β` shape reads
 off against the key polynomial's evaluation.
 :::
 
-:::theorem "embedded_consistency_bricks" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-{uses "consistency_case_lem54"}[] restated against the embedding bundle of
-{uses "challenge_embedding"}[] instead of the raw equations, at an abstract
-arity where the transcript's index casts are discharged, together with the
-matching represented-value bridge giving each represented value as the
-affinely substituted evaluation of its own polynomial — the form
-{uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
-couplings take their hypotheses in.
+:::theorem "embedded_vanishing_lem54" (lean := "KVAC.Schemes.MicroCMZ.RedEmbedding, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt_of_redEmbedding, KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+{uses "consistency_case_lem54"}[] restated against the embedding bundle: the
+four equations of {uses "challenge_embedding"}[] as one `RedEmbedding`
+hypothesis, its `evalAt` rewrite into the explicit embedded form, and the
+vanishing lemma at an abstract arity `q` tied to the transcript by
+`tags.length = q`. It takes the transcript facts of
+{uses "transcript_index_transport"}[] as hypotheses, and the key in the `macScalar`
+form of {uses "masked_key_normal_form_bridge"}[]. The first half of
+{bpref "embedded_consistency_bricks"}[].
+:::
+:::proof "embedded_vanishing_lem54"
+Open the embedding, convert the `macScalar` key to the spelled-out one with
+the `macScalar_maskedKey_expand` of {uses "masked_key_normal_form_bridge"}[],
+and apply the Core lemma of {uses "consistency_case_lem54"}[] at the cast
+index.
 :::
 
-:::theorem "transcript_invariants" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The properties of a whole reduction transcript that the bad-event analysis
-reads: every logged record carries the embedded base shape and the honest
-tag relation of {uses "reduction_coupling_bricks"}[], and the represented
-forgery is bounded in degree by {uses "agm_verification_polynomial"}[].
-The per-query invariant of {uses "sign_oracle_coupling"}[] iterated over a
-run.
+:::theorem "embedded_consistency_bricks" (lean := "KVAC.Schemes.MicroCMZ.represented_value_eq_affineSubst_eval") (parent := "cmz_amac") (tags := "milestone")
+The represented-value bridge built on the embedding bundle of
+{uses "embedded_vanishing_lem54"}[]: each represented value as the affinely
+substituted evaluation of its own polynomial, the form
+{uses "partial_evaluation_psi"}[] reads and the `verify`/`help` step
+couplings take their hypotheses in. The abstract arity is tied to the
+transcript by its length, so the index casts collapse.
+:::
+:::proof "embedded_consistency_bricks"
+Substituting the arity away collapses the `Fin.cast`s. The
+`macScalar_maskedKey_expand` of {uses "masked_key_normal_form_bridge"}[]
+converts the transcript facts of {uses "transcript_index_transport"}[],
+which enter as hypotheses, into the key form the bridge takes; the `evalAt` rewrite of {uses "embedded_vanishing_lem54"}[] puts the
+represented value into the explicit embedded form; {uses "agm_eval_bridge"}[]
+then evaluates it, the `U`-form transcript fact turning the game point into
+the masked point `v ↦ a v + χ·b v`, and the evaluation law of
+{uses "partial_evaluation_psi"}[] restates that multivariate evaluation as the
+univariate evaluation of `affineSubst` at `χ`.
+:::
+
+:::theorem "transcript_invariants" (lean := "KVAC.Schemes.MicroCMZ.reductionOracleImpl_preservesInv, KVAC.Schemes.MicroCMZ.redLog_honest, KVAC.Schemes.MicroCMZ.redLog_U_form") (parent := "cmz_amac") (tags := "milestone")
+The per-entry half of the state invariant of {uses "sign_oracle_coupling"}[],
+established for a whole run: at any log reachable from
+{uses "simulated_sign_oracle"}[], every logged tag is honest and every logged
+tag base has the embedded `U`-form `Uⱼ = auⱼ·g + buⱼ·X`. Both are conjuncts of
+one predicate preserved by the simulated oracle, stated in the same key-scalar
+form as {uses "reduction_coupling_bricks"}[]'s state invariant, so a caller
+holding the state invariant and a caller holding only support membership
+produce interchangeable facts; the honest-log correspondence conjunct is not
+carried here. The represented forgery is bounded in degree by
+{uses "agm_verification_polynomial"}[].
+:::
+
+:::proof "transcript_invariants"
+An induction over the simulated oracle's arms, of which only `sign` appends
+to the log; that arm appends an honest entry by the `embedTag_eq` of
+{uses "simulated_sign_oracle"}[], retyped through the `macScalar_maskedKey_eq`
+of {uses "reduction_coupling_bricks"}[], while `verify` and `help` leave the
+log unchanged. Restating these facts by index is
+{bpref "transcript_index_transport"}[].
+:::
+
+:::theorem "transcript_index_transport" (lean := "KVAC.Schemes.MicroCMZ.RedLog.length_tags, KVAC.Schemes.MicroCMZ.redLog_transcript_facts") (parent := "cmz_amac") (tags := "milestone")
+The facts of {uses "transcript_invariants"}[] transported from the log's
+entries onto the transcript index: for every position `j`, the `j`-th logged
+tag is honest and has the embedded `U`-form, stated in the tag-list, message
+and mask normal forms of {uses "reduction_coupling_bricks"}[]. The evaluation
+bridge of {bpref "agm_eval_bridge"}[] is reached from here by converting the
+index type and the key spelling at the use site.
+:::
+
+:::proof "transcript_index_transport"
+The `j`-th tag of the mapped list is the `j`-th entry's tag, and `macScalar` at
+arity 1 reads its message only at `0`, so the entry's own message and the
+transcript-indexed one agree.
 :::
 
 :::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
@@ -527,9 +594,10 @@ per-step couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[], stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
 {uses "consistency_case_lem54"}[], its embedded restatements
-{uses "embedded_consistency_bricks"}[] and
+{uses "embedded_vanishing_lem54"}[] and {uses "embedded_consistency_bricks"}[] and
 {uses "verification_polynomial_consistency"}[], and the
-{uses "transcript_invariants"}[] they read; the run-level view equality
+{uses "transcript_invariants"}[] they read, restated by index in
+{uses "transcript_index_transport"}[]; the run-level view equality
 {uses "run_level_coupling"}[]; the bad-event bound
 {uses "sz_adaptive_bound"}[] over the static core
 {uses "sz_static_core"}[]; and the union bound
@@ -639,12 +707,48 @@ candidate instance `Z` checked through the auxiliary Help oracle.
 
 *Theorem 5.3.* The anonymous-token variant `μCMZ_AT` is anonymous and
 one-more unforgeable, the latter in the algebraic group model under DL
-and 2-DL. `μCMZ_AT` is the variant of μCMZ with the boxed issuance-proof
-part of Figure 9 removed, keeping all `n` attributes and yielding the
+and 2-DL. `μCMZ_AT` is the variant of μCMZ with the issuance-proof part
+of Figure 9 removed, keeping all `n` attributes and yielding the
 anonymous-token variant of the scheme.
 
-*TODO (Track CMZ-OMUF).* State and prove Theorem 5.3 against the OMUF
-game from the *Preliminaries* chapter.
+The scheme itself is merged as the core with *both* issuance proofs
+removed — the printed figure boxes only the user proof `π_iu`, but the
+Theorem 5.11 proof analyzes the scheme without the server proof `π_is`
+as well; see the deviation note in the node below. The unforgeability
+analysis on top of it is open.
+
+*TODO (Track CMZ-OMUF).* Build the AGM-instrumented OMUF game over the
+core scheme, then state and prove Theorem 5.11 and the Theorem 5.3
+clause against the OMUF game from the *Preliminaries* chapter.
+
+:::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
+The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
+both issuance proofs removed, instantiating the anonymous-token syntax
+{uses "anonymous_tokens"}[] and sharing setup, key generation, and
+verification with the base MAC {uses "mucmz_base_mac"}[] definitionally,
+and reading the key generation support of {uses "mucmz_keygen_support"}[]
+in its correctness proof.
+Blind issuance is the Pedersen commitment `C' = Σᵢ mᵢ·Xᵢ + s·G₀`, the
+unconditional server response `(U', V') = (u·G₀, x₀·U' + u·(C' + Xᵣ))`,
+and the checked unblinding `σ = (r·U', r·(V' − s·U'))`; correctness is
+proved support-based over a nonzero generator. Both issuance nonces are
+drawn from the nonzero scalars where the printed figure samples
+`ℤ_p` — `u` conditioned for probability-one correctness (the base MAC's
+tag-base convention), `r` corrected per §5.1's `r ≠ 0` rerandomization
+requirement — and the bundle certifies syntax and correctness only.
+Deviation from the printed figure's boxes: O24 marks only the user proof
+`π_iu` as removable, but the Theorem 5.11 proof answers its Sign queries
+with the bare `(U', V')` and carries no zero-knowledge term, so the
+scheme it analyzes drops the server proof `π_is` too — this core removes
+both and says so in its name. The cost of dropping `π_is` is the
+anonymity clause of Theorem 5.3: the anonymity simulator extracts from
+`π_is` and the bound carries its knowledge-soundness term, so that clause
+is stated only for the `π_is`-carrying variant, while the core is the
+scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant
+follows with a zero-knowledge lifting lemma once the upstream erratum is
+settled, and the printed Theorem 5.3 node {bpref "mucmz_at_omuf"}[] stays
+a paper-element stub meanwhile.
+:::
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
@@ -661,7 +765,11 @@ Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::theorem "mucmz_at_agm_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11") (effort := "large") (priority := "low")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
-attributes.
+attributes. To be stated over the merged core scheme
+{uses "mucmz_at_core"}[]; the core's nonzero issuance nonces condition
+the paper's `ℤ_p` samplers away from their zero cases, so the printed
+constants transfer only up to per-query `1/p` differences — the Track
+CMZ-OMUF constant audit settles the stated bound.
 :::
 
 :::proof "mucmz_at_agm_omuf"
