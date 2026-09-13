@@ -163,8 +163,9 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
      `AGM_UF_CMVAGame` (the masks make `H, X₀, Xᵣ, X₁, Uⱼ` uniform; Sign matches
      `mac`);
    - *bad event*: `ψ = 0` despite `verifPoly ≠ 0` only with probability `≤ 3/p`
-     (Schwartz–Zippel over the masks: `ψ` restricts a degree-≤3 polynomial to a
-     random line, so `Pr[ψ ≡ 0] ≤ deg ψ / p ≤ 3/p`). -/
+     (the two-step bound of *The bad-event bound* above: `ψ ≡ 0` forces `φ` to
+     vanish at the shifted real-log point `a + (x+1)·b`, and Schwartz–Zippel on
+     `φ` over the shear `(a, b) ↦ (a + x·b, b)` gives `3/p`). -/
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZ3DLReductionAdv gen A + 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by

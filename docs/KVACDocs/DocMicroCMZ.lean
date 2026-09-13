@@ -545,7 +545,7 @@ keygen reparametrization that trades the honest key for the masks of
 The Schwartz–Zippel bad event at `3/p` for the adversary's *own*
 polynomial, stated as the `3/p` bound on the shift bit of
 {uses "reduction_analysis_experiment"}[]. Upgrades the fixed-polynomial
-statement of {uses "sz_static_core"}[] to the adaptive one by decoupling the
+statement of {bpref "sz_static_core"}[] to the adaptive one by decoupling the
 offset from the shift — O24's "the `b`'s are uniformly random and perfectly
 hidden by the respective `a`'s" — surviving the nonzero-`U` conditioning of
 {uses "sign_masks"}[].
@@ -635,6 +635,12 @@ by {uses "extraction_marginal"}[] — or, by
 `Adv^{3-dl} + 3/p`.
 :::
 
+:::proof "lem54_bound_assembly"
+Read on the AGM game through the run-level view equality
+{uses "run_level_coupling"}[], which carries its win onto the experiment's
+`winBit`; there the union bound of the body splits the win as stated.
+:::
+
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
 *O24 Theorem 5.1.* In the algebraic group model, μCMZ is an
 `n`-attribute algebraic MAC ({uses "algebraic_mac"}[]), UF-CMVA secure in the
@@ -648,7 +654,7 @@ Factors through the single-attribute case {uses "single_attribute_mac"}[], lifte
 {uses "forgery_case_gap_dl"}[] and {uses "forgery_case_mac"}[].
 :::
 
-:::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4") (effort := "large") (priority := "high")
+:::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
 *O24 Lemma 5.4.* Base case of {bpref "mucmz_mac_security"}[]: in the algebraic group
 model, single-attribute μCMZ is an algebraic MAC over `ℤ_p`, UF-CMVA
 secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]).
