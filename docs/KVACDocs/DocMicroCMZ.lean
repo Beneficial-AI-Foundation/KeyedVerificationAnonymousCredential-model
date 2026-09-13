@@ -555,7 +555,7 @@ hidden by the respective `a`'s" — surviving the nonzero-`U` conditioning of
 The shear `(a, b) ↦ (a + x·b, b)` is a uniform-preserving bijection for each
 challenge, under which the adversary's view and hence its polynomial depend on
 the sheared masks only; the shifted evaluation point is then uniform and
-independent of the polynomial, and the static core finishes.
+independent of the polynomial, and {uses "sz_static_core"}[] finishes.
 :::
 
 :::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi, KVAC.Schemes.MicroCMZ.RedTrace.shiftPoint") (parent := "cmz_amac") (tags := "milestone")
@@ -572,7 +572,8 @@ masked univariate; the analysis experiment keeps the whole record.
 The run of {uses "reduction_trace"}[] at the genuine challenge powers, with
 the challenge exponent in scope and the record kept, returning four bits. The win
 bit applies the real μCMZ win predicate to the key the masks embed at the
-challenge exponent; the extraction bit is the reduction's own output test; the
+challenge exponent; the extraction bit is the reduction's own output test
+(the root search of {uses "dlog_root_recovery"}[]); the
 bad bit says the forgery's verification polynomial is nonzero but its partial
 evaluation {uses "partial_evaluation_psi"}[] vanishes; the shift bit says it is
 nonzero but vanishes at the trace's shifted real-log point, the form
@@ -592,17 +593,19 @@ challenge powers of {uses "challenge_embedding"}[]; the monad laws identify the
 two `do` blocks once the powers are aligned.
 :::
 
-:::theorem "win_without_extraction_forces_bad" (lean := "KVAC.Schemes.MicroCMZ.redFull_win_not_rec_imp_bad") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "win_without_extraction_forces_bad" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_of_winBit_of_not_recBit") (parent := "cmz_amac") (tags := "milestone")
 On the support of {uses "reduction_analysis_experiment"}[], a win the
 reduction fails to extract from forces the bad bit: the forgery's verification
 polynomial is nonzero (a winning forgery is non-degenerate) while its partial
-evaluation vanishes (otherwise {uses "dlog_root_recovery"}[] would have
+evaluation vanishes (otherwise {bpref "dlog_root_recovery"}[] would have
 recovered the challenge exponent).
 :::
 
 :::proof "win_without_extraction_forces_bad"
-Compose the honest-log invariant of {uses "reduction_coupling_bricks"}[] with
-the key-smul evaluation identity of {uses "consistency_case_lem54"}[] to get
+Compose the log-honesty and `U`-form invariants of
+{uses "transcript_invariants"}[], transported by
+{uses "transcript_index_transport"}[], with the key-smul evaluation identity of
+{uses "consistency_case_lem54"}[] to get
 `eval (a + x·b) φ = 0`, then the two contrapositives: a non-identity forgery
 gives `φ ≠ 0` through {uses "agm_eval_bridge"}[], and failed root recovery
 gives `ψ = 0` through {uses "dlog_root_recovery"}[].
@@ -610,7 +613,7 @@ gives `ψ = 0` through {uses "dlog_root_recovery"}[].
 
 :::theorem "bad_bit_forces_shift_bit" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_le_szBit") (parent := "cmz_amac") (tags := "milestone")
 In {uses "reduction_analysis_experiment"}[], the bad bit implies the shift
-bit: a polynomial whose partial evaluation {uses "partial_evaluation_psi"}[]
+bit: a polynomial whose partial evaluation {bpref "partial_evaluation_psi"}[]
 vanishes also vanishes at the masks shifted by one challenge step, so the bad
 event's probability is at most the shift event's.
 :::

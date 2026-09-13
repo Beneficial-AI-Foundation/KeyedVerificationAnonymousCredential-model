@@ -26,17 +26,19 @@ to be added) reviews against a visible target. The proof arrives incrementally:
    kernel-verified with no remaining `sorry`.
 
 Until then this subtree's `sorry`s are the theorem below and the unproven
-sub-lemmas listed above; the theorem's blueprint node (`single_attribute_mac`)
+sub-lemmas stated below; the theorem's blueprint node (`single_attribute_mac`)
 shows "contains sorry" until proven.
 
 **Two departures from O24's printed bound** (Lemma 5.4, p. 36, states
 `Adv^{3-dl} + Adv^{dl} + 1/p`):
 
-- The bad-event bound is `deg ψ / p ≤ 3/p` (Schwartz–Zippel on the degree-≤3
-  `ψ`), not the `1/p` O24 prints (`docs/DESIGN_ALTERNATIVES.md`). With `d` the
-  total degree of `φ`, the `χ^d` coefficient of `ψ` is the degree-`d`
-  homogeneous part of `φ` at the `b` masks, so the bound is `d/p ≤ 3/p`, with
-  equality only when `φ` has total degree 3.
+- The bad-event bound is `3/p`, not the `1/p` O24 prints
+  (`docs/DESIGN_ALTERNATIVES.md`). `ψ ≡ 0` forces `φ` to vanish at the shifted
+  real-log point `a + (x+1)·b` (`eval_shift_eq_zero_of_affineSubst_eq_zero`),
+  whose `b`-part is uniform and independent of `φ` under the shear
+  `(a, b) ↦ (a + x·b, b)`; Schwartz–Zippel on `φ`, of total degree `≤ 3`
+  (`AGMPoly.totalDegree_verifPoly_le`), then gives `3/p` — see
+  *The bad-event bound* below.
 - The `Adv^dl` summand is dropped, on the proof of Lemma 5.4 itself (pp. 36–38):
   it builds one reduction, to 3-DL, and no DL reduction, so the summand is left
   unjustified — in O24 it survives only as nonnegative slack
@@ -74,31 +76,41 @@ lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
 
 /-- **Win without extraction forces the bad event (deterministic core).** On
 `redFull`'s support, `winBit = true` (the real `verify`/consistency/freshness on
-`sk = maskedKey x aM bM`) together with `recBit = false` (`recoverDlog gen X ψ ≠ x`)
+`sk = maskedKey x t.aM t.bM`) together with `recBit ≠ true` (`recoverDlog gen X ψ ≠ x`)
 forces the Schwartz–Zippel bad event `badBit = true`, i.e. `φ ≠ 0 ∧ ψ = 0` for
-`φ := verifPoly …` and `ψ := L.maskedSubst aM bM φ`. The proof composes `redLogHonestInv`
-→ `verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine`
-(`eval (a + x·b) φ = 0`) → `agm_n1_identity_Ustar_eq_zero` contrapositive (`φ ≠ 0`, via
-`σ.1 ≠ 0`) + `recoverDlog_verifPoly_eq` contrapositive (`ψ = 0`, via `recoverDlog ≠ x`). -/
-lemma redFull_win_not_rec_imp_bad (A : AGMUFAdversary F G 1) (t : RedBits)
+`φ := t.verifPoly` and `ψ := t.psi = t.log.maskedSubst t.aM t.bM φ`. The proof destructures
+`redTrace`'s support once (`mem_support_bind_iff`), reads the logged tags through
+`redLog_honest` + `redLog_U_form` via `redLog_transcript_facts`, then composes
+`verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` (`eval (a + x·b) φ = 0`)
+with the two contrapositives: `agm_n1_identity_Ustar_eq_zero` (`φ ≠ 0`, via `σ.1 ≠ 0`) and
+`recoverDlog_verifPoly_eq` (`ψ = 0`, via `recoverDlog ≠ x`). -/
+lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : RedBits)
     (ht : t ∈ support (redFull gen A)) (hw : t.winBit = true) (hr : t.recBit ≠ true) :
     t.badBit = true := by
   sorry
 
-/-- **Shift implication (deterministic).** `badBit ⟹ szBit`: if `ψ = affineSubst a b φ = 0` then
-`φ` vanishes at the shifted point `w v = a v + (x+1)·b v`
-(`eval_shift_eq_zero_of_affineSubst_eq_zero`), so the Schwartz–Zippel shift bit fires. Hence
+/-! ## The bad-event bound
+
+`Pr[badBit] = Pr[φ ≠ 0 ∧ ψ = 0]` is bounded by `3/p` in two steps on one run of `redFull`.
+
+1. **Shift (deterministic).** `ψ = t.log.maskedSubst t.aM t.bM φ = 0` forces `φ` to vanish at
+   `t.shiftPoint x = a + (x+1)·b` (`eval_shift_eq_zero_of_affineSubst_eq_zero`), so
+   `badBit ⟹ szBit`.
+2. **Schwartz–Zippel over the shear (the keystone).** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
+   a uniform-preserving bijection on `F²` per variable, for the four fixed mask pairs and the
+   per-query `(auⱼ, buⱼ)` — A's view and hence `φ` depend only on the sheared masks while the
+   `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform over
+   `Var t.log.length → F` independent of `φ`, and `probEvent_eval_shift_eq_zero_le`
+   (total degree `≤ 3`) gives `Pr[szBit] ≤ 3/p`. -/
+
+/-- **Shift implication.** `badBit ⟹ szBit` pointwise on the support (step 1 above), hence
 `Pr[badBit] ≤ Pr[szBit]`. -/
 lemma redFull_badBit_le_szBit (A : AGMUFAdversary F G 1) :
     Pr[(fun t : RedBits => t.badBit = true) | redFull gen A]
       ≤ Pr[(fun t : RedBits => t.szBit = true) | redFull gen A] := by
   sorry
 
-/-- **Schwartz–Zippel keystone (distribution layer).** The shift event `szBit` fires with
-probability at most `3/p`. The proof composes the shear coupling — the change of variables
-`(a, b) ↦ (a + x·b, b)` exhibiting the evaluation point as uniform and independent of the
-polynomial — with the analytic Schwartz–Zippel finish; the total-degree side-condition is
-`≤ 3`. -/
+/-- **Schwartz–Zippel keystone.** `Pr[szBit] ≤ 3/p` by the shear coupling (step 2 above). -/
 lemma redFull_szBit_le (A : AGMUFAdversary F G 1) :
     Pr[(fun t : RedBits => t.szBit = true) | redFull gen A]
       ≤ 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
