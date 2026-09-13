@@ -25,7 +25,8 @@ sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`:
 - `redFull_recBit_eq` — `redFull`'s `recBit` marginal *is* the 3-DL
   advantage: both experiments are `redTrace` at the challenge powers;
 - `redFull_badBit_of_winBit_of_not_recBit` — win ∧ ¬extract forces the
-  Schwartz–Zippel bad event;
+  Schwartz–Zippel bad event, reading the trace through `redTrace_support_facts`
+  (below);
 - `redFull_badBit_le_szBit` — the bad event implies the shift
   event (via `Coupling`'s shift lemma);
 - `redFull_szBit_le` — the shift event has probability ≤ `3/p`
@@ -106,8 +107,7 @@ lemma redTrace_support_facts {x : F} (A : AGMUFAdversary F G 1) (t : RedTrace F 
       ∀ e ∈ t.log, e.tag.1 = e.au • gen + e.bu • (x • gen) := by
   rw [redTrace] at ht
   simp only [mem_support_bind_iff, mem_support_pure_iff] at ht
-  obtain ⟨aEta, -, bEta, -, a0, -, b0, -, aXr, -, bXr, -, aX1, -, bX1, -, out, hout, ht⟩ := ht
-  obtain ⟨⟨mStar, σStar, ρU, ρV⟩, L⟩ := out
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hout, ht⟩ := ht
   subst ht
   exact ⟨⟨rfl, by module, by module, by module⟩,
     redLog_honest gen x _ _ _ _ _ hout, redLog_U_form gen x _ _ _ _ _ hout⟩
@@ -149,12 +149,11 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
     rw [List.mem_map]
     refine ⟨tr.log.get j, List.get_mem tr.log j, ?_⟩
     funext i
-    rw [Subsingleton.elim i 0]
+    rw [Fin.eq_zero i]
     exact hj.symm
   refine ⟨fun hφ0 => hσ1 (Ustar_eq_zero_of_verifPoly_zero gen tr.ρU tr.ρV hemb tr.log.msg
-    (tr.mStar 0) tr.σStar tr.log.tags tr.log.length_tags htag hfresh' hconsU hφ0), ?_⟩
-  by_contra hψ
-  exact hr (recoverDlog_verifPoly_eq gen heval0 hψ)
+    (tr.mStar 0) tr.σStar.1 tr.log.tags tr.log.length_tags htag hfresh' hconsU hφ0),
+    of_not_not (mt (recoverDlog_verifPoly_eq gen heval0) hr)⟩
 
 /-! ### The bad-event bound
 

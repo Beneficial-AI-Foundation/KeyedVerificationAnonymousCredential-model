@@ -22,6 +22,9 @@ abstract arity the remaining arms consume:
   `redLog_transcript_facts` carries them onto the transcript index;
 - `verifPoly_eval_embed_eq_zero` — the lemma at abstract arity that restates the
   vanishing fact from a `RedEmbedding` hypothesis rather than the raw equations;
+- `Ustar_eq_zero_of_verifPoly_zero` — the identity-branch companion at abstract arity:
+  an identically vanishing `verifPoly` on a fresh forgery forces `U* = 0` (`Core`'s
+  `agm_n1_identity_Ustar_eq_zero` behind a `RedEmbedding` hypothesis);
 - `represented_value_eq_affineSubst_eval` — its companion at abstract arity,
   restating each represented value as the `affineSubst` evaluation of its own
   polynomial.
@@ -251,8 +254,8 @@ instantiate `q := L.length` and restate the verification polynomial vanishing at
 embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping.
 
 The verification relation enters as the single equation `hkey` between the two represented
-values. The extraction assembly (a later PR) rebuilds it from the win predicate's three
-equations `ρU.evalAt … = U*`, `ρV.evalAt … = V*`, `V* = key • U*`. -/
+values. `redFull_badBit_of_winBit_of_not_recBit` (`SecurityN1.lean`) rebuilds it from the win
+predicate's three equations `ρU.evalAt … = U*`, `ρV.evalAt … = V*`, `V* = key • U*`. -/
 lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
     {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
@@ -281,24 +284,26 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
 /-- **Identity branch, arity-clean.** The `subst`-packaged companion of
 `agm_n1_identity_Ustar_eq_zero` (same role as `verifPoly_eval_embed_eq_zero` for the
 consistency core): with the arity `q` a variable tied to the transcript by `hq : tags.length = q`,
-a fresh forgery whose verification polynomial vanishes identically forces `U* = 0`. -/
+a fresh forgery whose verification polynomial vanishes identically forces `U* = 0`, given
+the log-honesty facts `htag` at the masked key and the consistency `hU` that `ρU` represents
+`U*`. -/
 lemma Ustar_eq_zero_of_verifPoly_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
     {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
     (msgs : Fin q → F) (mStar0 : F)
-    (σStar : G × G) (tags : List (G × G)) (hq : tags.length = q)
+    (UStar : G) (tags : List (G × G)) (hq : tags.length = q)
     (htag : ∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).2
       = macScalar (maskedKey x aM bM) (fun _ => msgs j)
         • (tags.get (Fin.cast hq.symm j)).1)
     (hfresh : ∀ j, mStar0 ≠ msgs j)
-    (hU : ρU.evalAt gen ep tags = σStar.1)
+    (hU : ρU.evalAt gen ep tags = UStar)
     (hverif : AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q) = 0) :
-    σStar.1 = 0 := by
+    UStar = 0 := by
   rw [AGMRepr.evalAt_of_redEmbedding gen hemb] at hU
   subst hq
   simp only [macScalar_maskedKey_expand] at htag
   exact agm_n1_identity_Ustar_eq_zero gen ρU ρV (aM.eta • gen + bM.eta • (x • gen))
-    (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) σStar.1 mStar0 tags msgs
+    (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) UStar mStar0 tags msgs
     htag hfresh hU hverif
 
 /-- **Represented value as a univariate evaluation (oracle-coupling lemma).** Under the 3-DL

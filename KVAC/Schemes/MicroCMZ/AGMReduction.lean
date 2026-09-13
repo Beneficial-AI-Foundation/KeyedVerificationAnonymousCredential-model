@@ -24,10 +24,10 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   Schwartz–Zippel core;
 - `SignCoupling` — the deterministic core of the coupling: the sign-step
   coupling triple (Eq. 14) and the transcript log invariants it establishes,
-  plus the two lemmas at abstract arity derived from the embedding — the
+  plus the lemmas at abstract arity derived from the embedding — the
   consistency⇒vanishing step (Eq. 12 evaluated in the relative discrete
-  logarithms) and the represented-value bridge the `verify`/`help` arms
-  consume;
+  logarithms), its identity-branch companion `Ustar_eq_zero_of_verifPoly_zero`,
+  and the represented-value bridge the `verify`/`help` arms consume;
 - `RedFull` — the analysis experiment `redFull`: the reduction's run at the
   genuine challenge powers, returning the record `RedBits` (win, extraction,
   Schwartz–Zippel bad and shift bits);
