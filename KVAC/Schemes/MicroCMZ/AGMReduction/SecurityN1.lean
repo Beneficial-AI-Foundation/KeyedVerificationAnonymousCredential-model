@@ -33,11 +33,8 @@ shows "contains sorry" until proven.
 `Adv^{3-dl} + Adv^{dl} + 1/p`):
 
 - The bad-event bound is `3/p`, not the `1/p` O24 prints
-  (`docs/DESIGN_ALTERNATIVES.md`). `ψ ≡ 0` forces `φ` to vanish at the shifted
-  real-log point `a + (x+1)·b` (`eval_shift_eq_zero_of_affineSubst_eq_zero`),
-  whose `b`-part is uniform and independent of `φ` under the shear
-  `(a, b) ↦ (a + x·b, b)`; Schwartz–Zippel on `φ`, of total degree `≤ 3`
-  (`AGMPoly.totalDegree_verifPoly_le`), then gives `3/p` — see
+  (`docs/DESIGN_ALTERNATIVES.md`): Schwartz–Zippel hits the verification
+  polynomial `φ` itself, of total degree `≤ 3`, at a shifted real-log point — see
   *The bad-event bound* below.
 - The `Adv^dl` summand is dropped, on the proof of Lemma 5.4 itself (pp. 36–38):
   it builds one reduction, to 3-DL, and no DL reduction, so the summand is left
@@ -89,7 +86,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
     t.badBit = true := by
   sorry
 
-/-! ## The bad-event bound
+/-! ### The bad-event bound
 
 `Pr[badBit] = Pr[φ ≠ 0 ∧ ψ = 0]` is bounded by `3/p` in two steps on one run of `redFull`.
 
@@ -121,8 +118,9 @@ lemma redFull_szBit_le (A : AGMUFAdversary F G 1) :
 /--
 **O24 Lemma 5.4, `n = 1`** (statement). Bounds the AGM advantage by the
 3-DL term plus `3/p`, with the `dlogAdv` term dropped (slack for `n = 1`).
-(O24 prints `1/p`; the bad event is a degree-≤3 Schwartz–Zippel restriction, so
-the provable constant is `3/p` — see the module docstring.)
+(O24 prints `1/p`; the bad event is Schwartz–Zippel on the degree-≤3
+verification polynomial, so the provable constant is `3/p` — see the module
+docstring.)
 
 **The embedding (O24 Eqs. 13–14), made precise.** Each secret exponent is a
 *linear* form in the 3-DL challenge exponent `x`: the reduction samples masks
@@ -146,26 +144,19 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
   since a submitted `U` may use `X₀` or `Vⱼ`, both degree-2 in `x`, times the
   degree-1 `keyⱼ` — hence `exponentEval … X''`, not just `X, X'`.)
 
-**Proof outline:**
+**Proof outline** (the assembly over the sub-lemmas above, all read on one run of
+`redFull`):
 
-1. rewrite `AGM_UF_CMVAAdv gen A secParam = Pr[win]` and split the win event on
-   whether the forgery's verification polynomial is identically zero;
-2. the identity branch is `0` by `agm_n1_identity_Ustar_eq_zero` (`U* = 0`
-   contradicts `verify`'s `σ.1 ≠ 0` check) — needs the log-honesty
-   invariant that every logged tag is honest;
-3. the non-identity branch is `≤ qdlogAdv 3 … + 3/p`. The reduction `B₃` runs `A`
-   under the simulated oracle (no `sk`; masks accumulated in the `StateT` log),
-   forms `ψ = affineSubst a b (verifPoly …)`, and returns `recoverDlog g X ψ`.
-   - *correctness when `ψ ≠ 0`*: `recoverDlog_verifPoly_eq` already closes this —
-     verification gives `MvPolynomial.eval (fun v => a v + x·b v) (verifPoly) = 0`
-     (via the `agmRepr_eval_eq_eval_toPoly` bridge), so `B₃` outputs `x`;
-   - *distribution equivalence*: the simulated game is identically distributed to
-     `AGM_UF_CMVAGame` (the masks make `H, X₀, Xᵣ, X₁, Uⱼ` uniform; Sign matches
-     `mac`);
-   - *bad event*: `ψ = 0` despite `verifPoly ≠ 0` only with probability `≤ 3/p`
-     (the two-step bound of *The bad-event bound* above: `ψ ≡ 0` forces `φ` to
-     vanish at the shifted real-log point `a + (x+1)·b`, and Schwartz–Zippel on
-     `φ` over the shear `(a, b) ↦ (a + x·b, b)` gives `3/p`). -/
+1. *game bridge*: `AGM_UF_CMVAAdv gen A secParam = Pr[winBit | redFull gen A]` — the
+   real game and the reduction's run are identically distributed (the masks make
+   `H, X₀, Xᵣ, X₁, Uⱼ` uniform and Sign matches `mac`; blueprint `run_level_coupling`);
+2. *split on extraction*: `Pr[winBit] ≤ Pr[recBit] + Pr[winBit ∧ ¬recBit]`;
+3. *extraction*: `Pr[recBit] = microCMZ3DLReductionAdv gen A` (`redFull_recBit_eq`);
+4. *bad event*: `winBit ∧ ¬recBit ⟹ badBit` (`redFull_badBit_of_winBit_of_not_recBit`;
+   the identity branch `φ = 0` is absorbed there, since `U* = 0` contradicts `verify`'s
+   `σ.1 ≠ 0`), `Pr[badBit] ≤ Pr[szBit]` (`redFull_badBit_le_szBit`), and
+   `Pr[szBit] ≤ 3/p` (`redFull_szBit_le`) — *The bad-event bound* above.
+-/
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZ3DLReductionAdv gen A + 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by

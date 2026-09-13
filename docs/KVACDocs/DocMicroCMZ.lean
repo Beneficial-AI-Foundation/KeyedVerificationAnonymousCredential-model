@@ -548,13 +548,14 @@ polynomial, stated as the `3/p` bound on the shift bit of
 statement of {bpref "sz_static_core"}[] to the adaptive one by decoupling the
 offset from the shift — O24's "the `b`'s are uniformly random and perfectly
 hidden by the respective `a`'s" — surviving the nonzero-`U` conditioning of
-{uses "sign_masks"}[].
+{bpref "sign_masks"}[].
 :::
 
 :::proof "sz_adaptive_bound"
 The shear `(a, b) ↦ (a + x·b, b)` is a uniform-preserving bijection for each
 challenge, under which the adversary's view and hence its polynomial depend on
-the sheared masks only; the shifted evaluation point is then uniform and
+the sheared masks only; the nonzero-`U` conditioning of {uses "sign_masks"}[]
+survives the shear, the shifted evaluation point is then uniform and
 independent of the polynomial, and {uses "sz_static_core"}[] finishes.
 :::
 
@@ -625,11 +626,11 @@ then monotonicity of the event probability.
 
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The union bound that assembles {bpref "single_attribute_mac"}[], over
-{uses "reduction_analysis_experiment"}[]: outside
-the identity branch of {uses "identity_case_lem54"}[], a win is either a
-3-DL extraction through {uses "dlog_root_recovery"}[] — its probability read
-by {uses "extraction_marginal"}[] — or, by
-{uses "win_without_extraction_forces_bad"}[], the bad event, which by
+{uses "reduction_analysis_experiment"}[], split on the extraction bit: a win
+is either a 3-DL extraction — its probability read by
+{uses "extraction_marginal"}[] — or, by
+{uses "win_without_extraction_forces_bad"}[], the bad event (the identity
+branch of {bpref "identity_case_lem54"}[] is absorbed there), which by
 {uses "bad_bit_forces_shift_bit"}[] falls under the `3/p` of
 {uses "sz_adaptive_bound"}[], so the advantage is at most
 `Adv^{3-dl} + 3/p`.
