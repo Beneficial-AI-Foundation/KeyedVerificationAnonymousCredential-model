@@ -532,20 +532,20 @@ transcript-indexed one agree.
 :::
 
 :::theorem "run_level_coupling" (lean := "KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame_evalDist_eq") (parent := "cmz_amac") (tags := "milestone")
-The run-level view equality: the adversary's view in the game of
-{uses "agm_model"}[] and its view against {uses "simulated_sign_oracle"}[]
-are identically distributed. Lifts the per-step couplings of
-{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[]
-across a whole transcript by induction on the oracle calls, over the
-keygen reparametrization that trades the honest key for the masks of
-{uses "challenge_embedding"}[].
+The run-level coupling: the game of {uses "agm_model"}[] and the win-bit
+marginal of {uses "reduction_analysis_experiment"}[] — the adversary run
+against {uses "simulated_sign_oracle"}[] — are identically distributed, so
+the AGM advantage is read as an event probability on the experiment.
 :::
 
 :::proof "run_level_coupling"
-Stated as the distribution equality between the AGM game and the win-bit
-marginal of {uses "reduction_analysis_experiment"}[]; the proof chains the
-keygen reparametrization with the two-implementation `simulateQ` coupling
-through an intermediate game.
+The keygen reparametrization trades the honest key for the masks of
+{uses "challenge_embedding"}[] by a uniform-preserving shear; the per-step
+couplings {uses "sign_oracle_coupling"}[] and
+{uses "verify_help_oracle_coupling"}[] are then lifted across the whole
+transcript by induction on the oracle calls, carrying the state invariant of
+{uses "transcript_invariants"}[]; the win bit is a function of the matched
+transcripts on both sides.
 :::
 
 :::theorem "sz_adaptive_bound" (lean := "KVAC.Schemes.MicroCMZ.redFull_szBit_le") (parent := "cmz_amac") (tags := "milestone")
