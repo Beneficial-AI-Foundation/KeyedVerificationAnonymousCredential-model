@@ -457,14 +457,16 @@ identity, which the verification polynomial's `α · keyPoly − β` shape reads
 off against the key polynomial's evaluation.
 :::
 
-:::theorem "embedded_vanishing_lem54" (lean := "KVAC.Schemes.MicroCMZ.RedEmbedding, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt_of_redEmbedding, KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "embedded_vanishing_lem54" (lean := "KVAC.Schemes.MicroCMZ.RedEmbedding, KVAC.Schemes.MicroCMZ.AGMRepr.evalAt_of_redEmbedding, KVAC.Schemes.MicroCMZ.verifPoly_eval_embed_eq_zero, KVAC.Schemes.MicroCMZ.Ustar_eq_zero_of_verifPoly_zero") (parent := "cmz_amac") (tags := "milestone")
 {uses "consistency_case_lem54"}[] restated against the embedding bundle: the
 four equations of {uses "challenge_embedding"}[] as one `RedEmbedding`
 hypothesis, its `evalAt` rewrite into the explicit embedded form, and the
 vanishing lemma at an abstract arity `q` tied to the transcript by
 `tags.length = q`. It takes the transcript facts of
 {uses "transcript_index_transport"}[] as hypotheses, and the key in the `macScalar`
-form of {uses "masked_key_normal_form_bridge"}[]. The first half of
+form of {uses "masked_key_normal_form_bridge"}[]; alongside it, the same
+packaging of the identity branch of {uses "agm_eval_bridge"}[], forcing `U* = 0`
+from an identically vanishing polynomial on a fresh forgery. The first half of
 {bpref "embedded_consistency_bricks"}[].
 :::
 :::proof "embedded_vanishing_lem54"
@@ -601,7 +603,7 @@ challenge powers of {uses "challenge_embedding"}[]; the monad laws identify the
 two `do` blocks once the powers are aligned.
 :::
 
-:::theorem "win_without_extraction_forces_bad" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_of_winBit_of_not_recBit") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "win_without_extraction_forces_bad" (lean := "KVAC.Schemes.MicroCMZ.redTrace_support_facts, KVAC.Schemes.MicroCMZ.redFull_badBit_of_winBit_of_not_recBit") (parent := "cmz_amac") (tags := "milestone")
 On the support of {uses "reduction_analysis_experiment"}[], a win the
 reduction fails to extract from forces the bad bit: the forgery's verification
 polynomial is nonzero (a winning forgery is non-degenerate) while its partial
@@ -610,13 +612,13 @@ recovered the challenge exponent).
 :::
 
 :::proof "win_without_extraction_forces_bad"
-Compose the log-honesty and `U`-form invariants of
-{uses "transcript_invariants"}[], transported by
-{uses "transcript_index_transport"}[], with the key-smul evaluation identity of
-{uses "consistency_case_lem54"}[] to get
-`eval (a + x·b) φ = 0`, then the two contrapositives: a non-identity forgery
-gives `φ ≠ 0` through {uses "agm_eval_bridge"}[], and failed root recovery
-gives `ψ = 0` through {uses "dlog_root_recovery"}[].
+Destructure the run's support once for the embedding certificate and the
+log-honesty and `U`-form invariants of {uses "transcript_invariants"}[],
+transported by {uses "transcript_index_transport"}[]; the arity-clean vanishing
+brick of {uses "embedded_vanishing_lem54"}[] then gives `eval (a + x·b) φ = 0`,
+and the two contrapositives close: a non-identity forgery gives `φ ≠ 0` through
+the identity branch of {uses "agm_eval_bridge"}[] packaged in the same node, and
+failed root recovery gives `ψ = 0` through {uses "dlog_root_recovery"}[].
 :::
 
 :::theorem "bad_bit_forces_shift_bit" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_le_szBit") (parent := "cmz_amac") (tags := "milestone")
