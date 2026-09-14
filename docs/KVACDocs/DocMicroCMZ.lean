@@ -719,6 +719,19 @@ translation, against the 1-attribute basis, evaluates as the original does
 against the embedded basis `Xᵢ = rᵢ•X₁`, are not part of this node.
 :::
 
+:::definition "attribute_collapse_reduction" (lean := "KVAC.Schemes.MicroCMZ.translateOracleImplChecked, KVAC.Schemes.MicroCMZ.nTo1Adversary, KVAC.Schemes.MicroCMZ.microCMZN3DLReduction") (parent := "cmz_amac") (tags := "milestone")
+The reduction adversaries of {bpref "forgery_case_mac"}[]. Along a fixed
+direction `r⃗`, the wrapper runs the `n`-attribute adversary of
+{uses "agm_model"}[] with public parameters `Xᵢ = rᵢ•X₁` and answers its queries
+through a translation oracle that forwards each query to the 1-attribute game,
+collapsing messages to `Σᵢ mᵢrᵢ` and representations through
+{uses "attribute_collapse_dictionary"}[]; on a `help` query it first checks the
+per-attribute representation consistency the honest oracle checks, since the
+collapsed sum check is weaker for `n ≥ 2`. The general-`n` 3-DL adversary
+samples `r⃗` and runs the `n = 1` reduction of {uses "challenge_embedding"}[] on
+the wrapped adversary.
+:::
+
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
 *O24 Lemma 5.5.* Reduces `n`-attribute μCMZ security to the
 single-attribute case {uses "single_attribute_mac"}[], giving its algebraic-MAC
@@ -737,9 +750,15 @@ case is bounded by the single-attribute MAC's UF-CMVA advantage
 :::
 
 :::proof "forgery_case_mac"
-The reduction collapses the `n`-attribute transcript onto a 1-attribute one
-along a direction `r⃗` with the dictionary {uses "attribute_collapse_dictionary"}[],
-then runs the single-attribute bound {uses "single_attribute_mac"}[].
+The forgery's attribute combination `Σᵢ m*ᵢXᵢ` differs from that of every
+signed message. The wrapper of {uses "attribute_collapse_reduction"}[] turns the
+`n`-attribute run into a 1-attribute run whose `sign`, `verify` and `help`
+answers agree with the honest `n`-attribute oracle under the embedded key
+`xᵢ = rᵢx₁`; for `x₁ ≠ 0` the collapsed forgery message `Σᵢ m*ᵢrᵢ` is then
+fresh among the collapsed signed messages, so a win transfers to the wrapped
+adversary and {uses "single_attribute_mac"}[] bounds it. Sampling `x⃗` uniformly
+is the same as sampling `(r⃗, x₁)` uniformly up to the event `x₁ = 0`, which
+costs `1/p`.
 :::
 
 :::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
