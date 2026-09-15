@@ -72,6 +72,27 @@ namespace KVAC.Framework
 
 open OracleComp OracleSpec KVAC.Core ENNReal
 
+/-! ## The `Present` oracle, what the distinguisher sees -/
+
+/-- The single oracle call of Definition 4.4, `Present_b(φ')`, for a fixed crs. -/
+inductive AnonQuery {M : Type → Type} [Monad M] (kvac : KVACSyntax M)
+    {secParam n : Nat} (crs : kvac.Crs secParam n) : Type where
+  /-- `Present_b(φ')`, a presentation request under the predicate `φ'`. -/
+  | present : kvac.Pred crs → AnonQuery kvac crs
+
+/-- Answer type of `Present_b(φ')`. A presentation message, or `none` when
+`φ'(m) = 0` or when the user holds no credential because issuance failed. -/
+def AnonPresentSpec {M : Type → Type} [Monad M] (kvac : KVACSyntax M)
+    {secParam n : Nat} (crs : kvac.Crs secParam n) : OracleSpec (AnonQuery kvac crs)
+  | .present _ => Option (kvac.PresentMsg crs)
+
+/-- The oracle interface the distinguisher `D` sees for a fixed crs, the
+`Present_b` oracle together with the random oracle. -/
+abbrev AnonDistSpec (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    {secParam n : Nat} (crs : kvac.Crs secParam n) :
+    OracleSpec (AnonQuery kvac crs ⊕ (ℕ ⊕ HS.Dom)) :=
+  AnonPresentSpec kvac crs + ZKRO HS
+
 /-! ## The parties -/
 
 /-- The anonymity simulator `Sim = (Sim.I, Sim.P)` of O24 §4.3 and Definition 4.4.
@@ -101,6 +122,46 @@ structure AnonSimulator (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)
   /-- `Sim.P(st_Sim, φ')`, a simulated presentation. -/
   simP : {secParam n : Nat} → (crs : kvac.Crs secParam n) → (stSim : SimState crs) →
     (φ' : kvac.Pred crs) → StateT HS.spec.QueryCache ProbComp (kvac.PresentMsg crs)
+
+/-- The issuer adversary `A(sk, pp, φ, m)` of Definition 4.4, the right side of
+the interactions `(σ; st_A) <- (KVAC.I.Usr(pp, m, φ) <-> A(sk, pp, φ, m))` and
+`(st_Sim; st_A) <- (Sim.I(pp, φ) <-> A(sk, pp, φ, m))`.
+
+The interaction is one round. The user side speaks first with the request `μ`,
+`A` answers with the issuer's response `σ'`, and the user side closes. `A`'s
+part of it is therefore two runs around one message. `prepare` is everything
+`A` does before `μ` arrives, with random oracle access, since an oracle
+algorithm queries at any time and a simulator that programs the oracle at its
+first move is detectable only by an adversary that queried earlier. `respond`
+is `A` on `μ`, returning `σ'`, or `none` to reject as `issueSrv` may, and the
+state `st_A` the interaction outputs on `A`'s side. `Pre` carries `A` across
+the user's move, and `StA` is the type of `st_A`, which the distinguisher
+receives. -/
+structure AnonIssuer (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS))) where
+  /-- The private state `A` keeps from its preparation to its response,
+  selected by the crs. -/
+  Pre : {secParam n : Nat} → kvac.Crs secParam n → Type
+  /-- The state `st_A` passed to the distinguisher, selected by the crs. -/
+  StA : {secParam n : Nat} → kvac.Crs secParam n → Type
+  /-- `A(sk, pp, φ, m)` before the user's request, with random oracle access. -/
+  prepare : {secParam n : Nat} → (crs : kvac.Crs secParam n) → (sk : kvac.Sk crs) →
+    (pp : kvac.Pp crs) → (φ : kvac.Pred crs) → (m : kvac.MsgVec crs) →
+    OracleComp (ZKRO HS) (Pre crs)
+  /-- `A` on the user's request `μ`, from its private state. -/
+  respond : {secParam n : Nat} → (crs : kvac.Crs secParam n) → (pre : Pre crs) →
+    (μ : kvac.IssueMsg crs) → OracleComp (ZKRO HS) (Option (kvac.BlindCred crs) × StA crs)
+
+/-- The distinguisher `D^{Present_b}(st_A)` of Definition 4.4. It takes no part
+in the interaction. It receives the state `st_A` the interaction output on
+`A`'s side, queries the `Present_b` oracle and the random oracle, and outputs
+the guess `b'`. The state type `StA` is a parameter, so that `A` and `D` stay
+two adversaries with two efficiency notions, as the statistical and
+everlasting variants of the definition require. -/
+structure AnonDistinguisher (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (StA : {secParam n : Nat} → kvac.Crs secParam n → Type) where
+  /-- `D^{Present_b}(st_A)`. -/
+  run : {secParam n : Nat} → (crs : kvac.Crs secParam n) → (stA : StA crs) →
+    OracleComp (AnonDistSpec HS kvac crs) Bool
 
 /-! ## Anonymity (O24 Definition 4.4) -/
 
