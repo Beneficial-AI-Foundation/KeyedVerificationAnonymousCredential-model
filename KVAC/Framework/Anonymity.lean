@@ -7,6 +7,7 @@ import KVAC.Framework.Syntax
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
 import VCVio.CryptoFoundations.SecExp
+import VCVio.CryptoFoundations.Asymptotics.Negligible
 
 /-!
 # Anonymity game for a keyed-verification credential (O24 §4.3, Definition 4.4)
@@ -311,5 +312,48 @@ structure AnonInstance (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS))
   φ : kvac.Pred crs
   /-- `φ(m) = 1`. -/
   holds_φ : kvac.holds crs φ m = true
+
+/-- The advantage at an instance, as a nonnegative extended real for
+`negligible`. -/
+noncomputable def AnonInstance.adv {HS : HashSpec} {kvac : KVACSyntax (OracleComp (ZKRO HS))}
+    {secParam n : Nat} (inst : AnonInstance HS kvac secParam n)
+    (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
+    (sim : AnonSimulator HS kvac) : ℝ≥0∞ :=
+  ENNReal.ofReal
+    (AnonAdv HS kvac issuer distinguisher sim inst.crs inst.sk inst.pp inst.m inst.φ inst.cache)
+
+/-- "A non-empty message family `M`", the standing assumption of Definition 4.4.
+Every crs selects a non-empty attribute type. Without it the quantification over
+instance families below is vacuous at a security parameter with no attributes,
+and a scheme that reveals its attributes would count as anonymous. -/
+def NonemptyMsg {M : Type → Type} [Monad M] (kvac : KVACSyntax M) : Prop :=
+  ∀ {secParam n : Nat} (crs : kvac.Crs secParam n), Nonempty (kvac.Msg crs)
+
+/-- Anonymity, O24 Definition 4.4, at a fixed attribute count `n`. The message
+family is non-empty, and there is a simulator `Sim = (Sim.I, Sim.P)` such that
+for all adversaries `A, D` the efficiency predicate admits and every family of
+instances, one per security parameter, the advantage is negligible in the
+security parameter.
+
+The order of quantifiers is the paper's, `∃ Sim` before `∀ A, D` and before the
+instances. Instances come as a family indexed by `λ` because the definition
+fixes `crs`, keys, `m` and `φ` pointwise while asking for negligibility in `λ`,
+so the function whose decay is asked for picks one instance at each `λ`.
+
+The efficiency predicate `isPPT` is an abstract parameter on the two
+adversaries, as in `Extractable`, since the development fixes no concrete
+efficiency notion on `OracleComp` adversaries. Taking it on the pair lets the
+variants below constrain the issuer adversary and the distinguisher separately.
+The hash specification `HS` is fixed across the security parameter, as in
+`Extractable` and `ZKAdv`, the fixed-parameter modelling of issue #148. -/
+def Anonymous (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (isPPT : (issuer : AnonIssuer HS kvac) → AnonDistinguisher HS kvac issuer.StA → Prop)
+    (n : Nat) : Prop :=
+  NonemptyMsg kvac ∧
+  ∃ sim : AnonSimulator HS kvac,
+    ∀ (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA),
+      isPPT issuer distinguisher →
+      ∀ inst : (secParam : Nat) → AnonInstance HS kvac secParam n,
+        negligible fun secParam => (inst secParam).adv issuer distinguisher sim
 
 end KVAC.Framework
