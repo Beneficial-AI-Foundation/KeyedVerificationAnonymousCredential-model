@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
 import KVAC.Framework.Syntax
+import KVAC.Framework.Extractability
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
 import VCVio.CryptoFoundations.SecExp
@@ -355,5 +356,21 @@ def Anonymous (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
       isPPT issuer distinguisher →
       ∀ inst : (secParam : Nat) → AnonInstance HS kvac secParam n,
         negligible fun secParam => (inst secParam).adv issuer distinguisher sim
+
+/-- Anonymity with O24's side condition `n ≤ poly(λ)` made a proof obligation, as
+`ExtractablePoly` does for Definition 4.5. The attribute count `n(λ)` is a function
+of the security parameter, and for every polynomially bounded `n` there is a
+simulator making the advantage negligible for the efficient adversaries, at
+attribute count `n secParam` for each `secParam`. `Anonymous` is the fixed-`n`
+slice. -/
+def AnonymousPoly (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (isPPT : (issuer : AnonIssuer HS kvac) → AnonDistinguisher HS kvac issuer.StA → Prop) : Prop :=
+  NonemptyMsg kvac ∧
+  ∀ n : ℕ → ℕ, PolyBounded n →
+    ∃ sim : AnonSimulator HS kvac,
+      ∀ (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA),
+      isPPT issuer distinguisher →
+        ∀ inst : (secParam : Nat) → AnonInstance HS kvac secParam (n secParam),
+          negligible fun secParam => (inst secParam).adv issuer distinguisher sim
 
 end KVAC.Framework
