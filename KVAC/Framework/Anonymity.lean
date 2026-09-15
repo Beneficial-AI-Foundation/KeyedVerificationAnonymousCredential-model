@@ -69,6 +69,27 @@ The advantage is the distinguishing advantage between the two worlds.
   from the supports of setup and key generation. The statistical variant drops
   the efficiency guard, and the everlasting forward variant keeps it on the
   issuer adversary alone.
+- **The group is not an output of setup.** In the paper `μCMZ.S(1^λ, n)` runs
+  `GrGen(1^λ)` and returns `crs := (Γ, H)` with `Γ = (𝔾, p, G)` and `H ←$ 𝔾`
+  (Figure 8), so "crs ∈ [KVAC.S(1^λ, n)]" ranges over the group description as
+  well as `H`, and `p` grows with `λ`. This module takes `kvac.setup`
+  abstractly and adds nothing. The μCMZ instance fixes the group and its
+  generator as parameters and returns only `H` from `setup`, so there the
+  quantifier ranges over every group of the class, every generator and every
+  `H ∈ 𝔾`, which is stronger than the paper's range but has no `λ` in it.
+  Under that instance `Anonymous` and `AnonymousPoly` are meaningful only with
+  a `λ`-indexed group family, issue #148, and the theorems about μCMZ bound
+  `AnonAdv` at fixed parameters. The same holds for `Extractable` and
+  `ExtractablePoly`.
+- **The predicate of a presentation.** The paper's oracle line answers
+  `Present_b(φ')` with `KVAC.P.Usr(pp, m, σ, φ)` and `Sim.P(st_Sim, φ)`, the
+  issuance predicate. The module passes the queried `φ'`, since the check
+  `φ'(m) = 1` is on `φ'` and a presentation under the issuance predicate alone
+  would make the oracle's argument idle.
+- **Absolute value.** The paper writes the advantage as a signed difference of
+  the two probabilities. `AnonAdv` is `boolDistAdvantage`, their absolute
+  difference, the reading under which the quantification over distinguishers
+  is symmetric in the two worlds.
 -/
 
 namespace KVAC.Framework
@@ -346,7 +367,9 @@ adversaries, as in `Extractable`, since the development fixes no concrete
 efficiency notion on `OracleComp` adversaries. Taking it on the pair lets the
 variants below constrain the issuer adversary and the distinguisher separately.
 The hash specification `HS` is fixed across the security parameter, as in
-`Extractable` and `ZKAdv`, the fixed-parameter modelling of issue #148. -/
+`Extractable` and `ZKAdv`, the fixed-parameter modelling of issue #148. The
+sibling modules name it `H`. This module writes `HS`, since `H` is the crs
+element of μCMZ in the paper's Figure 8. -/
 def Anonymous (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
     (isPPT : (issuer : AnonIssuer HS kvac) → AnonDistinguisher HS kvac issuer.StA → Prop)
     (n : Nat) : Prop :=
