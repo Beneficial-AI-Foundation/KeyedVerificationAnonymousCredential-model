@@ -6,6 +6,7 @@ Authors: Christiano Braga
 import KVAC.Framework.Syntax
 import KVAC.Core.NIZKP.Security
 import VCVio.OracleComp.ProbComp
+import VCVio.CryptoFoundations.SecExp
 
 /-!
 # Anonymity game for a keyed-verification credential (O24 §4.3, Definition 4.4)
@@ -162,6 +163,116 @@ structure AnonDistinguisher (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO
   /-- `D^{Present_b}(st_A)`. -/
   run : {secParam n : Nat} → (crs : kvac.Crs secParam n) → (stA : StA crs) →
     OracleComp (AnonDistSpec HS kvac crs) Bool
+
+/-! ## The game, how the oracle answers and the two worlds -/
+
+/-- The monad the `Present` oracle runs in. The shared random-oracle cache and
+the user's or simulator's state `S`, `none` when issuance failed, in one
+`StateT` over `ProbComp`. -/
+abbrev AnonComp (HS : HashSpec) (S : Type) : Type → Type :=
+  StateT (HS.spec.QueryCache × Option S) ProbComp
+
+/-- `Present_b(φ')` of Definition 4.4, generic in the world. The oracle "checks if
+`φ'(m)` holds for `m`, and if so returns" the presentation `pres s φ'` computed
+from the stored state `s`. World `b = 0` supplies the honest `KVAC.P.Usr` on the
+credential, world `b = 1` supplies `Sim.P` on the simulator state. A failed
+issuance (`none` state) answers `none`. -/
+def anonPresentImpl (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    {secParam n : Nat} (crs : kvac.Crs secParam n) (m : kvac.MsgVec crs) {S : Type}
+    (pres : S → kvac.Pred crs → StateT HS.spec.QueryCache ProbComp (kvac.PresentMsg crs)) :
+    QueryImpl (AnonPresentSpec kvac crs) (AnonComp HS S)
+  | .present φ' => StateT.mk fun (cache, st?) => do
+      match st? with
+      | none => pure (none, (cache, none))
+      | some s =>
+        if kvac.holds crs φ' m then
+          let (ρ, cache') ← (pres s φ').run cache
+          pure (some ρ, (cache', some s))
+        else pure (none, (cache, some s))
+
+/-- The random-oracle handler over the `Present` oracle's state. The
+distinguisher's direct `ZKRO HS` queries hit the same table the presentations
+use, as `extROImpl` arranges for the extraction game. -/
+def anonROImpl (HS : HashSpec) (S : Type) : QueryImpl (ZKRO HS) (AnonComp HS S) :=
+  fun q => StateT.mk fun (cache, st) => do
+    let (a, cache') ← (zkROImpl HS q).run cache
+    pure (a, (cache', st))
+
+/-- The issuance phase shared by both worlds. The adversary prepares first. The
+user side is abstract, a first move producing a request from `pp` and `φ`, and
+a second move producing the stored state `S` from the issuer's response. World
+`b = 0` instantiates it with `issueUsr₁` and `issueUsr₂`, world `b = 1` with
+`Sim.I`'s two moves. Returns the adversary state `st_A`, the stored state
+(`none` on rejection or abort), and the random-oracle cache after the phase. -/
+def anonIssuance (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (issuer : AnonIssuer HS kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
+    (sk : kvac.Sk crs) (pp : kvac.Pp crs) (m : kvac.MsgVec crs) (φ : kvac.Pred crs)
+    {U S : Type}
+    (usr₁ : StateT HS.spec.QueryCache ProbComp (U × kvac.IssueMsg crs))
+    (usr₂ : U → kvac.BlindCred crs → StateT HS.spec.QueryCache ProbComp (Option S))
+    (cache₀ : HS.spec.QueryCache) :
+    ProbComp (issuer.StA crs × Option S × HS.spec.QueryCache) := do
+  -- A(sk, pp, φ, $\vec{m}$) prepares, with random oracle access, before the user speaks.
+  let (pre, cache₁) ← runRO HS cache₀ (issuer.prepare crs sk pp φ m)
+  -- The user's (or simulator's) request.
+  let ((stU, μ), cache₂) ← usr₁.run cache₁
+  -- (σ'; st_A) ← A on μ.
+  let ((σ'?, stA), cache₃) ← runRO HS cache₂ (issuer.respond crs pre μ)
+  -- The user's (or simulator's) check and unblinding.
+  match σ'? with
+  | none    => pure (stA, none, cache₃)
+  | some σ' =>
+    let (s?, cache₄) ← (usr₂ stU σ').run cache₃
+    pure (stA, s?, cache₄)
+
+/-- World `b = 0` of Definition 4.4. Honest issuance
+`(σ; st_A) ← (KVAC.I.Usr(pp, m, φ) <-> A(sk, pp, φ, m))`, then
+`b' ← D^{Present₀}(st_A)` with `Present₀(φ') = KVAC.P.Usr(pp, m, σ, φ')`. -/
+def anonGameReal (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
+    {secParam n : Nat} (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
+    (m : kvac.MsgVec crs) (φ : kvac.Pred crs) (cache₀ : HS.spec.QueryCache) :
+    ProbComp Bool := do
+  let (stA, σ?, cache) ← anonIssuance HS kvac issuer crs sk pp m φ
+    (simulateQ (zkROImpl HS) (kvac.issueUsr₁ crs pp m φ))
+    (fun stU σ' => simulateQ (zkROImpl HS) (kvac.issueUsr₂ crs stU σ')) cache₀
+  let oracles :=
+    anonPresentImpl HS kvac crs m
+      (fun σ φ' => simulateQ (zkROImpl HS) (kvac.presentUsr crs pp m σ φ')) +
+    anonROImpl HS (kvac.Cred crs)
+  (simulateQ oracles (distinguisher.run crs stA)).run' (cache, σ?)
+
+/-- World `b = 1` of Definition 4.4. Simulated issuance
+`(st_Sim; st_A) ← (Sim.I(pp, φ) <-> A(sk, pp, φ, m))`, then
+`b' ← D^{Present₁}(st_A)` with `Present₁(φ') = Sim.P(st_Sim, φ')`. The
+simulator never receives the attribute vector `m`. Only `A` receives it, as
+the definition gives it to `A`, and the `Present` oracle reads it for the check
+`φ'(m) = 1`. -/
+def anonGameSim (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
+    (sim : AnonSimulator HS kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
+    (sk : kvac.Sk crs) (pp : kvac.Pp crs) (m : kvac.MsgVec crs) (φ : kvac.Pred crs)
+    (cache₀ : HS.spec.QueryCache) : ProbComp Bool := do
+  let (stA, st?, cache) ← anonIssuance HS kvac issuer crs sk pp m φ
+    (sim.simI₁ crs pp φ) (sim.simI₂ crs) cache₀
+  let oracles :=
+    anonPresentImpl HS kvac crs m (sim.simP crs) + anonROImpl HS (sim.SimState crs)
+  (simulateQ oracles (distinguisher.run crs stA)).run' (cache, st?)
+
+/-- The anonymity advantage `Adv^anon_{KVAC,A,D}` of Definition 4.4 at fixed
+`crs`, keys, attribute vector, predicate and initial cache, with respect to the
+simulator `sim`. The distinguishing advantage between the two worlds,
+`|Pr[b' = 1 | b = 0] − Pr[b' = 1 | b = 1]|`. `Anonymous` below asks some `sim`
+to make it negligible for every efficient `(A, D)`, and `StatisticallyAnonymous`
+for every `(A, D)`. An `abbrev`, so it unfolds in the proofs of those
+predicates for concrete schemes. -/
+noncomputable abbrev AnonAdv (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
+    (sim : AnonSimulator HS kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
+    (sk : kvac.Sk crs) (pp : kvac.Pp crs) (m : kvac.MsgVec crs) (φ : kvac.Pred crs)
+    (cache₀ : HS.spec.QueryCache) : ℝ :=
+  ProbComp.boolDistAdvantage (anonGameReal HS kvac issuer distinguisher crs sk pp m φ cache₀)
+    (anonGameSim HS kvac issuer distinguisher sim crs sk pp m φ cache₀)
 
 /-! ## Anonymity (O24 Definition 4.4) -/
 
