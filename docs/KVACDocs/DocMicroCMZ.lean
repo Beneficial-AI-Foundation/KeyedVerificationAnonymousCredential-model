@@ -12,6 +12,7 @@ import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.ATVariant
+import KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability
 
 open Verso.Genre Manual
 open Informal
@@ -717,9 +718,15 @@ Theorem 5.11 proof analyzes the scheme without the server proof `π_is`
 as well; see the deviation note in the node below. The unforgeability
 analysis on top of it is open.
 
-*TODO (Track CMZ-OMUF).* Build the AGM-instrumented OMUF game over the
-core scheme, then state and prove Theorem 5.11 and the Theorem 5.3
-clause against the OMUF game from the *Preliminaries* chapter.
+The AGM-instrumented OMUF game over the core is delivered in two
+steps. The instrumented oracle, {bpref "agm_omuf_oracle"}[], is merged;
+the algebraic adversary, the winning condition, the experiment and its
+advantage are the registered stub {bpref "agm_omuf_game"}[], after which
+Theorem 5.11 and the one-more unforgeability clause of Theorem 5.3 are
+stated over that game.
+
+*TODO (Track CMZ-OMUF).* The second half of the game, then the Theorem
+5.11 statements and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -750,6 +757,43 @@ settled, and the printed Theorem 5.3 node {bpref "mucmz_at_omuf"}[] stays
 a paper-element stub meanwhile.
 :::
 
+:::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.reprMatches, KVAC.Schemes.MicroCMZ.instDecidableReprMatches, KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
+The instrumented Sign and Verify oracles of the algebraic-group-model
+one-more unforgeability game for the core scheme {uses "mucmz_at_core"}[]
+(O24 §5.6), the first half of the game of Figure 6
+({uses "omuf_game"}[]) specialised to algebraic adversaries. Every
+submitted group element carries a representation of the MAC game's type
+({uses "agm_model"}[]) over the fixed basis and the blinded pairs issued so
+far. The Sign arm is gated *on the way in*, the first issuance request in
+the repository to be so gated: a commitment whose representation does not
+evaluate to it, or whose tag-coefficient list has not exactly one entry per
+issued pair, is refused with `none` and still logged, so every Sign query
+counts toward Figure 6's counter while only issued pairs extend the
+representation basis. The Verify arm is gated like the MAC game's, with the
+same exact-length rule, so one decidable predicate serves the oracles and
+the winning condition. The log keeps each commitment's representation for
+the Theorem 5.11 reduction. Exact-length lists depart from the MAC game's
+permissive `zipWith` evaluation so that an accepted representation
+evaluates to the same element against every later transcript, the final
+one included, letting the proof read the finished log against one list of
+pairs (Equations 17 and 18); the gate is computable from the adversary's
+own view, so refusals reveal nothing. The MAC track's evaluation bridge does not carry over, since a
+blind-issuance answer is not a MAC tag on a known message; see
+`DESIGN_ALTERNATIVES.md`. The carrier is `ProbComp`, the core never calling
+a hash.
+:::
+
+:::definition "agm_omuf_game" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "high")
+The second half of the AGM-instrumented one-more unforgeability game over
+the oracle {uses "agm_omuf_oracle"}[]: the algebraic adversary returning
+`q + 1` forgeries with one representation per token component (O24
+Equation 19), the winning condition (the plain Figure 6 condition of
+{uses "omuf_game"}[] plus representation consistency of every forgery over
+the final transcript, with the exact-length rule), the experiment, its
+advantage, and the decidable Sign predicate the static query-budget
+hypotheses of Theorem 5.11 use.
+:::
+
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
 ({uses "zk_arguments"}[]), the variant `μCMZ_AT` of {uses "mucmz_construction"}[] is an
@@ -766,7 +810,8 @@ Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
 attributes. To be stated over the merged core scheme
-{uses "mucmz_at_core"}[]; the core's nonzero issuance nonces condition
+{uses "mucmz_at_core"}[] in the AGM-instrumented game
+{uses "agm_omuf_game"}[], the plain game following by a deferred bridge; the core's nonzero issuance nonces condition
 the paper's `ℤ_p` samplers away from their zero cases, so the printed
 constants transfer only up to per-query `1/p` differences — the Track
 CMZ-OMUF constant audit settles the stated bound.
