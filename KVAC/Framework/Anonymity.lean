@@ -102,4 +102,42 @@ structure AnonSimulator (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)
   simP : {secParam n : Nat} → (crs : kvac.Crs secParam n) → (stSim : SimState crs) →
     (φ' : kvac.Pred crs) → StateT HS.spec.QueryCache ProbComp (kvac.PresentMsg crs)
 
+/-! ## Anonymity (O24 Definition 4.4) -/
+
+/-- One instance of the quantifier prefix of Definition 4.4 at a fixed security
+parameter and attribute count. "For all `crs ∈ [KVAC.S(1^λ, n)]` and
+`(sk, pp) ∈ [KVAC.K(crs)]`, `m ∈ M^n_crs`, `φ ∈ Φ` such that `φ(m) = 1`." The
+random-oracle caches left by setup and key generation come with the supports,
+so the games start from the table those algorithms built.
+
+The structure exists because `AnonAdv` is pointwise while the definition asks
+for negligibility in `λ`. `Anonymous` quantifies over families of instances,
+one admissible choice at each `λ`, and asks the resulting function of `λ` to be
+negligible. The games and the theorems that bound `AnonAdv` take the same data
+as loose arguments with support hypotheses, in the style of `newUsr_mac_isSome`,
+and do not use this structure. -/
+structure AnonInstance (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (secParam n : Nat) where
+  /-- The common reference string `crs`. -/
+  crs : kvac.Crs secParam n
+  /-- The random-oracle table setup leaves. -/
+  cacheSetup : HS.spec.QueryCache
+  /-- `crs ∈ [KVAC.S(1^λ, n)]`, setup run through the random oracle from the
+  empty table. -/
+  crs_mem : (crs, cacheSetup) ∈ support (runRO HS ∅ (kvac.setup secParam n))
+  /-- The secret key `sk`. -/
+  sk : kvac.Sk crs
+  /-- The public parameters `pp`. -/
+  pp : kvac.Pp crs
+  /-- The random-oracle table key generation leaves, where the games start. -/
+  cache : HS.spec.QueryCache
+  /-- `(sk, pp) ∈ [KVAC.K(crs)]`, key generation run from setup's table. -/
+  keys_mem : ((sk, pp), cache) ∈ support (runRO HS cacheSetup (kvac.keygen crs))
+  /-- The attribute vector `m ∈ M^n_crs`. -/
+  m : kvac.MsgVec crs
+  /-- The predicate `φ ∈ Φ`. -/
+  φ : kvac.Pred crs
+  /-- `φ(m) = 1`. -/
+  holds_φ : kvac.holds crs φ m = true
+
 end KVAC.Framework
