@@ -373,4 +373,17 @@ def AnonymousPoly (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
         ∀ inst : (secParam : Nat) → AnonInstance HS kvac secParam (n secParam),
           negligible fun secParam => (inst secParam).adv issuer distinguisher sim
 
+/-- Statistical anonymity, O24 Definition 4.4. The advantage is negligible "for
+unbounded adversaries `A, D`", so the efficiency guard is dropped. -/
+def StatisticallyAnonymous (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (n : Nat) : Prop :=
+  Anonymous HS kvac (fun _ _ => True) n
+
+/-- Everlasting forward anonymity, O24 Definition 4.4. The advantage is
+"negligible when `D` is unbounded", so the efficiency guard falls on the issuer
+adversary `A` alone and the distinguisher is arbitrary. -/
+def EverlastingForwardAnonymous (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (isPPTIssuer : AnonIssuer HS kvac → Prop) (n : Nat) : Prop :=
+  Anonymous HS kvac (fun issuer _ => isPPTIssuer issuer) n
+
 end KVAC.Framework
