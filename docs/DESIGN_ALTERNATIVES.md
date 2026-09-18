@@ -412,6 +412,66 @@ probability `2/p − 1/p²`. Reductions replaying issuance must account for
 the per-nonce `1/p` distribution differences, as the AGM track already does for
 the tag base (*Conditioned sign masks* above).
 
+## Exact-length representations in the AGM OMUF game
+
+**Decision.** In the AGM-instrumented one-more unforgeability game for the
+μCMZ_AT core (`AGMOneMoreUnforgeability.lean`) a submitted representation is
+accepted only when its tag-coefficient list has exactly one entry per blinded
+pair issued so far, in addition to evaluating to the submitted element
+(`reprMatches`). The Sign oracle applies this gate to its *input*, the
+commitment `C'` of O24 Equation 17, refusing with `none` on failure and still
+logging the query together with its representation. The Verify oracle applies
+the same predicate to the submitted token, like the MAC game's Verify arm but
+with the exact-length rule added, so that one decidable predicate serves the
+oracles and the winning condition.
+
+**Rejected alternatives.** (i) The MAC game's convention, `AGMRepr.eval`'s
+`zipWith` against the issued pairs, which ignores excess entries and reads
+missing ones as zero, with no length check. (ii) Canonical normalization,
+accepting any list and storing it cut to the current transcript length.
+(iii) Rejecting excess entries only and accepting short lists as zero-padded.
+
+**Fidelity argument.** The rule is a simplification, not a soundness
+requirement. The Theorem 5.11 proof (O24 §5.6) substitutes each commitment's
+representation into the server's answer (Equation 18) as coefficients read at
+the arity of its own query, and a dictionary reading exactly that many
+positions is correct on any list. Exact length buys the right to evaluate an
+accepted representation against any later transcript, the final one included,
+with the same result, so the second half of the game and the reduction can read
+the finished log against one list of pairs instead of a per-query prefix. Under
+(i) an excess entry ignored at query time contributes once more pairs exist, so
+the same representation names two different elements at two arities. Under
+(iii) short lists are extension-stable but give many lists for one
+element, and the reduction's coefficient dictionary (`AGMRepr.toReprCoeffs` on
+the MAC side) reads an exact-length list position by position, so exact length
+is the normal form that needs no padding or truncation lemma. The precise
+guarantee is that `AGMRepr.eval` of an accepted representation is unchanged
+under any later extension of the transcript, while `reprMatches` itself is
+not, its length conjunct failing once more pairs exist. Lemmas about an
+earlier commitment must evaluate its representation and never re-check the
+gate at a grown transcript. The MAC game does not need the rule because its
+Verify and Help representations are consumed once, at the arity of the moment
+they are checked. (ii) gives the same guarantee at the cost of a normalization
+lemma and is the fallback if a uniform game interface across the two tracks is
+preferred.
+
+**Why the gate cannot strengthen the adversary.** The gate is computable from
+the adversary's own view, the public elements, the pairs it received, and the
+representation it chose, so a refusal reveals nothing about the secret key,
+and an adversary loses nothing by pre-checking its own queries. Counting
+refused queries toward Figure 6's counter, rejecting short lists, and gating
+the Verify arm are therefore conventions that change no adversary's power up
+to a query-preserving simulation.
+
+**What carries over from the MAC track.** The representation type `AGMRepr`,
+the coefficient conversion `AGMRepr.toReprCoeffs`, and the generic
+`sum_zipWith_eq_fin_sum_getD` apply to exact-length lists as they are. The
+evaluation bridge `agmRepr_eval_eq_eval_toPoly` does not, since it assumes every
+issued pair is a MAC tag `V = macScalar(sk, m)·U` on a known message, whereas a
+blind-issuance answer is `V' = (x₀ + xᵣ)·U' + u·C'`, a polynomial in the
+commitment's representation. The Equation 18 bridge is new work. Decided
+September 2026 (Track CMZ-OMUF, step A4 of #12).
+
 ## Open alternatives
 
 None at present.
