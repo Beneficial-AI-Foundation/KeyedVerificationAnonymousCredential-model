@@ -25,17 +25,17 @@ to be added) reviews against a visible target. The proof arrives incrementally:
 2. each remaining sub-lemma is then discharged, sorry-free, until the theorem is
    kernel-verified with no remaining `sorry`.
 
-Until then the theorem below carries the only `sorry` of this subtree; its
-blueprint node (`single_attribute_mac`) shows "contains sorry" until proven.
+Until then this subtree's `sorry`s are the theorem below and the unproven
+sub-lemmas stated below; the theorem's blueprint node (`single_attribute_mac`)
+shows "contains sorry" until proven.
 
 **Two departures from O24's printed bound** (Lemma 5.4, p. 36, states
 `Adv^{3-dl} + Adv^{dl} + 1/p`):
 
-- The bad-event bound is `deg ψ / p ≤ 3/p` (Schwartz–Zippel on the degree-≤3
-  `ψ`), not the `1/p` O24 prints (`docs/DESIGN_ALTERNATIVES.md`). With `d` the
-  total degree of `φ`, the `χ^d` coefficient of `ψ` is the degree-`d`
-  homogeneous part of `φ` at the `b` masks, so the bound is `d/p ≤ 3/p`, with
-  equality only when `φ` has total degree 3.
+- The bad-event bound is `3/p`, not the `1/p` O24 prints
+  (`docs/DESIGN_ALTERNATIVES.md`): Schwartz–Zippel hits the verification
+  polynomial `φ` itself, of total degree `≤ 3`, at a shifted real-log point — see
+  *The bad-event bound* below.
 - The `Adv^dl` summand is dropped, on the proof of Lemma 5.4 itself (pp. 36–38):
   it builds one reduction, to 3-DL, and no DL reduction, so the summand is left
   unjustified — in O24 it survives only as nonnegative slack
@@ -71,13 +71,56 @@ lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
       pow_one]
   rw [microCMZ3DLReductionAdv, ← probEvent_eq_eq_probOutput, ← hmap, probEvent_map]; rfl
 
+/-- **Win without extraction forces the bad event (deterministic core).** On
+`redFull`'s support, `winBit = true` (the real `verify`/consistency/freshness on
+`sk = maskedKey x t.aM t.bM`) together with `recBit ≠ true` (`recoverDlog gen X ψ ≠ x`)
+forces the Schwartz–Zippel bad event `badBit = true`, i.e. `φ ≠ 0 ∧ ψ = 0` for
+`φ := t.verifPoly` and `ψ := t.psi = t.log.maskedSubst t.aM t.bM φ`. The proof destructures
+`redTrace`'s support once (`mem_support_bind_iff`), reads the logged tags through
+`redLog_honest` + `redLog_U_form` via `redLog_transcript_facts`, then composes
+`verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` (`eval (a + x·b) φ = 0`)
+with the two contrapositives: `agm_n1_identity_Ustar_eq_zero` (`φ ≠ 0`, via `σ.1 ≠ 0`) and
+`recoverDlog_verifPoly_eq` (`ψ = 0`, via `recoverDlog ≠ x`). -/
+lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : RedBits)
+    (ht : t ∈ support (redFull gen A)) (hw : t.winBit = true) (hr : t.recBit ≠ true) :
+    t.badBit = true := by
+  sorry
+
+/-! ### The bad-event bound
+
+`Pr[badBit] = Pr[φ ≠ 0 ∧ ψ = 0]` is bounded by `3/p` in two steps on one run of `redFull`.
+
+1. **Shift (deterministic).** `ψ = t.log.maskedSubst t.aM t.bM φ = 0` forces `φ` to vanish at
+   `t.shiftPoint x = a + (x+1)·b` (`eval_shift_eq_zero_of_affineSubst_eq_zero`), so
+   `badBit ⟹ szBit`.
+2. **Schwartz–Zippel over the shear (the keystone).** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
+   a uniform-preserving bijection on `F²` per variable, for the four fixed mask pairs and the
+   per-query `(auⱼ, buⱼ)` — A's view and hence `φ` depend only on the sheared masks while the
+   `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform over
+   `Var t.log.length → F` independent of `φ`, and `probEvent_eval_shift_eq_zero_le`
+   (total degree `≤ 3`) gives `Pr[szBit] ≤ 3/p`. -/
+
+/-- **Shift implication.** `badBit ⟹ szBit` pointwise on the support (step 1 above), hence
+`Pr[badBit] ≤ Pr[szBit]`. -/
+lemma redFull_badBit_le_szBit (A : AGMUFAdversary F G 1) :
+    Pr[(fun t : RedBits => t.badBit = true) | redFull gen A]
+      ≤ Pr[(fun t : RedBits => t.szBit = true) | redFull gen A] := by
+  sorry
+
+/-- **Schwartz–Zippel keystone.** `Pr[szBit] ≤ 3/p` by the shear coupling (step 2 above). -/
+lemma redFull_szBit_le (A : AGMUFAdversary F G 1) :
+    Pr[(fun t : RedBits => t.szBit = true) | redFull gen A]
+      ≤ 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
+  sorry
+
 /-! ## Lemma 5.4 -/
 
 /--
 **O24 Lemma 5.4, `n = 1`** (statement). Bounds the AGM advantage by the
 3-DL term plus `3/p`, with the `dlogAdv` term dropped (slack for `n = 1`).
-(O24 prints `1/p`; the bad event is a degree-≤3 Schwartz–Zippel restriction, so
-the provable constant is `3/p` — see the module docstring.)
+(O24 prints `1/p`; the bad event is Schwartz–Zippel on the degree-≤3
+verification polynomial, so the provable constant is `3/p` — see the module
+docstring.)
 
 **The embedding (O24 Eqs. 13–14), made precise.** Each secret exponent is a
 *linear* form in the 3-DL challenge exponent `x`: the reduction samples masks
@@ -101,25 +144,19 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
   since a submitted `U` may use `X₀` or `Vⱼ`, both degree-2 in `x`, times the
   degree-1 `keyⱼ` — hence `exponentEval … X''`, not just `X, X'`.)
 
-**Proof outline:**
+**Proof outline** (the assembly over the sub-lemmas above, all read on one run of
+`redFull`):
 
-1. rewrite `AGM_UF_CMVAAdv gen A secParam = Pr[win]` and split the win event on
-   whether the forgery's verification polynomial is identically zero;
-2. the identity branch is `0` by `agm_n1_identity_Ustar_eq_zero` (`U* = 0`
-   contradicts `verify`'s `σ.1 ≠ 0` check) — needs the log-honesty
-   invariant that every logged tag is honest;
-3. the non-identity branch is `≤ qdlogAdv 3 … + 3/p`. The reduction `B₃` runs `A`
-   under the simulated oracle (no `sk`; masks accumulated in the `StateT` log),
-   forms `ψ = affineSubst a b (verifPoly …)`, and returns `recoverDlog g X ψ`.
-   - *correctness when `ψ ≠ 0`*: `recoverDlog_verifPoly_eq` already closes this —
-     verification gives `MvPolynomial.eval (fun v => a v + x·b v) (verifPoly) = 0`
-     (via the `agmRepr_eval_eq_eval_toPoly` bridge), so `B₃` outputs `x`;
-   - *distribution equivalence*: the simulated game is identically distributed to
-     `AGM_UF_CMVAGame` (the masks make `H, X₀, Xᵣ, X₁, Uⱼ` uniform; Sign matches
-     `mac`);
-   - *bad event*: `ψ = 0` despite `verifPoly ≠ 0` only with probability `≤ 3/p`
-     (Schwartz–Zippel over the masks: `ψ` restricts a degree-≤3 polynomial to a
-     random line, so `Pr[ψ ≡ 0] ≤ deg ψ / p ≤ 3/p`). -/
+1. *game bridge*: `AGM_UF_CMVAAdv gen A secParam = Pr[winBit | redFull gen A]` — the
+   real game and the reduction's run are identically distributed (the masks make
+   `H, X₀, Xᵣ, X₁, Uⱼ` uniform and Sign matches `mac`; blueprint `run_level_coupling`);
+2. *split on extraction*: `Pr[winBit] ≤ Pr[recBit] + Pr[winBit ∧ ¬recBit]`;
+3. *extraction*: `Pr[recBit] = microCMZ3DLReductionAdv gen A` (`redFull_recBit_eq`);
+4. *bad event*: `winBit ∧ ¬recBit ⟹ badBit` (`redFull_badBit_of_winBit_of_not_recBit`;
+   the identity branch `φ = 0` is absorbed there, since `U* = 0` contradicts `verify`'s
+   `σ.1 ≠ 0`), `Pr[badBit] ≤ Pr[szBit]` (`redFull_badBit_le_szBit`), and
+   `Pr[szBit] ≤ 3/p` (`redFull_szBit_le`) — *The bad-event bound* above.
+-/
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZ3DLReductionAdv gen A + 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
