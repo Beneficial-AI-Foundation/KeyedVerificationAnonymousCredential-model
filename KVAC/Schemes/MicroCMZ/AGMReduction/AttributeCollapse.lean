@@ -15,12 +15,19 @@ public attribute elements as `Xᵢ = rᵢ • X₁` (so their discrete logarithm
 satisfy `xᵢ = rᵢ · x₁`), and translate each algebraic representation over the
 `n`-attribute basis to one over the 1-attribute basis whose evaluation agrees.
 
+The paper's reduction `B` (Claim 5.7) fixes `z₁ = 1`, samples `zᵢ` for
+`i ∈ [2, n]`, and collapses *messages* to `m₁ + Σᵢ zᵢ mᵢ`. Here the direction
+`r⃗` ranges over all `n` coordinates (the `n`-game's `X₁` is `r₁ • X₁`), and,
+because the instrumented game's `verify`/`help` queries carry algebraic
+representations, those are collapsed too. The message collapse `Σᵢ rᵢ mᵢ` is
+the wrapper's job and is not in this file.
+
 This file holds the pure-algebra dictionary of that collapse: the two
 representation translations, `AGMRepr.collapseRepr` for a single represented
-element (the `sign`/`verify` arms and the forgery) and `AGMRepr.linCombCollapse`
+element (the `verify`/`help` arms and the forgery) and `AGMRepr.linCombCollapse`
 for the weighted sum `Σᵢ rᵢ • Aᵢ` of represented elements (the `help` arm).
-The wrapper adversary built on them, and the evaluation bridges that justify
-the translations, are added on top of this dictionary.
+The evaluation bridges that justify these translations, and the wrapper
+adversary built on them, are not in this file.
 -/
 
 set_option autoImplicit false
@@ -34,9 +41,10 @@ variable {n : ℕ}
 along a direction `r⃗`: every field is preserved except the attribute
 coefficients, which are combined into `Σᵢ rᵢ · ρ.x i` (the single `x₁`
 coefficient). Tag coefficients `uv` are carried unchanged, since the issued
-tags are the same list in both games. Against the 1-attribute basis
-`(g₀, H, X₀, Xᵣ, fun _ => X₁)` it evaluates as `ρ` does against the embedded
-basis `(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`. -/
+tags are the same list in both games. It is built so that, against the
+1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, it evaluates as `ρ` does
+against the embedded basis `(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`; that
+evaluation bridge is proved with the wrapper coupling. -/
 def AGMRepr.collapseRepr (r : Fin n → F) (ρ : AGMRepr F n) : AGMRepr F 1 where
   g := ρ.g
   h := ρ.h
@@ -47,17 +55,17 @@ def AGMRepr.collapseRepr (r : Fin n → F) (ρ : AGMRepr F n) : AGMRepr F 1 wher
 
 /-- Length of the combined tag-coefficient list for `linCombCollapse`: the
 maximum of the per-attribute `uv` list lengths. Beyond this length every
-`(ρA i).uv.getD k (0,0)` is `(0,0)`, so both sides of the evaluation bridge
-contribute `0` to that tag position (via `List.getD`'s default). -/
+`(ρA i).uv.getD k (0, 0)` is `(0, 0)`, so, in the intended evaluation bridge,
+both sides contribute `0` to that tag position (via `List.getD`'s default). -/
 def linCombCollapseUVLen (ρA : Fin n → AGMRepr F n) : ℕ :=
   (Finset.univ : Finset (Fin n)).sup fun i => ((ρA i).uv).length
 
 /-- Combined 1-attribute representation of the weighted element
 `Σᵢ rᵢ • Aᵢ`, where each `Aᵢ` carries the `n`-attribute representation `ρA i`.
-Against the 1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)` it evaluates to
-`Σᵢ rᵢ • (ρA i).eval` against the embedded basis
-`(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)` — the dictionary the `help` arm of the
-`n → 1` wrapper uses to collapse an `n`-attribute help query.
+It is built to evaluate, against the 1-attribute basis
+`(g₀, H, X₀, Xᵣ, fun _ => X₁)`, to `Σᵢ rᵢ • (ρA i).eval` against the embedded
+basis `(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)`; this is the bridge the `help` arm of
+the `n → 1` wrapper relies on to collapse an `n`-attribute help query.
 
 The scalar-coefficient fields are the weighted sums; the single attribute
 coefficient is `Σᵢ Σⱼ rᵢ·rⱼ·(ρA i).x j` (the collapsed attribute coefficient
@@ -71,7 +79,7 @@ def AGMRepr.linCombCollapse (r : Fin n → F) (ρA : Fin n → AGMRepr F n) :
   xr := ∑ i, r i * (ρA i).xr
   x := fun _ => ∑ i, ∑ j, r i * r j * (ρA i).x j
   uv := (List.range (linCombCollapseUVLen ρA)).map fun k =>
-    (∑ i, r i * ((ρA i).uv.getD k (0,0)).1,
-     ∑ i, r i * ((ρA i).uv.getD k (0,0)).2)
+    (∑ i, r i * ((ρA i).uv.getD k (0, 0)).1,
+     ∑ i, r i * ((ρA i).uv.getD k (0, 0)).2)
 
 end KVAC.Schemes.MicroCMZ
