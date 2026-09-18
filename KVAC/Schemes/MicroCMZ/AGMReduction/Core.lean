@@ -563,8 +563,8 @@ lemma recoverDlog_verifPoly_eq {q : ℕ} {a b : AGMPoly.Var q → F} {x : F}
 
 /-- Everything the reduction's run produces before extraction: the two mask records, the
 embedded public parameters (O24 Eq. 13), the adversary's forgery with its two AGM
-representations, and the log of issued tags with their `u`-masks. `microCMZ3DLReduction`
-keeps only `recoverDlog` of it; the Lemma 5.4 analysis experiment reads the rest. -/
+representations, and the log of issued MAC codes with their `u`-masks. `microCMZ3DLReduction`
+keeps only `recoverDlog` of it; the analysis experiment of the next part reads the rest. -/
 structure RedTrace (F G : Type) where
   /-- The `a`-side fixed-variable masks. -/
   aM : FixedMasks F
@@ -574,13 +574,13 @@ structure RedTrace (F G : Type) where
   ep : EmbeddedParams G
   /-- The forged message. -/
   mStar : Fin 1 → F
-  /-- The forged tag `(U*, V*)`. -/
+  /-- The forged MAC code `(U*, V*)`. -/
   σStar : G × G
   /-- The AGM representation of `U*`. -/
   ρU : AGMRepr F 1
   /-- The AGM representation of `V*`. -/
   ρV : AGMRepr F 1
-  /-- The log of issued tags with their `u`-masks. -/
+  /-- The log of issued MAC codes with their `u`-masks. -/
   log : RedLog F G
 
 /-- The reduction's run. Given the challenge powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
