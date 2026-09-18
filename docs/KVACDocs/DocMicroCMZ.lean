@@ -757,7 +757,7 @@ settled, and the printed Theorem 5.3 node {bpref "mucmz_at_omuf"}[] stays
 a paper-element stub meanwhile.
 :::
 
-:::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.reprMatches, KVAC.Schemes.MicroCMZ.instDecidableReprMatches, KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.reprMatches, KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
 The instrumented Sign and Verify oracles of the algebraic-group-model
 one-more unforgeability game for the core scheme {uses "mucmz_at_core"}[]
 (O24 §5.6), the first half of the game of Figure 6

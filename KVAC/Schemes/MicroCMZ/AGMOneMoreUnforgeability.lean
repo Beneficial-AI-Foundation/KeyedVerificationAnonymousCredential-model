@@ -52,36 +52,25 @@ answer.
 **Gate on the way in.** The Sign oracle evaluates the submitted representation
 over the current public elements and issued pairs and compares it with the
 submitted commitment. On a match it answers through the core's server
-algorithm. On a mismatch it refuses with `none`. Gating the answers rather than
-restricting the adversary type is the merged MAC game's choice, and the same
-`DESIGN_ALTERNATIVES.md` discussion applies. The gate is computable from the
-adversary's own view (the public elements, the pairs it received, and the
-representation it chose), so a refusal reveals nothing about the secret key,
-and an adversary loses nothing by pre-checking its own queries. This is why the
-stricter conventions below cannot strengthen the adversary.
+algorithm, on a mismatch it refuses with `none`. Gating the answers rather than
+restricting the adversary type is the merged MAC game's choice. The gate is
+computable from the adversary's own view, so a refusal reveals nothing about
+the secret key, an adversary loses nothing by pre-checking its own queries, and
+the stricter conventions below cannot strengthen it.
 
 **Exact-length tag coefficients.** The representation's tag-coefficient list must
 have exactly one entry per blinded pair issued so far, else the query is refused.
 This departs from `AGMRepr.eval`'s permissive `zipWith`, which ignores excess
 entries and reads missing ones as zero. The rule is a simplification, not a
-soundness requirement. The Theorem 5.11 proof uses each commitment's
-representation as coefficients, at the arity of its own query (the recursion of
-Equations 17 and 18), and a dictionary reading exactly that many positions
-would be correct on any list. What exact length buys is that an accepted
-representation evaluates to the same element against every later transcript,
-the final one included, because the pairing stops at the list's length, so the
-second half and the reduction may read the finished log against one final list
-of pairs instead of carrying a per-query prefix. An excess entry would break
-that, contributing once more pairs exist. Short lists are extension-stable but
-admit many lists for one element, so exact length also gives one normal form
-per element, which the coefficient dictionary (`AGMRepr.toReprCoeffs` on the
-MAC side) reads position by position with no padding lemma. Note the precise
-guarantee: `AGMRepr.eval` of an accepted representation is unchanged under any
-later extension of the transcript, while `reprMatches` itself is not, since its
-length conjunct fails once more pairs exist. Lemmas about an earlier commitment
-must therefore evaluate its representation, never re-check the gate, at a grown
-transcript. See `DESIGN_ALTERNATIVES.md`, *Exact-length representations in the
-AGM OMUF game*.
+soundness requirement. It buys one guarantee: `AGMRepr.eval` of an accepted
+representation is unchanged under any later extension of the transcript, so the
+winning condition and the reduction can read the finished log against one final
+list of pairs instead of carrying a per-query prefix. `reprMatches` itself is
+not stable, since its length conjunct fails once more pairs exist, so lemmas
+about an earlier commitment must evaluate its representation, never re-check
+the gate, at a grown transcript. The comparison with the permissive and the
+canonical-form alternatives is in `DESIGN_ALTERNATIVES.md`, *Exact-length
+representations in the AGM OMUF game*.
 
 **The log keeps the representations.** Every Sign query is logged in issuance
 order as the commitment, its representation, and the server's answer, `none`
@@ -112,14 +101,12 @@ item 18 lives over `OracleComp (ZKRO H)` and gets its own game.
 harmless there because only the length is read. Here the pairs extend the
 representation basis in issuance order, so the log appends, as `AGMLog` does.
 
-**What carries over from the MAC track, and what does not.** The representation
-type, the coefficient conversion `AGMRepr.toReprCoeffs`, and the generic
-`sum_zipWith_eq_fin_sum_getD` apply to exact-length lists as they are. The MAC
-track's evaluation bridge `agmRepr_eval_eq_eval_toPoly` does not: it assumes
-every issued pair is a MAC tag `V = macScalar(sk, m)·U` on a known message,
-whereas a blind-issuance answer is `V' = (x₀ + xᵣ)·U' + u·C'`, a polynomial in
-the commitment's representation. The Equation 18 bridge is new work for the
-Theorem 5.11 proof.
+**What carries over from the MAC track.** The representation type and the
+coefficient conversion `AGMRepr.toReprCoeffs` apply to exact-length lists as
+they are. The MAC track's evaluation bridge `agmRepr_eval_eq_eval_toPoly` does
+not, since a blind-issuance answer `V' = (x₀ + xᵣ)·U' + u·C'` is not a MAC tag
+on a known message. The Equation 18 bridge is new work for the Theorem 5.11
+proof.
 -/
 
 set_option autoImplicit false
@@ -176,19 +163,20 @@ the representation basis. Refused queries contribute nothing. -/
 def AGMOMUFLog.tags (log : AGMOMUFLog F G n) : List (G × G) :=
   log.filterMap fun e => e.2.2
 
+/-- The empty transcript has issued nothing. -/
 @[simp] theorem AGMOMUFLog.tags_nil : AGMOMUFLog.tags ([] : AGMOMUFLog F G n) = [] := rfl
 
 /-- Appending an issued query extends the basis by its pair. -/
 @[simp] theorem AGMOMUFLog.tags_append_some (log : AGMOMUFLog F G n) (C' : G)
     (ρ : AGMRepr F n) (p : G × G) :
     AGMOMUFLog.tags (log ++ [(C', ρ, some p)]) = AGMOMUFLog.tags log ++ [p] := by
-  simp [AGMOMUFLog.tags, List.filterMap_append]
+  simp [AGMOMUFLog.tags]
 
 /-- Appending a refused query leaves the basis unchanged. -/
 @[simp] theorem AGMOMUFLog.tags_append_none (log : AGMOMUFLog F G n) (C' : G)
     (ρ : AGMRepr F n) :
     AGMOMUFLog.tags (log ++ [(C', ρ, none)]) = AGMOMUFLog.tags log := by
-  simp [AGMOMUFLog.tags, List.filterMap_append]
+  simp [AGMOMUFLog.tags]
 
 end Data
 
@@ -202,21 +190,15 @@ variable {n : ℕ}
 The gate of the AGM OMUF game: a representation `ρ` *matches* a group element
 `y` over the fixed basis `(g₀, H, X₀, Xᵣ, X⃗)` and the issued pairs `tags` iff its
 tag-coefficient list has exactly one entry per issued pair and it evaluates to
-`y` (see *Exact-length tag coefficients* in the module docstring). Decidable, so
-the oracles and the winning condition can `decide` it. The length conjunct is
-the only difference from the MAC game's consistency check. It is not stable
-under extension of `tags`; `AGMRepr.eval` of an accepted representation is.
+`y` (see *Exact-length tag coefficients* in the module docstring). An `abbrev`,
+so decidability is derived and the oracles and the winning condition `decide`
+it. The length conjunct is the only difference from the MAC game's consistency
+check. It is not stable under extension of `tags`; `AGMRepr.eval` of an
+accepted representation is.
 -/
-def reprMatches (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
+abbrev reprMatches (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
     (tags : List (G × G)) (y : G) : Prop :=
   ρ.uv.length = tags.length ∧ ρ.eval g₀ H X₀ Xᵣ X tags = y
-
-/-- Hand-written rather than derived: instance search does not unfold the
-`def` `reprMatches`, and both the oracle and the winning condition `decide` it. -/
-instance instDecidableReprMatches (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
-    (tags : List (G × G)) (y : G) :
-    Decidable (reprMatches ρ g₀ H X₀ Xᵣ X tags y) :=
-  inferInstanceAs (Decidable (_ ∧ _))
 
 /-! ## The instrumented oracle -/
 
