@@ -32,8 +32,9 @@ variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 /-- The bits an analysis run of the reduction returns, for the forgery's verification
 polynomial `φ` and its masked univariate `ψ` (`RedTrace.verifPoly`, `RedTrace.psi`). -/
 structure RedBits where
-  /-- The real μCMZ win predicate (consistency ∧ freshness ∧ `verify`) on the key the masks
-  embed at the challenge exponent. -/
+  /-- The `AGM_UF_CMVAGame` predicate (consistency ∧ freshness ∧ `verify`) with the embedded
+  points `ep` and the reduction's `log` in place of the honest `pp` and log, on the key the
+  masks embed at the challenge exponent. -/
   winBit : Bool
   /-- The reduction's extraction success `recoverDlog gen X ψ = x`. -/
   recBit : Bool
