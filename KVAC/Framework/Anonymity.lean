@@ -248,6 +248,25 @@ def anonIssuance (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
     let (s?, cache₄) ← (usr₂ stU σ').run cache₃
     pure (stA, s?, cache₄)
 
+/-- The common run of the two worlds of Definition 4.4, parameterised by the
+user side. `usr₁` and `usr₂` are the two issuance moves and `pres` the
+presentation procedure, all in the random-oracle state monad, with `U` the
+issuance state and `S` the hidden state that `Present` consults, the credential
+in the real world and the simulator state in the simulated one. Issuance runs
+through `anonIssuance`, then the distinguisher runs under the `Present` oracle
+and the random oracle from the resulting cache and hidden state. -/
+def anonGameRun (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
+    (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
+    {secParam n : Nat} (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
+    (m : kvac.MsgVec crs) (φ : kvac.Pred crs) {U S : Type}
+    (usr₁ : StateT HS.spec.QueryCache ProbComp (U × kvac.IssueMsg crs))
+    (usr₂ : U → kvac.BlindCred crs → StateT HS.spec.QueryCache ProbComp (Option S))
+    (pres : S → kvac.Pred crs → StateT HS.spec.QueryCache ProbComp (kvac.PresentMsg crs))
+    (cache₀ : HS.spec.QueryCache) : ProbComp Bool := do
+  let (stA, s?, cache) ← anonIssuance HS kvac issuer crs sk pp m φ usr₁ usr₂ cache₀
+  (simulateQ (anonPresentImpl HS kvac crs m pres + anonROImpl HS S)
+    (distinguisher.run crs stA)).run' (cache, s?)
+
 /-- World `b = 0` of Definition 4.4. Honest issuance
 `(σ; st_A) ← (KVAC.I.Usr(pp, m, φ) <-> A(sk, pp, φ, m))`, then
 `b' ← D^{Present₀}(st_A)` with `Present₀(φ') = KVAC.P.Usr(pp, m, σ, φ')`. -/
@@ -255,15 +274,12 @@ def anonGameReal (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
     (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
     {secParam n : Nat} (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
     (m : kvac.MsgVec crs) (φ : kvac.Pred crs) (cache₀ : HS.spec.QueryCache) :
-    ProbComp Bool := do
-  let (stA, σ?, cache) ← anonIssuance HS kvac issuer crs sk pp m φ
+    ProbComp Bool :=
+  anonGameRun HS kvac issuer distinguisher crs sk pp m φ
     (simulateQ (zkROImpl HS) (kvac.issueUsr₁ crs pp m φ))
-    (fun stU σ' => simulateQ (zkROImpl HS) (kvac.issueUsr₂ crs stU σ')) cache₀
-  let oracles :=
-    anonPresentImpl HS kvac crs m
-      (fun σ φ' => simulateQ (zkROImpl HS) (kvac.presentUsr crs pp m σ φ')) +
-    anonROImpl HS (kvac.Cred crs)
-  (simulateQ oracles (distinguisher.run crs stA)).run' (cache, σ?)
+    (fun stU σ' => simulateQ (zkROImpl HS) (kvac.issueUsr₂ crs stU σ'))
+    (fun σ φ' => simulateQ (zkROImpl HS) (kvac.presentUsr crs pp m σ φ'))
+    cache₀
 
 /-- World `b = 1` of Definition 4.4. Simulated issuance
 `(st_Sim; st_A) ← (Sim.I(pp, φ) <-> A(sk, pp, φ, m))`, then
@@ -275,12 +291,9 @@ def anonGameSim (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
     (issuer : AnonIssuer HS kvac) (distinguisher : AnonDistinguisher HS kvac issuer.StA)
     (sim : AnonSimulator HS kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
     (sk : kvac.Sk crs) (pp : kvac.Pp crs) (m : kvac.MsgVec crs) (φ : kvac.Pred crs)
-    (cache₀ : HS.spec.QueryCache) : ProbComp Bool := do
-  let (stA, st?, cache) ← anonIssuance HS kvac issuer crs sk pp m φ
-    (sim.simI₁ crs pp φ) (sim.simI₂ crs) cache₀
-  let oracles :=
-    anonPresentImpl HS kvac crs m (sim.simP crs) + anonROImpl HS (sim.SimState crs)
-  (simulateQ oracles (distinguisher.run crs stA)).run' (cache, st?)
+    (cache₀ : HS.spec.QueryCache) : ProbComp Bool :=
+  anonGameRun HS kvac issuer distinguisher crs sk pp m φ
+    (sim.simI₁ crs pp φ) (sim.simI₂ crs) (sim.simP crs) cache₀
 
 /-- The anonymity advantage `Adv^anon_{KVAC,A,D}` of Definition 4.4 at fixed
 `crs`, keys, attribute vector, predicate and initial cache, with respect to the

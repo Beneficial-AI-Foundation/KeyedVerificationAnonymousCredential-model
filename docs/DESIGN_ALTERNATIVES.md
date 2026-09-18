@@ -432,8 +432,7 @@ the crs, and an average does not bound the advantage at every crs, since a rare
 crs may carry advantage one while contributing little to the mean. The
 pointwise reading is the paper's. Its cost is that the zero-knowledge and
 knowledge-soundness advantages of the repository are sampled, so the Theorem
-5.8 statement must bridge the two formulations. Recorded in
-`docs/MICROCMZ_ANONYMITY_PLAN.md`.
+5.8 statement must bridge the two formulations.
 
 ## The issuer adversary runs before and after the user's request
 
