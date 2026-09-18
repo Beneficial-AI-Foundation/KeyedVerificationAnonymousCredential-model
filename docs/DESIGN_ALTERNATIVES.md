@@ -437,16 +437,19 @@ representation into the server's answer (Equation 18) as coefficients read at
 the arity of its own query, and a dictionary reading exactly that many
 positions is correct on any list. Exact length buys the right to evaluate an
 accepted representation against any later transcript, the final one included,
-with the same result, so the second half of the game and the reduction can read
-the finished log against one list of pairs instead of a per-query prefix. Under
+with the same result, so the winning condition and the reduction can read the
+finished log against one list of pairs instead of a per-query prefix. Under
 (i) an excess entry ignored at query time contributes once more pairs exist, so
 the same representation names two different elements at two arities. Under
-(iii) short lists are extension-stable but give many lists for one
-element, and the reduction's coefficient dictionary (`AGMRepr.toReprCoeffs` on
-the MAC side) reads an exact-length list position by position, so exact length
-is the normal form that needs no padding or truncation lemma. The precise
-guarantee is that `AGMRepr.eval` of an accepted representation is unchanged
-under any later extension of the transcript, while `reprMatches` itself is
+(iii) short lists are extension-stable but one coefficient vector has many list
+forms, differing in omitted trailing zeros, and the reduction's coefficient
+dictionary (`AGMRepr.toReprCoeffs` on the MAC side) reads an exact-length list
+position by position, so exact length fixes the list form of a chosen vector
+with no padding or truncation lemma. It does not make representations unique:
+distinct coefficient vectors can name the same group element, which is why the
+log keeps the adversary's choice. The precise guarantee is that `AGMRepr.eval`
+of an accepted representation is unchanged under any later extension of the
+transcript (`AGMRepr.eval_append_of_length_eq`), while `reprMatches` itself is
 not, its length conjunct failing once more pairs exist. Lemmas about an
 earlier commitment must evaluate its representation and never re-check the
 gate at a grown transcript. The MAC game does not need the rule because its
