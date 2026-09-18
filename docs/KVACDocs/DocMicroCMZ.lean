@@ -708,6 +708,17 @@ stated through
 {uses "lem54_bound_assembly"}[].
 :::
 
+:::definition "attribute_collapse_dictionary" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr, KVAC.Schemes.MicroCMZ.linCombCollapseUVLen, KVAC.Schemes.MicroCMZ.AGMRepr.linCombCollapse") (parent := "cmz_amac") (tags := "milestone")
+The `n → 1` attribute-collapse dictionary of {bpref "forgery_case_mac"}[]: along a
+direction `r⃗`, an `n`-attribute representation of {uses "agm_model"}[] is
+translated to a 1-attribute one by combining the attribute coefficients into
+`Σᵢ rᵢ·xᵢ` and keeping every other coefficient, and a weighted sum `Σᵢ rᵢ•Aᵢ` of
+represented elements gets the combined representation whose tag coefficients
+are merged position by position. The evaluation bridges, that against the
+1-attribute basis `Xᵢ = rᵢ•X₁` each translation evaluates as the original does,
+belong to the oracle coupling that consumes this dictionary.
+:::
+
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
 *O24 Lemma 5.5.* Reduces `n`-attribute μCMZ security to the
 single-attribute case {uses "single_attribute_mac"}[], giving its algebraic-MAC
