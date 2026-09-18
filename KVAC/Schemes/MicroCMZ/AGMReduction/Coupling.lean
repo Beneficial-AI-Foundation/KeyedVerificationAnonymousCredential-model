@@ -187,8 +187,10 @@ First conjunct: both impls append one entry per `sign` query in order, so the ho
 reduction log with the masks projected away. Second: `redLogInv`, the per-entry honesty of the
 reduction log on its own.
 
-Stated here only: the per-oracle preservation lemmas for `sign`/`verify`/`help` and the
-run-level view equality that consume this invariant are deferred.
+Stated here only: the `sign` preservation lemma and the run-level coupling that consume
+this invariant live in `SignCoupling.lean` (`reductionSignStep_relTriple`,
+`reductionOracleImpl_preservesInv`) and `SecurityN1.lean` (`AGM_UF_CMVAGame_evalDist_eq`);
+the `verify`/`help` preservation lemmas are deferred.
 
 -- NOTE: Open point: this invariant admits a zero logged base — `au = bu = 0`
 satisfies both conjuncts — so `U ≠ 0` is not recoverable from it. The deferred

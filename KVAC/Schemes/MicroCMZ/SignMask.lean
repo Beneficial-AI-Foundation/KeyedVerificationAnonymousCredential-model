@@ -14,10 +14,10 @@ import VCVio.OracleComp.QueryTracking.Unpredictability
 Per-query output-distribution lemmas for the sign arm: sampling the non-vanishing
 signing masks and forming the code tag has, per query, the same law as the real
 oracle's `U ←$ {g // g ≠ 0}`. These are distributional facts only; the downstream
-security use — a future `AGMPolynomial`-based reduction consuming them by name — is
-deferred (`AGMReduction` does not exist yet). Kept in their own `AGMPolynomial`-free
-module so that reduction (which imports `MvPolynomial`) can reuse them without
-re-elaborating the proofs in an `MvPolynomial`-heavy instance context, where the
+security use — the reduction's sign arm consuming them by name — is
+`reductionSignStep_relTriple` (`AGMReduction/SignCoupling.lean`). Kept in their own
+`AGMPolynomial`-free module so that reduction (which imports `MvPolynomial`) can reuse
+them without re-elaborating the proofs in an `MvPolynomial`-heavy instance context, where the
 `$ᵗ`-subtype samples below would loop `SampleableType` / `Fintype` search. Imports
 only `AlgebraicMAC.lean` (for `glog` / `gen_ne_zero` / `glog_smul`) and `VCVio`.
 -/
@@ -234,9 +234,9 @@ masks and forming the honest pair `(U, key·U)` at `U = aᵤ·g + bᵤ·X` (`X =
 exactly the law of `(U ←$ {g ≠ 0}; (U, key·U))`: both are
 `(fun g => (g, key·g)) <$> uniformNonzero G`, and the `U`-laws agree by
 `sign_U_dist_eq`. This builds the honest pair *directly*; rewriting Eq. 14's degree-2
-tag `Vⱼ` (in the 3-DL challenge bases) to `key·U` — and hence the coupling to the
-paper's simulator — is the reduction's obligation and is deferred. The mask sample is
-the opaque `reductionMaskSample`, so a future reduction can apply this by name without
+tag `Vⱼ` (in the 3-DL challenge bases) to `key·U` is `embedTag_eq`
+(`AGMReduction/Core.lean`); `reductionSignStep_relTriple` applies both. The mask sample is
+the opaque `reductionMaskSample`, so the reduction applies this by name without
 surfacing the raw `$ᵗ`. -/
 lemma sign_masked_tag_dist_eq (x key : F) :
     evalDist ((fun p : {p : F × F // p.1 • gen + p.2 • (x • gen) ≠ 0} =>
