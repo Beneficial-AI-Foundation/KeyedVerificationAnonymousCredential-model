@@ -36,7 +36,8 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   assembled over the sub-lemmas its module docstring lists;
 - `AttributeCollapse` — the `n → 1` attribute collapse of Lemma 5.5 (Claim 5.7):
   the representation translations along a direction `r⃗`, the wrapper adversary
-  `nTo1Adversary`, and the general-`n` 3-DL reduction `microCMZN3DLReduction`.
+  `nTo1Adversary`, and the general-`n` 3-DL reduction `microCMZN3DLReduction`
+  with its experiment and advantage at base `gen`.
 
 Lemma 5.4 stays untagged here until the theorem is sorry-free.
 
