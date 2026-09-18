@@ -87,7 +87,7 @@ section MaskedSubstNormalForms
 -- Unlike the projections above, these mention `AGMPoly`/`Polynomial` and so keep `Field F`.
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G]
 
-/-- The packaged substitution — the form `microCMZ3DLReduction` emits its `ψ` in — in the
+/-- The packaged substitution — the form `RedTrace.psi` emits `ψ` in — in the
 `affineSubst` form everything downstream is stated in. -/
 lemma maskedSubst_def (L : RedLog F G) (aM bM : FixedMasks F) :
     L.maskedSubst aM bM = AGMPoly.affineSubst (aM.embed L.aMask) (bM.embed L.bMask) := rfl

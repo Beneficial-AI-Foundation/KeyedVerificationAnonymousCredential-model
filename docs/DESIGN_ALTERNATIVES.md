@@ -317,7 +317,7 @@ narrowed, not contradicted, by a structural argument.
 
 **Decision.** The challenge embedding builds `X₀`'s `X`-coefficient as
 `a₀·b_h + b₀·a_h` (`AGMReduction/Core.lean`, PR #88, the Eq. 13 block of
-`microCMZ3DLReduction`). Like the `3/p` entry above, the rejected alternative
+`redTrace`). Like the `3/p` entry above, the rejected alternative
 here is the paper's own printed value rather than a formalization ambiguity —
 but unlike that entry, this one is a definite error: the printed coefficient
 breaks the identity `X₀ = x₀·H` outright (see the Fidelity argument below).
