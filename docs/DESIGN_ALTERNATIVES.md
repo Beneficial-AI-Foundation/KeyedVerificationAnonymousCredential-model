@@ -449,7 +449,7 @@ cannot compare an oracle value it saw earlier with the value a simulator
 programmed at its first move, so a simulator that reprograms the oracle when
 it forms the request is undetectable and the game is weaker than the paper's.
 One round of issuance bounds the protocol messages, not the adversary's local
-oracle computation. Found in the codex review of the module.
+oracle computation.
 
 ## Two adversary structures, not one pair
 
@@ -497,7 +497,7 @@ presentation under φ regardless of φ′ would leave the oracle's argument idle
 and let the distinguisher request only presentations of the issuance
 predicate. The comparison with CMZ14 that follows the definition speaks of
 presentations under the predicates the verifier asks for. The printed φ reads
-as a typo for φ′. Not yet reported to the author.
+as a typo for φ′.
 
 ## Exact-length representations in the AGM OMUF game
 
@@ -566,7 +566,7 @@ September 2026 (Track CMZ-OMUF, step A4 of #12).
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
 and returns `crs := (Γ, H)`, the group description together with a random
-group element (Figure 8). The μCMZ instance fixes the group and its generator
+group element (Figure 9). The μCMZ instance fixes the group and its generator
 as type parameters and returns only `H` from `setup`, so the framework's
 quantifier "crs ∈ [KVAC.S(1^λ, n)]" ranges over every group of the class and
 every `H`, with no λ in it. The faithful crs is `Γ × 𝔾`. Issue #148 tracks the

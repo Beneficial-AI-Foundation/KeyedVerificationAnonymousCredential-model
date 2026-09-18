@@ -71,7 +71,7 @@ The advantage is the distinguishing advantage between the two worlds.
   issuer adversary alone.
 - **The group is not an output of setup.** In the paper `μCMZ.S(1^λ, n)` runs
   `GrGen(1^λ)` and returns `crs := (Γ, H)` with `Γ = (𝔾, p, G)` and `H ←$ 𝔾`
-  (Figure 8), so "crs ∈ [KVAC.S(1^λ, n)]" ranges over the group description as
+  (Figure 9), so "crs ∈ [KVAC.S(1^λ, n)]" ranges over the group description as
   well as `H`, and `p` grows with `λ`. This module takes `kvac.setup`
   abstractly and adds nothing. The μCMZ instance fixes the group and its
   generator as parameters and returns only `H` from `setup`, so there the
@@ -369,7 +369,7 @@ variants below constrain the issuer adversary and the distinguisher separately.
 The hash specification `HS` is fixed across the security parameter, as in
 `Extractable` and `ZKAdv`, the fixed-parameter modelling of issue #148. The
 sibling modules name it `H`. This module writes `HS`, since `H` is the crs
-element of μCMZ in the paper's Figure 8. -/
+element of μCMZ in the paper's Figure 9. -/
 def Anonymous (HS : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO HS)))
     (isPPT : (issuer : AnonIssuer HS kvac) → AnonDistinguisher HS kvac issuer.StA → Prop)
     (n : Nat) : Prop :=
