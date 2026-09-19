@@ -412,6 +412,92 @@ probability `2/p − 1/p²`. Reductions replaying issuance must account for
 the per-nonce `1/p` distribution differences, as the AGM track already does for
 the tag base (*Conditioned sign masks* above).
 
+## Anonymity game at fixed setup, negligibility over instance families
+
+**Decision.** The anonymity games `anonGameReal` and `anonGameSim`
+(`Framework/Anonymity.lean`, PR #186) take the crs, the key pair, the attribute
+vector, the predicate and the initial random-oracle table as parameters. The
+predicate `Anonymous` quantifies over families of admissible instances indexed
+by the security parameter, one `AnonInstance` per λ with the support
+hypotheses, and asks the resulting function of λ to be negligible.
+
+**Rejected alternative.** Sampling the crs and the keys inside the game and
+letting the adversary choose the attribute vector and the predicate, as
+`EXTGame` does for Definition 4.5 and as `zkRun` does for zero knowledge.
+
+**Fidelity argument.** Definition 4.4 quantifies "for all crs ∈ [KVAC.S(1^λ, n)]
+and (sk, pp) ∈ [KVAC.K(crs)], m⃗ ∈ M^n, φ ∈ Φ such that φ(m⃗) = 1" and then
+asks for negligibility in λ. A game that samples setup bounds the average over
+the crs, and an average does not bound the advantage at every crs, since a rare
+crs may carry advantage one while contributing little to the mean. The
+pointwise reading is the paper's. Its cost is that the zero-knowledge and
+knowledge-soundness advantages of the repository are sampled, so the Theorem
+5.8 statement must bridge the two formulations.
+
+## The issuer adversary runs before and after the user's request
+
+**Decision.** `AnonIssuer` has two runs, `prepare` before the user speaks and
+`respond` on the request μ, with a private state between them, both with
+random-oracle access.
+
+**Rejected alternative.** One run of A on μ, after the user's first move.
+
+**Fidelity argument.** A(sk, pp, φ, m⃗) is an oracle algorithm in the random
+oracle model and queries at any time. With one run after μ, an adversary
+cannot compare an oracle value it saw earlier with the value a simulator
+programmed at its first move, so a simulator that reprograms the oracle when
+it forms the request is undetectable and the game is weaker than the paper's.
+One round of issuance bounds the protocol messages, not the adversary's local
+oracle computation.
+
+## Two adversary structures, not one pair
+
+**Decision.** `AnonIssuer` and `AnonDistinguisher` are two structures. The
+distinguisher takes the issuer's state type as a parameter, and the
+efficiency predicate of `Anonymous` is on the two.
+
+**Rejected alternative.** One record bundling A and D with a shared state type,
+on the ground that D receives A's output.
+
+**Fidelity argument.** Definition 4.4 names "adversaries A, D" and its variants
+constrain them separately, statistical anonymity for unbounded A and D, and
+everlasting forward anonymity for unbounded D alone. A shared record needs
+one efficiency predicate on the pair and leaves the everlasting variant to
+prose. Two structures make it a declaration,
+`EverlastingForwardAnonymous`. The shared state type is a typing constraint
+that a parameter carries as well as a record does.
+
+## The anonymity simulator runs in the random-oracle state monad
+
+**Decision.** The three procedures of `AnonSimulator` have type
+`StateT HS.spec.QueryCache ProbComp _`, as `ZKSimulator` does, so they read and
+may reprogram the oracle table.
+
+**Rejected alternative.** The carrier `OracleComp (ZKRO HS)` of the honest
+algorithms, which queries the oracle and cannot program it.
+
+**Fidelity argument.** O24 §3.3 grants a simulator the power to "explicitly
+re-program the random oracle", and the §5.4 simulator of Theorem 5.8 calls the
+proof systems' simulators to form π_iu and π_p. A simulator without that power
+would define a stronger notion than the paper's, and Theorem 5.8 would not be
+provable for it.
+
+## The Present oracle answers under the queried predicate
+
+**Decision.** `anonPresentImpl` answers `Present_b(φ')` with
+`KVAC.P.Usr(pp, m⃗, σ, φ')` or `Sim.P(st_Sim, φ')`, the predicate of the query.
+
+**Rejected alternative.** The paper's oracle line as printed, which returns
+`KVAC.P.Usr(pp, m⃗, σ, φ)` and `Sim.P(st_Sim, φ)` with the issuance predicate
+`φ`.
+
+**Fidelity argument.** The same line checks "if φ′(m⃗) holds", and a
+presentation under φ regardless of φ′ would leave the oracle's argument idle
+and let the distinguisher request only presentations of the issuance
+predicate. The comparison with CMZ14 that follows the definition speaks of
+presentations under the predicates the verifier asks for. The printed φ reads
+as a typo for φ′.
+
 ## Exact-length representations in the AGM OMUF game
 
 **Decision.** In the AGM-instrumented one-more unforgeability game for the
@@ -477,4 +563,14 @@ September 2026 (Track CMZ-OMUF, step A4 of #12).
 
 ## Open alternatives
 
-None at present.
+**The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
+and returns `crs := (Γ, H)`, the group description together with a random
+group element (Figure 9). The μCMZ instance fixes the group and its generator
+as type parameters and returns only `H` from `setup`, so the framework's
+quantifier "crs ∈ [KVAC.S(1^λ, n)]" ranges over every group of the class and
+every `H`, with no λ in it. The faithful crs is `Γ × 𝔾`. Issue #148 tracks the
+encodings, a deterministic family `GrGen : ℕ → Type` as the committed step,
+and sampled group descriptions as the fully faithful one. Until it closes the
+asymptotic predicates `Anonymous`, `AnonymousPoly`, `Extractable` and
+`ExtractablePoly` are not provable for μCMZ, and the theorems bound the
+advantages at fixed parameters.

@@ -144,14 +144,24 @@ variants O24 distinguishes:
 Anonymity requires a simulator that can produce indistinguishable
 transcripts for both issuance and presentation.
 
-*TODO (Track F2).* Define the anonymity game and the two variants. Use
-the `SampleableGroup` typeclass from the *Core* chapter
-(game-construction binders).
+`Framework/Anonymity.lean` defines the game and its advantage at fixed
+crs, keys, attribute vector, predicate and random-oracle cache, then the
+predicate `Anonymous` over families of such instances indexed by the
+security parameter, its statistical and everlasting forward variants, and
+`AnonymousPoly` with the `n ≤ poly(λ)` side condition. The issuer adversary
+and the distinguisher are two structures, so the variants constrain them
+separately.
 
-:::definition "kvac_anonymity" (parent := "framework_anonymity") (tags := "paper, O24 Def 4.4") (effort := "medium") (priority := "high")
-*O24 Definition 4.4.* Anonymity for a KVAC scheme {uses "kvac_syntax"}[]:
-issuance and presentation are simulatable without the secret attributes,
-so presentations are unlinkable across executions.
+:::definition "kvac_anonymity" (lean := "KVAC.Framework.AnonSimulator, KVAC.Framework.AnonQuery, KVAC.Framework.AnonPresentSpec, KVAC.Framework.AnonComp, KVAC.Framework.anonPresentImpl, KVAC.Framework.anonROImpl, KVAC.Framework.AnonDistSpec, KVAC.Framework.AnonIssuer, KVAC.Framework.AnonDistinguisher, KVAC.Framework.anonIssuance, KVAC.Framework.anonGameRun, KVAC.Framework.anonGameReal, KVAC.Framework.anonGameSim, KVAC.Framework.AnonAdv, KVAC.Framework.AnonInstance, KVAC.Framework.AnonInstance.adv, KVAC.Framework.NonemptyMsg, KVAC.Framework.Anonymous, KVAC.Framework.StatisticallyAnonymous, KVAC.Framework.EverlastingForwardAnonymous, KVAC.Framework.AnonymousPoly") (parent := "framework_anonymity") (tags := "paper, O24 Def 4.4")
+*O24 Definition 4.4.* Anonymity for a KVAC scheme {uses "kvac_syntax"}[].
+An issuer adversary `A` holding the secret key interacts with the honest
+user or with a simulator `Sim.I` that does not know the attributes, and a
+distinguisher `D` then queries a `Present` oracle answered by the honest
+user or by `Sim.P`. The advantage `AnonAdv` is the distinguishing advantage
+between the two worlds at fixed crs, keys, attributes and predicate. The
+scheme is anonymous when one simulator makes it negligible for every
+efficient pair `(A, D)` at every family of instances, and statistically
+anonymous when the guard is dropped.
 :::
 
 # Extractability (Definition 4.5)
