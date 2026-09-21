@@ -139,7 +139,7 @@ The security tracks for each scheme are mostly independent of the other scheme. 
   - Modules: `KVAC/Schemes/MicroCMZ/Anonymity.lean`
   - Depends on: Track CMZ-C (#163), Track F2 (anonymity game, #104), Track Σ (zk and ksnd terms)
   - Theorem 5.8: μCMZ is anonymous given a knowledge-sound ZKP. Statistical anonymity result.
-  - **Status:** not started. A statement scaffold is proposed in PR #139 (in review).
+  - **Status:** not started. The statement is item 10 of the October plan (#10), over the μCMZ instance of #163.
 - [ ] **Track CMZ-E** — μCMZ extractability (§5.5)
   - Modules: `KVAC/Schemes/MicroCMZ/Extractability.lean`
   - Depends on: Track CMZ-C (#163), Track F2, Track CMZ-M, Track Σ, the #118 cache-extension bridge (see PR #140)
