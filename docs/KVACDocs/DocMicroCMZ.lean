@@ -618,8 +618,8 @@ are read off once here.
 :::proof "win_without_extraction_forces_bad"
 Destructure the run's support once for the embedding certificate and the
 log-honesty and `U`-form invariants of {uses "transcript_invariants"}[],
-transported by {uses "transcript_index_transport"}[]; the arity-clean vanishing
-brick of {uses "embedded_vanishing_lem54"}[] then gives `eval (a + x·b) φ = 0`,
+transported by {uses "transcript_index_transport"}[]; the vanishing lemma at
+abstract arity of {uses "embedded_vanishing_lem54"}[] then gives `eval (a + x·b) φ = 0`,
 and the two contrapositives close: a non-identity forgery gives `φ ≠ 0` through
 the identity-branch companion in the same node, its key relation spelled through
 {uses "reduction_coupling_bricks"}[], and failed root recovery gives `ψ = 0`

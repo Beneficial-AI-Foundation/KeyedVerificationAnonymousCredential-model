@@ -133,7 +133,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
   obtain ⟨⟨⟨hconsU, hconsV⟩, hfresh⟩, hσ1, hmaceq⟩ := hw
   simp only [ne_eq, decide_eq_true_eq] at hr
   simp only [decide_eq_true_eq]
-  -- the MAC relation between the two represented values, in the form the bricks take
+  -- the MAC relation between the two represented values, in the form the embedding lemmas take
   have hkey : tr.ρV.evalAt gen tr.ep tr.log.tags
       = macScalar (maskedKey x tr.aM tr.bM) (fun _ => tr.mStar 0)
           • tr.ρU.evalAt gen tr.ep tr.log.tags := by
