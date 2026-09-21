@@ -738,6 +738,12 @@ with the honest 1-attribute oracle answers as the honest `n`-attribute oracle
 does under the embedded key `xᵢ = rᵢx₁`, on all inputs.
 :::
 
+:::proof "collapse_oracle_coupling"
+Case split on the arm; each answer is decided in the exponent, where the two
+evaluation bridges of {uses "attribute_collapse_dictionary"}[] rewrite the
+collapsed check into the `n`-attribute one at the embedded key.
+:::
+
 :::theorem "collapse_freshness_transfer" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
 When the forgery's attribute combination collides with no signed message and
 `x₁ ≠ 0`, the collapsed forgery message `Σᵢ m*ᵢrᵢ` is fresh among the collapsed
@@ -745,10 +751,21 @@ signed messages, so a win of the `n`-attribute adversary is a win of the wrapper
 of {uses "attribute_collapse_reduction"}[].
 :::
 
+:::proof "collapse_freshness_transfer"
+A collision `Σᵢ m*ᵢrᵢ = Σᵢ mᵢrᵢ` with a signed `m⃗ ≠ m⃗*` is a nonzero linear
+form in `r⃗` vanishing at the sampled direction, which the collision-free
+hypothesis excludes; the wrapper's forgery is then fresh by definition.
+:::
+
 :::theorem "collapse_direction_averaging" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
 Off the event `x₁ = 0`, the marginal of `x⃗ = r⃗·x₁` for uniform `(r⃗, x₁)` is the
 uniform `n`-attribute key, so averaging the per-direction bound over `r⃗` costs
 `1/p`.
+:::
+
+:::proof "collapse_direction_averaging"
+For `x₁ ≠ 0` the map `r⃗ ↦ r⃗·x₁` is a bijection of `Fⁿ`, so the conditional law
+of `x⃗` is uniform; the excluded event `x₁ = 0` has mass `1/p`.
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")

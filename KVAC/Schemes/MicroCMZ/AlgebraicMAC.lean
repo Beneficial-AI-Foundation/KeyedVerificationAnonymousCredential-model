@@ -207,8 +207,7 @@ abbrev AGMLog (F G : Type) (n : ℕ) := List ((Fin n → F) × (G × G))
 
 /-- Representation consistency of a `help` query against the transcript basis
 `(g₀, H, X₀, Xᵣ, X⃗)` and the issued tags: every submitted element equals the
-evaluation of its representation. Checked by the honest oracle and re-checked
-per attribute by the `n → 1` collapse oracle. -/
+evaluation of its representation. -/
 abbrev helpConsistent (H : G) (pp : G × G × (Fin n → G)) (tags : List (G × G))
     (A₀ : G) (A : Fin n → G) (Z : G) (ρ₀ : AGMRepr F n) (ρA : Fin n → AGMRepr F n)
     (ρZ : AGMRepr F n) : Prop :=

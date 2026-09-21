@@ -21,7 +21,7 @@ The paper's reduction `B` (Claim 5.7) fixes `z₁ = 1`, samples `zᵢ` for
 (index `0` in `Fin n`) is `r₁ • X₁`, with `X₁` the 1-attribute game's public
 element (the paper's `z₁ = 1` is the case `r₁ = 1`). Because the instrumented
 game's `verify`/`help` queries carry algebraic representations, those are
-collapsed too. The message collapse `Σᵢ rᵢ mᵢ` is the wrapper's job.
+collapsed too. The message collapse `Σᵢ mᵢ rᵢ` is the wrapper's job.
 
 This file holds the pure-algebra dictionary of that collapse and the wrapper
 built on it.
@@ -83,8 +83,9 @@ def linCombCollapseUVLen (ρA : Fin n → AGMRepr F n) : ℕ :=
 `Σᵢ rᵢ • Aᵢ`, where each `Aᵢ` carries the `n`-attribute representation `ρA i`.
 It is built to evaluate, against the 1-attribute basis
 `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, to `Σᵢ rᵢ • (ρA i).eval` against the embedded
-basis `(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)`; this is the bridge the `help` arm of
-the `n → 1` wrapper will rely on to collapse an `n`-attribute help query.
+basis `(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)`. The `help` arm of `nTo1Adversary`
+collapses an `n`-attribute help query through it, and this evaluation identity
+is what the coupling `collapse_oracle_coupling` needs.
 
 The scalar-coefficient fields are the weighted sums; the single attribute
 coefficient is `Σᵢ Σⱼ rᵢ·rⱼ·(ρA i).x j` (the collapsed attribute coefficient
@@ -103,8 +104,8 @@ def AGMRepr.linCombCollapse (r : Fin n → F) (ρA : Fin n → AGMRepr F n) :
 
 /-! ## The `n → 1` query-translation wrapper -/
 
-/-- The collapsed message `Σᵢ rᵢ · mᵢ` of the `n → 1` wrapper. -/
-def collapseMsg (r m : Fin n → F) : Fin 1 → F := fun _ => ∑ i, r i * m i
+/-- The collapsed message `Σᵢ mᵢ · rᵢ` of the `n → 1` wrapper. -/
+def collapseMsg (r m : Fin n → F) : Fin 1 → F := fun _ => ∑ i, m i * r i
 
 /-- Query-translation oracle of the `n → 1` collapse. Each `n`-attribute query
 becomes one 1-attribute `query` in `OracleComp (AGMOracleSpec F G 1)`: messages
@@ -122,7 +123,8 @@ oracle does. The check is needed because the honest `help` check is per attribut
 `n ≥ 2` (individually wrong representations whose weighted errors cancel). A
 genuine algebraic adversary never trips it (its `Aᵢ = (ρA i).eval`). The
 pre-check is what lets the `sign`/`verify`/`help` answers be coupled exactly with
-the embedded-key `n`-attribute oracle; that coupling is proved with the wrapper.
+the embedded-key `n`-attribute oracle; that coupling is the blueprint stub
+`collapse_oracle_coupling`, not in this file.
 
 The oracle tracks the issued-tag list `List (G × G)` as its state (each forwarded
 `sign` appends the returned tag) so that the `help` consistency `eval` uses the
@@ -152,7 +154,7 @@ noncomputable def collapseOracleImpl (r : Fin n → F) (H : G)
       else
         pure (false, tags)
 
-/-- The `n → 1` attribute-collapse wrapper adversary (O24 Claim 5.7). For a fixed
+/-- The `n → 1` attribute-collapse wrapper adversary (Claim 5.7). For a fixed
 direction `r⃗`, a 1-attribute adversary that runs `A` against
 `collapseOracleImpl` and returns the collapsed forgery. The tag-tracking state
 starts empty and is projected away (`StateT.run' []`). -/
