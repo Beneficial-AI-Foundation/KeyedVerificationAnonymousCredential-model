@@ -7,6 +7,7 @@ import KVAC.Core.NIZKP.Construction
 import KVAC.Core.Hash
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.SimSemantics.Append
+import VCVio.OracleComp.QueryTracking.RandomOracle.Simulation
 
 /-!
 # Zero-knowledge for a non-interactive proof system (O24 §3.3)
@@ -59,6 +60,8 @@ prover runs through `zkROImpl` on the same cache and so shares its answers.
   `(x, w) ∈ R` guard.
 - `zkGameReal` / `zkGameSim` — the experiments as `ProbComp Bool`.
 - `ZKAdv` — the distinguishing advantage `boolDistAdvantage` between them.
+- `runRO` — interpret a computation from a cache through `zkROImpl`. The lemma
+  `runRO_liftM` says a lifted `ProbComp` computation leaves that cache unchanged.
 
 A scheme is zero-knowledge if some `Sim` makes `ZKAdv` negligible in `secParam`
 for every PPT adversary. The asymptotic / negligibility statement is deferred,
@@ -216,5 +219,41 @@ issue #118. -/
 def runRO {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
     (c : OracleComp (ZKRO H) α) : ProbComp (α × H.spec.QueryCache) :=
   (simulateQ (zkROImpl H) c).run cache
+
+/-! ## Oracle-free computations under `runRO`
+
+A `ProbComp` computation enters `OracleComp (ZKRO H)` through `liftM`, VCV-io's
+`liftComp` along the sub-specification `unifSpec ⊂ₒ ZKRO H`. The lifted
+computation never queries `H`. Run through `runRO` it returns the cache it was
+given, and its outputs are those of the original computation. A scheme uses
+this lift to reuse `ProbComp` algorithms inside a credential at the oracle
+carrier, for instance the μCMZ base MAC's `setup` and `keygen` (issue #118). -/
+
+/-- The implementation `zkROImpl` unfolds to VCV-io's forwarding handler for the
+uniform arm summed with the lazy random oracle, by `rfl`. -/
+lemma zkROImpl_eq_unifFwd_add (H : HashSpec) :
+    zkROImpl H = unifFwdImpl H.spec + H.roImpl := rfl
+
+/-- **Lifted computations leave the cache alone.** Running a lifted `ProbComp`
+computation from `cache` returns each output paired with the same `cache`. -/
+lemma runRO_liftM {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
+    (p : ProbComp α) :
+    runRO H cache (liftM p) = (fun x => (x, cache)) <$> p := by
+  rw [runRO, zkROImpl_eq_unifFwd_add]
+  exact roSim.run_liftM H.roImpl p cache
+
+/-- The support form of `runRO_liftM`. The pair `(a, c')` is a result of the
+lifted run from `cache` iff `a` is a result of the original computation and
+`c' = cache`. -/
+lemma mem_support_runRO_liftM_iff {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
+    (p : ProbComp α) (a : α) (c' : H.spec.QueryCache) :
+    (a, c') ∈ support (runRO H cache (liftM p)) ↔ a ∈ support p ∧ c' = cache := by
+  rw [runRO_liftM, support_map, Set.mem_image]
+  constructor
+  · rintro ⟨x, hx, hxc⟩
+    obtain ⟨rfl, rfl⟩ := Prod.mk.inj hxc
+    exact ⟨hx, rfl⟩
+  · rintro ⟨ha, rfl⟩
+    exact ⟨a, ha, rfl⟩
 
 end KVAC.Core
