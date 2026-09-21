@@ -282,7 +282,7 @@ identities the coupling will cite are named: each issued tag is the honest
 key multiple of its own base at the challenge exponent, and each
 mask-derived univariate evaluates there to the mask it lifts. The
 fidelity sentence — each issued tag honestly distributed — is discharged
-per query in {bpref "sign_oracle_coupling"}[]; the run-level view equality
+per query in {bpref "sign_oracle_coupling"}[]; the run-level coupling
 that lifts it across a whole transcript is {bpref "run_level_coupling"}[].
 
 Two departures from O24. Equation 14 prints `Vⱼ`'s `G`-coefficient with a
@@ -531,14 +531,21 @@ arity 1 reads its message only at `0`, so the entry's own message and the
 transcript-indexed one agree.
 :::
 
-:::theorem "run_level_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
-The run-level view equality: the adversary's view in the game of
-{uses "agm_model"}[] and its view against {uses "simulated_sign_oracle"}[]
-are identically distributed. Lifts the per-step couplings of
-{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[]
-across a whole transcript by induction on the oracle calls, over the
-keygen reparametrization that trades the honest key for the masks of
-{uses "challenge_embedding"}[].
+:::theorem "run_level_coupling" (lean := "KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame_evalDist_eq") (parent := "cmz_amac") (tags := "milestone")
+The run-level coupling: the game of {uses "agm_model"}[] and the win-bit
+marginal of {uses "reduction_analysis_experiment"}[] — the adversary run
+against {uses "simulated_sign_oracle"}[] — are identically distributed, so
+the AGM advantage is read as an event probability on the experiment.
+:::
+
+:::proof "run_level_coupling"
+The keygen reparametrization trades the honest key for the masks of
+{uses "challenge_embedding"}[] by a uniform-preserving shear; the per-step
+couplings {uses "sign_oracle_coupling"}[] and
+{uses "verify_help_oracle_coupling"}[] are then lifted across the whole
+transcript by induction on the oracle calls, carrying the state invariant and
+mask-uniformity lemmas of {uses "reduction_coupling_bricks"}[]; the win bit is a
+function of the matched transcripts on both sides.
 :::
 
 :::theorem "sz_adaptive_bound" (lean := "KVAC.Schemes.MicroCMZ.redFull_szBit_le") (parent := "cmz_amac") (tags := "milestone")
@@ -637,9 +644,9 @@ branch of {bpref "identity_case_lem54"}[] is absorbed there), which by
 :::
 
 :::proof "lem54_bound_assembly"
-Read on the AGM game through the run-level view equality
-{uses "run_level_coupling"}[], which carries its win onto the experiment's
-`winBit`; there the union bound of the body splits the win as stated.
+Read on the AGM game through the run-level coupling
+{uses "run_level_coupling"}[], which gives the game's win and the experiment's
+`winBit` the same law; there the union bound of the body splits the win as stated.
 :::
 
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
@@ -687,7 +694,7 @@ stated through
 {uses "embedded_vanishing_lem54"}[] and {uses "embedded_consistency_bricks"}[] and
 {uses "verification_polynomial_consistency"}[], and the
 {uses "transcript_invariants"}[] they read, restated by index in
-{uses "transcript_index_transport"}[]; the run-level view equality
+{uses "transcript_index_transport"}[]; the run-level coupling
 {uses "run_level_coupling"}[]; the bad-event bound
 {uses "sz_adaptive_bound"}[] over the static core
 {uses "sz_static_core"}[]; and the union bound

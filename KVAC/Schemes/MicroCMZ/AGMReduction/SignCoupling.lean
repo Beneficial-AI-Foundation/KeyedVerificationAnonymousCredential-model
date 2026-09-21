@@ -35,8 +35,8 @@ key in the explicit form `x₀ + xᵣ + m·x₁` instead, and this is the lemma 
 one form to the other; each lemma at abstract arity converts in its own proof, at
 the boundary.
 
-The `verify` and `help` oracle arms, and the run-level view equality, are
-deferred — as are the step couplings that consume the lemmas above.
+The `verify` and `help` oracle arms are deferred; the run-level coupling is
+`AGM_UF_CMVAGame_evalDist_eq` in `SecurityN1.lean`.
 
 Everything here is deterministic algebra plus one distributional equality lifted
 to a relational triple; no probability *bounds* — the counting layer sits above it.
