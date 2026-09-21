@@ -181,8 +181,7 @@ failure arm. Under the oracle-carrier correctness {uses "kvac_correctness"}[],
 every result of the honest MAC code generation run from any random-oracle
 cache at least as large as the keygen cache is a credential, so the user
 counter always advances as in O24 Figure 8. The run is transported back to
-the keygen cache by a cache transport lemma for `runRO`, whose proof is
-pending.
+the keygen cache by a cache transport lemma for `runRO`.
 :::
 
 :::proof "newusr_never_fails"
