@@ -6,7 +6,7 @@ Branch `microcmz-remaining-statements`, worktree `KVAC-prj/kvac-statements`, fro
 
 1. μCMZ `KVACSyntax` instance, `Credential.lean` (#163, part 4 of #6, node `mucmz_construction`), over abstract `NIZKPSyntax` parameters for R_iu, R_is, R_p, with its correctness `CorrectRO` (Definition 4.3) under completeness of the three parameters.
 2. Partial‑disclosure predicate family {φ_a⃗} (#104), and the `Enforces` proofs of `riuSigma` and `rpSigma` for the family, which `Relations.lean` supplies only for `trivialPolicy`.
-3. Hypothesis "ZKP proves R ⊇ R_cmz" with a composition clause for the shared `ZKRO H` (PR #139 stub), over the §3.3 argument properties (node `zk_arguments`).
+3. Hypothesis "ZKP proves R ⊇ R_cmz" with a composition clause for the shared `ZKRO H` (#176), over the §3.3 argument properties (node `zk_arguments`).
 4. Fiat–Shamir transform of the three Σ‑protocols (#3, rescope pending), oracle reprogramming `HashSpec.programFresh` (#60), the no‑coins lemma for the Fiat–Shamir verifier (#101), the encoding and domain‑separation obligations of `Core/Hash.lean`, and Theorem 9.2 (strong simulation extractability of Σ for the admissible relations of Definition 9.1, in the AGM and ROM). Deferrable, the instance is stated over abstract parameters and the bounds over abstract Adv^zk and Adv^ksnd terms. Item 11 needs the concrete Σ instantiation.
 
 **Theorem 5.1, UF‑CMVA (Track CMZ‑M)**
@@ -19,7 +19,7 @@ Branch `microcmz-remaining-statements`, worktree `KVAC-prj/kvac-statements`, fro
 **Theorem 5.8, anonymity (Track CMZ‑A)**
 
 9. Anonymity game, Definition 4.4, `Framework/Anonymity.lean` (node `kvac_anonymity`).
-10. Issuance and presentation simulators of §5.4, and the Theorem 5.8 bound (node `mucmz_anonymity`, not yet stated). PR #139 has a qualitative `Anonymous` scaffold under review, its three stubs `sorry` bodied since 8ddfa6b.
+10. Issuance and presentation simulators of §5.4, and the Theorem 5.8 bound (node `mucmz_anonymity`, not yet stated). Definition 4.4 is `Framework/Anonymity.lean` (PR #186).
 11. The corollary after Theorem 5.2, statistical anonymity of μCMZ[ZKP = Σ] under the hypothesis that Σ is statistically knowledge sound. Needs the Σ instantiation of item 4 and the bound of item 10.
 
 **Theorem 5.10, extractability (Track CMZ‑E)**
