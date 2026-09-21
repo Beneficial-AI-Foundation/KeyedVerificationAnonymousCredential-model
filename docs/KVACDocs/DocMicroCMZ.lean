@@ -544,7 +544,7 @@ The keygen reparametrization trades the honest key for the masks of
 couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[] are then lifted across the whole
 transcript by induction on the oracle calls, carrying the state invariant and
-mask-uniformity bricks of {uses "reduction_coupling_bricks"}[]; the win bit is a
+mask-uniformity lemmas of {uses "reduction_coupling_bricks"}[]; the win bit is a
 function of the matched transcripts on both sides.
 :::
 

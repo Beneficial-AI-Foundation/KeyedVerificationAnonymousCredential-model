@@ -28,7 +28,7 @@ sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`:
 - `redFull_badBit_le_szBit` — the bad event implies the shift
   event (via `Coupling`'s shift lemma);
 - `redFull_szBit_le` — the shift event has probability ≤ `3/p`
-  (the Schwartz–Zippel keystone);
+  (the adaptive Schwartz–Zippel bound);
 - `AGM_UF_CMVAGame_evalDist_eq` — the real game and `redFull`'s `winBit`
   are identically distributed.
 
@@ -172,7 +172,7 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
 
 1. *game bridge*: `AGM_UF_CMVAAdv gen A secParam = Pr[winBit | redFull gen A]` — the
    real game and the reduction's run are identically distributed (the masks make
-   `H, Xᵣ, X₁` uniform, `X₀ = x₀·H` rides on the reparametrized key, and Sign matches
+   `H, Xᵣ, X₁` uniform, `X₀ = x₀·H` is determined by the reparametrized key, and Sign matches
    `mac`; blueprint `run_level_coupling`);
 2. *split on extraction*: `Pr[winBit] ≤ Pr[recBit] + Pr[winBit ∧ ¬recBit]`;
 3. *extraction*: `Pr[recBit] = microCMZ3DLReductionAdv gen A` (`redFull_recBit_eq`);
