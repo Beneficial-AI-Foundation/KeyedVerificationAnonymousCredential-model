@@ -541,13 +541,22 @@ keygen reparametrization that trades the honest key for the masks of
 {uses "challenge_embedding"}[].
 :::
 
-:::theorem "sz_adaptive_bound" (parent := "cmz_amac") (tags := "milestone") (effort := "large") (priority := "high")
+:::theorem "sz_adaptive_bound" (lean := "KVAC.Schemes.MicroCMZ.redFull_szBit_le") (parent := "cmz_amac") (tags := "milestone")
 The Schwartz–Zippel bad event at `3/p` for the adversary's *own*
-polynomial. Upgrades the fixed-polynomial statement of
-{uses "sz_static_core"}[] to the adaptive one by decoupling the offset from
-the shift — O24's "the `b`'s are uniformly random and perfectly hidden by
-the respective `a`'s" — surviving the nonzero-`U` conditioning of
-{uses "sign_masks"}[].
+polynomial, stated as the `3/p` bound on the shift bit of
+{uses "reduction_analysis_experiment"}[]. Upgrades the fixed-polynomial
+statement of {bpref "sz_static_core"}[] to the adaptive one by decoupling the
+offset from the shift — O24's "the `b`'s are uniformly random and perfectly
+hidden by the respective `a`'s" — surviving the nonzero-`U` conditioning of
+{bpref "sign_masks"}[].
+:::
+
+:::proof "sz_adaptive_bound"
+The shear `(a, b) ↦ (a + x·b, b)` is a uniform-preserving bijection for each
+challenge, under which the adversary's view and hence its polynomial depend on
+the sheared masks only; the nonzero-`U` conditioning of {uses "sign_masks"}[]
+survives the shear, the shifted evaluation point is then uniform and
+independent of the polynomial, and {uses "sz_static_core"}[] finishes.
 :::
 
 :::definition "reduction_trace" (lean := "KVAC.Schemes.MicroCMZ.RedTrace, KVAC.Schemes.MicroCMZ.redTrace, KVAC.Schemes.MicroCMZ.RedTrace.verifPoly, KVAC.Schemes.MicroCMZ.RedTrace.psi, KVAC.Schemes.MicroCMZ.RedTrace.shiftPoint") (parent := "cmz_amac") (tags := "milestone")
@@ -564,7 +573,8 @@ masked univariate; the analysis experiment keeps the whole record.
 The run of {uses "reduction_trace"}[] at the genuine challenge powers, with
 the challenge exponent in scope and the record kept, returning four bits. The win
 bit applies the real μCMZ win predicate to the key the masks embed at the
-challenge exponent; the extraction bit is the reduction's own output test; the
+challenge exponent; the extraction bit is the reduction's own output test
+(the root search of {uses "dlog_root_recovery"}[]); the
 bad bit says the forgery's verification polynomial is nonzero but its partial
 evaluation {uses "partial_evaluation_psi"}[] vanishes; the shift bit says it is
 nonzero but vanishes at the trace's shifted real-log point, the form
@@ -584,14 +594,52 @@ challenge powers of {uses "challenge_embedding"}[]; the monad laws identify the
 two `do` blocks once the powers are aligned.
 :::
 
+:::theorem "win_without_extraction_forces_bad" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_of_winBit_of_not_recBit") (parent := "cmz_amac") (tags := "milestone")
+On the support of {uses "reduction_analysis_experiment"}[], a win the
+reduction fails to extract from forces the bad bit: the forgery's verification
+polynomial is nonzero (a winning forgery is non-degenerate) while its partial
+evaluation vanishes (otherwise {bpref "dlog_root_recovery"}[] would have
+recovered the challenge exponent).
+:::
+
+:::proof "win_without_extraction_forces_bad"
+Compose the log-honesty and `U`-form invariants of
+{uses "transcript_invariants"}[], transported by
+{uses "transcript_index_transport"}[], with the key-smul evaluation identity of
+{uses "consistency_case_lem54"}[] to get
+`eval (a + x·b) φ = 0`, then the two contrapositives: a non-identity forgery
+gives `φ ≠ 0` through {uses "agm_eval_bridge"}[], and failed root recovery
+gives `ψ = 0` through {uses "dlog_root_recovery"}[].
+:::
+
+:::theorem "bad_bit_forces_shift_bit" (lean := "KVAC.Schemes.MicroCMZ.redFull_badBit_le_szBit") (parent := "cmz_amac") (tags := "milestone")
+In {uses "reduction_analysis_experiment"}[], the bad bit implies the shift
+bit: a polynomial whose partial evaluation {bpref "partial_evaluation_psi"}[]
+vanishes also vanishes at the masks shifted by one challenge step, so the bad
+event's probability is at most the shift event's.
+:::
+
+:::proof "bad_bit_forces_shift_bit"
+The shift lemma of {uses "sz_static_core"}[] applied pointwise on the support,
+then monotonicity of the event probability.
+:::
+
 :::theorem "lem54_bound_assembly" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
 The union bound that assembles {bpref "single_attribute_mac"}[], over
-{uses "reduction_analysis_experiment"}[]: outside
-the identity branch of {uses "identity_case_lem54"}[], a win is either a
-3-DL extraction through {uses "dlog_root_recovery"}[] — its probability read
-by {uses "extraction_marginal"}[] — or the bad event of
+{uses "reduction_analysis_experiment"}[], split on the extraction bit: a win
+is either a 3-DL extraction — its probability read by
+{uses "extraction_marginal"}[] — or, by
+{uses "win_without_extraction_forces_bad"}[], the bad event (the identity
+branch of {bpref "identity_case_lem54"}[] is absorbed there), which by
+{uses "bad_bit_forces_shift_bit"}[] falls under the `3/p` of
 {uses "sz_adaptive_bound"}[], so the advantage is at most
 `Adv^{3-dl} + 3/p`.
+:::
+
+:::proof "lem54_bound_assembly"
+Read on the AGM game through the run-level view equality
+{uses "run_level_coupling"}[], which carries its win onto the experiment's
+`winBit`; there the union bound of the body splits the win as stated.
 :::
 
 :::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
@@ -607,7 +655,7 @@ Factors through the single-attribute case {uses "single_attribute_mac"}[], lifte
 {uses "forgery_case_gap_dl"}[] and {uses "forgery_case_mac"}[].
 :::
 
-:::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4") (effort := "large") (priority := "high")
+:::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
 *O24 Lemma 5.4.* Base case of {bpref "mucmz_mac_security"}[]: in the algebraic group
 model, single-attribute μCMZ is an algebraic MAC over `ℤ_p`, UF-CMVA
 secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]).
@@ -629,7 +677,9 @@ discrete logarithm among at most 3 roots, recovered by
 The steps this decomposes into, in the order the stack delivers them: the
 reduction trace {uses "reduction_trace"}[] and the analysis experiment
 {uses "reduction_analysis_experiment"}[] every bound is read on, with its
-extraction marginal {uses "extraction_marginal"}[]; the per-step couplings
+extraction marginal {uses "extraction_marginal"}[], the deterministic core
+{uses "win_without_extraction_forces_bad"}[], and its bad-to-shift step
+{uses "bad_bit_forces_shift_bit"}[]; the per-step couplings
 {uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[],
 stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
