@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Semar Augusto
 -/
 import KVAC.Schemes.MicroCMZ.AGMReduction.RedFull
+import KVAC.Schemes.MicroCMZ.AGMReduction.SignCoupling
 
 /-!
 # μCMZ AGM unforgeability, `n = 1` — the Lemma 5.4 target statement (O24 §5.3)
@@ -24,7 +25,8 @@ sub-lemmas about the experiment `redFull` of `AGMReduction/RedFull.lean`:
 - `redFull_recBit_eq` — `redFull`'s `recBit` marginal *is* the 3-DL
   advantage: both experiments are `redTrace` at the challenge powers;
 - `redFull_badBit_of_winBit_of_not_recBit` — win ∧ ¬extract forces the
-  Schwartz–Zippel bad event;
+  Schwartz–Zippel bad event, reading the trace through `redTrace_support_facts`
+  (below);
 - `redFull_badBit_le_szBit` — the bad event implies the shift
   event (via `Coupling`'s shift lemma);
 - `redFull_szBit_le` — the shift event has probability ≤ `3/p`
@@ -94,20 +96,64 @@ lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
       pow_one]
   rw [microCMZ3DLReductionAdv, ← probEvent_eq_eq_probOutput, ← hmap, probEvent_map]; rfl
 
+/-- What one run of `redTrace` at the challenge powers certifies about its trace: the
+embedding holds at the challenge exponent (`RedEmbedding`), and every logged tag is honest
+(`redLog_honest`) and in `U`-form (`redLog_U_form`). The one place `redTrace`'s support is
+destructured. -/
+lemma redTrace_support_facts {x : F} (A : AGMUFAdversary F G 1) (t : RedTrace F G)
+    (ht : t ∈ support (redTrace gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen) A)) :
+    RedEmbedding gen x t.aM t.bM t.ep ∧
+      (∀ e ∈ t.log, e.tag.2 = macScalar (maskedKey x t.aM t.bM) e.msg • e.tag.1) ∧
+      ∀ e ∈ t.log, e.tag.1 = e.au • gen + e.bu • (x • gen) := by
+  rw [redTrace] at ht
+  simp only [mem_support_bind_iff, mem_support_pure_iff] at ht
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hout, ht⟩ := ht
+  subst ht
+  exact ⟨⟨rfl, by module, by module, by module⟩,
+    redLog_honest gen x _ _ _ _ _ hout, redLog_U_form gen x _ _ _ _ _ hout⟩
+
 /-- **Win without extraction forces the bad event (deterministic core).** On
 `redFull`'s support, `winBit = true` (the real `verify`/consistency/freshness on
 `sk = maskedKey x t.aM t.bM`) together with `recBit ≠ true` (`recoverDlog gen X ψ ≠ x`)
 forces the Schwartz–Zippel bad event `badBit = true`, i.e. `φ ≠ 0 ∧ ψ = 0` for
-`φ := t.verifPoly` and `ψ := t.psi = t.log.maskedSubst t.aM t.bM φ`. The proof destructures
-`redTrace`'s support once (`mem_support_bind_iff`), reads the logged tags through
-`redLog_honest` + `redLog_U_form` via `redLog_transcript_facts`, then composes
-`verifPoly_eval_eq_zero_of_keySmul` + `gamePoint_eq_embed_affine` (`eval (a + x·b) φ = 0`)
-with the two contrapositives: `agm_n1_identity_Ustar_eq_zero` (`φ ≠ 0`, via `σ.1 ≠ 0`) and
+`φ := t.verifPoly` and `ψ := t.psi = t.log.maskedSubst t.aM t.bM φ`. The proof reads the
+trace through `redTrace_support_facts` and `redLog_transcript_facts`, gets
+`eval (a + x·b) φ = 0` from `verifPoly_eval_embed_eq_zero`, then closes the two conjuncts by
+contraposition: `Ustar_eq_zero_of_verifPoly_zero` (`φ ≠ 0`, via `σ.1 ≠ 0`) and
 `recoverDlog_verifPoly_eq` (`ψ = 0`, via `recoverDlog ≠ x`). -/
 lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : RedBits)
     (ht : t ∈ support (redFull gen A)) (hw : t.winBit = true) (hr : t.recBit ≠ true) :
     t.badBit = true := by
-  sorry
+  rw [redFull] at ht
+  simp only [mem_support_bind_iff, mem_support_pure_iff] at ht
+  obtain ⟨x, -, tr, htr, rfl⟩ := ht
+  obtain ⟨hemb, hhon, hUform⟩ := redTrace_support_facts gen A tr htr
+  obtain ⟨htag, htagU⟩ := redLog_transcript_facts gen hhon hUform
+  simp only [Bool.and_eq_true, decide_eq_true_eq, verify] at hw
+  obtain ⟨⟨⟨hconsU, hconsV⟩, hfresh⟩, hσ1, hmaceq⟩ := hw
+  simp only [ne_eq, decide_eq_true_eq] at hr
+  simp only [decide_eq_true_eq]
+  -- the MAC relation between the two represented values, in the form the embedding lemmas take
+  have hkey : tr.ρV.evalAt gen tr.ep tr.log.tags
+      = macScalar (maskedKey x tr.aM tr.bM) (fun _ => tr.mStar 0)
+          • tr.ρU.evalAt gen tr.ep tr.log.tags := by
+    rw [hconsV, hconsU, hmaceq]
+    simp only [macScalar_maskedKey_eq]
+  have heval0 : MvPolynomial.eval
+      (fun v => tr.aM.embed tr.log.aMask v + x * tr.bM.embed tr.log.bMask v) tr.verifPoly = 0 :=
+    verifPoly_eval_embed_eq_zero gen tr.ρU tr.ρV hemb tr.log.aMask tr.log.bMask tr.log.msg
+      (tr.mStar 0) tr.log.tags tr.log.length_tags ⟨htag, htagU⟩ hkey
+  have hfresh' : ∀ j : Fin tr.log.length, tr.mStar 0 ≠ tr.log.msg j := by
+    intro j hj
+    apply hfresh
+    rw [List.mem_map]
+    refine ⟨tr.log.get j, List.get_mem tr.log j, ?_⟩
+    funext i
+    rw [Fin.eq_zero i]
+    exact hj.symm
+  refine ⟨fun hφ0 => hσ1 (Ustar_eq_zero_of_verifPoly_zero gen tr.ρU tr.ρV hemb tr.log.msg
+    (tr.mStar 0) tr.σStar.1 tr.log.tags tr.log.length_tags htag hfresh' hconsU hφ0),
+    of_not_not (mt (recoverDlog_verifPoly_eq gen heval0) hr)⟩
 
 /-! ### The bad-event bound
 
@@ -128,7 +174,13 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
 lemma redFull_badBit_le_szBit (A : AGMUFAdversary F G 1) :
     Pr[(fun t : RedBits => t.badBit = true) | redFull gen A]
       ≤ Pr[(fun t : RedBits => t.szBit = true) | redFull gen A] := by
-  sorry
+  refine probEvent_mono ?_
+  intro t ht hbad
+  rw [redFull] at ht
+  simp only [mem_support_bind_iff, mem_support_pure_iff] at ht
+  obtain ⟨x, -, tr, -, rfl⟩ := ht
+  simp only [decide_eq_true_eq] at hbad ⊢
+  exact ⟨hbad.1, eval_shift_eq_zero_of_affineSubst_eq_zero _ _ x _ hbad.2⟩
 
 /-- **The adaptive Schwartz–Zippel bound.** `Pr[szBit] ≤ 3/p` by the shear coupling (step 2 above). -/
 lemma redFull_szBit_le (A : AGMUFAdversary F G 1) :
