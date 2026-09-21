@@ -6,9 +6,9 @@ Authors: Semar Augusto
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 
 /-!
-# The `n → 1` attribute collapse (O24 Claim 5.7)
+# The `n → 1` attribute collapse (Claim 5.7)
 
-The general-`n` unforgeability bound (O24 Lemma 5.5) routes through the `n = 1`
+The general-`n` unforgeability bound (Lemma 5.5) routes through the `n = 1`
 case (Lemma 5.4, `agm_ufcmva_le_n1_explicit`) by *collapsing* an `n`-attribute
 transcript onto a 1-attribute one: pick a direction `r⃗ : Fin n → F`, embed the
 public attribute elements as `Xᵢ = rᵢ • X₁` (so their discrete logarithms
@@ -17,10 +17,11 @@ satisfy `xᵢ = rᵢ · x₁`), and translate each algebraic representation over
 
 The paper's reduction `B` (Claim 5.7) fixes `z₁ = 1`, samples `zᵢ` for
 `i ∈ [2, n]`, and collapses *messages* to `m₁ + Σᵢ zᵢ mᵢ`. Here the direction
-`r⃗` ranges over all `n` coordinates (the `n`-game's `X₁` is `r₁ • X₁`), and,
-because the instrumented game's `verify`/`help` queries carry algebraic
-representations, those are collapsed too. The message collapse `Σᵢ rᵢ mᵢ` is
-the wrapper's job and is not in this file.
+`r⃗` ranges over all `n` coordinates: the `n`-game's first attribute element is
+`r₁ • X₁`, with `X₁` the 1-attribute game's public element (the paper's `z₁ = 1`
+is the case `r₁ = 1`). Because the instrumented game's `verify`/`help` queries
+carry algebraic representations, those are collapsed too. The message collapse
+`Σᵢ rᵢ mᵢ` is the wrapper's job and is not in this file.
 
 This file holds the pure-algebra dictionary of that collapse: the two
 representation translations, `AGMRepr.collapseRepr` for a single represented
@@ -44,7 +45,7 @@ coefficient). Tag coefficients `uv` are carried unchanged, since the issued
 tags are the same list in both games. It is built so that, against the
 1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, it evaluates as `ρ` does
 against the embedded basis `(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`; that
-evaluation bridge is proved with the wrapper coupling. -/
+evaluation bridge is not in this file. -/
 def AGMRepr.collapseRepr (r : Fin n → F) (ρ : AGMRepr F n) : AGMRepr F 1 where
   g := ρ.g
   h := ρ.h
@@ -65,7 +66,7 @@ def linCombCollapseUVLen (ρA : Fin n → AGMRepr F n) : ℕ :=
 It is built to evaluate, against the 1-attribute basis
 `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, to `Σᵢ rᵢ • (ρA i).eval` against the embedded
 basis `(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)`; this is the bridge the `help` arm of
-the `n → 1` wrapper relies on to collapse an `n`-attribute help query.
+the `n → 1` wrapper will rely on to collapse an `n`-attribute help query.
 
 The scalar-coefficient fields are the weighted sums; the single attribute
 coefficient is `Σᵢ Σⱼ rᵢ·rⱼ·(ρA i).x j` (the collapsed attribute coefficient

@@ -714,9 +714,9 @@ direction `r⃗`, an `n`-attribute representation of {uses "agm_model"}[] is
 translated to a 1-attribute one by combining the attribute coefficients into
 `Σᵢ rᵢ·xᵢ` and keeping every other coefficient, and a weighted sum `Σᵢ rᵢ•Aᵢ` of
 represented elements gets the combined representation whose tag coefficients
-are merged position by position. The evaluation bridges, that against the
-1-attribute basis `Xᵢ = rᵢ•X₁` each translation evaluates as the original does,
-are proved where {bpref "forgery_case_mac"}[] consumes this dictionary.
+are merged position by position. The evaluation bridges, that each
+translation, against the 1-attribute basis, evaluates as the original does
+against the embedded basis `Xᵢ = rᵢ•X₁`, are not part of this node.
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
