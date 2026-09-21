@@ -19,8 +19,9 @@ sit in their own files.
 
 - `KVACSyntax M` (this file) — the Definition 4.2 algorithms, no obligations.
 - `Correct` (`Correctness.lean`) — Definition 4.3.
-- Anonymity (Definition 4.4) and extractability (Definition 4.5, Figure 8) —
-  deferred to later tracks.
+- Anonymity (Definition 4.4, `Anonymity.lean`) and extractability
+  (Definition 4.5, Figure 8, `Extractability.lean`) — the security games,
+  opt-in.
 
 ## Protocol shape
 
