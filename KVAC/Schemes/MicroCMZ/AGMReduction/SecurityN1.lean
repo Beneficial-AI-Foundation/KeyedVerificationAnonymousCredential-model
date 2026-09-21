@@ -93,7 +93,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
 1. **Shift (deterministic).** `ψ = t.log.maskedSubst t.aM t.bM φ = 0` forces `φ` to vanish at
    `t.shiftPoint x = a + (x+1)·b` (`eval_shift_eq_zero_of_affineSubst_eq_zero`), so
    `badBit ⟹ szBit`.
-2. **Schwartz–Zippel over the shear (the keystone).** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
+2. **The adaptive Schwartz–Zippel bound over the shear.** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
    a uniform-preserving bijection on `F²` per variable, for the four fixed mask pairs and the
    per-query `(auⱼ, buⱼ)` — A's view and hence `φ` depend only on the sheared masks while the
    `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform over
@@ -107,7 +107,7 @@ lemma redFull_badBit_le_szBit (A : AGMUFAdversary F G 1) :
       ≤ Pr[(fun t : RedBits => t.szBit = true) | redFull gen A] := by
   sorry
 
-/-- **Schwartz–Zippel keystone.** `Pr[szBit] ≤ 3/p` by the shear coupling (step 2 above). -/
+/-- **The adaptive Schwartz–Zippel bound.** `Pr[szBit] ≤ 3/p` by the shear coupling (step 2 above). -/
 lemma redFull_szBit_le (A : AGMUFAdversary F G 1) :
     Pr[(fun t : RedBits => t.szBit = true) | redFull gen A]
       ≤ 3 * (Fintype.card F : ℝ≥0∞)⁻¹ := by
