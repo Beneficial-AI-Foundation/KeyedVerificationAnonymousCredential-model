@@ -355,7 +355,100 @@ theorem extractablePoly_obligation (H : HashSpec)
     ExtractablePoly H kvac isPPT := by
   sorry
 
-/-! ## Honest issuance for `NewUsr` oracle never fails -/
+/-! ## Cache transport for `runRO`
+
+`runRO H c k` interprets `k` through `zkROImpl H`, whose uniform arm never touches the
+cache and whose hash arm is VCV-io's lazy `randomOracle`. The lemmas below expose the
+support of one step of each arm and combine them into the cache transport
+`runRO_support_of_le`: a run from a cache `c` replays, query by query, from any smaller
+cache `c₁ ≤ c`. -/
+
+/-- The uniform arm of `zkROImpl` answers with a uniform sample and leaves the cache as it
+found it: one step from `c` is a pair `(u, c)`, for every `u`. -/
+lemma support_zkROImpl_inl_run (H : HashSpec) (n : ℕ) (c : H.spec.QueryCache) :
+    support ((zkROImpl H (Sum.inl n)).run c) = Set.range (fun u => (u, c)) := by
+  simp only [add_apply_inl, zkROImpl, QueryImpl.ofLift_eq_id', QueryImpl.add_apply_inl,
+    QueryImpl.liftTarget_apply, QueryImpl.id'_apply, StateT.run_monadLift, monadLift_self,
+    bind_pure_comp, support_map, support_liftM, OracleQuery.input_query, OracleQuery.cont_query,
+    Set.range_id, Set.image_univ]
+
+/-- The hash oracle `H.roImpl` on a cached point answers from the cache and leaves it
+unchanged. -/
+lemma roImpl_run_some (H : HashSpec) {d : H.Dom} {c : H.spec.QueryCache} {u : H.spec.Range d}
+    (hc : c d = some u) : (H.roImpl d).run c = pure (u, c) :=
+  QueryImpl.withCaching_run_some _ hc
+
+/-- The hash oracle `H.roImpl` on a fresh point samples the answer uniformly and records
+it. -/
+lemma roImpl_run_none (H : HashSpec) {d : H.Dom} {c : H.spec.QueryCache} (hc : c d = none) :
+    (H.roImpl d).run c = (fun u => (u, c.cacheQuery d u)) <$> ($ᵗ H.spec.Range d) :=
+  QueryImpl.withCaching_run_none _ hc
+
+/-- **One-step cache transport for the hash oracle.** A step of `H.roImpl` from `c` that
+answers `u` and ends at `c'` can be replayed from any `c₁ ≤ c`, answering the same `u` and
+ending at some `c₁' ≤ c'`. A point cached in `c₁` answers identically on both sides. A
+point cached only in `c` is a fresh sample on the `c₁` side that may return the value `c`
+records. A point cached in neither is the same fresh sample on both sides. -/
+lemma roImpl_step_of_le (H : HashSpec) (d : H.Dom) {c₁ c : H.spec.QueryCache} (h : c₁ ≤ c)
+    {u : H.spec.Range d} {c' : H.spec.QueryCache}
+    (hu : (u, c') ∈ support ((H.roImpl d).run c)) :
+    ∃ c₁', c₁' ≤ c' ∧ (u, c₁') ∈ support ((H.roImpl d).run c₁) := by
+  rcases hcd : c d with _ | u₀
+  · -- Cached in neither: the same fresh sample on both sides.
+    have hc₁d : c₁ d = none := by
+      rcases hc₁ : c₁ d with _ | v
+      · rfl
+      · exact absurd (h hc₁) (by rw [hcd]; exact (Option.some_ne_none v).symm)
+    rw [roImpl_run_none H hcd, support_map, support_uniformSample, Set.image_univ] at hu
+    obtain ⟨v, hv⟩ := hu
+    obtain ⟨rfl, rfl⟩ := Prod.mk.inj hv
+    refine ⟨c₁.cacheQuery d v, QueryCache.cacheQuery_mono h d v, ?_⟩
+    rw [roImpl_run_none H hc₁d, support_map, support_uniformSample, Set.image_univ]
+    exact ⟨v, rfl⟩
+  · -- Cached in `c`: the step from `c` answers `u₀` and leaves the cache alone.
+    rw [roImpl_run_some H hcd, support_pure, Set.mem_singleton_iff] at hu
+    obtain ⟨rfl, rfl⟩ := Prod.mk.inj hu
+    rcases hc₁d : c₁ d with _ | u₁
+    · -- Cached only in `c`: sample the recorded value `u` on the `c₁` side.
+      refine ⟨c₁.cacheQuery d u, ?_, ?_⟩
+      · intro t' v ht'
+        by_cases het : t' = d
+        · subst het
+          rw [QueryCache.cacheQuery_self] at ht'
+          rw [← ht']
+          exact hcd
+        · rw [QueryCache.cacheQuery_of_ne _ _ het] at ht'
+          exact h ht'
+      · rw [roImpl_run_none H hc₁d, support_map, support_uniformSample, Set.image_univ]
+        exact ⟨u, rfl⟩
+    · -- Cached in both: `c₁ ≤ c` forces the same value.
+      have hu₁ : u₁ = u := by
+        have h' := h hc₁d
+        rw [hcd] at h'
+        exact (Option.some.inj h').symm
+      subst hu₁
+      refine ⟨c₁, h, ?_⟩
+      rw [roImpl_run_some H hc₁d, support_pure]
+      exact Set.mem_singleton _
+
+/-- **One-step cache transport for `zkROImpl`.** A step of the random-oracle handler from
+`c` that answers `u` and ends at `c'` can be replayed from any `c₁ ≤ c`, answering the same
+`u` and ending at some `c₁' ≤ c'`. The uniform arm ignores the cache; the hash arm is
+`roImpl_step_of_le`. -/
+lemma zkROImpl_step_of_le (H : HashSpec) (t : ℕ ⊕ H.Dom) {c₁ c : H.spec.QueryCache}
+    (h : c₁ ≤ c) {u : (ZKRO H).Range t} {c' : H.spec.QueryCache}
+    (hu : (u, c') ∈ support ((zkROImpl H t).run c)) :
+    ∃ c₁', c₁' ≤ c' ∧ (u, c₁') ∈ support ((zkROImpl H t).run c₁) := by
+  rcases t with n | d
+  · -- Uniform arm: the cache is untouched on both sides.
+    rw [support_zkROImpl_inl_run] at hu
+    obtain ⟨v, hv⟩ := hu
+    obtain ⟨rfl, rfl⟩ := Prod.mk.inj hv
+    refine ⟨c₁, h, ?_⟩
+    rw [support_zkROImpl_inl_run]
+    exact ⟨v, rfl⟩
+  · -- Hash arm: `zkROImpl H (Sum.inr d)` is `H.roImpl d` by definition.
+    exact roImpl_step_of_le H d h hu
 
 /-- **Cache transport for `runRO`.** Any result a computation can produce when run
 from a cache `c` was already possible from a smaller cache `c₁ ≤ c`, for some final
@@ -363,13 +456,38 @@ cache. The lazily sampled random oracle started from `c₁` can sample exactly t
 answers `c` records, so a run from `c₁` replays the run from `c` query by query.
 A hash query cached in `c₁` answers identically on both sides. One cached only in
 `c` is a fresh sample on the `c₁` side that may return the cached value. One cached
-in neither is the same fresh sample on both sides. The proof is pending, tracked in
-issue #168. -/
+in neither is the same fresh sample on both sides.
+
+The proof is an induction on `k`, generalised over the pair `c₁ ≤ c`. Each query is
+transported by `zkROImpl_step_of_le`, which re-establishes the order for the
+continuation. -/
 theorem runRO_support_of_le {α : Type} (H : HashSpec) {c₁ c : H.spec.QueryCache}
     (h : c₁ ≤ c) (k : OracleComp (ZKRO H) α) {a : α} {c'' : H.spec.QueryCache}
     (hm : (a, c'') ∈ support (runRO H c k)) :
     ∃ c', (a, c') ∈ support (runRO H c₁ k) := by
-  sorry
+  induction k using OracleComp.inductionOn generalizing c₁ c c'' with
+  | pure x =>
+    simp only [runRO, simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff,
+      Prod.mk.injEq] at hm
+    obtain ⟨rfl, rfl⟩ := hm
+    exact ⟨c₁, by
+      simp only [runRO, simulateQ_pure, StateT.run_pure, support_pure, Set.mem_singleton_iff]⟩
+  | query_bind t k ih =>
+    -- One query, then the rest: the handler steps from the cache, and the continuation
+    -- runs from the cache the step leaves behind.
+    have hrun : ∀ c₀ : H.spec.QueryCache, runRO H c₀ (liftM (OracleSpec.query t) >>= k) =
+        (zkROImpl H t).run c₀ >>= fun p => runRO H p.2 (k p.1) := by
+      intro c₀
+      simp only [runRO, simulateQ_bind, simulateQ_spec_query, StateT.run_bind]
+    rw [hrun, support_bind, Set.mem_iUnion₂] at hm
+    obtain ⟨⟨u, cmid⟩, hu, hm⟩ := hm
+    obtain ⟨cmid₁, hle, hu₁⟩ := zkROImpl_step_of_le H t h hu
+    obtain ⟨c', hc'⟩ := ih u hle hm
+    refine ⟨c', ?_⟩
+    rw [hrun, support_bind, Set.mem_iUnion₂]
+    exact ⟨(u, cmid₁), hu₁, hc'⟩
+
+/-! ## Honest issuance for `NewUsr` oracle never fails -/
 
 /-- Under `CorrectRO`, honest issuance for the `NewUsr` oracle never fails. Every
 result of `kvac.mac` run from any cache `c` at least as large as the keygen cache
