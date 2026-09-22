@@ -160,6 +160,23 @@ abbrev Policy (F : Type) (n : ℕ) : Type := (Fin n → F) → Bool
 /-- No-policy predicate `φ ≡ ⊤` (O24 anonymous-token / base-credential case). -/
 def trivialPolicy : Policy F n := fun _ => true
 
+/-- Conjunction of policies, pointwise `&&` (O24 Definition 4.1: a predicate
+family is closed under conjunction). -/
+def andPolicy (φ ψ : Policy F n) : Policy F n := fun m => φ m && ψ m
+
+/-- Full-disclosure policy `φ_m⃗`, true exactly on `m⃗` (O24 Definition 4.2
+requires `Φ ⊇ {φ_a⃗}`). Decidable equality on `Policy F n` needs no field,
+since `Fintype.decidablePiFintype` supplies it over the finite domain. -/
+def exactPolicy (m : Fin n → F) : Policy F n := fun m' => decide (m' = m)
+
+omit [Field F] [Fintype F] [SampleableType F] in
+/-- The full-disclosure policy `φ_m⃗` accepts `m⃗'` iff `m⃗' = m⃗`. -/
+theorem exactPolicy_eq_true_iff (m m' : Fin n → F) :
+    exactPolicy m m' = true ↔ m' = m :=
+  decide_eq_true_iff
+
+example : DecidableEq (Policy F n) := inferInstance
+
 /-! ## R_iu — issuance user proof (O24 Eq. 9) -/
 
 /-- R_iu statement `(C', X⃗, φ)` (O24 Fig 9 / Eq. 9):

@@ -7,6 +7,7 @@ import VersoManual
 import VersoBlueprint
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.Relations
+import KVAC.Schemes.MicroCMZ.ProofSystems
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -97,10 +98,19 @@ key, and the sampler of nonzero scalars `uniformUnits` for the paper's
 `ℤ_p^×` draws, with its support lemma.
 :::
 
-:::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
+:::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.andPolicy, KVAC.Schemes.MicroCMZ.exactPolicy, KVAC.Schemes.MicroCMZ.exactPolicy_eq_true_iff, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
 Credential policies `φ` over attribute vectors, the public issuer bases,
 the enforcement predicate connecting a relation to its policy, and the
-trivial policy with its enforcement lemmas.
+trivial policy with its enforcement lemmas. Conjunction and the
+full-disclosure policy `φ_m⃗` complete the predicate family of O24
+Definitions 4.1 and 4.2 over policies.
+:::
+
+:::definition "mucmz_proof_system_parameters" (lean := "KVAC.Schemes.MicroCMZ.ProofSystemFor, KVAC.Schemes.MicroCMZ.ProofSystemFor.instDecidableEqProof, KVAC.Schemes.MicroCMZ.RiuProofSystem, KVAC.Schemes.MicroCMZ.RisProofSystem, KVAC.Schemes.MicroCMZ.RpProofSystem") (parent := "cmz_construction") (tags := "milestone")
+The prover and verifier of a non-interactive proof system with fixed
+statement and witness types, over the shared random oracle. The μCMZ
+credential takes three of them as parameters, for {uses "riu_relation"}[],
+{uses "ris_relation"}[], and {uses "rp_relation"}[].
 :::
 
 :::theorem "mucmz_sigma_protocols" (lean := "KVAC.Schemes.MicroCMZ.riuSigma, KVAC.Schemes.MicroCMZ.riuSigma_complete, KVAC.Schemes.MicroCMZ.riuSigma_hvzk, KVAC.Schemes.MicroCMZ.riuSigma_speciallySoundAt, KVAC.Schemes.MicroCMZ.riuSigma_speciallySoundAt_trivial, KVAC.Schemes.MicroCMZ.riuSimTranscript, KVAC.Schemes.MicroCMZ.risSigma, KVAC.Schemes.MicroCMZ.risSigma_complete, KVAC.Schemes.MicroCMZ.risSigma_hvzk, KVAC.Schemes.MicroCMZ.risSigma_speciallySound, KVAC.Schemes.MicroCMZ.risSimTranscript, KVAC.Schemes.MicroCMZ.rpSigma, KVAC.Schemes.MicroCMZ.rpSigma_complete, KVAC.Schemes.MicroCMZ.rpSigma_hvzk, KVAC.Schemes.MicroCMZ.rpSigma_speciallySoundAt, KVAC.Schemes.MicroCMZ.rpSigma_speciallySoundAt_trivial, KVAC.Schemes.MicroCMZ.rpSimTranscript") (parent := "cmz_construction") (tags := "milestone")
