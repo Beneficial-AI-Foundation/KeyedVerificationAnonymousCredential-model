@@ -527,6 +527,13 @@ live in the statement rather than as protocol parameters. -/
 abbrev RpStmt (G : Type) (F : Type) (n : ℕ) : Type :=
   G × PublicBases G n × (Fin n → G) × G × Policy F n
 
+omit [Field F] [SampleableType F] [SampleableGroup F G] in
+/-- Decidable equality on R_p statements. Instance search fails on `RpStmt` at the
+default `synthInstance.maxSize`, so the tail product is synthesized first. -/
+instance instDecidableEqRpStmt : DecidableEq (RpStmt G F n) :=
+  have : DecidableEq ((Fin n → G) × G × Policy F n) := inferInstance
+  inferInstance
+
 /-- R_p witness `(r', r⃗, m⃗)` (O24 Eq. 11): the presentation blinding scalar `r'`,
 the per-commitment randomness `r⃗`, and the attributes `m⃗`,
 `F × (Fin n → F) × (Fin n → F)`. -/

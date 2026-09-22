@@ -106,11 +106,14 @@ full-disclosure policy `φ_m⃗` complete the predicate family of O24
 Definitions 4.1 and 4.2 over policies.
 :::
 
-:::definition "mucmz_proof_system_parameters" (lean := "KVAC.Schemes.MicroCMZ.ProofSystemFor, KVAC.Schemes.MicroCMZ.ProofSystemFor.instDecidableEqProof, KVAC.Schemes.MicroCMZ.RiuProofSystem, KVAC.Schemes.MicroCMZ.RisProofSystem, KVAC.Schemes.MicroCMZ.RpProofSystem") (parent := "cmz_construction") (tags := "milestone")
-The prover and verifier of a non-interactive proof system with fixed
-statement and witness types, over the shared random oracle. The μCMZ
-credential takes three of them as parameters, for {uses "riu_relation"}[],
-{uses "ris_relation"}[], and {uses "rp_relation"}[].
+:::definition "mucmz_proof_system_parameters" (lean := "KVAC.Schemes.MicroCMZ.ProofSystemFor, KVAC.Schemes.MicroCMZ.ProofSystemFor.instDecidableEqProof, KVAC.Schemes.MicroCMZ.ProofSystemFor.toNIZKPSyntax, KVAC.Schemes.MicroCMZ.RiuProofSystem, KVAC.Schemes.MicroCMZ.RisProofSystem, KVAC.Schemes.MicroCMZ.RpProofSystem, KVAC.Schemes.MicroCMZ.instDecidableEqRpStmt") (parent := "cmz_construction") (tags := "milestone")
+The prover and verifier of a non-interactive proof system with fixed crs,
+statement and witness types, over the shared random oracle. Both take the
+crs element `H`, which `R_is` and `R_p` mention. The μCMZ credential takes three
+of them as parameters, for {uses "riu_relation"}[], {uses "ris_relation"}[],
+and {uses "rp_relation"}[]. A conversion to `NIZKPSyntax`, given a setup and
+a relation, makes the proof-system properties apply. Decidable equality on
+`R_p` statements supports the simulation-extractability game.
 :::
 
 :::theorem "mucmz_sigma_protocols" (lean := "KVAC.Schemes.MicroCMZ.riuSigma, KVAC.Schemes.MicroCMZ.riuSigma_complete, KVAC.Schemes.MicroCMZ.riuSigma_hvzk, KVAC.Schemes.MicroCMZ.riuSigma_speciallySoundAt, KVAC.Schemes.MicroCMZ.riuSigma_speciallySoundAt_trivial, KVAC.Schemes.MicroCMZ.riuSimTranscript, KVAC.Schemes.MicroCMZ.risSigma, KVAC.Schemes.MicroCMZ.risSigma_complete, KVAC.Schemes.MicroCMZ.risSigma_hvzk, KVAC.Schemes.MicroCMZ.risSigma_speciallySound, KVAC.Schemes.MicroCMZ.risSimTranscript, KVAC.Schemes.MicroCMZ.rpSigma, KVAC.Schemes.MicroCMZ.rpSigma_complete, KVAC.Schemes.MicroCMZ.rpSigma_hvzk, KVAC.Schemes.MicroCMZ.rpSigma_speciallySoundAt, KVAC.Schemes.MicroCMZ.rpSigma_speciallySoundAt_trivial, KVAC.Schemes.MicroCMZ.rpSimTranscript") (parent := "cmz_construction") (tags := "milestone")
