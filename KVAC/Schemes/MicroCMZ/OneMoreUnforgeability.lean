@@ -8,35 +8,56 @@ import KVAC.Preliminaries.Assumptions
 import VCVio.OracleComp.QueryTracking.QueryBound
 
 /-!
-# μCMZ_AT one-more unforgeability, `n = 1` — the Theorem 5.11 target statement (O24 §5.6)
+# μCMZ_AT one-more unforgeability — the Theorem 5.11 target statements (O24 §5.6)
 
 Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
-(IACR ePrint 2024/1552), at `n = 1` (Equation 23), for the μCMZ_AT core in the
-AGM-instrumented game of `KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability`.
-Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue
-#189), first of three PRs; the general `n` statement and the Claims 5.12 to 5.14
-with their polynomial layer follow. Stated first and `sorry`d on the pattern of
-`AGMReduction/SecurityN1.lean`, so that the reduction reviews against a visible
-target; the blueprint node `mucmz_at_agm_omuf_n1` shows "contains sorry" until
-the proof is merged.
+(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM-instrumented game of
+`KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability`: at `n = 1` (Equation 23), the
+case the paper proves directly, and for every `n` (the printed bound). Track
+CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189),
+the first two of three PRs; the Claims 5.12 to 5.14 with their polynomial layer
+follow. Stated first and `sorry`d on the pattern of
+`AGMReduction/SecurityN1.lean`, so that the reductions review against visible
+targets; the blueprint nodes `mucmz_at_agm_omuf_n1` and `mucmz_at_agm_omuf` show
+"contains sorry" until the proofs are merged.
 
-## The statement and its parts
+## The statements and their parts
 
-  agm_omuf_le_n1 :   AGM_OMUFAdv gen A secParam  ≤  omufBoundN1 F q εdl ε2dl
-    for every  A : AGMOMUFAdversary F G 1  with
-      ∀ H pp, IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q    at most q Sign queries,
-                                                                   refused ones included
+  agm_omuf_le_n1 :  AGM_OMUFAdv gen A secParam  ≤  omufBoundN1 F q εdl ε2dl
+                    for every  A : AGMOMUFAdversary F G 1
+  agm_omuf_le    :  AGM_OMUFAdv gen A secParam  ≤  omufBound F q εdl' ε2dl' εgap
+                    for every  0 < n  and  A : AGMOMUFAdversary F G n
+    both under the budget hypothesis
+      ∀ H pp, IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q     at most q Sign queries,
+                                                                    refused ones included
     where
-      omufBoundN1 F q εdl ε2dl = (q + 4)/p + (q + 1)·εdl + 3·ε2dl   Equation 23, printed
-                                                                   constants, provisional
-      εdl  = dlogAdv gen (omufDLReduction gen q A)                 DL reduction, Claims 5.12
-                                                                   (u_ι monomial) and 5.13 (η)
-      ε2dl = twoDlogAdv gen (omufTwoDLReduction gen A)             2-DL reduction, Claim 5.14
-                                                                   (x₀, xᵣ, x₁, three cases)
+      omufBoundN1 F q εdl ε2dl    = (q + 4)/p + (q + 1)·εdl + 3·ε2dl         Equation 23
+      omufBound F q εdl ε2dl εgap = (q + 6)/p + (q + 1)·εdl + 3·ε2dl + εgap  printed bound
+      εdl  = dlogAdv gen (omufDLReduction gen q A)        DL reduction, Claims 5.12 (u_ι monomial)
+                                                          and 5.13 (η monomial)
+      ε2dl = twoDlogAdv gen (omufTwoDLReduction gen A)    2-DL reduction, Claim 5.14
+                                                          (x₀, xᵣ, x₁ monomials, three cases)
+      εdl', ε2dl'  the same two at the transformed adversary  omufToN1 gen A
+                                                          attribute lifting, distinct case
+      εgap = gapDlogAdv gen (omufGapDLReduction gen A)    collision case
+    with the paper's printed constants, provisional.
 
-The two reductions are declared with `sorry` bodies, the first sorried
+The `n = 1` case is the one the paper proves directly. General `n` follows from
+it (p. 46): the winning event splits by whether the forgeries' attribute
+combinations `Σᵢ mᵢ·Xᵢ` are pairwise distinct, the distinct case reduces to
+`n = 1` on a transformed adversary, and the colliding case to gap-DL by an
+argument in the style of Lemma 5.5 (which the paper's text cites as Theorem
+5.5). The four named constructions, the two reductions, the attribute-lifting
+transformation `omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and
+the gap-DL reduction, are declared with `sorry` bodies, the first sorried
 definitions in the repository, and are built with the proofs of the Claims over
-the polynomial layer of Equations 17 to 22.
+the polynomial layer of Equations 17 to 22. Whether the transformation reuses
+the Lemma 5.5 embedding of the MAC track is open with Semar (question C2 of the
+Theorem 5.3 plan). One constraint is on record: the adversary shape carries no
+private coin oracle, so a transformation that needs randomness must fix its
+coins in the construction, with a fixed-coins argument in the proof, or the
+shape must grow a coin arm (Phase B). Extra Sign queries are not a source of
+randomness, they break the budget and the one-more count.
 
 ## Why named reductions
 
@@ -64,9 +85,9 @@ three fixed cases.
 repository already documents one Schwartz–Zippel undercount in this section
 family (`3/p` for a printed `1/p`, `AGMPolynomial.lean`), and the Claims share
 the pattern. The constant audit of the proof phase settles them, with an errata
-item on any change, and the named definition makes such a change one line. The
-printed general bound, `(q + 6)/p + …`, exceeds Equation 23 by `2/p + Adv^gapdl`
-and will be stated separately with the general `n` extension.
+item on any change, and the named definitions make such a change one line each.
+The printed general bound `omufBound` exceeds Equation 23 by `2/p + Adv^gapdl`,
+the overhead of the general `n` argument, `1/p` from each of its two cases.
 
 ## Out of scope
 
@@ -93,6 +114,18 @@ noncomputable def omufBoundN1 (F : Type) [Fintype F] (q : ℕ) (εdl ε2dl : ℝ
     ℝ≥0∞ :=
   ((q : ℝ≥0∞) + 4) * (Fintype.card F : ℝ≥0∞)⁻¹ + ((q : ℝ≥0∞) + 1) * εdl +
     3 * ε2dl
+
+/--
+The printed bound of O24 Theorem 5.11 for every `n`,
+`(q + 6)/p + (q + 1)·εdl + 3·ε2dl + εgap`, with `εgap` the gap-DL advantage of
+the collision-case reduction. Exceeds `omufBoundN1` by `2/p + εgap`, `1/p` from
+each case of the general `n` argument. Printed constants, provisional (module
+docstring, *Constants*).
+-/
+noncomputable def omufBound (F : Type) [Fintype F] (q : ℕ) (εdl ε2dl εgap : ℝ≥0∞) :
+    ℝ≥0∞ :=
+  ((q : ℝ≥0∞) + 6) * (Fintype.card F : ℝ≥0∞)⁻¹ + ((q : ℝ≥0∞) + 1) * εdl +
+    3 * ε2dl + εgap
 
 variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
 variable {G : Type} [DecidableEq G] [SampleableGroup F G]
@@ -133,7 +166,41 @@ noncomputable def omufTwoDLReduction :
       AGMOMUFAdversary F G 1 → QDLogAdversary 2 F G :=
   sorry
 
-/-! ## The statement -/
+/--
+The attribute-lifting transformation of the general `n` proof of O24 Theorem
+5.11 (p. 46, "techniques similar to the ones of the previous section", the
+Lemma 5.5 embedding): from an `n`-attribute algebraic one-more forger it builds
+a single-attribute one against which the `n = 1` reductions run. Declared with
+a `sorry` body until built; whether it reuses the MAC track's Lemma 5.5
+embedding is question C2 of the Theorem 5.3 plan. Two constraints on the
+construction: it must preserve the Sign budget, forwarding each Sign query of
+the `n`-attribute forger exactly once and making none of its own, since
+`agm_omuf_le` runs the `n = 1` reductions at the same `q`, while translating
+the representation gates and the transcript and carrying a distinct-combination
+win into a single-attribute win; and the adversary shape has no private coin
+oracle (module docstring), so its coins are fixed in the construction or the
+shape grows a coin arm.
+-/
+noncomputable def omufToN1 :
+    ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
+      AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1 :=
+  sorry
+
+/--
+The gap-DL reduction of the collision case of O24 Theorem 5.11 at general `n`
+(p. 46, two forgeries with equal attribute combination `Σᵢ mᵢ·Xᵢ`, "reduced to
+DL using an argument similar to Theorem 5.5", the paper's text citing its
+Lemma 5.5 as a theorem), built from an `n`-attribute algebraic one-more
+forger. Unlike the transformation, it may randomise freely, since
+`GapDLogAdversary` carries a uniform-sampling arm. Declared with a `sorry` body
+until built.
+-/
+noncomputable def omufGapDLReduction :
+    ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
+      AGMOMUFAdversary F G n → GapDLogAdversary F G :=
+  sorry
+
+/-! ## The statements -/
 
 variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
@@ -153,6 +220,23 @@ theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
     AGM_OMUFAdv gen A secParam ≤
       omufBoundN1 F q (dlogAdv gen (omufDLReduction gen q A))
         (twoDlogAdv gen (omufTwoDLReduction gen A)) := by
+  sorry
+
+/--
+**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
+stated first and `sorry`d, with the paper's printed bound. The proof splits the
+winning event by whether the forgeries' attribute combinations are pairwise
+distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
+transformed adversary `omufToN1 gen A`, the colliding case is the gap-DL
+reduction, and the two add `2/p + Adv^gapdl` to Equation 23. The domain `0 < n`
+is §3.4's, as for the plain game.
+-/
+theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G n), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    AGM_OMUFAdv gen A secParam ≤
+      omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
+        (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
+        (gapDlogAdv gen (omufGapDLReduction gen A)) := by
   sorry
 
 end KVAC.Schemes.MicroCMZ
