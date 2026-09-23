@@ -501,7 +501,7 @@ as a typo for φ′.
 ## Exact-length representations in the AGM OMUF game
 
 **Decision.** In the AGM-instrumented one-more unforgeability game for the
-μCMZ_AT core (`AGMOneMoreUnforgeability.lean`) a submitted representation is
+μCMZ_AT core (`OneMoreUnforgeability/Game.lean`) a submitted representation is
 accepted only when its tag-coefficient list has exactly one entry per blinded
 pair issued so far, in addition to evaluating to the submitted element
 (`reprMatches`). The Sign oracle applies this gate to its *input*, the
@@ -563,7 +563,7 @@ September 2026 (Track CMZ-OMUF, step A4 of #12).
 
 ## Theorem 5.11 stated before its reductions exist
 
-**Decision.** `OneMoreUnforgeability.lean` states Theorem 5.11 (`n = 1` as
+**Decision.** `OneMoreUnforgeability/Statements.lean` states Theorem 5.11 (`n = 1` as
 `agm_omuf_le_n1`, every `n` as `agm_omuf_le`) with `sorry` proofs in the shape
 of `agm_ufcmva_le_n1_explicit`, the advantage of the forger bounded by a named
 expression of the advantages of *named* reduction adversaries. The reductions
