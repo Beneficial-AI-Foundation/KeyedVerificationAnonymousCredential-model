@@ -18,7 +18,7 @@ Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue
 with their polynomial layer follow. Stated first and `sorry`d on the pattern of
 `AGMReduction/SecurityN1.lean`, so that the reduction reviews against a visible
 target; the blueprint node `mucmz_at_agm_omuf_n1` shows "contains sorry" until
-the proof lands.
+the proof is merged.
 
 ## The statement and its parts
 
@@ -102,7 +102,7 @@ variable {G : Type} [DecidableEq G] [SampleableGroup F G]
 The generator and its bijectivity fact are explicit binders here rather than
 section variables, since a `sorry` body mentions neither and a section variable
 joins a definition only when mentioned. The `sorry` inhabits the whole function
-type (module docstring, *The shape of the statement*). -/
+type (module docstring, *Why named reductions*). -/
 
 /--
 The discrete-log reduction of O24 Theorem 5.11 at `n = 1`, for the Sign budget
