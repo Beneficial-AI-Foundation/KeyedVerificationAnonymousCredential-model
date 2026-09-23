@@ -836,11 +836,12 @@ Theorem 5.11 is stated, `sorry`d, at `n = 1` as
 arrive with the proofs.
 
 The commitment polynomials of Equations 17 and 18 are
-{bpref "omuf_commitment_polynomials"}[].
+{bpref "omuf_commitment_polynomials"}[], the forgery polynomial of
+Equation 22 with the case split of the proof is
+{bpref "omuf_forgery_polynomial"}[].
 
-*TODO (Track CMZ-OMUF).* The forgery polynomial of Equation 22 with the
-case split, the game transcript the polynomials are read off, the Claims
-5.12 to 5.14, and the Theorem 5.3 clause.
+*TODO (Track CMZ-OMUF).* The game transcript the polynomials are read off,
+the Claims 5.12 to 5.14, and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -973,10 +974,10 @@ such a change.
 At the actual number of Sign queries, at most `q`, a win presents one
 forgery more than there were Sign queries, hence more than the issued
 pairs, so by pigeonhole one forgery is not the unblinding of any pair. Its
-polynomial of Equation 22 then has a nonzero monomial in one of three
-variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`, and the three cases are
-bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
-{uses "omuf_case_iii"}[].
+polynomial of Equation 22, {uses "omuf_forgery_polynomial"}[], then has a
+nonzero monomial in one of three variable groups, `u⃗`, `η`, or
+`x₀, xᵣ, x₁`, and the three cases are bounded by {uses "omuf_case_i"}[],
+{uses "omuf_case_ii"}[], and {uses "omuf_case_iii"}[].
 :::
 
 :::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length") (parent := "cmz_omuf") (tags := "milestone")
@@ -992,6 +993,19 @@ The arity `r` is the number of issued pairs, since a refused query gets no
 variable. The game-level evaluation bridge, that at an honest run's
 discrete-log point `c_k` evaluates to the logarithm of the `k`-th issued
 commitment, is the proof phase's.
+:::
+
+:::definition "omuf_forgery_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.omufForgeryPoly, KVAC.Schemes.MicroCMZ.AGMPoly.HasUMonomial, KVAC.Schemes.MicroCMZ.AGMPoly.HasEtaMonomial, KVAC.Schemes.MicroCMZ.AGMPoly.HasXMonomial, KVAC.Schemes.MicroCMZ.AGMPoly.cases_of_mem_vars") (parent := "cmz_omuf") (tags := "milestone")
+The forgery polynomial `φ` of O24 Equation 22 for the Theorem 5.11 proof at
+`n = 1`, `toPolyAt α · (x₀ + xᵣ + m*·x₁) − toPolyAt β` for a forgery with
+representations `α` of `U*` and `β` of `V*` over the commitment polynomials
+of {uses "omuf_commitment_polynomials"}[], and the three variable groups of
+the proof's case split, items (i) to (iii) of p. 45: a nonzero monomial in
+some `u_j`, in `η`, or in `x₀`, `xᵣ` or `x₁`, as membership in Mathlib's
+`vars`, with the lemma that a variable of `φ` falls in one of the three
+groups. That a winning forgery's `φ` is nonzero and vanishes at the
+discrete-log point, hence has a variable, is the pigeonhole step and the
+coefficient identities of Equations 20 and 21, the proof phase's.
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")
