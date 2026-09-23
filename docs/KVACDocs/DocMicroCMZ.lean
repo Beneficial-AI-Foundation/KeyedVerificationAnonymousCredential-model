@@ -43,9 +43,10 @@ Eight files delivered under `KVAC/Schemes/MicroCMZ/`:
   lemmas, and the sign-arm coupling — Track CMZ-M.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
-  `Polynomial.lean` and `Statements.lean`) — Section 5.6, the AGM-instrumented
-  OMUF game over the core, the Equations 17 to 22 polynomial layer, and the
-  Theorem 5.11 statements — Track CMZ-OMUF.
+  `Polynomial.lean`, `Transcript.lean` and `Statements.lean`) — Section 5.6,
+  the AGM-instrumented OMUF game over the core, the Equations 17 to 22
+  polynomial layer, the game transcript, and the Theorem 5.11 statements —
+  Track CMZ-OMUF.
 
 Two more are planned:
 
@@ -838,10 +839,11 @@ arrive with the proofs.
 The commitment polynomials of Equations 17 and 18 are
 {bpref "omuf_commitment_polynomials"}[], the forgery polynomial of
 Equation 22 with the case split of the proof is
-{bpref "omuf_forgery_polynomial"}[].
+{bpref "omuf_forgery_polynomial"}[], and the game transcript they will be
+read off is {bpref "omuf_transcript"}[].
 
-*TODO (Track CMZ-OMUF).* The game transcript the polynomials are read off,
-the Claims 5.12 to 5.14, and the Theorem 5.3 clause.
+*TODO (Track CMZ-OMUF).* The case events read off the transcript, the
+Claims 5.12 to 5.14 over them, and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -1006,6 +1008,18 @@ some `u_j`, in `η`, or in `x₀`, `xᵣ` or `x₁`, as membership in Mathlib's
 groups. That a winning forgery's `φ` is nonzero and vanishes at the
 discrete-log point, hence has a variable, is the pigeonhole step and the
 coefficient identities of Equations 20 and 21, the proof phase's.
+:::
+
+:::definition "omuf_transcript" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace, KVAC.Schemes.MicroCMZ.agmOMUFTrace, KVAC.Schemes.MicroCMZ.AGM_OMUFGame_eq_trace") (parent := "cmz_omuf") (tags := "milestone")
+The run of {uses "agm_omuf_game"}[] as a record, for the Theorem 5.11 proof
+at `n = 1`: the trace holding the key, the crs, the public parameters, the
+final transcript and the forgeries with their representations, the run with
+the decision left out, and the lemma that the game is the trace followed by
+the decision (proved), so that the game's success probability is the trace
+probability of the win and bounds on events covering the win bound the
+game. The paper's "execution", of which the Claims bound the probability
+that an item happens, made an object, on the pattern of the MAC track's
+reduction trace.
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")
