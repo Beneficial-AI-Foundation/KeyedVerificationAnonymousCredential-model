@@ -12,7 +12,6 @@ import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.ATVariant
-import KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 
 open Verso.Genre Manual
@@ -32,7 +31,7 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Nine files delivered under `KVAC/Schemes/MicroCMZ/`:
+Eight files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
@@ -43,10 +42,9 @@ Nine files delivered under `KVAC/Schemes/MicroCMZ/`:
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
-- `AGMOneMoreUnforgeability.lean` — Section 5.6, the AGM-instrumented OMUF
-  game over the core — Track CMZ-OMUF.
-- `OneMoreUnforgeability.lean` — Section 5.6, the Theorem 5.11 statements,
-  `n = 1` first — Track CMZ-OMUF.
+- `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean` and
+  `Statements.lean`) — Section 5.6, the AGM-instrumented OMUF game over the
+  core and the Theorem 5.11 statements — Track CMZ-OMUF.
 
 Two more are planned:
 
