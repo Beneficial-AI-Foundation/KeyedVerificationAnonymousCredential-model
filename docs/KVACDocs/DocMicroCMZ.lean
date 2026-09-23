@@ -42,9 +42,10 @@ Eight files delivered under `KVAC/Schemes/MicroCMZ/`:
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
-- `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean` and
-  `Statements.lean`) — Section 5.6, the AGM-instrumented OMUF game over the
-  core and the Theorem 5.11 statements — Track CMZ-OMUF.
+- `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
+  `Polynomial.lean` and `Statements.lean`) — Section 5.6, the AGM-instrumented
+  OMUF game over the core, the Equations 17 to 22 polynomial layer, and the
+  Theorem 5.11 statements — Track CMZ-OMUF.
 
 Two more are planned:
 
@@ -834,8 +835,12 @@ Theorem 5.11 is stated, `sorry`d, at `n = 1` as
 {bpref "mucmz_at_agm_omuf"}[], against named reductions whose bodies
 arrive with the proofs.
 
-*TODO (Track CMZ-OMUF).* The Claims 5.12 to 5.14 with their polynomial
-layer, and the Theorem 5.3 clause.
+The commitment polynomials of Equations 17 and 18 are
+{bpref "omuf_commitment_polynomials"}[].
+
+*TODO (Track CMZ-OMUF).* The forgery polynomial of Equation 22 with the
+case split, the game transcript the polynomials are read off, the Claims
+5.12 to 5.14, and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -965,13 +970,28 @@ such a change.
 :::
 
 :::proof "mucmz_at_agm_omuf_n1"
-At the actual number `r ≤ q` of Sign queries, a win presents `r + 1`
-forgeries against at most `r` issued pairs, so by pigeonhole one forgery
-is not the unblinding of any pair. The polynomial of Equation 22 built
-from its representation then has a nonzero monomial in one of three
+At the actual number of Sign queries, at most `q`, a win presents one
+forgery more than there were Sign queries, hence more than the issued
+pairs, so by pigeonhole one forgery is not the unblinding of any pair. Its
+polynomial of Equation 22 then has a nonzero monomial in one of three
 variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`, and the three cases are
 bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
 {uses "omuf_case_iii"}[].
+:::
+
+:::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length") (parent := "cmz_omuf") (tags := "milestone")
+The commitment polynomials of O24 Equations 17 and 18 for the Theorem 5.11
+proof at `n = 1`, over the ring of {uses "agm_verification_polynomial"}[]:
+the exponent of a representation given the commitment polynomials
+(Equation 17 in the exponent, the OMUF twin of the MAC layer's `toPoly`,
+with `c_k` in place of `m_k·x₁` because a blind-issuance answer is
+`u_k·(x₀ + xᵣ + c_k)`), with its evaluation at a point in closed form, and
+the commitment polynomials `c_1, …, c_r` by a fold in issuance order, each
+fed the earlier ones (Equation 18), with its length and one-step unrolling.
+The arity `r` is the number of issued pairs, since a refused query gets no
+variable. The game-level evaluation bridge, that at an honest run's
+discrete-log point `c_k` evaluates to the logarithm of the `k`-th issued
+commitment, is the proof phase's.
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")
