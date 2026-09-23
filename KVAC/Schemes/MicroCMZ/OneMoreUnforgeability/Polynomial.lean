@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Jin Xing Lim
 -/
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
+import Mathlib.Algebra.MvPolynomial.Variables
 
 /-!
 # μCMZ_AT one-more unforgeability — the polynomial layer of Equations 17 to 22 (O24 §5.6)
@@ -12,9 +13,9 @@ The pure-algebra layer of the Theorem 5.11 proof at `n = 1`, over Mathlib only
 (no game imports), mirroring `AGMPolynomial.lean`, the Lemma 5.4 layer it
 extends: the polynomials the proof reads off an algebraic transcript, in the
 ring `AGMPoly.P F r = F[η, x₀, xᵣ, x₁, u₁, …, u_r]` of that file. Track CMZ-OMUF,
-step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189). This part
-covers Equations 17 and 18, the commitment polynomials; Equation 22, the forgery
-polynomial with the case split of the proof, follows in the next part.
+step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189), delivered
+in two parts: Equations 17 and 18, the commitment polynomials, then Equation 22,
+the forgery polynomial with the case split of the proof.
 
 ## Setting
 
@@ -37,15 +38,18 @@ polynomial with the case split of the proof, follows in the next part.
   ReprCoeffs.toPolyAt γ cs          exponent of a representation γ, given the
                                     commitment polynomials cs          (Eq 17 read in the exponent)
     |     eval_toPolyAt             its evaluation at a point, in closed form
-    '---> omufCommitPolys γs        c_1, …, c_r by a left fold in issuance order,
-                                    each fed the earlier ones                       (Eq 18)
-          omufCommitPolys_nil, omufCommitPolys_append_singleton, omufCommitPolys_length
+    |---> omufCommitPolys γs        c_1, …, c_r by a left fold in issuance order,
+    |                               each fed the earlier ones                       (Eq 18)
+    |     omufCommitPolys_nil, omufCommitPolys_append_singleton, omufCommitPolys_length
+    '---> omufForgeryPoly cs m* α β φ = toPolyAt α · keyPoly m* − toPolyAt β        (Eq 22)
+            |
+            '---> HasUMonomial φ, HasEtaMonomial φ, HasXMonomial φ
+                                    the three variable groups of the case split, items (i) to (iii)
+                  cases_of_mem_vars a variable of φ falls in one of the three groups
 
-Next part: `omufForgeryPoly cs m* α β`, the forgery polynomial `φ` of Equation
-22, `toPolyAt α · keyPoly m* − toPolyAt β`, and the three variable groups of the
-proof's case split. `OneMoreUnforgeability/Transcript.lean` then reads all of
-these off the game transcript (`OMUFTrace`) to define the case events that
-Claims 5.12 to 5.14 bound (`Statements.lean`).
+`OneMoreUnforgeability/Transcript.lean` reads these off the game transcript
+(`OMUFTrace`) to define the case events that Claims 5.12 to 5.14 bound
+(`Statements.lean`).
 
 ## What the proof phase owes this layer
 
@@ -54,10 +58,10 @@ module docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log
 point of an honest run, `c_k` evaluates to the logarithm of the `k`-th issued
 commitment and `toPolyAt γ cs` to the
 logarithm of the element `γ` represents, by induction over the transcript
-through the gate and the server's honest answers, so that the forgery
-polynomial of the next part vanishes at that point exactly when the
-verification equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds (acceptance also needs
-`U* ≠ 0`). `eval_toPolyAt` is its algebraic half;
+through the gate and the server's honest answers, so that `φ` vanishes at that
+point exactly when the verification equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds
+(acceptance also needs `U* ≠ 0`, so a verifying forgery has vanishing `φ`, not
+conversely). `eval_toPolyAt` is its algebraic half;
 the induction over the run is step A5 of the plan. So are the coefficient
 identities of Equations 20 and 21 (in particular that, under the exact-length
 gate, `u_k` occurs in `c_j` only for `k < j`), the degree bounds, and the
@@ -65,7 +69,9 @@ constant audit.
 
 ## Conventions
 
-The fold of Equation 18 reads earlier polynomials through `List.getD … 0`, so a slot not yet
+"φ has a nonzero monomial in `v`" is Mathlib's `v ∈ φ.vars`, the variables
+occurring in some monomial of `φ` with nonzero coefficient. The fold of
+Equation 18 reads earlier polynomials through `List.getD … 0`, so a slot not yet
 issued contributes `γ_{u,k}·u_k + γ_{v,k}·u_k·(x₀ + xᵣ)` rather than nothing;
 for a representation accepted by the game's exact-length gate, the conversion
 `toReprCoeffs` pads both coefficients of every not-yet-issued pair with `0`, so
@@ -139,5 +145,47 @@ theorem omufCommitPolys_length (γs : List (ReprCoeffs F r)) :
     rw [ih]
     simp only [List.length_append, List.length_singleton]
     omega
+
+/-! ## Equation 22 -/
+
+/--
+The forgery polynomial `φ` of O24 Equation 22 for a forgery `(m*, (U*, V*))`
+with representations `α` of `U*` and `β` of `V*` over the final transcript:
+`toPolyAt α · (x₀ + xᵣ + m*·x₁) − toPolyAt β`. Through the Equation 18 bridge
+of the proof phase (module docstring), its evaluation at the discrete logarithms
+of an honest run is `0` when the forgery verifies; the pigeonhole step and the
+coefficient identities of Equations 20 and 21 then show that a winning forgery
+not supported by any issued pair has a nonzero `φ`, a polynomial with a root at
+the secret point, which is what the three Claims exploit.
+-/
+noncomputable def omufForgeryPoly (cs : Fin r → P F r) (mStar : F) (α β : ReprCoeffs F r) :
+    P F r :=
+  α.toPolyAt cs * keyPoly mStar - β.toPolyAt cs
+
+/-! ## The case split, items (i) to (iii) of p. 45 -/
+
+/-- Item (i): `φ` has a nonzero monomial in some `u_j` (Claim 5.12). -/
+def HasUMonomial (φ : P F r) : Prop := ∃ j : Fin r, Var.u j ∈ φ.vars
+
+/-- Item (ii): `φ` has a nonzero monomial in `η` (Claim 5.13). -/
+def HasEtaMonomial (φ : P F r) : Prop := Var.eta ∈ φ.vars
+
+/-- Item (iii): `φ` has a nonzero monomial in `x₀`, `xᵣ` or `x₁` (Claim 5.14,
+three cases). -/
+def HasXMonomial (φ : P F r) : Prop :=
+  Var.x0 ∈ φ.vars ∨ Var.xr ∈ φ.vars ∨ Var.x1 ∈ φ.vars
+
+/-- The three groups exhaust the variables: any variable occurring in `φ` puts
+`φ` in one of the cases. The proof phase shows a winning forgery's `φ` is a
+nonzero polynomial vanishing at the secret point, hence non-constant, hence has
+a variable. -/
+theorem cases_of_mem_vars {φ : P F r} {v : Var r} (hv : v ∈ φ.vars) :
+    HasUMonomial φ ∨ HasEtaMonomial φ ∨ HasXMonomial φ := by
+  cases v with
+  | eta => exact Or.inr (Or.inl hv)
+  | x0 => exact Or.inr (Or.inr (Or.inl hv))
+  | xr => exact Or.inr (Or.inr (Or.inr (Or.inl hv)))
+  | x1 => exact Or.inr (Or.inr (Or.inr (Or.inr hv)))
+  | u j => exact Or.inl ⟨j, hv⟩
 
 end KVAC.Schemes.MicroCMZ.AGMPoly
