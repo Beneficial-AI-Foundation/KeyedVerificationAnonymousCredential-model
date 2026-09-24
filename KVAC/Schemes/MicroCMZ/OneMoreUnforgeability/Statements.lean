@@ -4,6 +4,7 @@ Released under MIT license as described in the file LICENSE.
 Authors: Jin Xing Lim
 -/
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
 import KVAC.Preliminaries.Assumptions
 import VCVio.OracleComp.QueryTracking.QueryBound
 
@@ -13,13 +14,14 @@ import VCVio.OracleComp.QueryTracking.QueryBound
 Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
 (IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM-instrumented game of
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
-case the paper proves directly, and for every `n` (the printed bound). Track
-CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189),
-the first two of three PRs; the Claims 5.12 to 5.14 with their polynomial layer
-follow. Stated first and `sorry`d on the pattern of
+case the paper proves directly, for every `n` (the printed bound), and the
+Claims 5.12 to 5.14 of the `n = 1` proof over the case events of
+`CaseEvents.lean`. Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of
+item 17 (issue #189). Stated first and `sorry`d on the pattern of
 `AGMReduction/SecurityN1.lean`, so that the reductions review against visible
-targets; the blueprint nodes `mucmz_at_agm_omuf_n1` and `mucmz_at_agm_omuf` show
-"contains sorry" until the proofs are merged.
+targets; the blueprint nodes `mucmz_at_agm_omuf_n1`, `mucmz_at_agm_omuf` and
+`omuf_case_i` to `omuf_case_iii` show "contains sorry" until the proofs are
+merged.
 
 ## The statements and their parts
 
@@ -33,8 +35,8 @@ targets; the blueprint nodes `mucmz_at_agm_omuf_n1` and `mucmz_at_agm_omuf` show
     where
       omufBoundN1 F q εdl ε2dl    = (q + 4)/p + (q + 1)·εdl + 3·ε2dl         Equation 23
       omufBound F q εdl ε2dl εgap = (q + 6)/p + (q + 1)·εdl + 3·ε2dl + εgap  printed bound
-      εdl  = dlogAdv gen (omufDLReduction gen q A)        DL reduction, Claims 5.12 (u_ι monomial)
-                                                          and 5.13 (η monomial)
+      εdl  = dlogAdv gen (omufDLReduction gen q A)        DL reduction, the mixture of the
+                                                          two Claim reductions below
       ε2dl = twoDlogAdv gen (omufTwoDLReduction gen A)    2-DL reduction, Claim 5.14
                                                           (x₀, xᵣ, x₁ monomials, three cases)
       εdl', ε2dl'  the same two at the transformed adversary  omufToN1 gen A
@@ -42,22 +44,35 @@ targets; the blueprint nodes `mucmz_at_agm_omuf_n1` and `mucmz_at_agm_omuf` show
       εgap = gapDlogAdv gen (omufGapDLReduction gen A)    collision case
     with the paper's printed constants, provisional.
 
+  omuf_claim_5_12 :  Pr[ CaseU   | agmOMUFTrace gen secParam A ]  ≤  q·(1/p + εU)     item (i)
+  omuf_claim_5_13 :  Pr[ CaseEta | agmOMUFTrace gen secParam A ]  ≤  1/p + εη         item (ii)
+  omuf_claim_5_14 :  Pr[ CaseX   | agmOMUFTrace gen secParam A ]  ≤  3·(1/p + ε2dl)   item (iii)
+    for every  A : AGMOMUFAdversary F G 1,  over the case events of CaseEvents.lean,
+    the first under the budget hypothesis, the other two without
+    where
+      εU = dlogAdv gen (omufDLReductionU gen q A)         Claim 5.12, selector over ι ∈ [q]
+      εη = dlogAdv gen (omufDLReductionEta gen A)         Claim 5.13, challenge in the crs
+    and the theorem's εdl is the mixture  q/(q + 1)·εU + 1/(q + 1)·εη,  so that
+      q·(1/p + εU) + (1/p + εη) + 3·(1/p + ε2dl)  =  omufBoundN1 F q εdl ε2dl
+    once the win is covered by the three events (pigeonhole, proof phase).
+
 The `n = 1` case is the one the paper proves directly. General `n` follows from
 it (p. 46): the winning event splits by whether the forgeries' attribute
 combinations `Σᵢ mᵢ·Xᵢ` are pairwise distinct, the distinct case reduces to
 `n = 1` on a transformed adversary, and the colliding case to gap-DL by an
 argument in the style of Lemma 5.5 (which the paper's text cites as Theorem
-5.5). The four named constructions, the two reductions, the attribute-lifting
-transformation `omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and
-the gap-DL reduction, are declared with `sorry` bodies, the first sorried
-definitions in the repository, and are built with the proofs of the Claims over
-the polynomial layer of Equations 17 to 22. Whether the transformation reuses
-the Lemma 5.5 embedding of the MAC track is open with Semar (question C2 of the
-Theorem 5.3 plan). One constraint is on record: the adversary shape carries no
-private coin oracle, so a transformation that needs randomness must fix its
-coins in the construction, with a fixed-coins argument in the proof, or the
-shape must grow a coin arm (Phase B). Extra Sign queries are not a source of
-randomness, they break the budget and the one-more count.
+5.5). The six named constructions, the theorem's two reductions, the two
+per-Claim discrete-log reductions, the attribute-lifting transformation
+`omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and the gap-DL
+reduction, are declared with `sorry` bodies, the first sorried definitions in
+the repository, and are built with the proofs of the Claims over the polynomial
+layer of Equations 17 to 22 (`Polynomial.lean`, `CaseEvents.lean`). Whether the
+transformation reuses the Lemma 5.5 embedding of the MAC track is open with
+Semar (question C2 of the Theorem 5.3 plan). One constraint is on record: the
+adversary shape carries no private coin oracle, so a transformation that needs
+randomness must fix its coins in the construction, with a fixed-coins argument
+in the proof, or the shape must grow a coin arm (Phase B). Extra Sign queries
+are not a source of randomness, they break the budget and the one-more count.
 
 ## Why named reductions
 
@@ -70,16 +85,18 @@ function of the finite group, with advantage `1`, so quantifying existentially
 over the reductions is vacuous (the right-hand side exceeds every probability),
 and assuming a bound `ε` on every discrete-log adversary is false below `1` and
 trivial at or above it. Hence the shape of `agm_ufcmva_le_n1_explicit` against
-two named reductions. Their `sorry` sits at the whole function type, not under
+named reductions. Their `sorry` sits at the whole function type, not under
 the binders, so that the placeholders are not definitionally independent of
 their arguments (a `def … (A) := sorry` would make `f A₁ = f A₂` hold by `rfl`).
-No lemma may be stated about them beyond this theorem until they are built,
+No lemma may be stated about them beyond the theorems and Claims of this file
+until they are built,
 since anything provable about an unspecified body holds of every inhabitant. The
-discrete-log reduction takes the budget `q`, since a selector over the `q`
-issuance positions of Claim 5.12 needs it; the 2-DL reduction selects among
-three fixed cases.
+discrete-log reductions of the theorem and of Claim 5.12 take the budget `q`,
+since a selector over the `q` issuance positions needs it. Claim 5.13's embeds
+the challenge in the crs and the 2-DL reduction selects among three fixed
+cases, so neither takes it.
 
-## Constants
+## Constants and the extraction obligation
 
 `omufBoundN1` carries the printed constants of Equation 23, provisional: the
 repository already documents one Schwartz–Zippel undercount in this section
@@ -88,6 +105,28 @@ the pattern. The constant audit of the proof phase settles them, with an errata
 item on any change, and the named definitions make such a change one line each.
 The printed general bound `omufBound` exceeds Equation 23 by `2/p + Adv^gapdl`,
 the overhead of the general `n` argument, `1/p` from each of its two cases.
+
+The paper's `1/p` in each Claim is the degenerate mask, `b = 0` or the
+substituted polynomial in `χ` trivial, `b` uniform and hidden by `a`. A second
+event sits between the case events and the extraction. The events are the
+paper's items, a nonzero monomial in the variable of a formal polynomial, while
+the reduction extracts from the univariate polynomial left after evaluating
+every other variable at the run's values, and the monomial's coefficient, a
+nonzero polynomial in those other variables, can vanish there. An example: with
+no Sign query and Verify queries `(0, (G, c·G))` over all `c`, a forger learns
+`k = x₀ + xᵣ` and outputs the forgery `(0, (H, k·H))` represented over `H`,
+which wins whenever `H ≠ 0`. Its polynomial `η·(x₀ + xᵣ − k)` has an `η`
+monomial, so `CaseEta` holds with probability `1 − 1/p`, yet at the run's key
+nothing in `η` remains for the Claim 5.13 reduction, while the `x₀` embedding
+of Claim 5.14 extracts from it. Schwartz–Zippel bounds such a collapse by `d/p`
+only for a polynomial independent of the run's values, and honest Verify
+answers break that independence, each being a test of the key, with no Verify
+budget in the game. Whether the Claims keep the paper's events, with a covering
+argument that routes every winning polynomial to a reduction that extracts from
+it, or move to evaluated events, and whether a Verify budget and a
+per-Verify-query term join the statements, is an obligation of the proof phase
+beyond the constant audit, and a decision of the Theorem 5.3 plan. The paper's
+own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 
@@ -143,16 +182,58 @@ The discrete-log reduction of O24 Theorem 5.11 at `n = 1`, for the Sign budget
 the game it simulates for `A` and extracts the logarithm from the polynomial
 `φ_i` (Equation 22) of the unsupported forgery, at a `u_ι` monomial for a chosen
 issuance index `ι ∈ [q]` (Claim 5.12) or at an `η` monomial (Claim 5.13). The
-paper's factor `(q + 1)` is the union of these cases; whether one selector
-reduction or one reduction per case carries it is open with the MAC track
-(question C1 of the Theorem 5.3 plan), and the budget argument is what a
-selector over the `q` positions needs. Declared with a `sorry` body until the
-proof PRs build it; the generator fact is what the construction's logarithm
-bookkeeping (`glog`) will need.
+paper's factor `(q + 1)` is the union of these cases. Each Claim has its own
+reduction below, `omufDLReductionU` and `omufDLReductionEta` (decision A11 of
+the Theorem 5.3 plan), and this one is defined in the proof phase as their
+mixture, running the first with probability `q/(q + 1)` and the second with
+`1/(q + 1)`, so that `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)` and the
+Claims add up to the theorem's `(q + 1)·εdl` term. The budget argument is the
+selector's. Declared with a `sorry` body until the proof PRs build it; the
+generator fact is what the construction's logarithm bookkeeping (`glog`) will
+need.
 -/
 noncomputable def omufDLReduction :
     ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
       ℕ → AGMOMUFAdversary F G 1 → DiffieHellman.DLogAdversary F G :=
+  sorry
+
+/--
+The discrete-log reduction of O24 Claim 5.12 (item (i), a `u_ι` monomial), for the
+Sign budget `q`, built from an algebraic one-more forger `A`. It samples a
+position `ι ∈ [q]` uniformly, the selector whose guess costs the Claim's factor
+`q` and needs the budget as an argument (decision A11 of the Theorem 5.3 plan,
+one reduction per Claim), answers the `ι`-th issued Sign query, refused queries
+issuing nothing as in the game, with the challenge embedded in
+`U_ι = a·G + b·X` (p. 46, "Fix ι ∈ [q]"), fails if fewer than `ι` pairs are
+issued, and solves for the logarithm the equation that the unsupported
+forgery's polynomial `φ_i` (Equation 22) gives at `u_ι`. Two adaptations are the
+proof phase's. The core issues nonzero nonces (`uniformUnits`) while the paper's
+`U_ι` may vanish, so the masks are conditioned or the zero case coupled away,
+and the coefficient of the `u_ι` monomial must survive the evaluation of the
+other variables (module docstring, *Constants and the extraction obligation*).
+Declared with a `sorry` body until the proof PRs build it. The generator fact
+is what its logarithm bookkeeping will need.
+-/
+noncomputable def omufDLReductionU :
+    ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
+      ℕ → AGMOMUFAdversary F G 1 → DiffieHellman.DLogAdversary F G :=
+  sorry
+
+/--
+The discrete-log reduction of O24 Claim 5.13 (item (ii), an `η` monomial), built
+from an algebraic one-more forger `A`: it embeds the challenge in the crs,
+`H = a·G + b·X` with `X₀ = x₀·H` (p. 47), answers every query as the protocol
+prescribes, and solves the equation that the unsupported forgery's polynomial
+`φ_i` gives at `η`. No selector, hence no budget argument (decision A11). The
+coefficient of the `η` monomial must survive the evaluation of the other
+variables, which the example of the module docstring (*Constants and the
+extraction obligation*) shows is not automatic. Declared with a `sorry` body
+until the proof PRs build it. The generator fact is what its logarithm
+bookkeeping will need.
+-/
+noncomputable def omufDLReductionEta :
+    ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
+      AGMOMUFAdversary F G 1 → DiffieHellman.DLogAdversary F G :=
   sorry
 
 /--
@@ -237,6 +318,69 @@ theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ
       omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
         (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
         (gapDlogAdv gen (omufGapDLReduction gen A)) := by
+  sorry
+
+/-! ## The Claims
+
+The three Claims of the `n = 1` proof, over the case events of `CaseEvents.lean`
+read off the trace of `Transcript.lean`: each bounds the trace probability
+`Pr[ event | agmOMUFTrace gen secParam A ]` of one item of the case split by the
+paper's constant and the advantage of that item's reduction. Only Claim 5.12
+carries the budget hypothesis, since its constant `q` is the selector's range,
+the budget rather than the actual number of issued pairs, which the reduction
+cannot know before running the forger. Claims 5.13 and 5.14 embed the challenge
+in the crs or the public parameters and hold for every forger. The theorem
+invokes the three under its hypothesis and they add up to Equation 23 (module
+docstring). The docstrings state the paper's arguments, which the extraction
+obligation of the module docstring qualifies. Stated first and `sorry`d. -/
+
+/--
+**O24 Claim 5.12**, item (i), the adversary wins and some forgery polynomial has
+a nonzero monomial in some `u_j`, with probability at most
+`q·(1/p + Adv^dl)` for the reduction `omufDLReductionU gen q A`. The paper's
+`1/p` is the degenerate mask under the substitution `u_ι ↦ a + b·χ`, `b`
+uniform and hidden by `a` (p. 46), the factor `q` the selector's guess. That the
+coefficient of the monomial survives the evaluation of the other variables at
+the run's values is the extraction obligation of the module docstring. Printed
+constant, provisional (module docstring, *Constants and the extraction
+obligation*).
+-/
+theorem omuf_claim_5_12 (A : AGMOMUFAdversary F G 1) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    Pr[ OMUFTrace.CaseU gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (q : ℝ≥0∞) *
+        ((Fintype.card F : ℝ≥0∞)⁻¹ + dlogAdv gen (omufDLReductionU gen q A)) := by
+  sorry
+
+/--
+**O24 Claim 5.13**, item (ii), the adversary wins and some forgery polynomial
+has a nonzero monomial in `η`, with probability at most `1/p + Adv^dl` for the
+reduction `omufDLReductionEta gen A`. No factor `q`, since the challenge sits in
+the crs and no position is chosen, so no budget hypothesis. The module
+docstring's example, a forger that learns `x₀ + xᵣ` through Verify queries,
+realises the event with nothing for this reduction to extract, so the statement
+rests on the extraction obligation recorded there. Printed constant,
+provisional (module docstring, *Constants and the extraction obligation*).
+-/
+theorem omuf_claim_5_13 (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseEta gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + dlogAdv gen (omufDLReductionEta gen A) := by
+  sorry
+
+/--
+**O24 Claim 5.14**, item (iii), the adversary wins and some forgery polynomial
+has a nonzero monomial in `x₀`, `xᵣ` or `x₁`, with probability at most
+`3·(1/p + Adv^2-dl)` for the reduction `omufTwoDLReduction gen A`, the same
+2-DL reduction the theorem cites, its factor `3` the three near-identical
+embeddings (p. 47, the `x₀` case written out, `X₀ = a·H + b·η·X`, the `xᵣ` and
+`x₁` cases "almost identical"). No budget hypothesis, the challenge sits in
+the public parameters. The extraction obligation of the module docstring
+applies. Printed constant, provisional (module docstring, *Constants and the
+extraction obligation*).
+-/
+theorem omuf_claim_5_14 (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseX gen secParam | agmOMUFTrace gen secParam A ] ≤
+      3 * ((Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReduction gen A)) := by
   sorry
 
 end KVAC.Schemes.MicroCMZ
