@@ -831,13 +831,13 @@ adversary, the winning condition, the experiment and its advantage are
 {bpref "agm_omuf_game"}[]. Theorem 5.11 and the one-more unforgeability
 clause of Theorem 5.3 will be stated over that game.
 
-The `n = 1` bound of Equation 23 is stated, `sorry`d, as
-{bpref "mucmz_at_agm_omuf_n1"}[], against two named reductions whose
-bodies arrive with the proofs.
+Theorem 5.11 is stated, `sorry`d, at `n = 1` as
+{bpref "mucmz_at_agm_omuf_n1"}[] and for every `n` as
+{bpref "mucmz_at_agm_omuf"}[], against named reductions whose bodies
+arrive with the proofs.
 
-*TODO (Track CMZ-OMUF).* The general `n` statement of Theorem 5.11, the
-Claims 5.12 to 5.14 with their polynomial layer, and the Theorem 5.3
-clause.
+*TODO (Track CMZ-OMUF).* The Claims 5.12 to 5.14 with their polynomial
+layer, and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -921,15 +921,23 @@ advantage in the game of {uses "omuf_game"}[].
 Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::
 
-:::theorem "mucmz_at_agm_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11") (effort := "large") (priority := "low")
+:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
-attributes. To be stated over the merged core scheme
+attributes. Stated as `agm_omuf_le` over the merged core scheme
 {uses "mucmz_at_core"}[] in the AGM-instrumented game
-{uses "agm_omuf_game"}[], the plain game following by a deferred bridge; the core's nonzero issuance nonces condition
-the paper's `ℤ_p` samplers away from their zero cases, so the printed
-constants transfer only up to per-query `1/p` differences — the Track
-CMZ-OMUF constant audit settles the stated bound.
+{uses "agm_omuf_game"}[] for every `n > 0`, the plain game following by a
+deferred bridge, with the printed bound
+`(q + 6)/p + (q + 1)·Adv^dl + 3·Adv^2-dl + Adv^gapdl` behind the named
+definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
+and 2-DL advantages are those of the `n = 1` reductions run on the
+transformed adversary `omufToN1`, the gap-DL advantage that of the
+collision-case reduction `omufGapDLReduction`, both declared with `sorry`
+bodies until the proofs build them. *Note.* The constants are the paper's
+and provisional: the core's nonzero issuance nonces condition the paper's
+`ℤ_p` samplers away from their zero cases, so they transfer only up to
+per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles
+the stated bound, with an errata item on any change.
 :::
 
 :::proof "mucmz_at_agm_omuf"
