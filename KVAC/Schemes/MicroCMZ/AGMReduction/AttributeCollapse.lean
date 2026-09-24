@@ -23,7 +23,7 @@ is the case `r₁ = 1`). Because the instrumented game's `verify`/`help` queries
 carry algebraic representations, those are collapsed too. The message collapse
 `Σᵢ rᵢ mᵢ` is the wrapper's job and is not in this file.
 
-This file holds the pure-algebra dictionary of that collapse: the two
+This file holds the pure algebra of that collapse: the two
 representation translations, `AGMRepr.collapseRepr` for a single represented
 element (the `verify`/`help` arms and the forgery) and `AGMRepr.linCombCollapse`
 for the weighted sum `Σᵢ rᵢ • Aᵢ` of represented elements (the `help` arm).

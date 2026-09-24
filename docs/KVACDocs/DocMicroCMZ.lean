@@ -713,8 +713,9 @@ stated through
 :::
 
 :::definition "attribute_collapse_dictionary" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr, KVAC.Schemes.MicroCMZ.linCombCollapseUVLen, KVAC.Schemes.MicroCMZ.AGMRepr.linCombCollapse") (parent := "cmz_amac") (tags := "milestone")
-The `n → 1` attribute-collapse dictionary of {bpref "forgery_case_mac"}[]: along a
-direction `r⃗`, an `n`-attribute representation of {uses "agm_model"}[] is
+The `n → 1` attribute-collapse representation translations of
+{bpref "forgery_case_mac"}[]: along a direction `r⃗`, an `n`-attribute
+representation of {uses "agm_model"}[] is
 translated to a 1-attribute one by combining the attribute coefficients into
 `Σᵢ rᵢ·xᵢ` and keeping every other coefficient, and a weighted sum `Σᵢ rᵢ•Aᵢ` of
 represented elements gets the combined representation whose tag coefficients
@@ -742,8 +743,9 @@ case is bounded by the single-attribute MAC's UF-CMVA advantage
 
 :::proof "forgery_case_mac"
 The reduction collapses the `n`-attribute transcript onto a 1-attribute one
-along a direction `r⃗` with the dictionary {uses "attribute_collapse_dictionary"}[],
-then runs the single-attribute bound {uses "single_attribute_mac"}[].
+along a direction `r⃗` with the representation translations
+{uses "attribute_collapse_dictionary"}[], then runs the single-attribute bound
+{uses "single_attribute_mac"}[].
 :::
 
 :::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
