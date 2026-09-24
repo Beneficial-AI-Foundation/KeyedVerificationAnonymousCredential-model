@@ -117,14 +117,14 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
     - [ ] Partial-disclosure predicate family `{φ_a⃗}`, Definition 4.2 — not started (#104). Prerequisite for the anonymity game.
     - [ ] Anonymity game, Definition 4.4 (`Framework/Anonymity.lean`) — not started, the module does not exist.
 - [ ] **Track CMZ-C** — μCMZ construction
-  - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`, `KVAC/Schemes/MicroCMZ/Credential.lean` (planned)
+  - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`, `KVAC/Schemes/MicroCMZ/Credential.lean`
   - Depends on: Track 0, Track F1, Track Σ (Fiat–Shamir proofs), #104, #118
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
   - **Status** (split into sub-issues #39–#41 and #163 under #6; #6 was closed on 2026-07-21 before Part 4 landed and is reopened):
     - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
     - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40): `riuRel` / `riuSigma` with completeness and special soundness.
     - [x] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — landed (#41): `risRel` / `risSigma` and `rpRel` / `rpSigma`.
-    - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p (`Credential.lean`) — not started (#163). `Construction.lean` provides the base MAC only.
+    - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p (`Credential.lean`) — in progress (#163). The instance `μCMZCredentialSyntax` is delivered over the proof-system parameters of `ProofSystems.lean`. Its correctness `CorrectRO` follows.
 
 ## Wave 3 — security tracks (per scheme)
 
