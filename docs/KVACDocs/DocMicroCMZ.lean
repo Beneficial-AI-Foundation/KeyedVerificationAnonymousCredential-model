@@ -43,10 +43,10 @@ Eight files delivered under `KVAC/Schemes/MicroCMZ/`:
   lemmas, and the sign-arm coupling — Track CMZ-M.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
-  `Polynomial.lean`, `Transcript.lean` and `Statements.lean`) — Section 5.6,
-  the AGM-instrumented OMUF game over the core, the Equations 17 to 22
-  polynomial layer, the game transcript, and the Theorem 5.11 statements —
-  Track CMZ-OMUF.
+  `Polynomial.lean`, `Transcript.lean`, `CaseEvents.lean` and
+  `Statements.lean`) — Section 5.6, the AGM-instrumented OMUF game over the
+  core, the Equations 17 to 22 polynomial layer, the game transcript with
+  its case events, and the Theorem 5.11 statements — Track CMZ-OMUF.
 
 Two more are planned:
 
@@ -839,11 +839,12 @@ arrive with the proofs.
 The commitment polynomials of Equations 17 and 18 are
 {bpref "omuf_commitment_polynomials"}[], the forgery polynomial of
 Equation 22 with the case split of the proof is
-{bpref "omuf_forgery_polynomial"}[], and the game transcript they will be
-read off is {bpref "omuf_transcript"}[].
+{bpref "omuf_forgery_polynomial"}[], the game transcript is
+{bpref "omuf_transcript"}[], and the polynomials and case events read off
+it are {bpref "omuf_case_events"}[].
 
-*TODO (Track CMZ-OMUF).* The case events read off the transcript, the
-Claims 5.12 to 5.14 over them, and the Theorem 5.3 clause.
+*TODO (Track CMZ-OMUF).* The Claims 5.12 to 5.14 over those events, and
+the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -976,10 +977,11 @@ such a change.
 At the actual number of Sign queries, at most `q`, a win presents one
 forgery more than there were Sign queries, hence more than the issued
 pairs, so by pigeonhole one forgery is not the unblinding of any pair. Its
-polynomial of Equation 22, {uses "omuf_forgery_polynomial"}[], then has a
-nonzero monomial in one of three variable groups, `u⃗`, `η`, or
-`x₀, xᵣ, x₁`, and the three cases are bounded by {uses "omuf_case_i"}[],
-{uses "omuf_case_ii"}[], and {uses "omuf_case_iii"}[].
+polynomial of Equation 22, {uses "omuf_forgery_polynomial"}[], read off
+the run by {uses "omuf_case_events"}[], then has a nonzero monomial in one
+of three variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`, and the three cases
+are bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
+{uses "omuf_case_iii"}[].
 :::
 
 :::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length") (parent := "cmz_omuf") (tags := "milestone")
@@ -1020,6 +1022,22 @@ probability of the win and bounds on events covering the win bound the
 game. The paper's "execution", of which the Claims bound the probability
 that an item happens, made an object, on the pattern of the MAC track's
 reduction trace.
+:::
+
+:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX") (parent := "cmz_omuf") (tags := "milestone")
+The polynomials of a run and its case events, for the Theorem 5.11 proof
+at `n = 1`: the issued representations of a trace of
+{uses "omuf_transcript"}[], converted by {uses "agm_eval_bridge"}[] and
+aligned with the issued pairs (proved), the commitment polynomials of
+{uses "omuf_commitment_polynomials"}[] and the forgery polynomials of
+{uses "omuf_forgery_polynomial"}[] read off the trace at the arity of
+issued pairs, with the index lemmas showing the defaults are never reached
+(proved), and the win and the three case events, items (i) to (iii) of
+p. 45, the win conjoined with a forgery polynomial having a nonzero
+monomial in the group, the events Claims 5.12 to 5.14 bound. The
+game-level evaluation bridge, that at an honest run's discrete-log point
+these polynomials evaluate to the logarithms of the elements they
+represent, needs the run's honesty invariants and is the proof phase's.
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")

@@ -6,6 +6,7 @@ Authors: Jin Xing Lim
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Polynomial
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Transcript
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements
 
 /-!
@@ -27,12 +28,14 @@ documents its own contents in its module docstring:
   the proof's case split;
 - `Transcript` — the trace of a run of the game with the decision left out,
   and the game as trace plus decision;
+- `CaseEvents` — the polynomials of Equations 18 and 22 read off a trace, and
+  the win and the three case events of the proof's case split, items (i) to
+  (iii), that Claims 5.12 to 5.14 bound;
 - `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds
   `omufBoundN1` and `omufBound`, the named reduction stubs, `agm_omuf_le_n1` at
   `n = 1` (Equation 23) and `agm_omuf_le` for every `n`.
 
-The polynomials and case events read off the transcript, and the Claims 5.12
-to 5.14 over those events, follow as the last parts. The plain Figure 6 game of
+The Claims 5.12 to 5.14 over the case events follow as the last part. The plain Figure 6 game of
 `KVAC.Preliminaries.AnonymousTokens.Security` is reached from the AGM game by a
 deferred bridge (Phase B of the plan).
 -/
