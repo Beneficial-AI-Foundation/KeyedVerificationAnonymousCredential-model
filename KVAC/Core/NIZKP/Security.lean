@@ -230,7 +230,7 @@ this lift to reuse `ProbComp` algorithms inside a credential at the oracle
 carrier, for instance the μCMZ base MAC's `setup` and `keygen` (issue #118). -/
 
 /-- The implementation `zkROImpl` unfolds to VCV-io's forwarding handler for the
-uniform arm summed with the lazy random oracle, by `rfl`. -/
+uniform arm summed with the lazy random oracle. -/
 lemma zkROImpl_eq_unifFwd_add (H : HashSpec) :
     zkROImpl H = unifFwdImpl H.spec + H.roImpl := rfl
 
@@ -239,7 +239,7 @@ computation from `cache` returns each output paired with the same `cache`. -/
 lemma runRO_liftM {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
     (p : ProbComp α) :
     runRO H cache (liftM p) = (fun x => (x, cache)) <$> p := by
-  rw [runRO, zkROImpl_eq_unifFwd_add]
+  rw [runRO]
   exact roSim.run_liftM H.roImpl p cache
 
 /-- The support form of `runRO_liftM`. The pair `(a, c')` is a result of the
@@ -248,12 +248,6 @@ lifted run from `cache` iff `a` is a result of the original computation and
 lemma mem_support_runRO_liftM_iff {α : Type} (H : HashSpec) (cache : H.spec.QueryCache)
     (p : ProbComp α) (a : α) (c' : H.spec.QueryCache) :
     (a, c') ∈ support (runRO H cache (liftM p)) ↔ a ∈ support p ∧ c' = cache := by
-  rw [runRO_liftM, support_map, Set.mem_image]
-  constructor
-  · rintro ⟨x, hx, hxc⟩
-    obtain ⟨rfl, rfl⟩ := Prod.mk.inj hxc
-    exact ⟨hx, rfl⟩
-  · rintro ⟨ha, rfl⟩
-    exact ⟨a, ha, rfl⟩
+  simp [runRO_liftM, support_map, Set.mem_image, eq_comm]
 
 end KVAC.Core
