@@ -123,6 +123,17 @@ oracle of {uses "random_oracle_hashes"}[] with a reprogrammable cache,
 and the distinguishing advantage `ZKAdv`.
 :::
 
+:::theorem "runro_lift" (lean := "KVAC.Core.zkROImpl_eq_unifFwd_add, KVAC.Core.runRO_liftM, KVAC.Core.mem_support_runRO_liftM_iff") (parent := "core_zkproof") (tags := "milestone")
+Oracle-free computations under `runRO`. A `ProbComp` computation lifted into
+the `OracleComp (ZKRO H)` carrier of {uses "zk_game"}[] never queries the
+random oracle, so `runRO` returns the cache it was given paired with each
+output of the original computation (`runRO_liftM`), with the support form
+`mem_support_runRO_liftM_iff`. A scheme uses this lift to reuse oracle-free
+algorithms at the oracle carrier, for instance the μCMZ base MAC's `setup`
+and `keygen` (issue #118), and the oracle-carrier correctness `CorrectRO`
+relies on it.
+:::
+
 :::definition "extraction_game" (lean := "KVAC.Core.NIZKPSyntax.DecidableEqStmt, KVAC.Core.NIZKPSyntax.DecidableEqProof, KVAC.Core.witnessValid, KVAC.Core.KSNDAdversary, KVAC.Core.KSNDExtractor, KVAC.Core.ksndGame, KVAC.Core.KSNDAdv, KVAC.Core.SEQuery, KVAC.Core.SESpec, KVAC.Core.SEAdvSpec, KVAC.Core.SEAdversary, KVAC.Core.SimLog, KVAC.Core.SEState, KVAC.Core.seOracleImpl, KVAC.Core.SEExtractor, KVAC.Core.seGame, KVAC.Core.SEAdv") (parent := "core_zkproof") (tags := "milestone")
 The knowledge-soundness and strong simulation-extractability games of O24
 Section 3.3 on a {uses "nizkp_syntax"}[] carrier at `OracleComp (ZKRO H)`,
