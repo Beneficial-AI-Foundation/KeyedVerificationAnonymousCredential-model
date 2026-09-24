@@ -834,7 +834,10 @@ clause of Theorem 5.3 will be stated over that game.
 Theorem 5.11 is stated, `sorry`d, at `n = 1` as
 {bpref "mucmz_at_agm_omuf_n1"}[] and for every `n` as
 {bpref "mucmz_at_agm_omuf"}[], against named reductions whose bodies
-arrive with the proofs.
+arrive with the proofs. The Claims 5.12 to 5.14 of the `n = 1` proof are
+stated the same way, a discrete-log reduction each for Claims 5.12 and 5.13
+and the theorem's 2-DL reduction for Claim 5.14, as {bpref "omuf_case_i"}[],
+{bpref "omuf_case_ii"}[] and {bpref "omuf_case_iii"}[].
 
 The commitment polynomials of Equations 17 and 18 are
 {bpref "omuf_commitment_polynomials"}[], the forgery polynomial of
@@ -843,8 +846,8 @@ Equation 22 with the case split of the proof is
 {bpref "omuf_transcript"}[], and the polynomials and case events read off
 it are {bpref "omuf_case_events"}[].
 
-*TODO (Track CMZ-OMUF).* The Claims 5.12 to 5.14 over those events, and
-the Theorem 5.3 clause.
+*TODO (Track CMZ-OMUF).* The Theorem 5.3 one-more unforgeability clause,
+then the proofs of the Claims and of Theorem 5.11.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -1040,21 +1043,72 @@ these polynomials evaluate to the logarithms of the elements they
 represent, needs the run's honesty invariants and is the proof phase's.
 :::
 
-:::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")
-*O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof, case
-(i) occurs with probability at most `q · (1/p + Adv^dl)`, `q` times the
-sum of `1/p` and the discrete-log advantage
-({uses "hardness_assumptions"}[]).
+:::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
+*O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
+item (i) of the case split, the adversary wins and some forgery polynomial
+has a nonzero monomial in some `u_j`, the event `CaseU` of
+{uses "omuf_case_events"}[] over the trace of {uses "omuf_transcript"}[],
+has probability at most `q · (1/p + Adv^dl)` for an algebraic adversary
+making at most `q` Sign queries, the discrete-log advantage
+({uses "hardness_assumptions"}[]) being that of the named reduction
+`omufDLReductionU`, built from the adversary and the budget and declared
+with a `sorry` body until the proof builds it. Stated `sorry`d, printed
+constant, provisional until the Track CMZ-OMUF constant audit.
 :::
 
-:::theorem "omuf_case_ii" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.13") (effort := "medium") (priority := "low")
-*O24 Claim 5.13.* In the `μCMZ_AT` one-more unforgeability proof, case
-(ii) occurs with probability at most `1/p` plus the discrete-log
-advantage ({uses "hardness_assumptions"}[]).
+:::proof "omuf_case_i"
+The reduction samples a position `ι ∈ [q]` uniformly, the guess that costs
+the factor `q`, answers the `ι`-th issued Sign query with the challenge
+embedded in `U_ι = a·G + b·X`, refusing gated queries as the game does, and
+at the end solves for the logarithm the equation that the unsupported
+forgery's polynomial of {uses "omuf_forgery_polynomial"}[] gives at `u_ι`.
+The paper's `1/p` is the degenerate mask, `b` being uniform and hidden by
+`a` (p. 46). That the monomial's coefficient survives the evaluation of the
+other variables at the run's values is an obligation of the proof phase,
+recorded in the statement file.
 :::
 
-:::theorem "omuf_case_iii" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.14") (effort := "medium") (priority := "low")
-*O24 Claim 5.14.* In the `μCMZ_AT` one-more unforgeability proof, case
-(iii) occurs with probability at most `3(1/p + Adv^{2-dl})`
-({uses "hardness_assumptions"}[]).
+:::theorem "omuf_case_ii" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionEta, KVAC.Schemes.MicroCMZ.omuf_claim_5_13") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.13")
+*O24 Claim 5.13.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
+item (ii) of the case split, the adversary wins and some forgery polynomial
+has a nonzero monomial in `η`, the event `CaseEta` of
+{uses "omuf_case_events"}[] over the trace of {uses "omuf_transcript"}[],
+has probability at most `1/p + Adv^dl` for every algebraic adversary, the
+discrete-log advantage ({uses "hardness_assumptions"}[]) being that of the
+named reduction `omufDLReductionEta`, built from the adversary alone,
+declared with a `sorry` body until the proof builds it. Stated `sorry`d,
+printed constant, provisional until the Track CMZ-OMUF constant audit.
+:::
+
+:::proof "omuf_case_ii"
+The reduction embeds the challenge in the crs, `H = a·G + b·X` with
+`X₀ = x₀·H`, answers every query as the protocol prescribes, and solves the
+equation that the unsupported forgery's polynomial of
+{uses "omuf_forgery_polynomial"}[] gives at `η`, the paper's `1/p` being the
+degenerate mask (p. 47). No position is chosen, hence no factor `q` and no
+budget hypothesis. The same obligation as for item (i) applies, and the
+statement file's example, a forger that learns `x₀ + xᵣ` through Verify
+queries, shows that it is not automatic.
+:::
+
+:::theorem "omuf_case_iii" (lean := "KVAC.Schemes.MicroCMZ.omuf_claim_5_14") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.14")
+*O24 Claim 5.14.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
+item (iii) of the case split, the adversary wins and some forgery
+polynomial has a nonzero monomial in `x₀`, `xᵣ` or `x₁`, the event `CaseX`
+of {uses "omuf_case_events"}[] over the trace of {uses "omuf_transcript"}[],
+has probability at most `3(1/p + Adv^{2-dl})` for every algebraic adversary,
+the 2-DL advantage ({uses "hardness_assumptions"}[]) being that of the named
+reduction `omufTwoDLReduction` the theorem cites, anchored on its `n = 1`
+node. Stated `sorry`d, printed constant, provisional until the Track
+CMZ-OMUF constant audit.
+:::
+
+:::proof "omuf_case_iii"
+Three near-identical embeddings give the factor `3`. For `x₀` the reduction
+sets `X₀ = a·H + b·η·X`, answers Sign with the help of the first challenge
+element and Verify with the help of the second, for the quadratic term, and
+solves the equation that the unsupported forgery's polynomial of
+{uses "omuf_forgery_polynomial"}[] gives at `x₀`, the paper's `1/p` being
+the degenerate mask. The `xᵣ` and `x₁` cases are "almost identical" (p. 47).
+The same obligation as for item (i) applies.
 :::
