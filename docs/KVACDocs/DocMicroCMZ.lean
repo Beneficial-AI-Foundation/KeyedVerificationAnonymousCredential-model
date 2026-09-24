@@ -8,6 +8,7 @@ import VersoBlueprint
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.ProofSystems
+import KVAC.Schemes.MicroCMZ.Credential
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -37,6 +38,7 @@ Nine files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
+- `Credential.lean` — Section 5.1, the credential of Figure 9 — Track CMZ-C.
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
@@ -78,12 +80,10 @@ The four protocol algorithms: `KeyGen`, `Setup`, `Issue` (with predicate
 (setup and the MAC's tag base sample group elements) — no curve, hash
 function, or deployment is committed to here.
 
-The base MAC of the construction is merged; the credential protocol
-around it (Issue and Present, the predicate flow) remains open, per the
-scope note in `Construction.lean`'s module docs.
-
-*TODO (Track CMZ-C).* Implement Issue and Present following Section 5.1,
-on top of the merged base MAC.
+The base MAC of the construction and the credential around it, issuance
+and presentation over the three proof systems of Figure 9, are both
+delivered. Correctness of the credential at the oracle carrier follows
+separately.
 
 :::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
 The μCMZ base MAC over an abstract prime-order group
@@ -137,12 +137,17 @@ response first and solves for the commitment; special soundness
 subtracts two accepting transcripts.
 :::
 
-:::definition "mucmz_construction" (parent := "cmz_construction") (tags := "paper, O24 Fig 9")
+:::definition "mucmz_construction" (lean := "KVAC.Schemes.MicroCMZ.credIssueCoins, KVAC.Schemes.MicroCMZ.credPresentCoins, KVAC.Schemes.MicroCMZ.credBases, KVAC.Schemes.MicroCMZ.credIssueUsr₁, KVAC.Schemes.MicroCMZ.credIssueSrv, KVAC.Schemes.MicroCMZ.credIssueUsr₂, KVAC.Schemes.MicroCMZ.credPresentUsr, KVAC.Schemes.MicroCMZ.credPresentSrv, KVAC.Schemes.MicroCMZ.μCMZCredKeyedSetup, KVAC.Schemes.MicroCMZ.μCMZCredentialSyntax") (parent := "cmz_construction") (tags := "paper, O24 Fig 9")
 *O24 Figure 9.* The μCMZ keyed-verification credential system
 construction (a variant of `MAC_GGM`), instantiating the KVAC syntax
 {uses "kvac_syntax"}[] from an algebraic MAC {uses "algebraic_mac"}[]; the boxed
 part is removable for the one-more unforgeable variant. The MAC side is
-merged as {uses "mucmz_base_mac"}[]; Issue and Present remain open.
+{uses "mucmz_base_mac"}[]. Issuance and presentation are
+`μCMZCredentialSyntax`, a `KVACSyntax` at the oracle carrier over the three
+proof systems of {uses "mucmz_proof_system_parameters"}[], with setup and key
+generation those of the base MAC lifted through `liftM`. The issuance nonces
+and the presentation rerandomizer are drawn from the nonzero scalars, and the
+presentation server checks `U' ≠ 0` outside `R_cmz.p`, as Figure 9 does.
 :::
 
 :::definition "riu_relation" (lean := "KVAC.Schemes.MicroCMZ.RiuStmt, KVAC.Schemes.MicroCMZ.RiuWitness, KVAC.Schemes.MicroCMZ.riuRel") (parent := "cmz_construction") (tags := "paper, O24 Eq 9")
