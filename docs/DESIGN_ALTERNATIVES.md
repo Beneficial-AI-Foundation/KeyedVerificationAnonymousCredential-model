@@ -561,6 +561,39 @@ blind-issuance answer is `V' = (x₀ + xᵣ)·U' + u·C'`, a polynomial in the
 commitment's representation. The Equation 18 bridge is new work. Decided
 September 2026 (Track CMZ-OMUF, step A4 of #12).
 
+## Claim 5.7: the `n → 1` collapse translates representations, not only messages
+
+**Decision.** The Lemma 5.5 reduction `B` is built against the AGM-instrumented
+UF-CMVA(+Help) game (`AlgebraicMAC.lean`), whose `Verify`/`Help` queries and
+forgery carry algebraic representations over the `n`-attribute basis. `B`
+therefore translates every coefficient list to the 1-attribute basis:
+`AGMRepr.collapseRepr` for a single represented element and
+`AGMRepr.linCombCollapse` for the `Help` arm's weighted sum `Σᵢ rᵢ • Aᵢ`
+(`AttributeCollapse.lean`). The evaluation bridges, that each translation
+evaluates against `(g₀, H, X₀, Xᵣ, X₁)` as the original does against
+`Xᵢ = rᵢ • X₁`, are a proof obligation the paper does not have. The direction
+`r⃗` is a parameter of the translations; its sampling is the wrapper's and is
+not decided here.
+
+**The paper's step.** In O24 Claim 5.7 (pp. 39–40) `B` samples `zᵢ` for
+`i ∈ [2, n]`, sets `Xᵢ = zᵢ X₁`, and forwards each Sign, Verify, and Help query
+with the message collapsed to `m₁ + Σᵢ zᵢ mᵢ`; for Help the group-element
+vector `A⃗` is collapsed to one element. Nothing else is translated, because the
+plain game carries no representations.
+
+**Rejected alternative.** Running `B` against the plain `UF_CMVAGame`, so that
+only messages (and `A⃗`) collapse, exactly as in the paper.
+
+**Fidelity argument.** The `n = 1` target `agm_ufcmva_le_n1_explicit` is stated
+on the AGM game, and the AGM ↔ plain bridge is open work (#81; the
+`AlgebraicMAC.lean` docstring records the gate and the deferred `WellBehaved`
+bridge). Until #81 closes, a reduction to the plain game has no `n = 1` bound to
+invoke, and a reduction to the AGM game must hand the 1-attribute oracles
+representations they accept, hence the extra translation step and its bridges.
+The step adds no adversarial power: the translated representation is computed
+from the adversary's own representation and the public `r⃗`. Decided September
+2026 (Track CMZ-AGM, Lemma 5.5).
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
