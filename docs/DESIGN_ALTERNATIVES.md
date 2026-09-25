@@ -572,8 +572,8 @@ therefore translates every coefficient list to the 1-attribute basis:
 (`AttributeCollapse.lean`). The evaluation bridges, that each translation
 evaluates against `(g₀, H, X₀, Xᵣ, X₁)` as the original does against
 `Xᵢ = rᵢ • X₁`, are a proof obligation the paper does not have. The direction
-`r⃗` is a parameter of the translations; its sampling is the wrapper's and is
-not decided here.
+`r⃗` is a parameter of the translations; its sampling is decided in the next
+entry.
 
 **The paper's step.** In O24 Claim 5.7 (pp. 39–40) `B` samples `zᵢ` for
 `i ∈ [2, n]`, sets `Xᵢ = zᵢ X₁`, and forwards each Sign, Verify, and Help query
@@ -593,6 +593,31 @@ representations they accept, hence the extra translation step and its bridges.
 The step adds no adversarial power: the translated representation is computed
 from the adversary's own representation and the public `r⃗`. Decided September
 2026 (Track CMZ-AGM, Lemma 5.5).
+
+## Claim 5.7: the collapse direction is uniform in all `n` coordinates
+
+**Decision.** The general-`n` reduction `microCMZN3DLReduction`
+(`AttributeCollapse.lean`) samples the direction `r⃗ ←$ Fⁿ` uniformly in all `n`
+coordinates, `r₁` included, and runs the `n = 1` reduction on the wrapper
+`nTo1Adversary A r⃗`, whose `n`-attribute public parameters are `Xᵢ = rᵢ • X₁`
+for every `i`.
+
+**The paper's step.** In O24 Claim 5.7 `B` fixes `z₁ = 1` and samples `zᵢ` only
+for `i ∈ [2, n]`, so the first attribute element is the 1-attribute game's `X₁`
+itself and the embedded key is `(x₁, z₂x₁, …, zₙx₁)`.
+
+**Rejected alternative.** Fixing `r₁ = 1` as the paper does and sampling the
+remaining `n - 1` coordinates.
+
+**Fidelity argument.** Both choices cost the same `1/p`, charged in the stub
+`collapse_direction_averaging`: the embedded key has to be distributed as the
+honest uniform `n`-attribute key, and in either case it is so exactly off the
+event `x₁ = 0`. With `r₁ = 1` the key `(x₁, z₂x₁, …)` is uniform on `Fⁿ` for
+`x₁ ≠ 0`; with `r⃗` fully uniform, `r⃗ · x₁` is uniform on `Fⁿ` for `x₁ ≠ 0`
+because `r⃗ ↦ r⃗ · x₁` is then a bijection of `Fⁿ`. Sampling all `n` coordinates
+keeps one sampler `$ᵗ (Fin n → F)` and one uniform `Xᵢ = rᵢ • X₁` clause,
+instead of a distinguished index `0` in `Fin n` with its own case in every
+translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
 ## Open alternatives
 
