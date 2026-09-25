@@ -185,14 +185,14 @@ credential system, with attribute extractors `Ext.I` and `Ext.P` run
 against the adversary's issuance and presentation transcripts.
 :::
 
-:::theorem "newusr_never_fails" (lean := "KVAC.Framework.runRO_support_of_le, KVAC.Framework.newUsr_mac_isSome") (parent := "framework_extract") (tags := "milestone")
+:::theorem "newusr_never_fails" (lean := "KVAC.Framework.support_zkROImpl_inl_run, KVAC.Framework.roImpl_run_some, KVAC.Framework.roImpl_run_none, KVAC.Framework.roImpl_step_of_le, KVAC.Framework.zkROImpl_step_of_le, KVAC.Framework.runRO_support_of_le, KVAC.Framework.newUsr_mac_isSome") (parent := "framework_extract") (tags := "milestone")
 The `NewUsr` oracle of {uses "extractability_game"}[] never takes its
 failure arm. Under the oracle-carrier correctness {uses "kvac_correctness"}[],
 every result of the honest MAC code generation run from any random-oracle
 cache at least as large as the keygen cache is a credential, so the user
 counter always advances as in O24 Figure 8. The run is transported back to
-the keygen cache by a cache transport lemma for `runRO`, whose proof is
-pending.
+the keygen cache by a cache transport lemma for `runRO`, built from one-step
+support lemmas for the uniform and hash arms of the random-oracle handler.
 :::
 
 :::proof "newusr_never_fails"

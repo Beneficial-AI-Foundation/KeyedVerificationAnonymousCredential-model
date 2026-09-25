@@ -23,7 +23,7 @@ element (the paper's `z₁ = 1` is the case `r₁ = 1`). Because the instrumente
 game's `verify`/`help` queries carry algebraic representations, those are
 collapsed too. The message collapse `Σᵢ mᵢ rᵢ` is the wrapper's job.
 
-This file holds the pure-algebra dictionary of that collapse and the wrapper
+This file holds the pure algebra of that collapse and the wrapper
 built on it.
 
 - The two representation translations: `AGMRepr.collapseRepr` for a single

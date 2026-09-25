@@ -14,7 +14,7 @@ graph BT
   D44["9 · Definition 4.4, anonymity game"]
   T58["10 · Theorem 5.8, simulators and bound"]
   E12["12 · extractablePoly_obligation, statement correction (sorry), proved by 13"]
-  N14["14 · newUsr_mac_isSome, cache transport lemma (sorry)"]
+  N14["14 · newUsr_mac_isSome, EXTGame cache growth invariant"]
   T510["13 · Theorem 5.10, eight steps"]
   V18["18 · μCMZ_AT keeping π_is"]
   T511["17 · Theorem 5.11, Claims 5.12 to 5.14, lifting lemma"]
@@ -52,8 +52,8 @@ graph BT
   classDef sorry fill:#f6e3c5,color:#1f1f1f,stroke:#b7791f
   classDef leaf fill:#e3efe3,color:#1f1f1f,stroke:#3c7a3c
   class T1 root
-  class T52,T53,T51,T58,T510,T511,L55,V18 thm
-  class L54,E12,N14 sorry
+  class T52,T53,T51,T58,T510,T511,L55,V18,N14 thm
+  class L54,E12 sorry
   class SUB,K1,P2,H3,D44 leaf
 ```
 

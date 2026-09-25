@@ -13,6 +13,7 @@ import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 
 open Verso.Genre Manual
 open Informal
@@ -31,7 +32,7 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Seven files delivered under `KVAC/Schemes/MicroCMZ/`:
+Nine files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
@@ -42,12 +43,15 @@ Seven files delivered under `KVAC/Schemes/MicroCMZ/`:
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
+- `AGMOneMoreUnforgeability.lean` — Section 5.6, the AGM-instrumented OMUF
+  game over the core — Track CMZ-OMUF.
+- `OneMoreUnforgeability.lean` — Section 5.6, the Theorem 5.11 statements,
+  `n = 1` first — Track CMZ-OMUF.
 
-Three more are planned:
+Two more are planned:
 
 - `Anonymity.lean` — Section 5.4 — Track CMZ-A.
 - `Extractability.lean` — Section 5.5 — Track CMZ-E.
-- `OneMoreUnforgeability.lean` — Section 5.6 — Track CMZ-OMUF.
 
 :::theorem "mucmz_is_kvac" (tags := "paper, O24 Thm 1") (effort := "small") (priority := "medium")
 *O24 Theorem 1.* μCMZ is a keyed-verification anonymous credential
@@ -709,8 +713,9 @@ stated through
 :::
 
 :::definition "attribute_collapse_dictionary" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr, KVAC.Schemes.MicroCMZ.linCombCollapseUVLen, KVAC.Schemes.MicroCMZ.AGMRepr.linCombCollapse") (parent := "cmz_amac") (tags := "milestone")
-The `n → 1` attribute-collapse dictionary of {bpref "forgery_case_mac"}[]: along a
-direction `r⃗`, an `n`-attribute representation of {uses "agm_model"}[] is
+The `n → 1` attribute-collapse representation translations of
+{bpref "forgery_case_mac"}[]: along a direction `r⃗`, an `n`-attribute
+representation of {uses "agm_model"}[] is
 translated to a 1-attribute one by combining the attribute coefficients into
 `Σᵢ rᵢ·xᵢ` and keeping every other coefficient, and a weighted sum `Σᵢ rᵢ•Aᵢ` of
 represented elements gets the combined representation whose tag coefficients
@@ -899,10 +904,13 @@ adversary, the winning condition, the experiment and its advantage are
 {bpref "agm_omuf_game"}[]. Theorem 5.11 and the one-more unforgeability
 clause of Theorem 5.3 will be stated over that game.
 
-*TODO (Track CMZ-OMUF).* The Theorem 5.11 statements, starting with the
-`n = 1` bound of Equation 23 registered as the stub
-{bpref "mucmz_at_agm_omuf_n1"}[], then the Claims 5.12 to 5.14 and the
-general `n` extension, and the Theorem 5.3 clause.
+The `n = 1` bound of Equation 23 is stated, `sorry`d, as
+{bpref "mucmz_at_agm_omuf_n1"}[], against two named reductions whose
+bodies arrive with the proofs.
+
+*TODO (Track CMZ-OMUF).* The general `n` statement of Theorem 5.11, the
+Claims 5.12 to 5.14 with their polynomial layer, and the Theorem 5.3
+clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -1005,29 +1013,39 @@ bound and the colliding case to discrete log by an argument in the style
 of Lemma 5.5 ({uses "attribute_lifting"}[]), which adds `2/p + Adv^gapdl` to Equation 23.
 :::
 
-:::theorem "mucmz_at_agm_omuf_n1" (parent := "cmz_omuf") (tags := "milestone") (effort := "large") (priority := "high")
+:::theorem "mucmz_at_agm_omuf_n1" (lean := "KVAC.Schemes.MicroCMZ.omufBoundN1, KVAC.Schemes.MicroCMZ.omufDLReduction, KVAC.Schemes.MicroCMZ.omufTwoDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le_n1") (parent := "cmz_omuf") (tags := "milestone")
 Theorem 5.11 at `n = 1`, the case the paper proves directly. For every
 algebraic adversary against the core {uses "mucmz_at_core"}[] in the
-AGM-instrumented game {uses "agm_omuf_game"}[] making at most `q` Sign
-queries, a static hypothesis on the adversary, the advantage is at most
-Equation 23's `(q + 4)/p + (q + 1)·Adv^dl + 3·Adv^2-dl`
-({uses "hardness_assumptions"}[]). The printed constants are provisional
-until the Track CMZ-OMUF constant audit, with an errata item on any
-change, and the bound sits behind a named definition so the statement
-survives such a change.
+AGM-instrumented game {uses "agm_omuf_game"}[] whose program makes at
+most `q` Sign queries for every crs and public parameters, a static
+hypothesis on the adversary, the advantage is at most Equation 23's
+`(q + 4)/p + (q + 1)·Adv^dl + 3·Adv^2-dl` ({uses "hardness_assumptions"}[]),
+the two advantages being those of the named reductions `omufDLReduction`
+and `omufTwoDLReduction` built from the adversary. The reductions are
+declared with `sorry` bodies until the proofs build them, since at
+fixed parameters an existential quantification over unrestricted
+reduction adversaries is vacuous and a bound below one on every
+discrete-log adversary is false. The printed constants are provisional until the Track
+CMZ-OMUF constant audit, with an errata item on any change, and the bound
+sits behind the named definition `omufBoundN1` so the statement survives
+such a change.
 :::
 
 :::proof "mucmz_at_agm_omuf_n1"
-By pigeonhole one of the `q + 1` forgeries is not the unblinding of any of
-the at most `q` issued pairs. At least one of three coefficient groups of
-its representation is then nonzero, and the three cases are bounded by
-{uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and {uses "omuf_case_iii"}[].
+At the actual number `r ≤ q` of Sign queries, a win presents `r + 1`
+forgeries against at most `r` issued pairs, so by pigeonhole one forgery
+is not the unblinding of any pair. The polynomial of Equation 22 built
+from its representation then has a nonzero monomial in one of three
+variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`, and the three cases are
+bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
+{uses "omuf_case_iii"}[].
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")
 *O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof, case
-(i) occurs with probability at most `q/p` plus the discrete-log
-advantage ({uses "hardness_assumptions"}[]).
+(i) occurs with probability at most `q · (1/p + Adv^dl)`, `q` times the
+sum of `1/p` and the discrete-log advantage
+({uses "hardness_assumptions"}[]).
 :::
 
 :::theorem "omuf_case_ii" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.13") (effort := "medium") (priority := "low")
