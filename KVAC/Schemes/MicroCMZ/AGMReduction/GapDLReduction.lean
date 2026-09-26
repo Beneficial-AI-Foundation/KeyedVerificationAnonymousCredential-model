@@ -97,7 +97,7 @@ Verify and help are bit-exact (the DDH bit equals the honest game bit). Sign is
 exact in law once `g` is a generator (the bijectivity `Fact` the proof leaf
 assumes): `u ↦ u·g` carries the scalar sampler onto the honest `U ←$ G∖{0}` and
 `V = key·U`; the proof leaf couples the two samplers along that bijection. The
-paper (O24 Claim 5.6) folds `xᵣ` into `z` and prints the `Ddh` arguments without
+paper (Claim 5.6) folds `xᵣ` into `z` and prints the `Ddh` arguments without
 the `Σᵢ aaᵢ·mᵢ` / `xᵣ` terms; those are typos, corrected here to be faithful to
 this game's `Xᵣ` term. -/
 noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
