@@ -787,13 +787,14 @@ honest law, `u ↦ u•g` carrying the scalar sampler onto `U ←$ G∖{0}`.
 :::
 
 :::definition "collision_gap_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.gapDlReduction") (parent := "cmz_amac") (tags := "milestone")
-The reduction of {bpref "forgery_case_gap_dl"}[]. It samples the masks `aa⃗, bb⃗`,
-the scalars `z, xᵣ` and the crs `H`, runs the adversary through
+Given an adversary of {uses "agm_model"}[], the gap discrete-log adversary of
+{uses "hardness_assumptions"}[] for {bpref "forgery_case_gap_dl"}[]. It samples
+the masks `aa⃗, bb⃗`, the scalars `z, xᵣ` and the crs `H`, runs the adversary through
 {uses "collision_gap_dl_simulator"}[], and looks for a signed `m⃗ⱼ ≠ m⃗*` with
 `Σᵢ mⱼ,ᵢ•Xᵢ = Σᵢ m*ᵢ•Xᵢ`, a decidable equality on known group elements that
 needs no DDH query. On such a collision it returns
 `x = (Σᵢ aaᵢ(m*ᵢ − mⱼ,ᵢ))·(Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ))⁻¹`, and `0` when the
-denominator vanishes.
+denominator vanishes (`0⁻¹ = 0` in the field) or no collision is found.
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
@@ -813,7 +814,7 @@ The forgery's attribute combination `Σᵢ m*ᵢXᵢ` equals that of a signed
 adversary with the honest game (verify and help bit-for-bit, sign in law) and
 solves the collision relation for the challenge exponent `x`. The only loss is
 the event that the denominator `Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ)` vanishes, a degree-1
-condition on the perfectly hidden `bb⃗`, of probability `1/p`.
+condition on the perfectly hidden `bb⃗`, of probability at most `1/p`.
 :::
 
 :::theorem "forgery_case_mac" (parent := "cmz_amac") (tags := "paper, O24 Claim 5.7") (effort := "medium") (priority := "medium")
