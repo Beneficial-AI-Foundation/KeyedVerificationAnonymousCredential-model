@@ -14,7 +14,9 @@ message. The colliding case (Claim 5.6) is bounded by the gap discrete-log
 advantage: a reduction holding the challenge `X = x•g` and the DDH-decision
 oracle embeds `x` into the public parameters and runs the adversary. This file
 provides the simulator that answers the adversary's AGM oracles under that
-embedding; the reduction around it (masks, `crs`, extraction) extends this file.
+embedding, and the reduction `gapDlReduction` around it: it samples the masks
+and the crs, runs the simulator, and on a colliding forgery extracts
+`x = num·den⁻¹` from the collision relation, returning `0` when `den = 0`.
 
 The implicit secret key is `xᵢ = aaᵢ + bbᵢ·x` for self-sampled masks `aaᵢ, bbᵢ`,
 so `Xᵢ = aaᵢ•g + bbᵢ•X`; `x₀ = z` (so `X₀ = z•H`) and `xᵣ` are honestly known
@@ -126,5 +128,43 @@ noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
       let bit ← query (spec := unifSpec + GapDLogOracleSpec G)
         (Sum.inr (∑ i, bb i • A i, Z - (z + xr) • A₀ - ∑ i, aa i • A i))
       pure (decide consistent && bit, log)
+
+/-! ## The gap-DL reduction -/
+
+/-- The gap-DL reduction for general `n` (O24 Claim 5.6): embed the challenge
+`X = x·g` (`g = gen`) as `X₁,…,Xₙ` via self-sampled masks `aaᵢ, bbᵢ`
+(so `xᵢ = aaᵢ + bbᵢ·x`), and `X₀ = z·H`, `Xᵣ = xᵣ·g` with self-sampled `z, xᵣ`
+and crs `H ←$ G` (`pp = gapDlEmbedParams`); simulate `A` via `gapDlOracleImpl`;
+then on a *colliding* forgery (some queried `m⃗ⱼ ≠ m⃗*` with
+`Σᵢ mⱼ,ᵢ·Xᵢ = Σᵢ m*ᵢ·Xᵢ`) solve the linear relation
+`(Σᵢ (mⱼ,ᵢ−m*ᵢ)aaᵢ)·g = −(Σᵢ (mⱼ,ᵢ−m*ᵢ)bbᵢ)·X` for `x`:
+
+  `x = (Σᵢ aaᵢ·(m*ᵢ − mⱼ,ᵢ)) · (Σᵢ bbᵢ·(mⱼ,ᵢ − m*ᵢ))⁻¹`.
+
+The colliding `m⃗ⱼ` is located by *recomputation* — `Σᵢ mⱼ,ᵢ·Xᵢ` is a decidable
+equality on known group elements, no DDH query needed. The bad event
+`Σᵢ bbᵢ·(mⱼ,ᵢ−m*ᵢ) = 0` (degree-1 in the perfectly-hidden `bbᵢ`, probability
+`1/p`) is the slack, and defaults `x` to `0` (a branch the success analysis of
+Claim 5.6 rules out). -/
+noncomputable def gapDlReduction (A : AGMUFAdversary F G n) : GapDLogAdversary F G :=
+  fun _ X => do
+    let aa ← ($ᵗ (Fin n → F) : OracleComp (unifSpec + GapDLogOracleSpec G) (Fin n → F))
+    let bb ← ($ᵗ (Fin n → F) : OracleComp (unifSpec + GapDLogOracleSpec G) (Fin n → F))
+    let z ← ($ᵗ F : OracleComp (unifSpec + GapDLogOracleSpec G) F)
+    let xr ← ($ᵗ F : OracleComp (unifSpec + GapDLogOracleSpec G) F)
+    let H ← ($ᵗ G : OracleComp (unifSpec + GapDLogOracleSpec G) G)
+    let pp := gapDlEmbedParams gen aa bb z xr X H
+    let ((mStar, _σStar, _ρU, _ρV), log) ←
+      (simulateQ (gapDlOracleImpl gen aa bb z xr X H) (A.run H pp)).run []
+    let Xv := pp.2.2
+    let target := ∑ i, mStar i • Xv i
+    let mj? := (log.map Prod.fst).find?
+      (fun mj => decide (mj ≠ mStar ∧ (∑ i, mj i • Xv i) = target))
+    match mj? with
+    | some mj =>
+        let num := ∑ i, aa i * (mStar i - mj i)
+        let den := ∑ i, bb i * (mj i - mStar i)
+        pure (num * den⁻¹)
+    | none => pure 0
 
 end KVAC.Schemes.MicroCMZ
