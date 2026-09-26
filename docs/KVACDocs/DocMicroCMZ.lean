@@ -773,16 +773,17 @@ For `x₁ ≠ 0` the map `r⃗ ↦ r⃗·x₁` is a bijection of `Fⁿ`, so the 
 of `x⃗` is uniform; the excluded event `x₁ = 0` has mass `1/p`.
 :::
 
-:::definition "collision_gap_dl_simulator" (lean := "KVAC.Schemes.MicroCMZ.instSampleableNonzeroScalar, KVAC.Schemes.MicroCMZ.gapSignScalarSample, KVAC.Schemes.MicroCMZ.gapDlOracleImpl") (parent := "cmz_amac") (tags := "milestone")
+:::definition "collision_gap_dl_simulator" (lean := "KVAC.Schemes.MicroCMZ.gapSignScalarSample, KVAC.Schemes.MicroCMZ.gapDlOracleImpl") (parent := "cmz_amac") (tags := "milestone")
 The oracle simulator of {bpref "forgery_case_gap_dl"}[]. Holding the gap
 discrete-log challenge `X = x•g` of {uses "hardness_assumptions"}[] and
-self-sampled masks, it presents the public parameters `Xᵢ = aᵢ•g + bᵢ•X`,
+self-sampled masks, it presents the public parameters `Xᵢ = aaᵢ•g + bbᵢ•X`,
 `X₀ = z•H`, `Xᵣ = xᵣ•g` to the adversary of {uses "agm_model"}[] and answers its
 queries: `sign` with a nonzero scalar `u` and `V = c•U + u•(d•X)`, where `c` and
 `d` are the known and the `x`-multiplied parts of the key on the message;
 `verify` and `help` by the honest representation check followed by one DDH
-decision on the `x`-dependent part of the equation. The verify and help
-answers equal the honest game's; only the signing law differs.
+decision on the `x`-dependent part of the equation. Verify and help answer
+bit-for-bit as the honest game; for a generator `g`, sign answers with the
+honest law, `u ↦ u•g` carrying the scalar sampler onto `U ←$ G∖{0}`.
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
