@@ -44,7 +44,7 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   embedded parameters `Xᵢ = aaᵢ•g + bbᵢ•X`, and the gap-DL oracle simulator
   `gapDlOracleImpl`, answering the AGM oracles from those parameters through
   the DDH-decision oracle, and the gap-DL reduction `gapDlReduction`, which
-  extracts the challenge from a colliding forgery.
+  extracts the challenge exponent `x` from a colliding forgery.
 
 Lemma 5.4 stays untagged here until the theorem is sorry-free.
 
