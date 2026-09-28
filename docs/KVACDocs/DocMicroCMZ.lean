@@ -12,6 +12,7 @@ import KVAC.Schemes.MicroCMZ.Credential
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
+import KVAC.Schemes.MicroCMZ.SimulateQGuarded
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
@@ -209,6 +210,28 @@ adversaries against the single-attribute base MAC
 every output group element, oracles gate on representation consistency,
 and the discrete-log bookkeeping runs through `glog` with its linearity
 laws, over a {uses "sampleable_group"}[] carrier.
+:::
+
+:::theorem "guarded_oracle_projection" (lean := "KVAC.Schemes.MicroCMZ.guardImpl, KVAC.Schemes.MicroCMZ.guardImpl_run_pos, KVAC.Schemes.MicroCMZ.probFailure_guardImpl_run_neg, KVAC.Schemes.MicroCMZ.good_and_neverFails_of_probFailure_guard_bind_eq_zero, KVAC.Schemes.MicroCMZ.map_run_simulateQ_eq_of_guard_neverFails") (parent := "cmz_amac") (tags := "milestone")
+Guarded oracle simulation. `guardImpl` wraps a stateful oracle implementation
+with a per-query predicate `Good`: a good query runs the wrapped step lifted
+into `OptionT ProbComp`, a bad one fails, so the guarded run aborts at the
+first bad query and a zero failure probability certifies that no bad query is
+reachable in any execution. Under that certificate the state-projection
+theorem transports a simulated run along a state map `proj`: if every good
+step of the first implementation projects onto the corresponding step of the
+second, the two full runs agree under `proj`, as an equality of `ProbComp`
+computations.
+:::
+
+:::proof "guarded_oracle_projection"
+Induction on the oracle computation. At each query the never-fails
+hypothesis splits into goodness of the query and never-fails for every
+continuation reachable from the unguarded step; the induction hypothesis then
+rewrites each continuation under the support of that step, `bind_map_left`
+moves the projection onto the step, and the per-query hypothesis closes the
+goal. The per-query predicate is what VCV-io's state-invariant transport
+`map_run_simulateQ_eq_of_query_map_eq_inv'` cannot express.
 :::
 
 :::theorem "identity_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.spec, KVAC.Schemes.MicroCMZ.AGMPoly.identity_case, KVAC.Schemes.MicroCMZ.AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero") (parent := "cmz_amac") (tags := "milestone")
