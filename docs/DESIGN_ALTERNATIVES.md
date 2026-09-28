@@ -619,7 +619,7 @@ adversary and adding the gap-DL reduction for the collision case.
   by `rfl`, an accidental input-independence later proofs could lean on.
 - *Fresh reduction stubs at arity `n`* for the general statement, neutral
   about the proof. Rejected for now in favour of the paper's route, which
-  keeps the sorried surface smaller and makes the transformation the concrete
+  keeps the number of declarations with `sorry` bodies smaller and makes the transformation the concrete
   object of the open question whether it reuses the Lemma 5.5 embedding.
 
 **Constraints recorded.** No lemma may be stated about a sorried stub beyond
@@ -627,9 +627,10 @@ the theorems that cite it, since anything provable about an unspecified body
 holds of every inhabitant. The discrete-log reduction takes the Sign budget
 `q`, which a selector over the `q` issuance positions of Claim 5.12 needs. The
 adversary shape carries no private coin oracle, so the transformation fixes its
-coins in the construction, with a fixed-coins argument, or the shape grows a coin
-arm; extra Sign queries are not a source of randomness, they break the budget
-and the one-more count.
+coins in the construction, with a fixed-coins argument, or the shape grows an
+oracle for uniform sampling in the adversary's oracle specification. Extra Sign
+queries are not a source of randomness, they break the budget and the one-more
+count.
 
 ## Open alternatives
 

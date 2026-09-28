@@ -956,7 +956,11 @@ bodies until the proofs build them. *Note.* The constants are the paper's
 and provisional: the core's nonzero issuance nonces condition the paper's
 `ℤ_p` samplers away from their zero cases, so they transfer only up to
 per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles
-the stated bound, with an errata item on any change.
+the stated bound, with an errata item on any change. The crs `H` is drawn by
+`setup`, uniformly from the group today and from its nonzero elements after
+#149, when the statement bounds the game with `H ←$ 𝔾×`, a change estimated
+at `(q + 3)/(p(p − 1))` at proof level and bounded by `1/p` by the black-box
+transfer.
 :::
 
 :::proof "mucmz_at_agm_omuf"

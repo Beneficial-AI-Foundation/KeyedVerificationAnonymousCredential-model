@@ -42,6 +42,11 @@ targets; the blueprint nodes `mucmz_at_agm_omuf_n1` and `mucmz_at_agm_omuf` show
       εgap = gapDlogAdv gen (omufGapDLReduction gen A)    collision case
     with the paper's printed constants, provisional.
 
+Sign is Figure 6's name for the MAC code generation oracle in the token setting,
+and the name of the Lean constructor and of the budget predicate
+`AGMOMUFQuery.isSign`. This file keeps it, as the game file and
+`KVAC.Preliminaries.AnonymousTokens.Security` do.
+
 The `n = 1` case is the one the paper proves directly. General `n` follows from
 it (p. 46): the winning event splits by whether the forgeries' attribute
 combinations `Σᵢ mᵢ·Xᵢ` are pairwise distinct, the distinct case reduces to
@@ -56,8 +61,9 @@ the Lemma 5.5 embedding of the MAC track is open with Semar (question C2 of the
 Theorem 5.3 plan). One constraint is on record: the adversary shape carries no
 private coin oracle, so a transformation that needs randomness must fix its
 coins in the construction, with a fixed-coins argument in the proof, or the
-shape must grow a coin arm (Phase B). Extra Sign queries are not a source of
-randomness, they break the budget and the one-more count.
+shape must grow an oracle for uniform sampling in the adversary's oracle
+specification (Phase B). Extra Sign queries are not a source of randomness,
+they break the budget and the one-more count.
 
 ## Why named reductions
 
@@ -87,7 +93,14 @@ family (`3/p` for a printed `1/p`, `AGMPolynomial.lean`), and the Claims share
 the pattern. The constant audit of the proof phase settles them, with an errata
 item on any change, and the named definitions make such a change one line each.
 The printed general bound `omufBound` exceeds Equation 23 by `2/p + Adv^gapdl`,
-the overhead of the general `n` argument, `1/p` from each of its two cases.
+the overhead the paper attributes to the general `n` argument as a whole, "by
+Theorem 5.5" (p. 46), without assigning it to the two cases.
+
+The crs. `setup` of the base MAC draws `H` uniformly from `G`, and the first
+action of #149 changes it to draw from the nonzero elements. The statements
+type-check unchanged and then bound the game with `H ←$ 𝔾×`. Oana's proof-level
+estimate of the change in advantage is `(q + 3)/(p(p − 1))`, and the black-box
+transfer bounds it by `1/p`.
 
 ## Out of scope
 
@@ -118,9 +131,9 @@ noncomputable def omufBoundN1 (F : Type) [Fintype F] (q : ℕ) (εdl ε2dl : ℝ
 /--
 The printed bound of O24 Theorem 5.11 for every `n`,
 `(q + 6)/p + (q + 1)·εdl + 3·ε2dl + εgap`, with `εgap` the gap-DL advantage of
-the collision-case reduction. Exceeds `omufBoundN1` by `2/p + εgap`, `1/p` from
-each case of the general `n` argument. Printed constants, provisional (module
-docstring, *Constants*).
+the collision-case reduction. Exceeds `omufBoundN1` by `2/p + εgap`, the paper's
+total for the general `n` argument (p. 46, "by Theorem 5.5"), not split between
+its two cases. Printed constants, provisional (module docstring, *Constants*).
 -/
 noncomputable def omufBound (F : Type) [Fintype F] (q : ℕ) (εdl ε2dl εgap : ℝ≥0∞) :
     ℝ≥0∞ :=
@@ -179,7 +192,8 @@ the `n`-attribute forger exactly once and making none of its own, since
 the representation gates and the transcript and carrying a distinct-combination
 win into a single-attribute win; and the adversary shape has no private coin
 oracle (module docstring), so its coins are fixed in the construction or the
-shape grows a coin arm.
+shape grows an oracle for uniform sampling in the adversary's oracle
+specification.
 -/
 noncomputable def omufToN1 :
     ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
@@ -192,8 +206,8 @@ The gap-DL reduction of the collision case of O24 Theorem 5.11 at general `n`
 DL using an argument similar to Theorem 5.5", the paper's text citing its
 Lemma 5.5 as a theorem), built from an `n`-attribute algebraic one-more
 forger. Unlike the transformation, it may randomise freely, since
-`GapDLogAdversary` carries a uniform-sampling arm. Declared with a `sorry` body
-until built.
+`GapDLogAdversary` has an oracle for uniform sampling. Declared with a `sorry`
+body until built.
 -/
 noncomputable def omufGapDLReduction :
     ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
