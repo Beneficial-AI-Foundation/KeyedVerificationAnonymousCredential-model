@@ -205,6 +205,16 @@ representation basis.
 -/
 abbrev AGMLog (F G : Type) (n : ℕ) := List ((Fin n → F) × (G × G))
 
+/-- Representation consistency of a `help` query against the transcript basis
+`(g₀, H, X₀, Xᵣ, X⃗)` and the issued tags: every submitted element equals the
+evaluation of its representation. -/
+abbrev helpConsistent (H : G) (pp : G × G × (Fin n → G)) (tags : List (G × G))
+    (A₀ : G) (A : Fin n → G) (Z : G) (ρ₀ : AGMRepr F n) (ρA : Fin n → AGMRepr F n)
+    (ρZ : AGMRepr F n) : Prop :=
+  ρ₀.eval gen H pp.1 pp.2.1 pp.2.2 tags = A₀ ∧
+  (∀ i, (ρA i).eval gen H pp.1 pp.2.1 pp.2.2 tags = A i) ∧
+  ρZ.eval gen H pp.1 pp.2.1 pp.2.2 tags = Z
+
 /--
 Honest instrumented oracles for secret key `sk`, crs `H`, and public parameters
 `pp = (X₀, Xᵣ, X⃗)`. `sign` / `verify` delegate to `μCMZBaseMACSyntax F gen` (the
@@ -231,10 +241,7 @@ noncomputable def agmOracleImpl (secParam : ℕ) (sk : F × F × (Fin n → F)) 
         (μCMZBaseMACSyntax F gen).verify (secParam := secParam) H sk m σ, log)
   | .help A₀ A Z ρ₀ ρA ρZ => StateT.mk fun log =>
       let tags := log.map Prod.snd
-      let consistent :=
-        ρ₀.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = A₀ ∧
-        (∀ i, (ρA i).eval (gen) H pp.1 pp.2.1 pp.2.2 tags = A i) ∧
-        ρZ.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = Z
+      let consistent := helpConsistent gen H pp tags A₀ A Z ρ₀ ρA ρZ
       pure (decide consistent &&
         decide (Z = (sk.1 + sk.2.1) • A₀ + ∑ i, sk.2.2 i • A i), log)
 
