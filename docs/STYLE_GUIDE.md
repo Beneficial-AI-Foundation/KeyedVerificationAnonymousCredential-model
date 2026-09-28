@@ -64,16 +64,25 @@ Not attempted at all:
 
 So do not trust a mark: run `lake build` (the Lean kernel is the only authority for "compiles, no sorry"), read the linked Lean statement against the linked paper element, and grep for `sorry`/`admit`/`axiom`/`native_decide`. The numbers are a rough floor on *attempted* coverage; verified fidelity is a separate, human review.
 
-### Avoiding flexible tactics
+### Flexible tactics and squeezing `simp`
 
-Flexible (non-terminal) tactics make proofs fragile and harder to maintain. Avoid them as much as possible:
+Flexible tactics make proofs fragile and harder to maintain when the goal they produce is consumed by a later tactic. Whether to squeeze a `simp` call therefore depends on where it sits, following the [Mathlib rule on squeezing `simp` calls][mathlib-squeeze]:
 
-- **`simp`**: use `simp?` to obtain the explicit lemma list, then replace with `simp only [...]`. This makes the proof deterministic and resistant to changes in the global simp set.
-- **`simp_all`**: use `simp_all?` to obtain `simp_all only [...]`.
+> Unless performance is particularly poor or the proof breaks otherwise, *terminal `simp` calls* (a `simp` call is terminal if it closes the current goal or is only followed by flexible tactics such as `ring`, `field_simp`, `aesop`) should not be *squeezed* (replaced by the output of `simp?`).
+>
+> There are two main reasons for this:
+>
+> 1. A squeezed `simp` call might be several lines longer than the corresponding unsqueezed one, and therefore drown the useful information of what key lemmas were added to the unsqueezed `simp` call to close the goal in a sea of basic simp lemmas.
+> 2. A squeezed `simp` call refers to many lemmas by name, meaning that it will break when one such lemma gets renamed. Lemma renamings happen often enough for this to matter on a maintenance level.
+
+Concretely:
+
+- **Terminal `simp` / `simp_all`**: leave unsqueezed. A short list of the key lemmas (`simp [foo, bar]`) is welcome; the full `simp?` output is not.
+- **Non-terminal `simp` / `simp_all`** (the goal continues, or a `simp … at h` feeds a later tactic): use `simp?` / `simp_all?` to obtain the explicit lemma list, then replace with `simp only [...]` / `simp_all only [...]`. A change in the global simp set would otherwise silently change the goal the next tactic sees.
 - **`grind`**: prefer more targeted alternatives (`omega`, `ring`, `linear_combination`, `decide`) where feasible.
 - **`exact?` / `apply?`**: use these *interactively* to discover the right lemma, then replace with the explicit `exact` or `apply` call.
 
-When a flexible tactic is genuinely the best option (for example a `simp` that closes a goal whose explicit lemma list would be impractically long), document why in a short comment.
+When a non-terminal flexible tactic is genuinely the best option (for example a non-terminal `simp` whose `simp only` list would be impractically long), document why in a short comment.
 
 ### Linters
 
@@ -153,4 +162,5 @@ Why the F-side classes and `DecidableEq` aren't bundled as `class abbrev` parent
 **Use the `Add`-prefixed typeclasses.** Mathlib's `IsCyclic` and `IsSimpleGroup` are multiplicative-only — their class signatures require `[Pow G ℤ]` and `[Group G]` respectively, neither of which an `AddCommGroup G` provides. Using them in an additive context fails to elaborate (`failed to synthesize Pow G ℤ`). The additive counterparts `IsAddCyclic` (requires `[SMul ℤ G]`, provided by `AddCommGroup`) and `IsSimpleAddGroup` (requires `[AddGroup G]`) are the correct choice. Mathlib's `@[to_additive]` keeps the *theorems* in sync across the two notations, but typeclass names themselves are distinct.
 
 [mathlib-style]: https://leanprover-community.github.io/contribute/style.html
+[mathlib-squeeze]: https://leanprover-community.github.io/contribute/style.html#squeezing-simp-calls
 [mathlib-naming]: https://leanprover-community.github.io/contribute/naming.html
