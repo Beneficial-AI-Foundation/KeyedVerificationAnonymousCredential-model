@@ -69,4 +69,8 @@ only *use* the sealed `glog`.
   this term: it is a separate `n = poly` argument (its case (i) collision branch,
   via Claim 5.6), and there is no collision branch at `n = 1`. See
   `docs/presentations/rolf-status/errata.md` §6.
+
+Lemma 5.5's own departures from the printed bound — the gap-DL term kept
+explicit and the `5/p` slack accounting — are stated in `Security`'s module
+docstring.
 -/

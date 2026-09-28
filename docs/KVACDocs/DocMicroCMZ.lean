@@ -797,10 +797,20 @@ needs no DDH query. On such a collision it returns
 denominator vanishes (`0⁻¹ = 0` in the field) or no collision is found.
 :::
 
-:::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
-*O24 Lemma 5.5.* Reduces `n`-attribute μCMZ security to the
-single-attribute case {uses "single_attribute_mac"}[], giving its algebraic-MAC
-advantage over `ℤ_p`.
+:::theorem "attribute_lifting" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5")
+*O24 Lemma 5.5.* In the AGM game of {uses "agm_model"}[], the advantage of an
+`n`-attribute adversary is at most the 3-DL advantage of the collapse reduction
+plus the gap discrete-log advantage of the collision reduction
+({uses "hardness_assumptions"}[]) plus `5/p`.
+:::
+
+:::proof "attribute_lifting"
+Split the win event on whether the forgery's attribute combination collides
+with a signed message's. The colliding case is {uses "forgery_case_gap_dl"}[];
+the other is {uses "forgery_case_mac"}[], which ends in
+{uses "single_attribute_mac"}[] on the collapse wrapper, averaged over the
+direction. The slack `5/p` is `3/p` from the single-attribute bound, `1/p` from
+the keygen shear `x₁ = 0` and `1/p` from the vanishing denominator.
 :::
 
 :::theorem "forgery_case_gap_dl" (parent := "cmz_amac") (tags := "paper, O24 Claim 5.6") (effort := "medium") (priority := "medium")
