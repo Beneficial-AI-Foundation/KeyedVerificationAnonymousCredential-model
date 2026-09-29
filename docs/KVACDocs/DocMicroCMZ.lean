@@ -107,7 +107,7 @@ Credential policies `φ` over attribute vectors, the public issuer bases,
 the enforcement predicate connecting a relation to its policy, and the
 trivial policy with its enforcement lemmas. Conjunction and the
 full-disclosure policy `φ_m⃗` complete the predicate family of O24
-Definitions 4.1 and 4.2 over policies.
+Definitions 4.1 and 4.3 over policies.
 :::
 
 :::definition "mucmz_proof_system_parameters" (lean := "KVAC.Schemes.MicroCMZ.ProofSystemFor, KVAC.Schemes.MicroCMZ.ProofSystemFor.instDecidableEqProof, KVAC.Schemes.MicroCMZ.ProofSystemFor.toNIZKPSyntax, KVAC.Schemes.MicroCMZ.RiuProofSystem, KVAC.Schemes.MicroCMZ.RisProofSystem, KVAC.Schemes.MicroCMZ.RpProofSystem, KVAC.Schemes.MicroCMZ.instDecidableEqRpStmt") (parent := "cmz_construction") (tags := "milestone")

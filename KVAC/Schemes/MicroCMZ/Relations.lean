@@ -164,7 +164,7 @@ def trivialPolicy : Policy F n := fun _ => true
 family is closed under conjunction). -/
 def andPolicy (φ ψ : Policy F n) : Policy F n := fun m => φ m && ψ m
 
-/-- Full-disclosure policy `φ_m⃗`, true exactly on `m⃗` (O24 Definition 4.2
+/-- Full-disclosure policy `φ_m⃗`, true exactly on `m⃗` (O24 Definition 4.3
 requires `Φ ⊇ {φ_a⃗}`). Decidable equality on `Policy F n` needs no field,
 since `Fintype.decidablePiFintype` supplies it over the finite domain. -/
 def exactPolicy (m : Fin n → F) : Policy F n := fun m' => decide (m' = m)
