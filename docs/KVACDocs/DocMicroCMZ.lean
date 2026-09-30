@@ -794,9 +794,21 @@ self-sampled masks, it presents the public parameters `Xᵢ = aaᵢ•g + bbᵢ�
 queries: `sign` with a nonzero scalar `u` and `V = c•U + u•(d•X)`, where `c` and
 `d` are the known and the `x`-multiplied parts of the key on the message;
 `verify` and `help` by the honest representation check followed by one DDH
-decision on the `x`-dependent part of the equation. Verify and help answer
-bit-for-bit as the honest game; for a generator `g`, sign answers with the
-honest law, `u ↦ u•g` carrying the scalar sampler onto `U ←$ G∖{0}`.
+decision on the `x`-dependent part of the equation. On verify and help the
+oracle answers equal the honest answers; for a generator `g`, sign answers are
+identically distributed with the honest ones, `u ↦ u•g` carrying the scalar
+sampler onto `U ←$ G∖{0}`.
+:::
+
+:::definition "collision_gap_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.gapDlReduction") (parent := "cmz_amac") (tags := "milestone")
+Given an adversary of {uses "agm_model"}[], the gap discrete-log adversary of
+{uses "hardness_assumptions"}[] for {bpref "forgery_case_gap_dl"}[]. It samples
+the masks `aa⃗, bb⃗`, the scalars `z, xᵣ` and the crs `H`, runs the adversary through
+{uses "collision_gap_dl_simulator"}[], and looks for a message `m⃗ⱼ ≠ m⃗*`
+queried to the MAC oracle with `Σᵢ mⱼ,ᵢ•Xᵢ = Σᵢ m*ᵢ•Xᵢ`, a decidable equality on known group elements that
+needs no DDH query. On such a collision it returns
+`x = (Σᵢ aaᵢ(m*ᵢ − mⱼ,ᵢ))·(Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ))⁻¹`, and `0` when the
+denominator vanishes (`0⁻¹ = 0` in the field) or no collision is found.
 :::
 
 :::theorem "attribute_lifting" (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5") (effort := "medium") (priority := "medium")
@@ -808,6 +820,16 @@ advantage over `ℤ_p`.
 :::theorem "forgery_case_gap_dl" (parent := "cmz_amac") (tags := "paper, O24 Claim 5.6") (effort := "medium") (priority := "medium")
 *O24 Claim 5.6.* In the μCMZ unforgeability proof, the first forgery
 case is bounded by the gap discrete-log advantage ({uses "hardness_assumptions"}[]).
+:::
+
+:::proof "forgery_case_gap_dl"
+The forgery's attribute combination `Σᵢ m*ᵢXᵢ` equals that of a message
+`m⃗ⱼ ≠ m⃗*` queried to the MAC oracle. The reduction of
+{uses "collision_gap_dl_reduction"}[] presents the adversary with the honest
+game (on verify and help the oracle answers equal the honest answers; on sign
+they are identically distributed) and solves the collision relation for the challenge exponent `x`. The only loss is
+the event that the denominator `Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ)` vanishes, a degree-1
+condition on the perfectly hidden `bb⃗`, of probability at most `1/p`.
 :::
 
 :::theorem "forgery_case_mac" (parent := "cmz_amac") (tags := "paper, O24 Claim 5.7") (effort := "medium") (priority := "medium")
