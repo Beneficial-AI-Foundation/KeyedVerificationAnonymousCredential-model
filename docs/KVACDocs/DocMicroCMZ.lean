@@ -820,11 +820,12 @@ plus the gap discrete-log advantage of the collision reduction
 
 :::proof "attribute_lifting"
 Split the win event on whether the forgery's attribute combination collides
-with a signed message's. The colliding case is {uses "forgery_case_gap_dl"}[];
+with that of a message queried to the MAC oracle. The colliding case is {uses "forgery_case_gap_dl"}[];
 the other is {uses "forgery_case_mac"}[], which ends in
 {uses "single_attribute_mac"}[] on the collapse wrapper, averaged over the
-direction. The slack `5/p` is `3/p` from the single-attribute bound, `1/p` from
-the keygen shear `x₁ = 0` and `1/p` from the vanishing denominator.
+direction. The additive constant `5/p` is `3/p` from the single-attribute
+bound, `1/p` from the keygen shear `x₁ = 0` and `1/p` from the vanishing
+denominator.
 :::
 
 :::theorem "forgery_case_gap_dl" (parent := "cmz_amac") (tags := "paper, O24 Claim 5.6") (effort := "medium") (priority := "medium")

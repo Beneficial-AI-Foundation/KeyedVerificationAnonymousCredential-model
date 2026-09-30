@@ -72,6 +72,6 @@ only *use* the sealed `glog`.
   `docs/presentations/rolf-status/errata.md` §6.
 
 Lemma 5.5's own departures from the printed bound — the gap-DL term kept
-explicit and the `5/p` slack accounting — are stated in `Security`'s module
+explicit and the additive constant `5/p` — are stated in `Security`'s module
 docstring.
 -/
