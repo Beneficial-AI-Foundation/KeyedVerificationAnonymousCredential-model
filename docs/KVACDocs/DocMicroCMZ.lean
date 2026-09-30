@@ -7,6 +7,7 @@ import VersoManual
 import VersoBlueprint
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.Relations
+import KVAC.Schemes.MicroCMZ.ProofSystems
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -101,10 +102,22 @@ key, and the sampler of nonzero scalars `uniformUnits` for the paper's
 `ℤ_p^×` draws, with its support lemma.
 :::
 
-:::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
+:::definition "mucmz_policy_layer" (lean := "KVAC.Schemes.MicroCMZ.Policy, KVAC.Schemes.MicroCMZ.PublicBases, KVAC.Schemes.MicroCMZ.Enforces, KVAC.Schemes.MicroCMZ.trivialPolicy, KVAC.Schemes.MicroCMZ.andPolicy, KVAC.Schemes.MicroCMZ.exactPolicy, KVAC.Schemes.MicroCMZ.exactPolicy_eq_true_iff, KVAC.Schemes.MicroCMZ.riu_enforces_trivialPolicy, KVAC.Schemes.MicroCMZ.rp_enforces_trivialPolicy") (parent := "cmz_construction") (tags := "milestone")
 Credential policies `φ` over attribute vectors, the public issuer bases,
 the enforcement predicate connecting a relation to its policy, and the
-trivial policy with its enforcement lemmas.
+trivial policy with its enforcement lemmas. Conjunction and the
+full-disclosure policy `φ_m⃗` complete the predicate family of O24
+Definitions 4.1 and 4.3 over policies.
+:::
+
+:::definition "mucmz_proof_system_parameters" (lean := "KVAC.Schemes.MicroCMZ.ProofSystemFor, KVAC.Schemes.MicroCMZ.ProofSystemFor.instDecidableEqProof, KVAC.Schemes.MicroCMZ.ProofSystemFor.toNIZKPSyntax, KVAC.Schemes.MicroCMZ.RiuProofSystem, KVAC.Schemes.MicroCMZ.RisProofSystem, KVAC.Schemes.MicroCMZ.RpProofSystem, KVAC.Schemes.MicroCMZ.instDecidableEqRpStmt") (parent := "cmz_construction") (tags := "milestone")
+The prover and verifier of a non-interactive proof system with fixed crs,
+statement and witness types, over the shared random oracle. Both take the
+crs element `H`, which `R_is` and `R_p` mention. The μCMZ credential takes three
+of them as parameters, for {uses "riu_relation"}[], {uses "ris_relation"}[],
+and {uses "rp_relation"}[]. A conversion to `NIZKPSyntax`, given a setup and
+a relation, makes the proof-system properties apply. Decidable equality on
+`R_p` statements supports the simulation-extractability game.
 :::
 
 :::theorem "mucmz_sigma_protocols" (lean := "KVAC.Schemes.MicroCMZ.riuSigma, KVAC.Schemes.MicroCMZ.riuSigma_complete, KVAC.Schemes.MicroCMZ.riuSigma_hvzk, KVAC.Schemes.MicroCMZ.riuSigma_speciallySoundAt, KVAC.Schemes.MicroCMZ.riuSigma_speciallySoundAt_trivial, KVAC.Schemes.MicroCMZ.riuSimTranscript, KVAC.Schemes.MicroCMZ.risSigma, KVAC.Schemes.MicroCMZ.risSigma_complete, KVAC.Schemes.MicroCMZ.risSigma_hvzk, KVAC.Schemes.MicroCMZ.risSigma_speciallySound, KVAC.Schemes.MicroCMZ.risSimTranscript, KVAC.Schemes.MicroCMZ.rpSigma, KVAC.Schemes.MicroCMZ.rpSigma_complete, KVAC.Schemes.MicroCMZ.rpSigma_hvzk, KVAC.Schemes.MicroCMZ.rpSigma_speciallySoundAt, KVAC.Schemes.MicroCMZ.rpSigma_speciallySoundAt_trivial, KVAC.Schemes.MicroCMZ.rpSimTranscript") (parent := "cmz_construction") (tags := "milestone")
@@ -781,18 +794,19 @@ self-sampled masks, it presents the public parameters `Xᵢ = aaᵢ•g + bbᵢ�
 queries: `sign` with a nonzero scalar `u` and `V = c•U + u•(d•X)`, where `c` and
 `d` are the known and the `x`-multiplied parts of the key on the message;
 `verify` and `help` by the honest representation check followed by one DDH
-decision on the `x`-dependent part of the equation. Verify and help answer
-bit-for-bit as the honest game; for a generator `g`, sign answers with the
-honest law, `u ↦ u•g` carrying the scalar sampler onto `U ←$ G∖{0}`.
+decision on the `x`-dependent part of the equation. On verify and help the
+oracle answers equal the honest answers; for a generator `g`, sign answers are
+identically distributed with the honest ones, `u ↦ u•g` carrying the scalar
+sampler onto `U ←$ G∖{0}`.
 :::
 
 :::definition "collision_gap_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.gapDlReduction") (parent := "cmz_amac") (tags := "milestone")
 Given an adversary of {uses "agm_model"}[], the gap discrete-log adversary of
 {uses "hardness_assumptions"}[] for {bpref "forgery_case_gap_dl"}[]. It samples
 the masks `aa⃗, bb⃗`, the scalars `z, xᵣ` and the crs `H`, runs the adversary through
-{uses "collision_gap_dl_simulator"}[], and looks for a signed `m⃗ⱼ ≠ m⃗*` with
-`Σᵢ mⱼ,ᵢ•Xᵢ = Σᵢ m*ᵢ•Xᵢ`, a decidable equality on known group elements that
-needs no DDH query. On such a collision it returns
+{uses "collision_gap_dl_simulator"}[], and looks for a message `m⃗ⱼ ≠ m⃗*`
+queried to the MAC oracle with `Σᵢ mⱼ,ᵢ•Xᵢ = Σᵢ m*ᵢ•Xᵢ`, a decidable equality
+on known group elements that needs no DDH query. On such a collision it returns
 `x = (Σᵢ aaᵢ(m*ᵢ − mⱼ,ᵢ))·(Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ))⁻¹`, and `0` when the
 denominator vanishes (`0⁻¹ = 0` in the field) or no collision is found.
 :::
@@ -819,12 +833,14 @@ case is bounded by the gap discrete-log advantage ({uses "hardness_assumptions"}
 :::
 
 :::proof "forgery_case_gap_dl"
-The forgery's attribute combination `Σᵢ m*ᵢXᵢ` equals that of a signed
-`m⃗ⱼ ≠ m⃗*`. The reduction of {uses "collision_gap_dl_reduction"}[] presents the
-adversary with the honest game (verify and help bit-for-bit, sign in law) and
-solves the collision relation for the challenge exponent `x`. The only loss is
-the event that the denominator `Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ)` vanishes, a degree-1
-condition on the perfectly hidden `bb⃗`, of probability at most `1/p`.
+The forgery's attribute combination `Σᵢ m*ᵢXᵢ` equals that of a message
+`m⃗ⱼ ≠ m⃗*` queried to the MAC oracle. The reduction of
+{uses "collision_gap_dl_reduction"}[] presents the adversary with the honest
+game (on verify and help the oracle answers equal the honest answers; on sign
+they are identically distributed) and solves the collision relation for the
+challenge exponent `x`. The only loss is the event that the denominator
+`Σᵢ bbᵢ(mⱼ,ᵢ − m*ᵢ)` vanishes, a degree-1 condition on the perfectly hidden
+`bb⃗`, of probability at most `1/p`.
 :::
 
 :::theorem "forgery_case_mac" (parent := "cmz_amac") (tags := "paper, O24 Claim 5.7") (effort := "medium") (priority := "medium")
@@ -947,13 +963,13 @@ adversary, the winning condition, the experiment and its advantage are
 {bpref "agm_omuf_game"}[]. Theorem 5.11 and the one-more unforgeability
 clause of Theorem 5.3 will be stated over that game.
 
-The `n = 1` bound of Equation 23 is stated, `sorry`d, as
-{bpref "mucmz_at_agm_omuf_n1"}[], against two named reductions whose
-bodies arrive with the proofs.
+Theorem 5.11 is stated, `sorry`d, at `n = 1` as
+{bpref "mucmz_at_agm_omuf_n1"}[] and for every `n` as
+{bpref "mucmz_at_agm_omuf"}[], against named reductions whose bodies
+arrive with the proofs.
 
-*TODO (Track CMZ-OMUF).* The general `n` statement of Theorem 5.11, the
-Claims 5.12 to 5.14 with their polynomial layer, and the Theorem 5.3
-clause.
+*TODO (Track CMZ-OMUF).* The Claims 5.12 to 5.14 with their polynomial
+layer, and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -1037,15 +1053,27 @@ advantage in the game of {uses "omuf_game"}[].
 Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::
 
-:::theorem "mucmz_at_agm_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11") (effort := "large") (priority := "low")
+:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
-attributes. To be stated over the merged core scheme
+attributes. Stated as `agm_omuf_le` over the merged core scheme
 {uses "mucmz_at_core"}[] in the AGM-instrumented game
-{uses "agm_omuf_game"}[], the plain game following by a deferred bridge; the core's nonzero issuance nonces condition
-the paper's `ℤ_p` samplers away from their zero cases, so the printed
-constants transfer only up to per-query `1/p` differences — the Track
-CMZ-OMUF constant audit settles the stated bound.
+{uses "agm_omuf_game"}[] for every `n > 0`, the plain game following by a
+deferred bridge, with the printed bound
+`(q + 6)/p + (q + 1)·Adv^dl + 3·Adv^2-dl + Adv^gapdl` behind the named
+definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
+and 2-DL advantages are those of the `n = 1` reductions run on the
+transformed adversary `omufToN1`, the gap-DL advantage that of the
+collision-case reduction `omufGapDLReduction`, both declared with `sorry`
+bodies until the proofs build them. *Note.* The constants are the paper's
+and provisional: the core's nonzero issuance nonces condition the paper's
+`ℤ_p` samplers away from their zero cases, so they transfer only up to
+per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles
+the stated bound, with an errata item on any change. The crs `H` is drawn by
+`setup`, uniformly from the group today and from its nonzero elements after
+#149, when the statement bounds the game with `H ←$ 𝔾×`, a change estimated
+at `(q + 3)/(p(p − 1))` at proof level and bounded by `1/p` by the black-box
+transfer.
 :::
 
 :::proof "mucmz_at_agm_omuf"

@@ -41,11 +41,12 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   `nTo1Adversary`, and the general-`n` 3-DL reduction `microCMZN3DLReduction`
   with its experiment and advantage at base `gen`;
 - `GapDLReduction` — the Claim 5.6 side of Lemma 5.5: the nonzero-scalar
-  sampler `gapSignScalarSample` (a named seam over `uniformUnits F`), the
-  embedded parameters `Xᵢ = aaᵢ•g + bbᵢ•X`, and the gap-DL oracle simulator
-  `gapDlOracleImpl`, answering the AGM oracles from those parameters through
-  the DDH-decision oracle, and the gap-DL reduction `gapDlReduction`, which
-  extracts the challenge exponent `x` from a colliding forgery;
+  sampler `gapSignScalarSample` (an irreducible definition equal to
+  `uniformUnits F`), the embedded parameters `Xᵢ = aaᵢ•g + bbᵢ•X`, the
+  gap-DL oracle simulator `gapDlOracleImpl`, answering the AGM oracles from
+  those parameters through the DDH-decision oracle, and the gap-DL reduction
+  `gapDlReduction`, which extracts the challenge exponent `x` from a colliding
+  forgery;
 - `Security` — the Lemma 5.5 target bound `agm_ufcmva_le_explicit`, over the
   reductions of `AttributeCollapse` and `GapDLReduction`.
 
