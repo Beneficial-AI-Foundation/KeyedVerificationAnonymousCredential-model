@@ -62,6 +62,20 @@ factor is
 the key polynomial's constant part evaluated at the queried message. Also
 documented at its use site in PR #88.
 
+## 5. Claim 5.6's extraction has the wrong sign (p. 39)
+
+From a collision Σᵢ mⱼ,ᵢ(aᵢG + bᵢX) = Σᵢ m*ᵢ(aᵢG + bᵢX) the paper derives
+(Σᵢ (mⱼ,ᵢ − m*ᵢ)aᵢ)G = (Σᵢ (mⱼ,ᵢ − m*ᵢ)bᵢ)X and returns
+x = (Σᵢ aᵢ(mⱼ,ᵢ − m*ᵢ))(Σᵢ bᵢ(mⱼ,ᵢ − m*ᵢ))<sup>−1</sup>. Moving the X-terms
+across flips their sign, so the relation is
+(Σᵢ (mⱼ,ᵢ − m*ᵢ)aᵢ)G = −(Σᵢ (mⱼ,ᵢ − m*ᵢ)bᵢ)X and the printed value is −x.
+The correct extraction is
+
+&nbsp;&nbsp;&nbsp;&nbsp;x = (Σᵢ aᵢ(m*ᵢ − mⱼ,ᵢ))(Σᵢ bᵢ(mⱼ,ᵢ − m*ᵢ))<sup>−1</sup>,
+
+documented at its use site (`gapDlReduction` in
+`AGMReduction/GapDLReduction.lean`).
+
 ## 6. Theorem 5.1's printed bound elides the gap-DL term
 
 The printed bound is Adv<sup>3-dl</sup> + Adv<sup>dl</sup> + 3/p. The
@@ -152,7 +166,7 @@ The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 reduction modules queued behind it, in the order shown on the
 presentation's architecture slide. Items 7 and 8 concern §5.6 and are
 recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
-`Schemes/MicroCMZ/ATVariant.lean`. Items 9–11 are recorded at their use site
-in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. This note reports findings about the
-paper; the formal-completion status of each module is tracked on the
+`Schemes/MicroCMZ/ATVariant.lean`. Items 5 and 9–11 are recorded at their
+use site in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. This note
+reports findings about the paper; the formal-completion status of each module is tracked on the
 project's blueprint page.
