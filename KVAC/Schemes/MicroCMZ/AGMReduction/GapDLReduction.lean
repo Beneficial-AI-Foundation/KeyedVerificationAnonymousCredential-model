@@ -77,8 +77,8 @@ bbᵢ·X`), `x₀ = z` (so `X₀ = z·H`), and `xᵣ` honestly known (so `Xᵣ =
 Σᵢ aaᵢ·mᵢ` and `d := Σᵢ bbᵢ·mᵢ`, the game's key on message `m⃗` is
 `key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each arm reproduces `agmOracleImpl`'s
 behaviour under this embedding (the representation-consistency check `consistent`
-is a pure function of the *known* group elements `g, H, pp` and the logged tags,
-so the reduction computes it directly):
+is a pure function of the *known* group elements `g, H, pp` and the logged MAC
+codes, so the reduction computes it directly):
 
 - `.sign m⃗`: sample `u ← gapSignScalarSample` (nonzero), set `U := u·g`; then
   `key·U = c·U + u·(d·X)` (since `x·d·U = u·d·X`), so `V := c·U + u·(d·X)`;
@@ -93,13 +93,18 @@ so the reduction computes it directly):
   `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ = (z+xᵣ)·A₀ + Σᵢ aaᵢ·Aᵢ + x·(Σᵢ bbᵢ·Aᵢ)` via
   `Ddh(Σᵢ bbᵢ·Aᵢ, Z − (z+xᵣ)·A₀ − Σᵢ aaᵢ·Aᵢ)`.
 
-Verify and help are bit-exact (the DDH bit equals the honest game bit). Sign is
-exact in law once `g` is a generator (the bijectivity `Fact` the proof leaf
-assumes): `u ↦ u·g` carries the scalar sampler onto the honest `U ←$ G∖{0}` and
-`V = key·U`; the proof leaf couples the two samplers along that bijection. The
-paper (Claim 5.6) folds `xᵣ` into `z` and prints the `Ddh` arguments without
-the `Σᵢ aaᵢ·mᵢ` / `xᵣ` terms; those are typos, corrected here to be faithful to
-this game's `Xᵣ` term. -/
+On verify and help, each answer equals the honest answer, the DDH bit deciding
+the key equation. On sign, the answer is identically distributed with the honest
+one once `g` is a generator (the bijectivity `Fact` the proof leaf assumes):
+`u ↦ u·g` carries the scalar sampler onto the honest `U ←$ G∖{0}` and
+`V = key·U`; the proof leaf couples the two samplers along that bijection.
+
+The printed Claim 5.6 (O24 p. 39) carries three misprints, corrected here: it
+never defines `Xᵣ` and drops `xᵣ` from every key expression (errata §9); its
+Verify query drops the `Σᵢ aᵢmᵢ·U` term (errata §10); and that query,
+`Ddh(U, (Σᵢ bᵢmᵢ)⁻¹V − zU)`, misplaces the inverse, where the honest equation
+needs `Ddh(U, d⁻¹(V − c·U))` (errata §11). The nonzero `u` and the subsumed
+`Σᵢ bᵢmᵢ = 0` branch are departures from the paper, not misprints. -/
 noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
     QueryImpl (AGMOracleSpec F G n)
       (StateT (AGMLog F G n) (OracleComp (unifSpec + GapDLogOracleSpec G)))
