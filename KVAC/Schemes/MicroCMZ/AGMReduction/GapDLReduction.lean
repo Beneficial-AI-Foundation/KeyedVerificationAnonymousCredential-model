@@ -150,8 +150,9 @@ then on a *colliding* forgery (some queried `m⃗ⱼ ≠ m⃗*` with
 The colliding `m⃗ⱼ` is located by *recomputation* — `Σᵢ mⱼ,ᵢ•Xᵢ` is a decidable
 equality on known group elements, no DDH query needed. The bad event
 `Σᵢ bbᵢ·(mⱼ,ᵢ−m*ᵢ) = 0` (degree-1 in the perfectly-hidden `bbᵢ`, probability
-at most `1/p`) is the slack: the reduction then outputs `num·den⁻¹ = 0`, since
-`0⁻¹ = 0` in the field; a log with no collision also outputs `0`.
+at most `1/p`) is the 1/p term of the bound: the reduction then outputs
+`num·den⁻¹ = 0`, since `0⁻¹ = 0` in the field; a log with no collision also
+outputs `0`.
 
 The paper prints the relation without the minus sign and the extraction as
 `(Σᵢ aᵢ(mⱼ,ᵢ − m*ᵢ))·(Σᵢ bᵢ(mⱼ,ᵢ − m*ᵢ))⁻¹`, which is `−x`; the signs here are
