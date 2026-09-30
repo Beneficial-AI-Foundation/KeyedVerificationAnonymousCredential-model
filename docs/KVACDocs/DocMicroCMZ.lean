@@ -9,6 +9,7 @@ import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.ProofSystems
 import KVAC.Schemes.MicroCMZ.Credential
+import KVAC.Schemes.MicroCMZ.CredentialCorrectness
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -148,6 +149,23 @@ proof systems of {uses "mucmz_proof_system_parameters"}[], with setup and key
 generation those of the base MAC lifted through `liftM`. The issuance nonces
 and the presentation rerandomizer are drawn from the nonzero scalars, and the
 presentation server checks `U' ≠ 0` outside `R_cmz.p`, as Figure 9 does.
+:::
+
+:::theorem "mucmz_correctness" (lean := "KVAC.Schemes.MicroCMZ.mem_support_runRO_bind, KVAC.Schemes.MicroCMZ.mem_support_runRO_pure, KVAC.Schemes.MicroCMZ.ProofSystemFor.verify_of_perfectlyComplete, KVAC.Schemes.MicroCMZ.credIssue_correct, KVAC.Schemes.MicroCMZ.credPresent_correct, KVAC.Schemes.MicroCMZ.μCMZCredential_correctRO") (parent := "cmz_construction") (tags := "milestone")
+The credential of {uses "mucmz_construction"}[] satisfies the oracle-carrier
+correctness {uses "kvac_correctness"}[]. The hypotheses are a nonzero
+generator and the perfect completeness of `π_iu`, `π_is` and `π_p` for the
+relations {uses "riu_relation"}[], {uses "ris_relation"}[] and
+{uses "rp_relation"}[], with the crs setup `H ←$ G`.
+:::
+
+:::proof "mucmz_correctness"
+Perfect completeness fixes only the empty starting cache. The cache transport
+of {uses "newusr_never_fails"}[] replays every prover and verifier run from the
+empty cache, so each proof verifies from every cache. Issuance then yields a
+MAC code that passes the base-MAC check, by the unblinding algebra of
+{uses "mucmz_base_mac"}[]. On such a MAC code the server's recomputed `Z`
+equals the user's, so presentation accepts.
 :::
 
 :::definition "riu_relation" (lean := "KVAC.Schemes.MicroCMZ.RiuStmt, KVAC.Schemes.MicroCMZ.RiuWitness, KVAC.Schemes.MicroCMZ.riuRel") (parent := "cmz_construction") (tags := "paper, O24 Eq 9")
