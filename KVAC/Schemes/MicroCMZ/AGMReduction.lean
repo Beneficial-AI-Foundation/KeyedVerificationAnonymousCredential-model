@@ -9,6 +9,7 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.SignCoupling
 import KVAC.Schemes.MicroCMZ.AGMReduction.RedFull
 import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 import KVAC.Schemes.MicroCMZ.AGMReduction.AttributeCollapse
+import KVAC.Schemes.MicroCMZ.AGMReduction.GapDLReduction
 
 /-!
 # μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
@@ -37,7 +38,12 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 - `AttributeCollapse` — the `n → 1` attribute collapse of Lemma 5.5 (Claim 5.7):
   the representation translations along a direction `r⃗`, the wrapper adversary
   `nTo1Adversary`, and the general-`n` 3-DL reduction `microCMZN3DLReduction`
-  with its experiment and advantage at base `gen`.
+  with its experiment and advantage at base `gen`;
+- `GapDLReduction` — the Claim 5.6 side of Lemma 5.5: the nonzero-scalar
+  sampler `gapSignScalarSample` (an irreducible definition equal to
+  `uniformUnits F`), the embedded parameters `Xᵢ = aaᵢ•g + bbᵢ•X`, and the
+  gap-DL oracle simulator `gapDlOracleImpl`, answering the AGM oracles from
+  those parameters through the DDH-decision oracle.
 
 Lemma 5.4 stays untagged here until the theorem is sorry-free.
 

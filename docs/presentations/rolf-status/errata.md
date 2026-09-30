@@ -109,6 +109,42 @@ with probability 2/p − 1/p<sup>2</sup> (u = 0 aborts at the user's check,
 r = 0 mis-issues). The formalization draws both nonces from
 ℤ<sub>p</sub><sup>×</sup> (`uniformUnits`, PR #146 and PR #147).
 
+## 9. Claim 5.6 never defines X<sub>r</sub> (p. 39)
+
+The gap-DL reduction B of Claim 5.6 invokes the adversary with
+pp = (Γ, (X₀, X<sub>r</sub>, X₁, …, X<sub>n</sub>)) but defines only
+X₀ = zH and Xᵢ = aᵢG + bᵢX. The signing, Verify and Help answers all use the
+key's constant part z + Σᵢ aᵢmᵢ with no x<sub>r</sub>, although the game's key
+on m⃗ is x₀ + x<sub>r</sub> + Σᵢ mᵢxᵢ. The corrected reduction samples
+x<sub>r</sub>, publishes X<sub>r</sub> = x<sub>r</sub>G, and uses the constant
+part
+
+&nbsp;&nbsp;&nbsp;&nbsp;c = z + x<sub>r</sub> + Σᵢ aᵢmᵢ,
+
+documented at its use site (`gapDlKeyParts` and `gapDlOracleImpl` in
+`AGMReduction/GapDLReduction.lean`).
+
+## 10. Claim 5.6's Verify query drops the Σᵢ aᵢmᵢ term (p. 39)
+
+For Σᵢ bᵢmᵢ ≠ 0 the printed Verify answer is the bit of
+Ddh(U, (Σᵢ bᵢmᵢ)<sup>−1</sup>V − zU). Its Σᵢ bᵢmᵢ = 0 branch checks
+zU + Σᵢ aᵢmᵢU = V, and the signing answer uses (z + Σᵢ aᵢmᵢ)U, but the Ddh
+argument subtracts only zU. With d = Σᵢ bᵢmᵢ the honest equation
+V = (c + x·d)U needs the full constant part c·U removed (item 9 adds the
+x<sub>r</sub> term).
+
+## 11. Claim 5.6's Verify query misplaces the inverse (p. 39)
+
+The printed argument (Σᵢ bᵢmᵢ)<sup>−1</sup>V − zU applies d<sup>−1</sup> to V
+alone. Solving V = (c + x·d)U for the DH value gives d<sup>−1</sup>(V − cU) =
+x·U, so the query must be
+
+&nbsp;&nbsp;&nbsp;&nbsp;Ddh(U, d<sup>−1</sup>(V − cU)).
+
+The formalization avoids the inverse by querying Ddh(d·U, V − c·U), which
+returns the same bit for d ≠ 0 and also subsumes the d = 0 branch
+(`gapDlOracleImpl`, `AGMReduction/GapDLReduction.lean`).
+
 ## Status
 
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
@@ -116,6 +152,7 @@ The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 reduction modules queued behind it, in the order shown on the
 presentation's architecture slide. Items 7 and 8 concern §5.6 and are
 recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
-`Schemes/MicroCMZ/ATVariant.lean`. This note reports findings about the
+`Schemes/MicroCMZ/ATVariant.lean`. Items 9–11 are recorded at their use site
+in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. This note reports findings about the
 paper; the formal-completion status of each module is tracked on the
 project's blueprint page.
