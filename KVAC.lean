@@ -16,6 +16,7 @@ import KVAC.Schemes.MicroCMZ.CredentialGames
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
+import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
