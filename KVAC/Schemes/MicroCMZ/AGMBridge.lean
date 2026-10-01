@@ -8,7 +8,7 @@ import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SimulateQGuarded
 
 /-!
-# The AGM ↔ plain UF-CMVA bridge: `WellBehaved`
+# Well-behaved algebraic adversaries for the AGM ↔ plain UF-CMVA bridge
 
 `AGM_UF_CMVAGame` (`KVAC.Schemes.MicroCMZ.AlgebraicMAC`) is the *instrumented* unforgeability
 game: its oracles demand algebraic representations and gate their answers on transcript
@@ -60,8 +60,10 @@ instance instDecidableAgmGood (H : G) (pp : Params G n) (t : AGMQuery F G n) (lo
     Decidable (agmGood gen H pp t log) := by
   cases t <;> simp only [agmGood] <;> infer_instance
 
-/-- The honest instrumented oracle asserting its own gate: behaves like `agmOracleImpl` while
-every query is `agmGood`, aborts on the first bad one. -/
+/-- The honest instrumented oracle guarded by `agmGood`: behaves like `agmOracleImpl` while
+every query is `agmGood`, and aborts on the first bad one. The guard is stricter than the
+oracle's own gates: `agmOracleImpl` answers a consistent `help` query, `agmGood` rejects every
+`help` query. -/
 noncomputable abbrev guardedAgmOracleImpl (secParam : ℕ) (sk : Key F n) (H : G)
     (pp : Params G n) :
     QueryImpl (AGMOracleSpec F G n) (StateT (AGMLog F G n) (OptionT ProbComp)) :=
@@ -102,15 +104,15 @@ def WellBehaved (secParam : ℕ) (A : AGMUFAdversary F G n) : Prop :=
 def zeroRepr : AGMRepr F n := ⟨0, 0, 0, 0, 0, []⟩
 
 /-- The trivial algebraic adversary: makes no oracle queries and outputs the zero forgery with
-all-zero representations. Exists to witness `wellBehaved_trivialAdversary`. -/
+all-zero representations. It inhabits `WellBehaved` (`wellBehaved_trivialAdversary`). -/
 noncomputable def trivialAdversary : AGMUFAdversary F G n where
   run := fun _ _ => pure (fun _ => 0, (0, 0), zeroRepr, zeroRepr)
 
 /-- **`WellBehaved` is satisfiable** (for every `gen` and `secParam`): the guarded run of the
 query-free `trivialAdversary` never fails, and its zero forgery is consistent (the all-zero
-representation evaluates to `0` over any transcript basis). This inhabitant is the
-non-vacuity guard for statements conditional on `WellBehaved`: should a future edit make
-`WellBehaved` unsatisfiable, this lemma is what breaks. -/
+representation evaluates to `0` over any transcript basis). Statements conditional on
+`WellBehaved` would be vacuous if the predicate were unsatisfiable; this lemma rules that
+out. -/
 lemma wellBehaved_trivialAdversary (secParam : ℕ) :
     WellBehaved gen secParam (trivialAdversary (F := F) (G := G) (n := n)) := by
   intro sk H pp
