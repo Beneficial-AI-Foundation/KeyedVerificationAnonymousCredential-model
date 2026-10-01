@@ -241,7 +241,7 @@ representations evaluate to the submitted tag halves; a `help` query is never
 good, since the plain Figure 5 game has no Help oracle. The honest oracle of
 {uses "agm_model"}[], guarded by this predicate as in
 {uses "guarded_oracle_projection"}[], aborts at the first bad query. An
-adversary is well behaved when, for every key, generator `H` and public
+adversary is well behaved when, for every key, crs `H` and public
 parameters, its guarded run never fails and every reachable forgery is
 consistent over its final transcript. The query-free adversary returning the
 zero forgery with all-zero representations is well behaved, so the predicate
