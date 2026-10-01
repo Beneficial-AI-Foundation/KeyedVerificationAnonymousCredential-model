@@ -12,6 +12,7 @@ import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.SimulateQGuarded
+import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability
@@ -34,7 +35,7 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Ten files delivered under `KVAC/Schemes/MicroCMZ/`:
+Eleven files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
@@ -43,6 +44,8 @@ Ten files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
 - `SimulateQGuarded.lean` — VCV-io-only `simulateQ` plumbing: guarded oracles
   and the never-fails state-projection transport — Track CMZ-M.
+- `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries for the
+  AGM ↔ plain UF-CMVA bridge — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
@@ -229,6 +232,20 @@ rewrites each continuation under the support of that step, `bind_map_left`
 moves the projection onto the step, and the per-query hypothesis closes the
 goal. The per-query predicate is what VCV-io's state-invariant transport
 `map_run_simulateQ_eq_of_query_map_eq_inv'` cannot express.
+:::
+
+:::definition "well_behaved_algebraic_adversary" (lean := "KVAC.Schemes.MicroCMZ.agmGood, KVAC.Schemes.MicroCMZ.instDecidableAgmGood, KVAC.Schemes.MicroCMZ.guardedAgmOracleImpl, KVAC.Schemes.MicroCMZ.ForgeryConsistent, KVAC.Schemes.MicroCMZ.WellBehaved, KVAC.Schemes.MicroCMZ.zeroRepr, KVAC.Schemes.MicroCMZ.trivialAdversary, KVAC.Schemes.MicroCMZ.wellBehaved_trivialAdversary") (parent := "cmz_amac") (tags := "milestone")
+Well-behaved algebraic adversaries. A query is good against the current
+transcript when it is a `sign` query, or a `verify` query whose tag
+representations evaluate to the submitted tag halves; a `help` query is never
+good, since the plain Figure 5 game has no Help oracle. The honest oracle of
+{uses "agm_model"}[], guarded by this predicate as in
+{uses "guarded_oracle_projection"}[], aborts at the first bad query. An
+adversary is well behaved when, for every key, crs `H` and public
+parameters, its guarded run never fails and every reachable forgery is
+consistent over its final transcript. The query-free adversary returning the
+zero forgery with all-zero representations is well behaved, so the predicate
+is satisfiable.
 :::
 
 :::theorem "identity_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.spec, KVAC.Schemes.MicroCMZ.AGMPoly.identity_case, KVAC.Schemes.MicroCMZ.AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero") (parent := "cmz_amac") (tags := "milestone")
