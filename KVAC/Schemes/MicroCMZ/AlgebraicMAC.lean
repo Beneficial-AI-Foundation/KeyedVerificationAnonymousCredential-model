@@ -23,9 +23,9 @@ A word of caution on naming: this is scaffolding, not the honest game. The
 oracles here are *gated* — they answer honestly only when the submitted
 representation is consistent, and return `false` otherwise. So the game matches
 the honest UF-CMVA game only for *well-behaved* adversaries, the ones that never
-submit an inconsistent representation. Closing that gap is the job of the
-`WellBehaved` bridging lemma; that equivalence is deferred and is not proved in
-this file.
+submit an inconsistent representation. Closing that gap is the job of a
+bridging lemma under the `WellBehaved` hypothesis; that equivalence is
+deferred and is not proved in this file.
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 `AGMRepr` / `AGMRepr.eval`; and the instrumented game (`AGMOracleSpec`,
