@@ -10,11 +10,12 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.RedFull
 import KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1
 import KVAC.Schemes.MicroCMZ.AGMReduction.AttributeCollapse
 import KVAC.Schemes.MicroCMZ.AGMReduction.GapDLReduction
+import KVAC.Schemes.MicroCMZ.AGMReduction.Security
 
 /-!
-# μCMZ AGM unforgeability — the `n = 1` reduction (Lemma 5.4, O24 §5.3)
+# μCMZ AGM unforgeability — the reductions of Lemmas 5.4 and 5.5 (O24 §5.3)
 
-Aggregator for the reduction, which lives in the `AGMReduction/` subdirectory.
+Aggregator for the reductions, which live in the `AGMReduction/` subdirectory.
 It connects the game (`AlgebraicMAC`) to the polynomial backbone
 (`AGMPolynomial`). Each part documents its own contents in its module docstring:
 
@@ -41,11 +42,15 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   with its experiment and advantage at base `gen`;
 - `GapDLReduction` — the Claim 5.6 side of Lemma 5.5: the nonzero-scalar
   sampler `gapSignScalarSample` (an irreducible definition equal to
-  `uniformUnits F`), the embedded parameters `Xᵢ = aaᵢ•g + bbᵢ•X`, and the
+  `uniformUnits F`), the embedded parameters `Xᵢ = aaᵢ•g + bbᵢ•X`, the
   gap-DL oracle simulator `gapDlOracleImpl`, answering the AGM oracles from
-  those parameters through the DDH-decision oracle.
+  those parameters through the DDH-decision oracle, and the gap-DL reduction
+  `gapDlReduction`, which extracts the challenge exponent `x` from a colliding
+  forgery;
+- `Security` — the Lemma 5.5 target bound `agm_ufcmva_le_explicit`, over the
+  reductions of `AttributeCollapse` and `GapDLReduction`.
 
-Lemma 5.4 stays untagged here until the theorem is sorry-free.
+Lemmas 5.4 and 5.5 stay untagged here until their proofs are sorry-free.
 
 **Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` arms the
 order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
@@ -65,4 +70,8 @@ only *use* the sealed `glog`.
   this term: it is a separate `n = poly` argument (its case (i) collision branch,
   via Claim 5.6), and there is no collision branch at `n = 1`. See
   `docs/presentations/rolf-status/errata.md` §6.
+
+Lemma 5.5's own departures from the printed bound — the gap-DL term kept
+explicit and the additive constant `5/p` — are stated in `Security`'s module
+docstring.
 -/

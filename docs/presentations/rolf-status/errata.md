@@ -62,6 +62,20 @@ factor is
 the key polynomial's constant part evaluated at the queried message. Also
 documented at its use site in PR #88.
 
+## 5. Claim 5.6's extraction has the wrong sign (p. 39)
+
+From a collision Σᵢ mⱼ,ᵢ(aᵢG + bᵢX) = Σᵢ m*ᵢ(aᵢG + bᵢX) the paper derives
+(Σᵢ (mⱼ,ᵢ − m*ᵢ)aᵢ)G = (Σᵢ (mⱼ,ᵢ − m*ᵢ)bᵢ)X and returns
+x = (Σᵢ aᵢ(mⱼ,ᵢ − m*ᵢ))(Σᵢ bᵢ(mⱼ,ᵢ − m*ᵢ))<sup>−1</sup>. Moving the X-terms
+across flips their sign, so the relation is
+(Σᵢ (mⱼ,ᵢ − m*ᵢ)aᵢ)G = −(Σᵢ (mⱼ,ᵢ − m*ᵢ)bᵢ)X and the printed value is −x.
+The correct extraction is
+
+&nbsp;&nbsp;&nbsp;&nbsp;x = (Σᵢ aᵢ(m*ᵢ − mⱼ,ᵢ))(Σᵢ bᵢ(mⱼ,ᵢ − m*ᵢ))<sup>−1</sup>,
+
+documented at its use site (`gapDlReduction` in
+`AGMReduction/GapDLReduction.lean`).
+
 ## 6. Theorem 5.1's printed bound elides the gap-DL term
 
 The printed bound is Adv<sup>3-dl</sup> + Adv<sup>dl</sup> + 3/p. The
@@ -145,6 +159,24 @@ The formalization avoids the inverse by querying Ddh(d·U, V − c·U), which
 returns the same bit for d ≠ 0 and also subsumes the d = 0 branch
 (`gapDlOracleImpl`, `AGMReduction/GapDLReduction.lean`).
 
+## 12. Claim 5.13's bound has no term for Verify queries (pp. 46–47)
+
+Claim 5.13 bounds item (ii), a forgery polynomial with a monomial in η, by
+1/p + Adv<sup>dl</sup>, the 1/p covering the degenerate mask b = 0. Every honest
+Verify answer tests the key: the query (0, (G, c·G)) is accepted iff
+c = x₀ + x<sub>r</sub>. A forger that makes no Sign query, Q < p Verify queries
+over distinct c and a final guess among the untested values therefore learns
+x₀ + x<sub>r</sub> with probability (Q + 1)/p, and outputs the forgery
+(0, (H, (x₀ + x<sub>r</sub>)·H)) over H, which wins whenever H ≠ 0. Item (ii)
+then happens with probability (Q + 1)(p − 1)/p². The reduction of Claim 5.13
+substitutes η := a + bχ into ϕ = η·(x₀ + x<sub>r</sub> − k) and finds the zero
+polynomial at the run's key, so it extracts nothing. The printed bound needs a
+term of about Q/p in the number Q of Verify queries, or the argument has to send
+this forger to the x₀ embedding of Claim 5.14, which does extract from it. A
+matter of the concrete bound only, since Q/p is negligible asymptotically. The
+general shape, a monomial that is nonzero as a formal polynomial but whose
+coefficient vanishes at the run's key, is the same for Claims 5.12 and 5.14.
+
 ## Status
 
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
@@ -152,7 +184,8 @@ The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 reduction modules queued behind it, in the order shown on the
 presentation's architecture slide. Items 7 and 8 concern §5.6 and are
 recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
-`Schemes/MicroCMZ/ATVariant.lean`. Items 9–11 are recorded at their use site
-in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. This note reports findings about the
-paper; the formal-completion status of each module is tracked on the
+`Schemes/MicroCMZ/ATVariant.lean`. Items 5 and 9–11 are recorded at their
+use site in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. Item 12 is
+recorded in `Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean`. This note
+reports findings about the paper; the formal-completion status of each module is tracked on the
 project's blueprint page.

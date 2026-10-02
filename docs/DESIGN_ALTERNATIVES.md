@@ -526,7 +526,7 @@ as a typo for φ′.
 ## Exact-length representations in the AGM OMUF game
 
 **Decision.** In the AGM-instrumented one-more unforgeability game for the
-μCMZ_AT core (`AGMOneMoreUnforgeability.lean`) a submitted representation is
+μCMZ_AT core (`OneMoreUnforgeability/Game.lean`) a submitted representation is
 accepted only when its tag-coefficient list has exactly one entry per blinded
 pair issued so far, in addition to evaluating to the submitted element
 (`reprMatches`). The Sign oracle applies this gate to its *input*, the
@@ -646,7 +646,7 @@ translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
 ## Theorem 5.11 stated before its reductions exist
 
-**Decision.** `OneMoreUnforgeability.lean` states Theorem 5.11 (`n = 1` as
+**Decision.** `OneMoreUnforgeability/Statements.lean` states Theorem 5.11 (`n = 1` as
 `agm_omuf_le_n1`, every `n` as `agm_omuf_le`) with `sorry` proofs in the shape
 of `agm_ufcmva_le_n1_explicit`, the advantage of the forger bounded by a named
 expression of the advantages of *named* reduction adversaries. The reductions
@@ -681,6 +681,27 @@ coins in the construction, with a fixed-coins argument, or the shape grows an
 oracle for uniform sampling in the adversary's oracle specification. Extra Sign
 queries are not a source of randomness, they break the budget and the one-more
 count.
+
+**Per-Claim reductions.** Claims 5.12 and 5.13 each name their own discrete-log
+reduction, `omufDLReductionU gen q A` (the selector over the `q` issuance
+positions, bound `q·(1/p + Adv)`) and `omufDLReductionEta gen A` (the challenge
+in the crs, bound `1/p + Adv`), while Claim 5.14 cites the theorem's
+`omufTwoDLReduction`. The theorem's `omufDLReduction` is then the mixture of the
+two, run with probabilities `q/(q + 1)` and `1/(q + 1)`, so that
+`(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)` and the three Claims add up to
+Equation 23. The paper leaves this step implicit, writing `(q + 1)·Adv^dl` for
+the reductions of Claims 5.12 and 5.13 without naming an adversary, and the
+mixture makes that sum precise. Only Claim 5.12 carries the budget hypothesis, since only its
+constant is the budget. A shared discrete-log stub cited by both Claims was
+rejected. Its natural body is a `(q + 1)`-way selector over the `q` positions
+and the crs, which supports the factor `q + 1` in each Claim, not the paper's
+`q` and `1`. The case events are the paper's formal items. The extraction
+obligation recorded in the module docstring of `Statements.lean`, that a
+monomial's coefficient remain nonzero after the evaluation of the other
+variables at the run's values, with an example where it does not, may move the
+Claims to
+evaluated events or add a Verify budget to the statements, a decision left to
+the proof phase.
 
 ## Open alternatives
 
