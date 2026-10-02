@@ -1120,11 +1120,13 @@ bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
 The commitment polynomials of O24 Equations 17 and 18 for the Theorem 5.11
 proof at `n = 1`, over the ring of {uses "agm_verification_polynomial"}[]:
 the exponent of a representation given the commitment polynomials
-(Equation 17 in the exponent, the OMUF twin of the MAC layer's `toPoly`,
+(Equation 17 in the exponent, the counterpart for the OMUF game of the MAC
+layer's `toPoly`,
 with `c_k` in place of `m_k·x₁` because a blind-issuance answer is
 `u_k·(x₀ + xᵣ + c_k)`), with its evaluation at a point in closed form, and
 the commitment polynomials `c_1, …, c_r` by a fold in issuance order, each
-fed the earlier ones (Equation 18), with its length and one-step unrolling.
+given the earlier polynomials as arguments (Equation 18), with its length and
+one-step unrolling.
 The arity `r` is the number of issued pairs, since a refused query gets no
 variable. The game-level evaluation bridge, that at an honest run's
 discrete-log point `c_k` evaluates to the logarithm of the `k`-th issued

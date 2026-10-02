@@ -38,7 +38,7 @@ polynomial with the case split of the proof, follows in the next part.
                                     commitment polynomials cs          (Eq 17 read in the exponent)
     |     eval_toPolyAt             its evaluation at a point, in closed form
     '---> omufCommitPolys γs        c_1, …, c_r by a left fold in issuance order,
-                                    each fed the earlier ones                       (Eq 18)
+                                    each given the earlier polynomials as arguments (Eq 18)
           omufCommitPolys_nil, omufCommitPolys_append_singleton, omufCommitPolys_length
 
 Next part: `omufForgeryPoly cs m* α β`, the forgery polynomial `φ` of Equation
@@ -47,7 +47,7 @@ proof's case split. `OneMoreUnforgeability/Transcript.lean` then reads all of
 these off the game transcript (`OMUFTrace`) to define the case events that
 Claims 5.12 to 5.14 bound (`Statements.lean`).
 
-## What the proof phase owes this layer
+## Obligations deferred to the proof phase
 
 The game-level evaluation bridge, the Equation 18 bridge announced in the
 module docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log
@@ -87,16 +87,17 @@ variable {F : Type} [Field F] {r : ℕ}
 The exponent of a represented group element as a polynomial, given the
 commitment polynomials `cs` of the issued pairs: O24 Equation 17 read in the
 exponent, `γ_g + γ_h·η + γ_0·x₀η + γ_r·xᵣ + γ_1·x₁ + Σ_k γ_{u,k}·u_k +
-γ_{v,k}·u_k·(x₀ + xᵣ + c_k)`. The OMUF twin of `ReprCoeffs.toPoly`, which has
-`m_k·x₁` where this has `c_k` (module docstring, *Setting*).
+γ_{v,k}·u_k·(x₀ + xᵣ + c_k)`. The counterpart for the OMUF game of
+`ReprCoeffs.toPoly`, which has `m_k·x₁` where this has `c_k` (module docstring,
+*Setting*).
 -/
 noncomputable def ReprCoeffs.toPolyAt (γ : ReprCoeffs F r) (cs : Fin r → P F r) : P F r :=
   C γ.cg + C γ.ch * η + C γ.c0 * (x₀ * η) + C γ.cr * xᵣ + C γ.c1 * x₁ +
     ∑ k, (C (γ.cu k) * u k + C (γ.cv k) * (u k * (x₀ + xᵣ + cs k)))
 
 /-- Evaluation of `toPolyAt` at a point, in closed form: the algebraic half of
-the Equation 18 bridge (module docstring, *What the proof phase owes this
-layer*), the twin of `ReprCoeffs.eval_toPoly`. -/
+the Equation 18 bridge (module docstring, *Obligations deferred to the proof
+phase*), the counterpart for the OMUF game of `ReprCoeffs.eval_toPoly`. -/
 theorem ReprCoeffs.eval_toPolyAt (pt : Var r → F) (γ : ReprCoeffs F r)
     (cs : Fin r → P F r) :
     eval pt (γ.toPolyAt cs)
@@ -117,8 +118,9 @@ noncomputable def omufCommitPolys (γs : List (ReprCoeffs F r)) : List (P F r) :
 
 @[simp] theorem omufCommitPolys_nil : omufCommitPolys ([] : List (ReprCoeffs F r)) = [] := rfl
 
-/-- One more representation appends one more polynomial, fed the earlier ones:
-the fold unrolled by one step, for reasoning about the `j`-th polynomial. -/
+/-- One more representation appends one more polynomial, given the earlier
+polynomials as arguments: the fold unrolled by one step, for reasoning about the
+`j`-th polynomial. -/
 theorem omufCommitPolys_append_singleton (γs : List (ReprCoeffs F r)) (γ : ReprCoeffs F r) :
     omufCommitPolys (γs ++ [γ]) =
       omufCommitPolys γs ++ [γ.toPolyAt fun k => (omufCommitPolys γs).getD k 0] := by
