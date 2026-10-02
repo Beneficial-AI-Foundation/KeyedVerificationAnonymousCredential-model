@@ -36,15 +36,16 @@ The arity is the number of issued pairs, not the Sign budget, since a refused
 Sign query issues no pair and gets no variable, while the winning condition
 counts every Sign query.
 
-## What the proof phase owes this file
+## The lemma the proof phase proves
 
 The game-level evaluation bridge: at the discrete-log point of an honest run,
-`t.cs k` evaluates to the logarithm of the `k`-th issued commitment and each
-forgery polynomial vanishes exactly when the verification equation holds, by
-induction over the transcript through the gate and the server's honest answers.
-Its algebraic half is `eval_toPolyAt` in `Polynomial.lean`; the induction needs
-the run's honesty invariants, recovered from membership in the support of
-`agmOMUFTrace`, and is step A5 of the plan.
+`t.cs k` evaluates to the logarithm of the `k`-th issued commitment and, for a
+forgery whose representations match its token, which `Wins` supplies, its
+polynomial vanishes exactly when the verification equation holds, by induction
+over the transcript through the gate and the server's honest answers. Its
+algebraic half is `eval_toPolyAt` in `Polynomial.lean`; the induction needs the
+run's honesty invariants, recovered from membership in the support of
+`agmOMUFTrace`, and belongs to the proof of Theorem 5.11.
 -/
 
 set_option autoImplicit false

@@ -1176,8 +1176,10 @@ issued pairs, with the index lemmas showing the defaults are never reached
 p. 45, the win conjoined with a forgery polynomial having a nonzero
 monomial in the group, the events Claims 5.12 to 5.14 bound. The
 game-level evaluation bridge, that at an honest run's discrete-log point
-these polynomials evaluate to the logarithms of the elements they
-represent, needs the run's honesty invariants and is the proof phase's.
+each `c_j` evaluates to the logarithm of the `j`-th issued commitment and,
+for a forgery whose representations match its token, its `φ` evaluates to
+the residual `(x₀ + xᵣ + m*·x₁)·log U* − log V*`, needs the run's honesty
+invariants, and the proof of Theorem 5.11 establishes it.
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")
