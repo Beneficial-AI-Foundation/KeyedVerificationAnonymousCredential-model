@@ -126,16 +126,20 @@ paper's items, a nonzero monomial in the variable of a formal polynomial, while
 the reduction extracts from the univariate polynomial left after evaluating
 every other variable at the run's values, and the monomial's coefficient, a
 nonzero polynomial in those other variables, can vanish there. An example: with
-no Sign query and Verify queries `(0, (G, c·G))` over all `c`, a forger learns
-`k = x₀ + xᵣ` and outputs the forgery `(0, (H, k·H))` represented over `H`,
-which wins whenever `H ≠ 0`. Its polynomial `η·(x₀ + xᵣ − k)` has an `η`
-monomial, so `CaseEta` holds with probability `1 − 1/p`, yet at the run's key
-nothing in `η` remains for the Claim 5.13 reduction, while the `x₀` embedding
-of Claim 5.14 extracts from it. Schwartz–Zippel bounds such a collapse by `d/p`
+no Sign query, `Q < p` Verify queries `(0, (G, c·G))` over distinct `c` and a
+final guess among the untested values, a forger learns `k = x₀ + xᵣ` with
+probability `(Q + 1)/p` and outputs the forgery `(0, (H, k·H))` represented
+over `H`, which wins whenever `k` is right and `H ≠ 0`. Its polynomial
+`η·(x₀ + xᵣ − k)` has an `η` monomial, so `CaseEta` holds with probability
+`(Q + 1)(p − 1)/p²`, yet at the run's key nothing in `η` remains for the Claim
+5.13 reduction, while the `x₀` embedding of Claim 5.14 extracts from it, so the
+bound of Claim 5.13 needs a term of about `Q/p` (a candidate erratum of the
+Claim, item 12 of `docs/presentations/rolf-status/errata.md`). Schwartz–Zippel
+bounds such a vanishing by `d/p`
 only for a polynomial independent of the run's values, and honest Verify
 answers break that independence, each being a test of the key, with no Verify
 budget in the game. Whether the Claims keep the paper's events, with a covering
-argument that routes every winning polynomial to a reduction that extracts from
+argument that assigns every winning polynomial to a reduction that extracts from
 it, or move to evaluated events, and whether a Verify budget and a
 per-Verify-query term join the statements, is an obligation of the proof phase
 beyond the constant audit, and a decision of the Theorem 5.3 plan. The paper's
@@ -192,9 +196,9 @@ type (module docstring, *Why named reductions*). -/
 /--
 The discrete-log reduction of O24 Theorem 5.11 at `n = 1`, for the Sign budget
 `q`, built from an algebraic one-more forger `A`: it embeds the challenge into
-the game it simulates for `A` and extracts the logarithm from the polynomial
-`φ_i` (Equation 22) of the unsupported forgery, at a `u_ι` monomial for a chosen
-issuance index `ι ∈ [q]` (Claim 5.12) or at an `η` monomial (Claim 5.13). The
+the game it simulates for `A` and extracts the logarithm from a forgery
+polynomial `φ_i` (Equation 22) at a `u_ι` monomial for a chosen issuance index
+`ι ∈ [q]` (Claim 5.12) or at an `η` monomial (Claim 5.13). The
 paper's factor `(q + 1)` is the union of these cases. Each Claim has its own
 reduction below, `omufDLReductionU` and `omufDLReductionEta` (decision A11 of
 the Theorem 5.3 plan), and this one is defined in the proof phase as their
@@ -222,8 +226,9 @@ issued, and solves for the logarithm the equation that the unsupported
 forgery's polynomial `φ_i` (Equation 22) gives at `u_ι`. Two adaptations are the
 proof phase's. The core issues nonzero nonces (`uniformUnits`) while the paper's
 `U_ι` may vanish, so the masks are conditioned or the zero case coupled away,
-and the coefficient of the `u_ι` monomial must survive the evaluation of the
-other variables (module docstring, *Constants and the extraction obligation*).
+and the coefficient of the `u_ι` monomial must remain nonzero after the
+evaluation of the other variables (module docstring, *Constants and the
+extraction obligation*).
 Declared with a `sorry` body until the proof PRs build it. The generator fact
 is what its logarithm bookkeeping will need.
 -/
@@ -236,10 +241,10 @@ noncomputable def omufDLReductionU :
 The discrete-log reduction of O24 Claim 5.13 (item (ii), an `η` monomial), built
 from an algebraic one-more forger `A`: it embeds the challenge in the crs,
 `H = a·G + b·X` with `X₀ = x₀·H` (p. 47), answers every query as the protocol
-prescribes, and solves the equation that the unsupported forgery's polynomial
-`φ_i` gives at `η`. No selector, hence no budget argument (decision A11). The
-coefficient of the `η` monomial must survive the evaluation of the other
-variables, which the example of the module docstring (*Constants and the
+prescribes, and solves the equation that a forgery polynomial `φ_i` with that
+monomial gives at `η`. No selector, hence no budget argument (decision A11). The
+coefficient of the `η` monomial must remain nonzero after the evaluation of the
+other variables, which the example of the module docstring (*Constants and the
 extraction obligation*) shows is not automatic. Declared with a `sorry` body
 until the proof PRs build it. The generator fact is what its logarithm
 bookkeeping will need.
@@ -251,8 +256,9 @@ noncomputable def omufDLReductionEta :
 
 /--
 The 2-DL reduction of O24 Theorem 5.11 at `n = 1`, built from an algebraic
-one-more forger `A`: it extracts from an `x₀`, `xᵣ` or `x₁` monomial of the
-unsupported forgery's polynomial `φ_i` (Claim 5.14, three near-identical cases,
+one-more forger `A`: it extracts from an `x₀`, `xᵣ` or `x₁` monomial of a
+forgery polynomial `φ_i` with that monomial (Claim 5.14, three near-identical
+cases,
 the factor `3`). Declared with a `sorry` body until the proof PRs build it.
 -/
 noncomputable def omufTwoDLReduction :
@@ -354,8 +360,9 @@ a nonzero monomial in some `u_j`, with probability at most
 `q·(1/p + Adv^dl)` for the reduction `omufDLReductionU gen q A`. The paper's
 `1/p` is the degenerate mask under the substitution `u_ι ↦ a + b·χ`, `b`
 uniform and hidden by `a` (p. 46), the factor `q` the selector's guess. That the
-coefficient of the monomial survives the evaluation of the other variables at
-the run's values is the extraction obligation of the module docstring. Printed
+coefficient of the monomial remains nonzero after the evaluation of the other
+variables at the run's values is the extraction obligation of the module
+docstring. Printed
 constant, provisional (module docstring, *Constants and the extraction
 obligation*).
 -/
@@ -369,8 +376,9 @@ theorem omuf_claim_5_12 (A : AGMOMUFAdversary F G 1) (q : ℕ)
 /--
 **O24 Claim 5.13**, item (ii), the adversary wins and some forgery polynomial
 has a nonzero monomial in `η`, with probability at most `1/p + Adv^dl` for the
-reduction `omufDLReductionEta gen A`. No factor `q`, since the challenge sits in
-the crs and no position is chosen, so no budget hypothesis. The module
+reduction `omufDLReductionEta gen A`. No factor `q`, since the reduction embeds
+the challenge in the crs and no position is chosen, so no budget hypothesis. The
+module
 docstring's example, a forger that learns `x₀ + xᵣ` through Verify queries,
 realises the event with nothing for this reduction to extract, so the statement
 rests on the extraction obligation recorded there. Printed constant,
@@ -387,8 +395,9 @@ has a nonzero monomial in `x₀`, `xᵣ` or `x₁`, with probability at most
 `3·(1/p + Adv^2-dl)` for the reduction `omufTwoDLReduction gen A`, the same
 2-DL reduction the theorem cites, its factor `3` the three near-identical
 embeddings (p. 47, the `x₀` case written out, `X₀ = a·H + b·η·X`, the `xᵣ` and
-`x₁` cases "almost identical"). No budget hypothesis, the challenge sits in
-the public parameters. The extraction obligation of the module docstring
+`x₁` cases "almost identical"). No budget hypothesis, the reduction embeds the
+challenge in the public parameters. The extraction obligation of the module
+docstring
 applies. Printed constant, provisional (module docstring, *Constants and the
 extraction obligation*).
 -/

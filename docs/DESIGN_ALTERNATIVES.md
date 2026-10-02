@@ -664,14 +664,17 @@ in the crs, bound `1/p + Adv`), while Claim 5.14 cites the theorem's
 `omufTwoDLReduction`. The theorem's `omufDLReduction` is then the mixture of the
 two, run with probabilities `q/(q + 1)` and `1/(q + 1)`, so that
 `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)` and the three Claims add up to
-Equation 23. Only Claim 5.12 carries the budget hypothesis, since only its
+Equation 23. The paper leaves this step implicit, writing `(q + 1)·Adv^dl` for
+the reductions of Claims 5.12 and 5.13 without naming an adversary, and the
+mixture makes that sum precise. Only Claim 5.12 carries the budget hypothesis, since only its
 constant is the budget. A shared discrete-log stub cited by both Claims was
 rejected. Its natural body is a `(q + 1)`-way selector over the `q` positions
 and the crs, which supports the factor `q + 1` in each Claim, not the paper's
 `q` and `1`. The case events are the paper's formal items. The extraction
 obligation recorded in the module docstring of `Statements.lean`, that a
-monomial's coefficient survive the evaluation of the other variables at the
-run's values, with an example where it does not, may move the Claims to
+monomial's coefficient remain nonzero after the evaluation of the other
+variables at the run's values, with an example where it does not, may move the
+Claims to
 evaluated events or add a Verify budget to the statements, a decision left to
 the proof phase.
 

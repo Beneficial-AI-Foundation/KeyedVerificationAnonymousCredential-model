@@ -1202,11 +1202,13 @@ constant, provisional until the Track CMZ-OMUF constant audit.
 The reduction samples a position `ι ∈ [q]` uniformly, the guess that costs
 the factor `q`, answers the `ι`-th issued Sign query with the challenge
 embedded in `U_ι = a·G + b·X`, refusing gated queries as the game does, and
-at the end solves for the logarithm the equation that the unsupported
-forgery's polynomial of {uses "omuf_forgery_polynomial"}[] gives at `u_ι`.
+at the end solves for the logarithm the equation that a forgery
+polynomial with that monomial, of {uses "omuf_forgery_polynomial"}[], gives at
+`u_ι`.
 The paper's `1/p` is the degenerate mask, `b` being uniform and hidden by
-`a` (p. 46). That the monomial's coefficient survives the evaluation of the
-other variables at the run's values is an obligation of the proof phase,
+`a` (p. 46). That the monomial's coefficient remains nonzero after the
+evaluation of the other variables at the run's values is an obligation of the
+proof phase,
 recorded in the statement file.
 :::
 
@@ -1225,8 +1227,8 @@ printed constant, provisional until the Track CMZ-OMUF constant audit.
 :::proof "omuf_case_ii"
 The reduction embeds the challenge in the crs, `H = a·G + b·X` with
 `X₀ = x₀·H`, answers every query as the protocol prescribes, and solves the
-equation that the unsupported forgery's polynomial of
-{uses "omuf_forgery_polynomial"}[] gives at `η`, the paper's `1/p` being the
+equation that a forgery polynomial with that monomial, of
+{uses "omuf_forgery_polynomial"}[], gives at `η`, the paper's `1/p` being the
 degenerate mask (p. 47). No position is chosen, hence no factor `q` and no
 budget hypothesis. The same obligation as for item (i) applies, and the
 statement file's example, a forger that learns `x₀ + xᵣ` through Verify
@@ -1249,8 +1251,8 @@ CMZ-OMUF constant audit.
 Three near-identical embeddings give the factor `3`. For `x₀` the reduction
 sets `X₀ = a·H + b·η·X`, answers Sign with the help of the first challenge
 element and Verify with the help of the second, for the quadratic term, and
-solves the equation that the unsupported forgery's polynomial of
-{uses "omuf_forgery_polynomial"}[] gives at `x₀`, the paper's `1/p` being
+solves the equation that a forgery polynomial with that monomial, of
+{uses "omuf_forgery_polynomial"}[], gives at `x₀`, the paper's `1/p` being
 the degenerate mask. The `xᵣ` and `x₁` cases are "almost identical" (p. 47).
 The same obligation as for item (i) applies.
 :::
