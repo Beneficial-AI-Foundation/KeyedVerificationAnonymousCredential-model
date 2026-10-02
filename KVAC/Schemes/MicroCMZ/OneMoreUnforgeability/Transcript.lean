@@ -6,7 +6,7 @@ Authors: Jin Xing Lim
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 
 /-!
-# μCMZ_AT one-more unforgeability — the game transcript (O24 §5.6)
+# μCMZ_AT one-more unforgeability — the game trace (O24 §5.6)
 
 The run of the AGM-instrumented game of `Game.lean` as a record, for the
 Theorem 5.11 proof at `n = 1`: `OMUFTrace` holds everything a run produces
@@ -30,11 +30,11 @@ pattern of `RedTrace` in `AGMReduction/Core.lean`.
     |     AGM_OMUFGame_eq_trace     the game is the trace followed by the decision   (proved)
     '---> t : OMUFTrace F G   (sk, H, pp, log, out)
 
-`CaseEvents.lean` reads the polynomials of Equations 18 and 22 off a trace and
-defines the win and the three case events, items (i) to (iii) of p. 45, that
-Claims 5.12 to 5.14 bound in `Statements.lean`. Through the equality lemma, the
-game's success probability is the trace probability of the win, so bounds on
-events that together cover the win bound the game.
+`CaseEvents.lean` (part 3e, #203) reads the polynomials of Equations 18 and 22
+off a trace and defines the win and the three case events, items (i) to (iii)
+of p. 45, that Claims 5.12 to 5.14 bound in `Statements.lean`. Through the
+equality lemma, the game's success probability is the trace probability of the
+win, so bounds on events that together cover the win bound the game.
 -/
 
 set_option autoImplicit false
@@ -82,16 +82,16 @@ noncomputable def agmOMUFTrace (A : AGMOMUFAdversary F G 1) : ProbComp (OMUFTrac
   pure ⟨sk, H, pp, log, out⟩
 
 /-- The game is the trace followed by the decision, so the game's success
-probability is the trace probability of the win (`CaseEvents.lean`'s
-`OMUFTrace.Wins`), and bounds on events that together cover the win bound the
-game. -/
+probability is the trace probability of the win (`OMUFTrace.Wins` of
+`CaseEvents.lean`, part 3e, #203), and bounds on events that together cover the
+win bound the game. -/
 theorem AGM_OMUFGame_eq_trace (A : AGMOMUFAdversary F G 1) :
     AGM_OMUFGame gen secParam A =
       (agmOMUFTrace gen secParam A >>= fun t =>
         pure (decide (AGMOMUFWins gen secParam t.sk t.H t.pp t.log t.out))) := by
   -- After reassociating, the sides differ only by a `pure x >>= f` redex at the leaf,
-  -- which `OracleComp`'s bind reduces definitionally; any drift between the game and
-  -- the trace breaks this proof.
+  -- which `OracleComp`'s bind reduces definitionally; any change to the game that the
+  -- trace does not mirror breaks this proof.
   unfold AGM_OMUFGame agmOMUFTrace
   simp only [bind_assoc]
   congr 1

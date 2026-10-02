@@ -46,7 +46,7 @@ Eight files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
   `Polynomial.lean`, `Transcript.lean` and `Statements.lean`) — Section 5.6,
   the AGM-instrumented OMUF game over the core, the Equations 17 to 22
-  polynomial layer, the game transcript, and the Theorem 5.11 statements —
+  polynomial layer, the game trace, and the Theorem 5.11 statements —
   Track CMZ-OMUF.
 
 Two more are planned:
@@ -972,10 +972,10 @@ arrive with the proofs.
 The commitment polynomials of Equations 17 and 18 are
 {bpref "omuf_commitment_polynomials"}[], the forgery polynomial of
 Equation 22 with the case split of the proof is
-{bpref "omuf_forgery_polynomial"}[], and the game transcript they will be
+{bpref "omuf_forgery_polynomial"}[], and the game trace they will be
 read off is {bpref "omuf_transcript"}[].
 
-*TODO (Track CMZ-OMUF).* The case events read off the transcript, the
+*TODO (Track CMZ-OMUF).* The case events read off the trace, the
 Claims 5.12 to 5.14 over them, and the Theorem 5.3 clause.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
