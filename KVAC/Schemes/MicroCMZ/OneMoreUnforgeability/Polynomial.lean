@@ -62,7 +62,8 @@ through the gate and the server's honest answers, so that `φ` vanishes at that
 point exactly when the verification equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds
 (acceptance also needs `U* ≠ 0`, so a verifying forgery has vanishing `φ`, not
 conversely). `eval_toPolyAt` is its algebraic half;
-the induction over the run is step A5 of the plan. So are the coefficient
+the induction over the run belongs to the proof of Theorem 5.11. So do the
+coefficient
 identities of Equations 20 and 21 (in particular that, under the exact-length
 gate, `u_k` occurs in `c_j` only for `k < j`), the degree bounds, and the
 constant audit.
