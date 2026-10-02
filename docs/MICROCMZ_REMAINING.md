@@ -12,6 +12,8 @@ Branch `microcmz-remaining-statements`, worktree `KVAC-prj/kvac-statements`, fro
 **Theorem 5.1, UF‑CMVA (Track CMZ‑M)**
 
 5. Proof of `agm_ufcmva_le_n1_explicit` (Lemma 5.4, stated, `sorry`). Sub‑lemma skeleton in PRs #156 to #158, #161 and #162. The remaining sub‑lemmas are issues #108 to #116 (nodes `verify_help_oracle_coupling`, `verification_polynomial_consistency`, `run_level_coupling`, `sz_adaptive_bound`, `lem54_bound_assembly`, and `transcript_invariants`, `embedded_consistency_bricks` until #156 to #158 and #161 merge). Equation 15, the Help query representation, is the Help arm of #108.
+
+   Obligation from #149 on the game bridge (`run_level_coupling`, the docstring of `AGM_UF_CMVAGame_evalDist_eq` and step 1 of the proof outline in `AGMReduction/SecurityN1.lean`). Both passages say the masks make `H`, `Xᵣ`, `X₁` uniform and the reduction's run identically distributed to the real game. Since #149 `setup` draws `H` via `uniformNonzero`, so the real game's `H` is uniform on G ∖ {0}, and the mask on `H` must produce a nonzero `H` for the identically‑distributed claim to hold. The two docstrings still say uniform.
 6. Lemma 5.5, the n to 1 reduction (node `attribute_lifting`), with Claims 5.6 (collision branch, gap DL, node `forgery_case_gap_dl`) and 5.7 (forgery branch, node `forgery_case_mac`), and the general‑n bound `agm_ufcmva_le` with its gap DL summand (#80).
 7. Bridge from the AGM game with Help to plain `UF_CMVAGame`, or the decision to keep the AGM game as the target (#81).
 8. Theorem 5.1 statement (node `mucmz_mac_security`), with the target bound Adv^3‑dl + Adv^gap‑dl + 5/p of item 6 of `docs/presentations/rolf-status/errata.md`, replacing the printed Adv^3‑dl + Adv^dl + 3/p that the node text still shows.
