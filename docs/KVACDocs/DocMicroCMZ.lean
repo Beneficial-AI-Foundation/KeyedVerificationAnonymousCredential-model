@@ -1142,9 +1142,10 @@ of {uses "omuf_commitment_polynomials"}[], and the three variable groups of
 the proof's case split, items (i) to (iii) of p. 45: a nonzero monomial in
 some `u_j`, in `η`, or in `x₀`, `xᵣ` or `x₁`, as membership in Mathlib's
 `vars`, with the lemma that a variable of `φ` falls in one of the three
-groups. That a winning forgery's `φ` is nonzero and vanishes at the
-discrete-log point, hence has a variable, is the pigeonhole step and the
-coefficient identities of Equations 20 and 21, the proof phase's.
+groups. That the `φ` of the forgery the pigeonhole step selects is nonzero
+and vanishes at the discrete-log point, hence has a variable, is the
+pigeonhole step and the coefficient identities of Equations 20 and 21, the
+proof phase's.
 :::
 
 :::theorem "omuf_case_i" (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12") (effort := "medium") (priority := "low")

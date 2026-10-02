@@ -153,12 +153,13 @@ theorem omufCommitPolys_length (γs : List (ReprCoeffs F r)) :
 /--
 The forgery polynomial `φ` of O24 Equation 22 for a forgery `(m*, (U*, V*))`
 with representations `α` of `U*` and `β` of `V*` over the final transcript:
-`toPolyAt α · (x₀ + xᵣ + m*·x₁) − toPolyAt β`. Through the Equation 18 bridge
-of the proof phase (module docstring), its evaluation at the discrete logarithms
-of an honest run is `0` when the forgery verifies; the pigeonhole step and the
-coefficient identities of Equations 20 and 21 then show that a winning forgery
-not supported by any issued pair has a nonzero `φ`, a polynomial with a root at
-the secret point, which is what the three Claims exploit.
+`toPolyAt α · (x₀ + xᵣ + m*·x₁) − toPolyAt β`. Through the evaluation lemma of
+Equation 18, which the proof phase proves (module docstring), its evaluation at
+the discrete logarithms of an honest run is `0` when the forgery verifies; the
+pigeonhole step and the coefficient identities of Equations 20 and 21 then show
+that the forgery the pigeonhole step selects, one that is not the unblinding of
+any issued pair, has a nonzero `φ`, a polynomial with a root at the secret
+point, which is what the three Claims exploit.
 -/
 noncomputable def omufForgeryPoly (cs : Fin r → P F r) (mStar : F) (α β : ReprCoeffs F r) :
     P F r :=
@@ -178,9 +179,9 @@ def HasXMonomial (φ : P F r) : Prop :=
   Var.x0 ∈ φ.vars ∨ Var.xr ∈ φ.vars ∨ Var.x1 ∈ φ.vars
 
 /-- The three groups exhaust the variables: any variable occurring in `φ` puts
-`φ` in one of the cases. The proof phase shows a winning forgery's `φ` is a
-nonzero polynomial vanishing at the secret point, hence non-constant, hence has
-a variable. -/
+`φ` in one of the cases. The proof phase shows that the `φ` of the forgery the
+pigeonhole step selects is a nonzero polynomial vanishing at the secret point,
+hence non-constant, hence has a variable. -/
 theorem cases_of_mem_vars {φ : P F r} {v : Var r} (hv : v ∈ φ.vars) :
     HasUMonomial φ ∨ HasEtaMonomial φ ∨ HasXMonomial φ := by
   cases v with
