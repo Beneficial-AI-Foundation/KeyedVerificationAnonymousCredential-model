@@ -113,11 +113,11 @@ The printed general bound `omufBound` exceeds Equation 23 by `2/p + Adv^gapdl`,
 the overhead the paper attributes to the general `n` argument as a whole, "by
 Theorem 5.5" (p. 46), without assigning it to the two cases.
 
-The crs. `setup` of the base MAC draws `H` uniformly from `G`, and the first
-action of #149 changes it to draw from the nonzero elements. The statements
-type-check unchanged and then bound the game with `H ←$ 𝔾×`. Oana's proof-level
-estimate of the change in advantage is `(q + 3)/(p(p − 1))`, and the black-box
-transfer bounds it by `1/p`.
+The crs. `setup` of the base MAC draws `H` from the nonzero elements of `G`
+(`uniformNonzero`, the first action of #149; it previously drew `H` uniformly
+from `G`). The statements type-check unchanged and bound the game with
+`H ←$ 𝔾×`. Oana's proof-level estimate of the change in advantage is
+`(q + 3)/(p(p − 1))`, and the black-box transfer bounds it by `1/p`.
 
 The paper's `1/p` in each Claim is the degenerate mask, `b = 0` or the
 substituted polynomial in `χ` trivial, `b` uniform and hidden by `a`. A second
