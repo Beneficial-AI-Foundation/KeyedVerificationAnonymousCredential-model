@@ -21,9 +21,9 @@ documents its own contents in its module docstring:
   `AGM_OMUFGame` and its advantage;
 - `Polynomial` — the pure-algebra layer of Equations 17 to 22 over the ring of
   `AGMPolynomial.lean`: the exponent of a representation given the commitment
-  polynomials and the commitment polynomials `c_1, …, c_r` (Equations 17 and
-  18); the forgery polynomial `φ` (Equation 22) with the three variable groups
-  of the proof's case split follows;
+  polynomials, the commitment polynomials `c_1, …, c_r` (Equations 17 and 18),
+  the forgery polynomial `φ` (Equation 22), and the three variable groups of
+  the proof's case split;
 - `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds
   `omufBoundN1` and `omufBound`, the named reduction stubs, `agm_omuf_le_n1` at
   `n = 1` (Equation 23) and `agm_omuf_le` for every `n`.
