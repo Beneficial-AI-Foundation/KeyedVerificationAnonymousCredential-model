@@ -298,8 +298,8 @@ needs `glog`, but `glog`'s *proof* must elaborate without those instances in
 scope).
 
 The bridging lemma to the plain `UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security`
-is deferred; its runtime hypothesis `WellBehaved` lives in
-`KVAC.Schemes.MicroCMZ.AGMBridge`. Both games go through the interface
+is deferred; its runtime hypothesis `WellBehaved` and the forgetful translation
+`project` live in `KVAC.Schemes.MicroCMZ.AGMBridge`. Both games go through the interface
 `AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen` (setup/keygen/MAC/verify are
 delegated to the interface value, not inlined). -/
 
