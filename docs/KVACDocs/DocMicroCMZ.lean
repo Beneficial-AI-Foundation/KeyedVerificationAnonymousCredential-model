@@ -44,8 +44,8 @@ Eleven files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
 - `SimulateQGuarded.lean` — VCV-io-only `simulateQ` plumbing: guarded oracles
   and the never-fails state-projection transport — Track CMZ-M.
-- `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries for the
-  AGM ↔ plain UF-CMVA bridge — Track CMZ-M.
+- `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries and their
+  projection to the plain UF-CMVA game — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
@@ -246,6 +246,16 @@ parameters, its guarded run never fails and every reachable forgery is
 consistent over its final transcript. The query-free adversary returning the
 zero forgery with all-zero representations is well behaved, so the predicate
 is satisfiable.
+:::
+
+:::definition "plain_game_projection" (lean := "KVAC.Schemes.MicroCMZ.forgetReprImpl, KVAC.Schemes.MicroCMZ.projectBody, KVAC.Schemes.MicroCMZ.project, KVAC.Schemes.MicroCMZ.project_run_eq") (parent := "cmz_amac") (tags := "milestone")
+The forgetful projection. An algebraic adversary of {uses "agm_model"}[]
+becomes an adversary of the plain game {uses "ufcmva_game"}[] against the
+base MAC {uses "mucmz_base_mac"}[]: `sign` and `verify` queries are forwarded
+with their representations dropped, `help` queries are answered `false`
+locally, and the forgery is output without its representations. At attribute
+counts other than the adversary's own the projection outputs a junk forgery;
+at the matching count its run unfolds to the projected body.
 :::
 
 :::theorem "identity_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.spec, KVAC.Schemes.MicroCMZ.AGMPoly.identity_case, KVAC.Schemes.MicroCMZ.AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero") (parent := "cmz_amac") (tags := "milestone")
