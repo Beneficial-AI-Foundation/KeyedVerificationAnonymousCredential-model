@@ -14,6 +14,7 @@ import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.SimulateQGuarded
 import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
@@ -459,7 +460,7 @@ lemma turns "the partial evaluation {uses "partial_evaluation_psi"}[]
 vanishes identically" into "the multivariate polynomial vanishes at the
 real-log point shifted by the `b`-side masks", which is what aims
 Schwartz–Zippel at the multivariate polynomial directly — the source of
-the `3/p` in {uses "mucmz_mac_security"}[], against the `1/p` O24 prints.
+the `3/p` in {bpref "single_attribute_mac"}[], against the `1/p` O24 prints.
 The bound is then stated for a *fixed* nonzero polynomial of total degree
 `≤ 3` and a *fixed* offset, over a uniform shift: at most a `3/p` fraction
 of shifts make it vanish. Given as a cardinality bound and then in
@@ -726,17 +727,29 @@ Read on the AGM game through the run-level coupling
 `winBit` the same law; there the union bound of the body splits the win as stated.
 :::
 
-:::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "large") (priority := "high")
+:::theorem "agm_plain_game_bridge" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
+The AGM↔plain bridge. For a well-behaved algebraic adversary
+({uses "well_behaved_algebraic_adversary"}[]), the advantage of its translation
+({uses "plain_game_adversary"}[]) in the plain game of {uses "ufcmva_game"}[]
+equals its advantage in the AGM game of {uses "agm_model"}[].
+:::
+
+:::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmva_le_of_wellBehaved") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
 *O24 Theorem 5.1.* In the algebraic group model, μCMZ is an
 `n`-attribute algebraic MAC ({uses "algebraic_mac"}[]), UF-CMVA secure in the
-game of {uses "ufcmva_game"}[] under 3-DL and DL ({uses "hardness_assumptions"}[]), with
-advantage at most `Adv^{3-dl} + Adv^{dl} + 3/p`.
+plain game of {uses "ufcmva_game"}[]: for a well-behaved algebraic adversary
+({uses "well_behaved_algebraic_adversary"}[]), the advantage of its translation
+({uses "plain_game_adversary"}[]) is at most `Adv^{3-dl} + Adv^{gap-dl} + 5/p`
+({uses "hardness_assumptions"}[]). O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`;
+the bound is that of Lemma 5.5.
 :::
 
 :::proof "mucmz_mac_security"
-Factors through the single-attribute case {uses "single_attribute_mac"}[], lifted by
-{uses "attribute_lifting"}[], with the two forgery cases bounded by
-{uses "forgery_case_gap_dl"}[] and {uses "forgery_case_mac"}[].
+{uses "agm_plain_game_bridge"}[] replaces the plain advantage by the AGM
+advantage, which {uses "attribute_lifting"}[] bounds. That lemma factors
+through the single-attribute case {uses "single_attribute_mac"}[], with the two
+forgery cases bounded by {uses "forgery_case_gap_dl"}[] and
+{uses "forgery_case_mac"}[].
 :::
 
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
