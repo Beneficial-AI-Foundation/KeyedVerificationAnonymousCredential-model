@@ -36,10 +36,12 @@ O(1) issuance cost (down from O(n)), statistical anonymity, and security
 in the algebraic group model under 3-DL. The CMZ family it improves is
 deployed at scale (Signal private groups, Tor's Lox).
 
-Eleven files delivered under `KVAC/Schemes/MicroCMZ/`:
+Thirteen files delivered under `KVAC/Schemes/MicroCMZ/`:
 
 - `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
 - `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
+- `ProofSystems.lean` — Section 5.1, Figure 9, the three proof-system
+  parameters of the credential — Track CMZ-C.
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
@@ -47,9 +49,15 @@ Eleven files delivered under `KVAC/Schemes/MicroCMZ/`:
   and the never-fails state-projection transport — Track CMZ-M.
 - `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries and their
   translation to the plain UF-CMVA game — Track CMZ-M.
-- `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
-  `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
-  lemmas, and the sign-arm coupling — Track CMZ-M.
+- `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`,
+  `SignCoupling.lean`, `RedFull.lean`, `SecurityN1.lean`,
+  `AttributeCollapse.lean`, `GapDLReduction.lean`, and `Security.lean`) —
+  Section 5.3, the Lemma 5.4 reduction core, coupling lemmas, sign-arm
+  coupling and analysis experiment, the Lemma 5.4 statement, the Claim 5.7
+  attribute collapse, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
+  statement — Track CMZ-M.
+- `UFCMVA.lean` — Section 5.3, Theorem 5.1 in the plain UF-CMVA game —
+  Track CMZ-M.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 - `AGMOneMoreUnforgeability.lean` — Section 5.6, the AGM-instrumented OMUF
   game over the core — Track CMZ-OMUF.
@@ -201,8 +209,8 @@ coupling over the whole game and to carry Schwartz–Zippel over to the
 adversary's own polynomial, which depends on its view.
 
 *TODO (Track CMZ-M).* Finish the reduction's success-probability bound
-from these pieces, then assemble Lemma 5.4 and state Lemma 5.5 and
-Theorem 5.1.
+from these pieces, then assemble Lemma 5.4, and prove Lemma 5.5 and the
+AGM↔plain bridge behind Theorem 5.1.
 
 :::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.helpConsistent, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] specialised to algebraic
@@ -734,22 +742,33 @@ The AGM↔plain bridge. For a well-behaved algebraic adversary
 equals its advantage in the AGM game of {uses "agm_model"}[].
 :::
 
+:::proof "agm_plain_game_bridge"
+Per query: on a good query the honest AGM oracle step projects onto the plain
+oracle step of the translation, with the transcript projected to its messages
+in reverse order. `sign` runs the same MAC and the logs correspond; a good
+`verify` passes the representation gate, so both oracles answer the honest
+verification bit; a `help` query is never good. A well-behaved run never fails
+under the guard, so {uses "guarded_oracle_projection"}[] lifts the per-query
+step to the whole run. Setup and key generation are shared, freshness carries
+over along the transcript projection, and on every reachable forgery the
+consistency clause of well-behavedness supplies the AGM game's extra win
+conjunct, so the two games are the same computation.
+:::
+
 :::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmva_le_of_wellBehaved") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
-*O24 Theorem 5.1.* In the algebraic group model, μCMZ is an
-`n`-attribute algebraic MAC ({uses "algebraic_mac"}[]), UF-CMVA secure in the
+*O24 Theorem 5.1.* μCMZ is an `n`-attribute algebraic MAC
+({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 plain game of {uses "ufcmva_game"}[]: for a well-behaved algebraic adversary
 ({uses "well_behaved_algebraic_adversary"}[]), the advantage of its translation
-({uses "plain_game_adversary"}[]) is at most `Adv^{3-dl} + Adv^{gap-dl} + 5/p`
-({uses "hardness_assumptions"}[]). O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`;
-the bound is that of Lemma 5.5.
+({uses "plain_game_adversary"}[]) is at most the 3-DL advantage of the collapse
+reduction plus the gap discrete-log advantage of the collision reduction
+({uses "hardness_assumptions"}[]) plus `5/p`, the bound of Lemma 5.5. O24
+prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
 :::
 
 :::proof "mucmz_mac_security"
 {uses "agm_plain_game_bridge"}[] replaces the plain advantage by the AGM
-advantage, which {uses "attribute_lifting"}[] bounds. That lemma factors
-through the single-attribute case {uses "single_attribute_mac"}[], with the two
-forgery cases bounded by {uses "forgery_case_gap_dl"}[] and
-{uses "forgery_case_mac"}[].
+advantage, which {uses "attribute_lifting"}[] bounds.
 :::
 
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
