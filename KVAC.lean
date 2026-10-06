@@ -15,6 +15,7 @@ import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.SimulateQGuarded
 import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.AGMOneMoreUnforgeability
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
