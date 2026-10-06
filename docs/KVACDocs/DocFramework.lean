@@ -107,7 +107,7 @@ it never needs them to exist. Exhibiting them is a scheme-level
 obligation, discharged when μCMZ and μBBS build their predicate-family
 instances.
 
-:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
+:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO, KVAC.Framework.KVACRO, KVAC.Framework.KVACSyntax.lift, KVAC.Framework.lift_issue, KVAC.Framework.lift_present, KVAC.Framework.lift_setup, KVAC.Framework.correct_of_correctRO, KVAC.Framework.correctRO_of_correct") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
 *O24 Definition 4.3.* Correctness for a KVAC scheme {uses "kvac_syntax"}[]:
 honestly issued credentials always produce accepting presentations for
 the predicates they satisfy. Stated as two halves, issuance never
@@ -124,6 +124,15 @@ stateless support-based semantics. `CorrectRO` is `GenCorrect` at
 `issue` and `present` by `runRO`, the statement a Fiat–Shamir scheme over
 the oracle carrier proves. Its first consumer is the proof that the extraction
 game's `NewUsr` oracle never takes its `none` arm, in the stacked PR #140.
+
+The two carriers are related for oracle-free schemes. `KVACSyntax.lift`
+embeds a `ProbComp` syntax into `OracleComp (ZKRO H)` through `liftM`, with
+`lift_issue`, `lift_present` and `lift_setup` showing that the derived
+algorithms are the lifts of the originals, and `correct_of_correctRO`
+recovers `Correct` from `CorrectRO` of the lift, since a lifted run never
+changes the cache. `correctRO_of_correct` shows the converse.
+`KVACRO H` is the bundle at the oracle carrier, the
+syntax paired with `CorrectRO H`, as `NIZKP H` is for proof systems.
 :::
 
 # Anonymity (Definition 4.4)
