@@ -257,6 +257,28 @@ silently changing what the security notions mean; a field with a semantic law
 is checked once per scheme. The rest of the partial-disclosure family stays a
 scheme-level obligation (the TODO recorded in `Framework/Correctness.lean`).
 
+## Correctness requires issuance to succeed before presentation runs
+
+**Decision.** `CorrectOutcome` (`Framework/Correctness.lean`) asks every
+issuance outcome to be `some σ`, and only then asks every presentation bit
+from that `σ` to be `true`. A failed issuance violates correctness on its own,
+with no presentation bit. The types enforce the order, since `issueUsr₂`
+returns `Option Cred` and `presentUsr` takes a `Cred`.
+
+**Rejected alternative.** A presentation that also accepts `⊥`, with the
+convention that the server rejects it, so that `σ = ⊥` yields `b = 0`. The
+experiment would then compute a `Bool` on every run, at the cost of an
+`Option Cred` input to `presentUsr` that no scheme uses.
+
+**Fidelity argument.** The paper leaves this case implicit. O24 Definition 4.3
+runs `σ ← (KVAC.I.Usr ⇌ KVAC.I.Srv)` and then
+`b ← (KVAC.P.Srv ⇌ KVAC.P.Usr(pp, m⃗, σ, φ'))`, and issuance returns `⊥` when
+the server rejects `π_iu` or a `check` line of the user fails (Figure 9). The
+paper defines `KVAC.P.Usr` on credentials only, so the experiment assigns no
+value to `b` when `σ = ⊥`. Both readings, `b = 0` on `⊥` and the success event
+`σ ≠ ⊥ ∧ b = 1`, give the same probability. The decision states the second
+reading, which needs no convention on `⊥`.
+
 ## Schwartz–Zippel bound `3/p`, not the paper's `1/p`
 
 **Decision.** The Eq. 16 root bound for the non-identity case of Lemma 5.4 is
