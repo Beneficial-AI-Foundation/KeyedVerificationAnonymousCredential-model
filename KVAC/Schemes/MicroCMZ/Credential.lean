@@ -166,15 +166,19 @@ noncomputable def credPresentUsr {n : ℕ} (gen H : G) (πp : RpProofSystem HS G
 /-- Presentation, server side (O24 Figure 9). Recompute
 `Z = (x₀ + xᵣ)·U' + Σᵢ xᵢ·Cᵢ − C_V` and accept iff `U' ≠ 0` and `π_p` verifies on
 `(U', X⃗, C⃗, Z, φ)`. The check `U' ≠ 0` lies outside `R_cmz.p`, and footnote 5 of
-O24 §5.1 states that it is required. The verification of `π_p` on this `Z` is what
-tests the MAC equation, since `V'` and `m⃗` stay hidden. -/
+O24 §5.1 states that it is required. The server tests `U' ≠ 0` before it runs the
+verifier, so a presentation with `U' = 0` makes no random-oracle query. The
+verification of `π_p` on this `Z` is what tests the MAC equation, since `V'` and `m⃗`
+stay hidden. -/
 noncomputable def credPresentSrv {n : ℕ} (gen H : G) (πp : RpProofSystem HS G F n)
     (sk : Key F n) (φ : Policy F n) (ρ : G × G × (Fin n → G) × πp.Proof) :
     OracleComp (ZKRO HS) Bool := do
   let (U', CV, C, π) := ρ
-  let Z := (sk.1 + sk.2.1) • U' + (∑ i, sk.2.2 i • C i) - CV
-  let ok ← πp.verify H (U', credBases gen sk, C, Z, φ) π
-  pure (decide (U' ≠ 0) && ok)
+  if U' = 0 then
+    pure false
+  else
+    let Z := (sk.1 + sk.2.1) • U' + (∑ i, sk.2.2 i • C i) - CV
+    πp.verify H (U', credBases gen sk, C, Z, φ) π
 
 /-! ## The instance -/
 
