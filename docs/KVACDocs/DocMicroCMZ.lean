@@ -187,7 +187,7 @@ commitments over `U'` and `Z`, with the policy `φ`
 
 *Theorem 5.1.* μCMZ, viewed as an algebraic MAC under the *Core*
 algebraic-MAC interface, is UF-CMVA in the algebraic group model under
-3-DL. The proof factors through two lemmas:
+3-DL and gap-DL. The proof factors through two lemmas:
 
 - *Lemma 5.4* — the `n = 1` attribute case,
 - *Lemma 5.5* — the general `n`-attribute case, lifted from Lemma 5.4.
@@ -760,10 +760,11 @@ conjunct, so the two games are the same computation.
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 plain game of {uses "ufcmva_game"}[]: for a well-behaved algebraic adversary
 ({uses "well_behaved_algebraic_adversary"}[]), the advantage of its translation
-({uses "plain_game_adversary"}[]) is at most the 3-DL advantage of the collapse
-reduction plus the gap discrete-log advantage of the collision reduction
-({uses "hardness_assumptions"}[]) plus `5/p`, the bound of Lemma 5.5. O24
-prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
+({uses "plain_game_adversary"}[]) is at most the 3-DL advantage
+({uses "hardness_assumptions"}[]) of the collapse reduction
+({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
+of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
+this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
 :::
 
 :::proof "mucmz_mac_security"
@@ -774,7 +775,8 @@ advantage, which {uses "attribute_lifting"}[] bounds.
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
 *O24 Lemma 5.4.* Base case of {bpref "mucmz_mac_security"}[]: in the algebraic group
 model, single-attribute μCMZ is an algebraic MAC over `ℤ_p`, UF-CMVA
-secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]).
+secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]),
+with advantage at most the 3-DL advantage of its reduction plus `3/p`.
 :::
 
 :::proof "single_attribute_mac"
