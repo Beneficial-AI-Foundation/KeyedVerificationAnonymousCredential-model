@@ -39,10 +39,25 @@ form, which μCMZ satisfies perfectly. See
 `KVAC/Core/AlgebraicMAC/Correctness.lean` for why the support form is the
 lightest to prove.
 
-This is strictly stronger than the paper's "overwhelming": a scheme with
-negligible-but-nonzero correctness error would satisfy Definition 4.3 yet fail
-`Correct`. That is fine for the perfectly-correct schemes we formalize; a
-future scheme with correctness error would need a probabilistic restatement.
+Probability one and support membership are the same statement. The support of
+a computation is the set of its outputs of nonzero probability, so the good event
+has probability one iff every output in the support is good. VCVio's
+`probEvent_eq_one_iff` states it as
+`Pr[p | mx] = 1 ↔ Pr[⊥ | mx] = 0 ∧ ∀ x ∈ support mx, p x`, and the failure
+conjunct holds for a computation that never fails. `CorrectOutcome` has the form
+of the right side for issuance followed by presentation, with `p` the event
+"issuance yields `some σ` and presentation from `σ` accepts". At the oracle
+carrier the support is that of `runRO H s c`, the run from the cache `s`.
+
+This is strictly stronger than the paper's "overwhelming". Probability one
+implies overwhelming, since a zero failure probability is negligible.
+Overwhelming does not imply probability one. Figure 9 as printed draws the
+issuance nonces `u` and `r` and the presentation rerandomizer `r` from `ℤ_p`,
+and a zero draw makes the honest run fail. With perfectly complete proofs it
+fails with the negligible probability `1 − (1 − 1/p)³ = 3/p − 3/p² + 1/p³`, so
+it satisfies Definition 4.3 yet not `Correct`. That is fine for the
+perfectly-correct schemes we formalize; a future scheme with correctness error
+would need a probabilistic restatement.
 
 We split the paper's single experiment into its two halves — "issuance
 completes" and "presentation accepts" — so downstream proofs, such as the
