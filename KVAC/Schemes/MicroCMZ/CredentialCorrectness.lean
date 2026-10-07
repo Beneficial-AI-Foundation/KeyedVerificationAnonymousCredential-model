@@ -42,14 +42,11 @@ presentation half accepts every MAC code that passes it, under a satisfied `φ'`
 `mem_support_runRO_liftM_iff` and composes the two halves.
 -/
 
-namespace KVAC.Schemes.MicroCMZ
+namespace KVAC.Core
 
-open OracleComp KVAC.Core KVAC.Framework
+open OracleComp
 
 set_option autoImplicit false
-
-variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
-variable {G : Type} [DecidableEq G] [SampleableGroup F G]
 
 variable (HS : HashSpec)
 
@@ -67,6 +64,19 @@ lemma mem_support_runRO_pure {α : Type} (c : HS.spec.QueryCache) (a b : α)
     (c' : HS.spec.QueryCache) :
     (b, c') ∈ support (runRO HS c (pure a : OracleComp (ZKRO HS) α)) ↔ b = a ∧ c' = c := by
   simp [runRO]
+
+end KVAC.Core
+
+namespace KVAC.Schemes.MicroCMZ
+
+open OracleComp KVAC.Core KVAC.Framework
+
+set_option autoImplicit false
+
+variable {F : Type} [Field F] [Fintype F] [DecidableEq F] [SampleableType F]
+variable {G : Type} [DecidableEq G] [SampleableGroup F G]
+
+variable (HS : HashSpec)
 
 omit [DecidableEq G] in
 /-- Perfect completeness at every random-oracle cache. Let `π` be `PerfectlyComplete` with the crs

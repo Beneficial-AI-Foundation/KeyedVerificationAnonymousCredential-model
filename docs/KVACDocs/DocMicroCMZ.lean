@@ -151,7 +151,7 @@ and the presentation rerandomizer are drawn from the nonzero scalars, and the
 presentation server checks `U' ≠ 0` outside `R_cmz.p`, as Figure 9 does.
 :::
 
-:::theorem "mucmz_correctness" (lean := "KVAC.Schemes.MicroCMZ.mem_support_runRO_bind, KVAC.Schemes.MicroCMZ.mem_support_runRO_pure, KVAC.Schemes.MicroCMZ.ProofSystemFor.verify_of_perfectlyComplete, KVAC.Schemes.MicroCMZ.credIssue_correct, KVAC.Schemes.MicroCMZ.credPresent_correct, KVAC.Schemes.MicroCMZ.μCMZCredential_correctRO") (parent := "cmz_construction") (tags := "milestone")
+:::theorem "mucmz_correctness" (lean := "KVAC.Core.mem_support_runRO_bind, KVAC.Core.mem_support_runRO_pure, KVAC.Schemes.MicroCMZ.ProofSystemFor.verify_of_perfectlyComplete, KVAC.Schemes.MicroCMZ.credIssue_correct, KVAC.Schemes.MicroCMZ.credPresent_correct, KVAC.Schemes.MicroCMZ.μCMZCredential_correctRO") (parent := "cmz_construction") (tags := "milestone")
 The credential of {uses "mucmz_construction"}[] satisfies the oracle-carrier
 correctness {uses "kvac_correctness"}[]. The hypotheses are a nonzero
 generator and the perfect completeness of `π_iu`, `π_is` and `π_p` for the
