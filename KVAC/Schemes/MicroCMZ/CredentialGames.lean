@@ -12,8 +12,8 @@ import KVAC.Framework.Anonymity
 
 The extraction game `EXTGame` of Figure 8 and the anonymity game of Definition 4.4 elaborate at
 the μCMZ instance `μCMZCredentialSyntax` of Figure 9. This file holds only `example`s and declares
-nothing. The Theorem 5.8 and Theorem 5.10 statements write `AnonAdv HS (μCMZCredentialSyntax …)`
-and `EXTAdv HS (μCMZCredentialSyntax …)` directly, as the review note of issue #163 asks, so no
+nothing. The review note of issue #163 asks the Theorem 5.8 and Theorem 5.10 statements to write
+`AnonAdv HS (μCMZCredentialSyntax …)` and `EXTAdv HS (μCMZCredentialSyntax …)` directly, so no
 local advantage is defined here. The statement files, their extractor and their simulator belong to
 issues #10 and #179.
 
@@ -38,7 +38,8 @@ variables of `Credential.lean`. The anonymity advantage `AnonAdv` needs no decid
 - The crs of the instance is `H : G`, whose type mentions neither the security parameter nor the
   attribute count. A crs argument therefore fixes neither, and `EXTAdvSpec`, `AnonAdv` and the
   carriers take `secParam` and `n` as named arguments.
-- The instance is `noncomputable`, so every example that mentions it is too.
+- The instance is `noncomputable`, so the examples whose values compute with it, the two
+  advantages and the two decidable equalities, are `noncomputable` too.
 - `NonemptyMsg` takes the witness `(0 : F)` with its type. The bare numeral `0` at the carrier
   `Msg crs` makes the elaborator search for an `OfNat` instance at an unreduced type, and the
   check did not finish within 300 seconds.
