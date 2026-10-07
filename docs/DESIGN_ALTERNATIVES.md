@@ -462,12 +462,14 @@ simulator's pair with the issuer adversary, through its parameters `usr₁` and
 **Rejected alternative.** `Sim.I` as one interactive procedure, with its own
 game run beside the honest one.
 
-**Fidelity argument.** The paper leaves this split implicit. Definition 4.2
+**Fidelity argument.** Definition 4.4 leaves this split implicit. Definition 4.2
 splits only the honest user, into `KVAC.I.Usr₁` and `KVAC.I.Usr₂`, on the
 ground that every issuance protocol of the paper is one round. Definition 4.4
 writes `Sim.I(pp, φ) ⇌ A(sk, pp, φ, m⃗)` as an interaction of the same shape,
 and a one-round interaction on the user side is a first move, the issuer's
-reply and a second move. The split therefore gives the simulator exactly the
+reply and a second move. The proof of Theorem 5.8 describes the μCMZ simulator
+in these two moves, sending `C'` with a simulated `π_iu` and then checking the
+server's response. The split therefore gives the simulator exactly the
 interface of the honest user, and one issuance phase serves both worlds, so the
 two experiments differ only in the procedures the world supplies.
 

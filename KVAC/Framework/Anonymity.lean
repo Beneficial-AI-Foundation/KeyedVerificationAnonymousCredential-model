@@ -31,17 +31,18 @@ runs, and three Lean parameters have no counterpart in the paper.
 | O24 Definition 4.4 | This module |
 | --- | --- |
 | `KVAC.I.Usr(pp, m, φ)`, interactive | `issueUsr₁` and `issueUsr₂`, split by Definition 4.2 |
-| `Sim.I(pp, φ)`, interactive | `simI₁` and `simI₂`, a split the paper leaves implicit |
+| `Sim.I(pp, φ)`, interactive | `simI₁` and `simI₂`, a split Definition 4.4 leaves implicit |
 | `Sim.P(st_Sim, φ')` | `simP` |
 | `A(sk, pp, φ, m)` | `AnonIssuer`, with the runs `prepare` and `respond` |
 | `D^{Present_b}(st_A)` | `AnonDistinguisher.run` |
 | `Present_b(φ')` | `anonPresentImpl` over `presentUsr` (`b = 0`) or `simP` (`b = 1`) |
 | The experiments for `b = 0` and `b = 1` | `anonGameReal` and `anonGameSim`, via `anonGameRun` |
 | `Adv^anon_{KVAC,A,D}(λ, n)` | `AnonAdv` at fixed parameters, and `Anonymous` over `λ` |
-| No counterpart | `usr₁`, `usr₂` and `pres` of `anonIssuance` and `anonGameRun` |
+| No counterpart | `usr₁`, `usr₂` and `pres` of `anonGameRun` |
 
 The parameters `usr₁` and `usr₂` are the first and the second issuance move of
-the user side, and `pres` is its presentation. The world supplies them.
+the user side, and `pres` is its presentation. `anonIssuance` takes the first
+two. The world supplies all three.
 `anonGameReal` passes `issueUsr₁`, `issueUsr₂` and `presentUsr`, and
 `anonGameSim` passes `simI₁`, `simI₂` and `simP`. The paper needs no such
 parameters, since it writes the two experiments out in full.
