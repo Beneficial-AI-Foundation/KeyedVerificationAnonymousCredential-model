@@ -44,16 +44,18 @@ a computation is the set of its outputs of nonzero probability, so the good even
 has probability one iff every output in the support is good. VCVio's
 `probEvent_eq_one_iff` states it as
 `Pr[p | mx] = 1 ↔ Pr[⊥ | mx] = 0 ∧ ∀ x ∈ support mx, p x`, and the failure
-conjunct holds for a computation that never fails. `CorrectOutcome` is the right
-side, with `p` the event "issuance yields `some σ` and presentation from `σ`
-accepts". At the oracle carrier the support is that of `runRO H s c`, the run
-from the cache `s`.
+conjunct holds for a computation that never fails. `CorrectOutcome` has the form
+of the right side for issuance followed by presentation, with `p` the event
+"issuance yields `some σ` and presentation from `σ` accepts". At the oracle
+carrier the support is that of `runRO H s c`, the run from the cache `s`.
 
 This is strictly stronger than the paper's "overwhelming". Probability one
 implies overwhelming, since a zero failure probability is negligible.
-Overwhelming does not imply probability one. Figure 9 with the literal nonces
-`u, r ←$ ℤ_p` fails with the negligible probability `2/p − 1/p²`, so it
-satisfies Definition 4.3 yet not `Correct`. That is fine for the
+Overwhelming does not imply probability one. Figure 9 as printed draws the
+issuance nonces `u` and `r` and the presentation rerandomizer `r` from `ℤ_p`,
+and a zero draw makes the honest run fail. With perfectly complete proofs it
+fails with the negligible probability `1 − (1 − 1/p)³ = 3/p − 3/p² + 1/p³`, so
+it satisfies Definition 4.3 yet not `Correct`. That is fine for the
 perfectly-correct schemes we formalize; a future scheme with correctness error
 would need a probabilistic restatement.
 

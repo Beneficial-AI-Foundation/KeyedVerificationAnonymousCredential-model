@@ -163,8 +163,8 @@ relations {uses "riu_relation"}[], {uses "ris_relation"}[] and
 Perfect completeness fixes only the empty starting cache. The cache transport
 of {uses "newusr_never_fails"}[] replays every prover and verifier run from the
 empty cache, so each proof verifies from every cache. Issuance then yields a
-MAC code that passes the base-MAC check, by the unblinding algebra of
-{uses "mucmz_base_mac"}[]. On such a MAC code the server's recomputed `Z`
+MAC code that passes the check of {uses "mucmz_base_mac"}[], by the unblinding
+algebra `V' − s·U' = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U'`. On such a MAC code the server's recomputed `Z`
 equals the user's, so presentation accepts.
 :::
 

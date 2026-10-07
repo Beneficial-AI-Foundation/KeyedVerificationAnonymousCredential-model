@@ -111,17 +111,37 @@ lemma). The formalization states the core as `μCMZATCore`
 π<sub>is</sub>-carrying variant and the lifting lemma to Phase B of the
 Theorem 5.3 plan (issue #12). Reported to the author in August 2026.
 
-## 8. Figure 9 samples r ←$ ℤ<sub>p</sub>, but §5.1 requires r ≠ 0 (pp. 33–34)
+## 8. Figure 9 writes ℤ<sub>p</sub> where §5.1 and correctness need ℤ<sub>p</sub><sup>×</sup> (pp. 33–34)
 
-Figure 9's unblinding step samples the user re-randomizer as r ←$ ℤ<sub>p</sub>.
-§5.1 (p. 33) states the re-randomization property for r ≠ 0, and the
-presentation step samples the same operation with r ←$ ℤ<sub>p</sub><sup>×</sup>.
-An honest run with r = 0 emits the token (0, 0), which the scheme's own
-verifier rejects. Same family as the U ←$ 𝔾 versus Eq. (1) U ←$ 𝔾<sup>×</sup>
-mismatch for the base MAC. Under the literal samplers honest issuance fails
-with probability 2/p − 1/p<sup>2</sup> (u = 0 aborts at the user's check,
-r = 0 mis-issues). The formalization draws both nonces from
-ℤ<sub>p</sub><sup>×</sup> (`uniformUnits`, PR #146 and PR #147).
+**Where.** Figure 9 (p. 34) draws three scalars from ℤ<sub>p</sub>. They are
+the server's issuance nonce u (U′ := uG), the user's issuance rerandomizer r
+(U := rU′) and the user's presentation rerandomizer r ((U′, V′) := (rU, rV)).
+The prose of §5.1 (p. 33) states the rerandomization property for r ≠ 0 and
+draws the presentation rerandomizer from ℤ<sub>p</sub><sup>×</sup>.
+
+**Why it is a problem.** The figure and the prose disagree, and only the
+nonzero draws give a working run. A zero draw produces an honest value that a
+check of the scheme then rejects, even when every proof verifies.
+
+| Draw | Effect of a zero draw |
+| --- | --- |
+| Issuance nonce u | U′ = 0, rejected by the user's check U′ ≠ 0G |
+| Issuance rerandomizer r | The credential (0, 0), rejected at presentation |
+| Presentation rerandomizer r | U′ = 0, rejected by the server's check U′ ≠ 0G |
+
+As printed, Figure 9 is therefore not perfectly correct. With perfectly
+complete proofs an honest run fails with probability 1 − (1 − 1/p)<sup>3</sup>,
+or 2/p − 1/p<sup>2</sup> for issuance alone. The error is negligible, so the
+figure still satisfies Definition 4.3, and the inconsistency, not the error, is
+the erratum. Drawing from ℤ<sub>p</sub><sup>×</sup> costs nothing and gives
+perfect correctness. The base MAC has the same mismatch, U ←$ 𝔾 in Figure 9
+against U ←$ 𝔾<sup>×</sup> in Eq. (1).
+
+**How the formalization fixes it.** The formalization draws all three from
+ℤ<sub>p</sub><sup>×</sup> with `uniformUnits`, the issuance nonces in PR #146
+and PR #147 and the presentation rerandomizer in PR #206. No zero draw remains,
+so the honest run never fails, and `μCMZCredential_correctRO` proves
+correctness with probability one (PR #221).
 
 ## 9. Claim 5.6 never defines X<sub>r</sub> (p. 39)
 

@@ -272,10 +272,10 @@ experiment would then compute a `Bool` on every run, at the cost of an
 
 **Fidelity argument.** The paper leaves this case implicit. O24 Definition 4.3
 runs `σ ← (KVAC.I.Usr ⇌ KVAC.I.Srv)` and then
-`b ← (KVAC.P.Srv ⇌ KVAC.P.Usr(pp, m⃗, σ, φ'))`, and issuance returns `⊥` when
-the server rejects `π_iu` or a `check` line of the user fails (Figure 9). The
-paper defines `KVAC.P.Usr` on credentials only, so the experiment assigns no
-value to `b` when `σ = ⊥`. Both readings, `b = 0` on `⊥` and the success event
+`b ← (KVAC.P.Srv ⇌ KVAC.P.Usr(pp, m⃗, σ, φ'))`. Issuance fails when the issuer
+rejects the user's message and returns `σ' = ⊥` (O24 §4.1), or when a `check`
+line of the user fails (Figure 9). The paper defines `KVAC.P.Usr` on credentials
+only, so the experiment assigns no value to `b` after a failed issuance. Both readings, `b = 0` on `⊥` and the success event
 `σ ≠ ⊥ ∧ b = 1`, give the same probability. The decision states the second
 reading, which needs no convention on `⊥`.
 

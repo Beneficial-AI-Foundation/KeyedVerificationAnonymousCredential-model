@@ -106,9 +106,9 @@ theorem ProofSystemFor.verify_of_perfectlyComplete [SampleableType G] {Stmt Witn
   exact hπ 0 crs ∅ hsetup x w hrel p' c₁' hp' b c₂' hb'
 
 /-- The issuance half of the correctness of the μCMZ credential (O24 Definition 4.3, Figure 9).
-Take keys in the support of `keygen H gen`, so that `pp = (x₀·H, xᵣ·gen, (xᵢ·gen)ᵢ)`, and
-attributes `m⃗` with `φ(m⃗) = 1`. From every cache, every issuance outcome is a MAC code that passes
-the base-MAC check `verify`.
+Take the secret key `(x₀, xᵣ, x⃗)` with the public parameters `pp = (x₀·H, xᵣ·gen, (xᵢ·gen)ᵢ)`
+that `keygen H gen` returns for it, and attributes `m⃗` with `φ(m⃗) = 1`. From every cache,
+every issuance outcome is a MAC code that passes the base-MAC check `verify`.
 
 The completeness of `π_iu` and of `π_is` discharges both verifications. The nonzero nonce `u` and
 `gen ≠ 0` pass the check `U' ≠ 0`. The unblinding algebra
@@ -179,9 +179,9 @@ theorem credIssue_correct (gen : G) (hgen : gen ≠ 0)
   ring
 
 /-- The presentation half of the correctness of the μCMZ credential (O24 Definition 4.3,
-Figure 9). Take keys in the support of `keygen H gen`, a MAC code `σ` that passes the base-MAC
-check `verify` for `m⃗`, and a policy with `φ'(m⃗) = 1`. From every cache, every presentation bit
-is `true`.
+Figure 9). Take the secret key `(x₀, xᵣ, x⃗)` with the public parameters that `keygen H gen`
+returns for it, a MAC code `σ` that passes the base-MAC check `verify` for `m⃗`, and a policy
+with `φ'(m⃗) = 1`. From every cache, every presentation bit is `true`.
 
 The server's `Z = (x₀ + xᵣ)·U' + Σᵢ xᵢ·Cᵢ − C_V` equals the user's `Σᵢ rᵢ·Xᵢ − r'·H`, since
 `V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U`. So both parties use the same `R_cmz.p` statement, and the
