@@ -22,6 +22,30 @@ not know `m`. A distinguisher `D` then receives `A`'s state and queries a
 `KVAC.P.Usr(pp, m, σ, φ')` or with the presentation simulator `Sim.P(st_Sim, φ')`.
 The advantage is the distinguishing advantage between the two worlds.
 
+## Correspondence with the paper
+
+The correspondence between Definition 4.4 and this module is not a bijection.
+One interactive procedure of the paper is two Lean moves, one adversary is two
+runs, and three Lean parameters have no counterpart in the paper.
+
+| O24 Definition 4.4 | This module |
+| --- | --- |
+| `KVAC.I.Usr(pp, m, φ)`, interactive | `issueUsr₁` and `issueUsr₂`, split by Definition 4.2 |
+| `Sim.I(pp, φ)`, interactive | `simI₁` and `simI₂`, a split the paper leaves implicit |
+| `Sim.P(st_Sim, φ')` | `simP` |
+| `A(sk, pp, φ, m)` | `AnonIssuer`, with the runs `prepare` and `respond` |
+| `D^{Present_b}(st_A)` | `AnonDistinguisher.run` |
+| `Present_b(φ')` | `anonPresentImpl` over `presentUsr` (`b = 0`) or `simP` (`b = 1`) |
+| The experiments for `b = 0` and `b = 1` | `anonGameReal` and `anonGameSim`, via `anonGameRun` |
+| `Adv^anon_{KVAC,A,D}(λ, n)` | `AnonAdv` at fixed parameters, and `Anonymous` over `λ` |
+| No counterpart | `usr₁`, `usr₂` and `pres` of `anonIssuance` and `anonGameRun` |
+
+The parameters `usr₁` and `usr₂` are the first and the second issuance move of
+the user side, and `pres` is its presentation. The world supplies them.
+`anonGameReal` passes `issueUsr₁`, `issueUsr₂` and `presentUsr`, and
+`anonGameSim` passes `simI₁`, `simI₂` and `simP`. The paper needs no such
+parameters, since it writes the two experiments out in full.
+
 ## Departures from the paper's notation
 
 - **Parameters, not sampling.** Definition 4.4 quantifies over every

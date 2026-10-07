@@ -450,6 +450,27 @@ it forms the request is undetectable and the game is weaker than the paper's.
 One round of issuance bounds the protocol messages, not the adversary's local
 oracle computation.
 
+## The issuance simulator as two moves
+
+**Decision.** `AnonSimulator` splits `Sim.I(pp, φ)` into the moves `simI₁`,
+which sends the request `μ`, and `simI₂`, which receives the issuer's response
+`σ'` and returns `st_Sim` or rejects (`Framework/Anonymity.lean`). The function
+`anonIssuance` composes either the honest pair `issueUsr₁`, `issueUsr₂` or the
+simulator's pair with the issuer adversary, through its parameters `usr₁` and
+`usr₂`. The module docstring maps the paper's objects to the Lean ones.
+
+**Rejected alternative.** `Sim.I` as one interactive procedure, with its own
+game run beside the honest one.
+
+**Fidelity argument.** The paper leaves this split implicit. Definition 4.2
+splits only the honest user, into `KVAC.I.Usr₁` and `KVAC.I.Usr₂`, on the
+ground that every issuance protocol of the paper is one round. Definition 4.4
+writes `Sim.I(pp, φ) ⇌ A(sk, pp, φ, m⃗)` as an interaction of the same shape,
+and a one-round interaction on the user side is a first move, the issuer's
+reply and a second move. The split therefore gives the simulator exactly the
+interface of the honest user, and one issuance phase serves both worlds, so the
+two experiments differ only in the procedures the world supplies.
+
 ## Two adversary structures, not one pair
 
 **Decision.** `AnonIssuer` and `AnonDistinguisher` are two structures. The
