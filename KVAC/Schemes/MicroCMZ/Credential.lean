@@ -63,11 +63,6 @@ The server's input is `sk` alone, so it recomputes the public bases `X⃗`, `X�
 Predicates are the Boolean policies `Policy F n` of `Relations.lean`, with the
 trivial policy, pointwise conjunction and the full-disclosure policy `φ_m⃗`. The
 partial-disclosure members `φ_a⃗` arrive with issue #104.
-
-## Out of scope
-
-Correctness at the oracle carrier (`CorrectRO`), the security statements and the
-blueprint anchoring follow in separate PRs of issue #163.
 -/
 
 namespace KVAC.Schemes.MicroCMZ
