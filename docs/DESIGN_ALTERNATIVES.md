@@ -744,6 +744,31 @@ Claims to
 evaluated events or add a Verify budget to the statements, a decision left to
 the proof phase.
 
+## Plain one-more forgers sample through `unifSpec`
+
+**Decision.** The plain one-more unforgeability adversary `OMUFAdversary` runs
+in `OracleComp (unifSpec + OMUFOracleSpec tok crs)`: uniform sampling beside the
+game's Sign and Verify arms, which `OMUFGame` forwards to `ProbComp` untouched.
+
+**Why.** It is the convention of VCV-io and of the secure-messaging project for
+adversaries with game oracles: `PRFOracleSpec`, `IND_CPA_oracleSpec` and the
+Fischlin adversaries put `unifSpec` beside the game oracles. Transformations
+then sample inside the forger they build, as VCV-io's Fiat–Shamir
+`simulatedNmaAdv` runs its simulator inside it. The forger of the `π_is`
+lifting lemma is such a transformation: it samples the random oracle lazily and
+runs a zero-knowledge simulator, one proof per Sign query, inside a forger
+against the core.
+
+**Scope.** The algebraic `AGMOMUFAdversary` keeps its shape, without a coin
+oracle. Its one transformation, `omufToN1`, carries the constraint in
+*Theorem 5.11 stated before its reductions exist*.
+
+**Rejected alternative.** *Fixed coins in the construction*, the adversary type
+without sampling. Needs a fixed-coins or choice argument with no precedent in
+VCV-io or secure-messaging, and per-query simulator coins make it awkward.
+
+Decided October 2026 (Track CMZ-OMUF).
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`

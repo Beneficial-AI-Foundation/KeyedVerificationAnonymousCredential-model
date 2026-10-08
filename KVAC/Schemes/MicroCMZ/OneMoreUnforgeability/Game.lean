@@ -230,8 +230,8 @@ def AGMOMUFForgery.plain (e : AGMOMUFForgery F G n) : (Fin n → F) × Code G :=
 An algebraic one-more unforgeability adversary against μCMZ_AT for `n`
 attributes (O24 §5.6): given the crs `H` and the public parameters
 `(X₀, Xᵣ, X⃗)`, it queries the instrumented oracles and outputs its list of
-forgeries, `q + 1` of them to win. The shape of `AGMUFAdversary` and the plain
-`OMUFAdversary`, with the same inherited limitation: no private coin oracle.
+forgeries, `q + 1` of them to win. The shape of `AGMUFAdversary`, with its
+limitation: no private coin oracle, which the plain `OMUFAdversary` has.
 -/
 structure AGMOMUFAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program: from `(H, pp)`, query the instrumented Sign and

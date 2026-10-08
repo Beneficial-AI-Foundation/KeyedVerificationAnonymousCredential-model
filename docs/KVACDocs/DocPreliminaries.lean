@@ -130,8 +130,9 @@ accordingly not formalized here.
 scheme {uses "anonymous_tokens"}[] with non-interactive issuance: after `q`
 blind-issuance sessions the adversary must present `q + 1` valid
 pairwise-distinct message/token pairs. Mirrors the UF-CMVA game
-{bpref "ufcmva_game"}[]: a Sign/Verify query menu, a logged
-honest oracle implementation (the log's length is Figure 6's dynamic
+{bpref "ufcmva_game"}[]: a Sign/Verify query menu, beside which the
+adversary samples uniformly as VCV-io's adversaries with game oracles do, a
+logged honest oracle implementation (the log's length is Figure 6's dynamic
 counter `q`), the experiment as a `ProbComp Bool` with the three-clause
 win condition `OMUFWins`, and the advantage `OMUFAdv`. Static
 query-budget hypotheses belong to the security theorems over this game,
