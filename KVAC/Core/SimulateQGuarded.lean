@@ -13,7 +13,7 @@ import VCVio.OracleComp.SimSemantics.StateT.StateProjection
 `guardImpl` wraps a stateful oracle implementation with a per-query assertion `good`: on a query
 satisfying `good` it lifts the wrapped oracle's step into `OptionT ProbComp`, otherwise it
 `failure`s. Running the guarded oracle therefore *aborts on the first bad query*, so
-`Pr[⊥ | (simulateQ (guardImpl impl good) oa).run s] = 0` says exactly that no bad query is
+`Pr[⊥ | (simulateQ (guardImpl impl good) oa).run s] = 0` implies that no bad query is
 reachable in any execution of `oa` against `impl`. The `OptionT` layer is where the failure
 lives — plain `OracleComp` is a total free monad with no `failure` — and aborting *at* the bad
 query gives the certificate the shape the projection proof consumes: `probFailure_bind_eq_zero_iff`
