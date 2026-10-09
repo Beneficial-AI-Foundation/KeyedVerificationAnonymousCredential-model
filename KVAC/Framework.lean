@@ -75,4 +75,19 @@ structure KVAC where
   /-- Correctness of the syntactic algorithms (O24 Definition 4.3). -/
   correct : Correct alg
 
+open OracleComp KVAC.Core
+
+/--
+The oracle-carrier counterpart of `KVAC` (O24 Definition 4.2): a syntactic credential
+system over `OracleComp (ZKRO H)`, so that Fiat–Shamir proofs share the random oracle
+`H`, paired with its correctness `CorrectRO H` (Definition 4.3). Mirrors `NIZKP H`.
+-/
+structure KVACRO (H : HashSpec) where
+  /-- The syntactic algorithms (S / K / I / P), with the honest computation in
+  `OracleComp (ZKRO H)`. -/
+  alg : KVACSyntax (OracleComp (ZKRO H))
+  /-- Correctness of the syntactic algorithms at the oracle carrier
+  (O24 Definition 4.3). -/
+  correct : CorrectRO H alg
+
 end KVAC.Framework

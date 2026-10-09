@@ -28,8 +28,13 @@ semantics are provided. `probRunSem` has no state (`S = Unit`) and reads
 `roRunSem H` threads the random-oracle cache of `runRO` through `setup`,
 `keygen`, `issue` and `present`, and `CorrectRO H := GenCorrect (roRunSem H)`
 is the statement a Fiat–Shamir scheme over `OracleComp (ZKRO H)` proves
-(issue #118). The two notions are the same skeleton at two semantics; no
-lemma relates them, and none is needed by their consumers.
+(issue #118). The two notions are the same skeleton at two semantics. For an
+oracle-free scheme they are related by `KVACSyntax.lift`, which embeds a
+`ProbComp` syntax into `OracleComp (ZKRO H)` through `liftM`:
+`correct_of_correctRO` recovers `Correct kvac` from `CorrectRO H (kvac.lift H)`, and
+`correctRO_of_correct` is its converse, so the two are equivalent for oracle-free
+schemes. The lifted algorithms never query the oracle, so the cache stays `∅`
+throughout.
 
 ## Support-based form
 
@@ -148,5 +153,145 @@ a Fiat–Shamir credential's proofs share the oracle. Mirrors
 `probRunSem`; no lift or bridge lemma between the two is stated. -/
 def CorrectRO (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) : Prop :=
   GenCorrect (roRunSem H) kvac
+
+/--
+Lift a `ProbComp` credential syntax to the `OracleComp (ZKRO H)` carrier. Every
+algorithm is the original one embedded by `liftM`, so it never queries the random
+oracle; the carrier-independent data (`Crs`, `Pred`, `holds`, …) is copied
+unchanged. -/
+def KVACSyntax.lift (H : HashSpec) (kvac : KVACSyntax ProbComp) :
+    KVACSyntax (OracleComp (ZKRO H)) := { kvac with
+  setup := fun p n => liftM (kvac.setup p n)
+  keygen := fun crs => liftM (kvac.keygen crs)
+  issueUsr₁ :=  fun crs pp q pcrs => liftM (kvac.issueUsr₁ crs pp q pcrs)
+  issueUsr₂ :=  fun crs ustate blindcred => liftM (kvac.issueUsr₂ crs ustate blindcred)
+  issueSrv :=  fun crs Sk pcrs msg => liftM (kvac.issueSrv crs Sk pcrs msg)
+  presentUsr := fun crs pp q pcrs pcrs' => liftM (kvac.presentUsr crs pp q pcrs pcrs')
+  presentSrv := fun crs pp q pcrs => liftM (kvac.presentSrv crs pp q pcrs) }
+
+/-- The derived honest issuance of the lifted syntax is the lift of the original
+issuance: `liftM` commutes with the `issueChain` of the three issuance moves. -/
+lemma lift_issue (H : HashSpec) (kvac : KVACSyntax ProbComp) {secParam n : Nat}
+    (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs)
+    (m : kvac.MsgVec crs) (φ : kvac.Pred crs) :
+    (KVACSyntax.lift H kvac).issue crs sk pp m φ = liftM (kvac.issue crs sk pp m φ) := by
+    simp only [KVACSyntax.issue, KVACSyntax.lift, KVAC.Core.issueChain]
+    simp only [liftM_bind]
+    congr
+    ext x
+    congr
+    ext y
+    cases y with
+     | none => simp
+     | some v => simp
+
+/-- The derived honest presentation of the lifted syntax is the lift of the original
+presentation: `liftM` commutes with the `bind` of the user's proof and the issuer's
+check. -/
+lemma lift_present {H : HashSpec} {secParam n : Nat} (kvac : KVACSyntax ProbComp)
+    (crs : kvac.Crs secParam n) (sk : kvac.Sk crs) (pp : kvac.Pp crs) (m : kvac.MsgVec crs)
+    (θ : kvac.Pred crs) (σ : kvac.Cred crs) :
+     ((KVACSyntax.lift H kvac).present crs sk pp m σ θ) =
+       liftM (kvac.present crs sk pp m σ θ) := by
+     simp only [KVACSyntax.present,  KVACSyntax.lift, liftM_bind]
+
+
+/-- The setup of the lifted syntax is the original `setup`, viewed at the oracle
+carrier. -/
+@[simp]
+lemma lift_setup {H : HashSpec} {kvac : KVACSyntax ProbComp} {secParam n : Nat} :
+     (KVACSyntax.lift H kvac).setup secParam n = kvac.setup secParam n := by
+     simp only [KVACSyntax.lift]
+
+/--
+Recover `ProbComp` correctness from oracle-carrier correctness (issue #118). If the
+lift of `kvac'` to `OracleComp (ZKRO H)` satisfies `CorrectRO`, then `kvac'` satisfies
+`GenCorrect probRunSem`, i.e. `Correct`. The lifted algorithms never touch the oracle
+cache, so every state in the `roRunSem` run is `∅`, and `mem_support_runRO_liftM_iff`
+translates each `Runs` fact between the two semantics. -/
+theorem correct_of_correctRO (H : HashSpec) (kvac' : KVACSyntax ProbComp) :
+    CorrectRO H (KVACSyntax.lift H kvac') → Correct kvac' := by
+    intros gcro
+    rw [Correct, GenCorrect]
+    intros sPn n n_pos crs s runs_s keys s' runs_s' m θ θ' holds holds'
+    have ⟨sk, pps⟩ := keys
+    rw [CorrectOutcome]
+    intros o ps ps_runs
+    rw [CorrectRO, GenCorrect] at gcro
+    specialize gcro sPn n n_pos
+    specialize gcro crs
+    simp_all only [probRunSem, lift_setup, Prod.forall, exists_const, Bool.forall_bool,
+      Bool.false_eq_true, imp_false, implies_true, and_true]
+    rw [roRunSem] at gcro
+    simp only at gcro
+    specialize gcro ∅
+    erw [ mem_support_runRO_liftM_iff] at gcro
+    simp only [and_true] at gcro
+    specialize gcro runs_s sk pps ∅
+    erw [ mem_support_runRO_liftM_iff] at gcro
+    simp only [and_true] at gcro
+    specialize gcro runs_s' m θ θ' holds holds'
+    rw [CorrectOutcome] at gcro
+    specialize gcro o ∅
+    erw [ lift_issue, mem_support_runRO_liftM_iff] at gcro
+    simp only [and_true, forall_exists_index, Bool.forall_bool, Bool.false_eq_true, imp_false,
+      implies_true] at gcro
+    specialize gcro ps_runs
+    have ⟨σ, σ_is_some, no_support⟩ := gcro
+    use σ
+    simp only [σ_is_some]
+    apply And.intro
+    · rfl
+    specialize no_support ∅
+    erw [lift_present] at no_support
+    erw [ mem_support_runRO_liftM_iff] at no_support
+    aesop
+
+/--
+Converse of `correct_of_correctRO` (issue #118). If `kvac'` is correct at `ProbComp`,
+its lift to `OracleComp (ZKRO H)` satisfies `CorrectRO`. A lifted algorithm never
+queries the random oracle, so each `roRunSem` run leaves the cache `∅` unchanged, and
+`mem_support_runRO_liftM_iff` translates each `Runs` fact between the two semantics.
+Together the two theorems make `Correct` and `CorrectRO` of the lift equivalent for
+oracle-free schemes. -/
+theorem correctRO_of_correct (H : HashSpec) (kvac' : KVACSyntax ProbComp) :
+    Correct kvac' → CorrectRO H (KVACSyntax.lift H kvac') := by
+  intro gcro
+  rw [CorrectRO, GenCorrect]
+  intros sPn n n_pos crs s runs_s keys s' runs_s' m θ θ' holds holds'
+  have ⟨sk, pps⟩ := keys
+  rw [CorrectOutcome]
+  intros o ps ps_runs
+  rw [Correct, GenCorrect] at gcro
+  specialize gcro sPn n n_pos
+  specialize gcro crs
+  simp_all only [probRunSem, lift_setup, Prod.forall, exists_const, Bool.forall_bool,
+    Bool.false_eq_true, imp_false, implies_true, and_true]
+  simp_all only [roRunSem]
+  specialize gcro ()
+  erw [mem_support_runRO_liftM_iff] at runs_s
+  have ⟨runs_s, s_eq⟩ := runs_s
+  specialize gcro runs_s sk pps ()
+  erw [mem_support_runRO_liftM_iff] at runs_s'
+  have ⟨runs_s', s_eq⟩ := runs_s'
+  specialize gcro runs_s' m θ θ' holds holds'
+  rw [CorrectOutcome] at gcro
+  specialize gcro o ()
+  erw [lift_issue, mem_support_runRO_liftM_iff] at ps_runs
+  have ⟨ps_runs, s_eq⟩ := ps_runs
+  simp only [and_true, Bool.forall_bool, Bool.false_eq_true, imp_false,
+    implies_true] at gcro
+  specialize gcro ps_runs
+  have ⟨σ, σ_is_some, no_support⟩ := gcro
+  use σ
+  simp only [σ_is_some]
+  apply And.intro
+  · rfl
+  erw [lift_present]
+  simp only [not_exists]
+  intros x
+  erw [mem_support_runRO_liftM_iff]
+  simp
+  aesop
 
 end KVAC.Framework
