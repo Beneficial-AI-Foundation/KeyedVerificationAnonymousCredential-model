@@ -39,7 +39,7 @@ set_option autoImplicit false
 
 open OracleComp OracleSpec
 
-namespace KVAC.Schemes.MicroCMZ
+namespace KVAC.Core
 
 variable {ι : Type} {spec : OracleSpec ι} {σ₁ σ₂ α : Type}
 
@@ -119,4 +119,4 @@ theorem map_run_simulateQ_eq_of_guard_neverFails
               (simulateQ impl₂ (oa x.1)).run x.2) := by
               rw [hproj t s hgood]
 
-end KVAC.Schemes.MicroCMZ
+end KVAC.Core
