@@ -208,6 +208,14 @@ noncomputable def setup {G : Type} [AddCommGroup G] [Fintype G] [DecidableEq G]
     [Nontrivial G] (_secParam _n : ℕ) : ProbComp G :=
   uniformNonzero G
 
+/-- The crs element of O24 Figure 9, drawn from `𝔾×` (errata item 13), is a possible
+output of `setup` iff it is nonzero. Lets consumers obtain `H ≠ 0` from a `setup`
+premise by `simp`, without unfolding `setup` to `uniformNonzero`. -/
+@[simp] theorem mem_support_setup {G : Type} [AddCommGroup G] [Fintype G] [DecidableEq G]
+    [Nontrivial G] (secParam n : ℕ) (H : G) :
+    H ∈ support (setup secParam n) ↔ H ≠ 0 :=
+  mem_support_uniformNonzero H
+
 /-- `K(crs)`: the parameter `H` is the CRS that `setup` produced. -/
 noncomputable def keygen {n : ℕ} (H : G) (gen : G) : ProbComp (Key F n × Params G n) := do
   let x₀ ← $ᵗ F
