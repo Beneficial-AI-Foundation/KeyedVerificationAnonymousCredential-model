@@ -143,9 +143,9 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 
 ```lean
 noncomputable def setup {G : Type}
-    [SampleableType G] (_secParam _n : ℕ) :
-    ProbComp G :=
-  $ᵗ G
+    [AddCommGroup G] [Fintype G] [DecidableEq G] [Nontrivial G]
+    (_secParam _n : ℕ) : ProbComp G :=
+  uniformNonzero G
 ```
 
 - The formalization is per-group, not asymptotic: each security theorem is an advantage inequality at one arbitrary fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255 the statistical term is 3/p ≈ 2<sup>−250</sup>.
