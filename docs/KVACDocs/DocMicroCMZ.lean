@@ -42,6 +42,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
+- `SimulateQGuarded.lean` — VCV-io-only `simulateQ` plumbing: guarded oracles
+  and the never-fails state-projection transport — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
@@ -212,9 +214,9 @@ and the discrete-log bookkeeping runs through `glog` with its linearity
 laws, over a {uses "sampleable_group"}[] carrier.
 :::
 
-:::theorem "guarded_oracle_projection" (lean := "KVAC.Schemes.MicroCMZ.guardImpl, KVAC.Schemes.MicroCMZ.guardImpl_run_pos, KVAC.Schemes.MicroCMZ.probFailure_guardImpl_run_neg, KVAC.Schemes.MicroCMZ.good_and_neverFails_of_probFailure_guard_bind_eq_zero, KVAC.Schemes.MicroCMZ.map_run_simulateQ_eq_of_guard_neverFails") (parent := "cmz_amac") (tags := "milestone")
+:::theorem "guarded_oracle_projection" (lean := "KVAC.Schemes.MicroCMZ.guardImpl, KVAC.Schemes.MicroCMZ.guardImpl_run_pos, KVAC.Schemes.MicroCMZ.probFailure_guardImpl_run_neg, KVAC.Schemes.MicroCMZ.map_run_simulateQ_eq_of_guard_neverFails") (parent := "cmz_amac") (tags := "milestone")
 Guarded oracle simulation. `guardImpl` wraps a stateful oracle implementation
-with a per-query predicate `Good`: a good query runs the wrapped step lifted
+with a per-query predicate `good`: a good query runs the wrapped step lifted
 into `OptionT ProbComp`, a bad one fails, so the guarded run aborts at the
 first bad query and a zero failure probability certifies that no bad query is
 reachable in any execution. Under that certificate the state-projection
