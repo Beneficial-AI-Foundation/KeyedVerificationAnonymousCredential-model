@@ -231,7 +231,7 @@ An algebraic one-more unforgeability adversary against μCMZ_AT for `n`
 attributes (O24 §5.6): given the crs `H` and the public parameters
 `(X₀, Xᵣ, X⃗)`, it queries the instrumented oracles and outputs its list of
 forgeries, `q + 1` of them to win. The shape of `AGMUFAdversary`, with its
-limitation: no private coin oracle, which the plain `OMUFAdversary` has.
+limitation: no private coin oracle, unlike the plain `OMUFAdversary`.
 -/
 structure AGMOMUFAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program: from `(H, pp)`, query the instrumented Sign and

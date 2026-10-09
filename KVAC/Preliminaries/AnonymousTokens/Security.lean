@@ -11,16 +11,17 @@ import VCVio.CryptoFoundations.SecExp
 
 The one-more unforgeability (OMUF) game for an `ATSyntax ProbComp`,
 following O24 §3.4 and Figure 6, and mirroring the UF-CMVA layer
-(`KVAC.Core.AlgebraicMAC.Security`) construct for construct. After `q`
-blind-issuance sessions, the adversary must present `q + 1` valid
-pairwise-distinct message/token pairs.
+(`KVAC.Core.AlgebraicMAC.Security`) construct for construct, except that the
+adversary also has a private coin oracle. After `q` blind-issuance sessions,
+the adversary must present `q + 1` valid pairwise-distinct message/token
+pairs.
 
 ## Layout
 
 - `OMUFQuery` — an inductive type enumerating the two oracle arms.
 - `OMUFOracleSpec` — the `OracleSpec` parametrised by `OMUFQuery`.
 - `OMUFAdversary` — adversaries: `OracleComp`-valued programs that take
-  `(crs, pp)`, sample uniformly, and return candidate message/token pairs.
+  `(crs, pp)` and return candidate message/token pairs.
 - `SignLog` — list of issuance requests answered during the game; its
   length is Figure 6's query counter `q`.
 - `omufOracleImpl` — `QueryImpl` that honestly implements Sign and Verify
@@ -43,12 +44,10 @@ games, carries none.
 **Every Sign query counts.** The Sign oracle logs the request whether or
 not the server rejects it — Figure 6 increments `q` before the response.
 
-**The adversary samples.** Its oracle specification is
-`unifSpec + OMUFOracleSpec tok crs`, uniform sampling beside Sign and Verify,
-the VCVio convention for adversaries with game oracles (`PRFOracleSpec`,
-`IND_CPA_oracleSpec`). The game forwards sampling queries to `ProbComp`
-untouched, and reductions and transformations built from an adversary draw
-their own coins through the same arm.
+**The adversary has a private coin oracle.** Its oracle specification is
+`unifSpec + OMUFOracleSpec tok crs`, and `OMUFGame` answers that oracle in
+`ProbComp`. The comparison with fixed coins is in `DESIGN_ALTERNATIVES.md`,
+*Plain one-more forgers have a private coin oracle*.
 -/
 
 namespace KVAC.Preliminaries
@@ -91,8 +90,9 @@ def OMUFOracleSpec (tok : ATSyntax ProbComp)
 
 /--
 An OMUF adversary: a program that, given the CRS and the public
-parameters, samples uniformly, queries the Sign / Verify oracles and outputs a
-list of candidate message/token pairs — Figure 6's `(m⃗ᵢ, σᵢ)_{i=1}^{q+1}`.
+parameters, queries a private coin oracle and the Sign / Verify oracles,
+then outputs a list of candidate message/token pairs — Figure 6's
+`(m⃗ᵢ, σᵢ)_{i=1}^{q+1}`.
 Figure 6 writes `A^{Sign,Verify}(pp)` and infers the crs from `pp`. The
 crs is passed alongside `pp` here, matching `UFAdversary`, since it is
 public. The list's required length `q + 1` depends on the run (`q` =
@@ -100,8 +100,8 @@ number of Sign queries made), so the type is a bare list and the game
 checks the length.
 -/
 structure OMUFAdversary (tok : ATSyntax ProbComp) where
-  /-- The adversary's program: from `(crs, pp)`, sample uniformly, query
-  Sign / Verify and output the candidate message/token pairs. -/
+  /-- The adversary's program: from `(crs, pp)`, query Sign / Verify and
+  output the candidate message/token pairs. -/
   run : {secParam n : Nat} → (crs : tok.Crs secParam n) → tok.Pp crs →
     OracleComp (unifSpec + OMUFOracleSpec tok crs)
       (List (tok.MsgVec crs × tok.Token crs))
@@ -145,12 +145,12 @@ abbrev OMUFWins (tok : ATSyntax ProbComp) (crs : tok.Crs secParam n)
 
 /--
 The one-more unforgeability experiment (O24 Figure 6) as a
-`ProbComp Bool`. Runs the adversary with its sampling queries forwarded to
-`ProbComp` and its Sign / Verify queries answered by `omufOracleImpl`,
-recovers its output list and the final `SignLog`, and
-returns `true` iff `OMUFWins` holds with `q` = the number of Sign queries
-made. The game is stated for every `n`; §3.4's `n > 0` domain enters
-through `ATSyntax.Correct` and the security theorems.
+`ProbComp Bool`. Runs the adversary with its private coin oracle answered by
+`ProbComp` and its Sign / Verify oracles by `omufOracleImpl`, recovers its
+output list and the final `SignLog`, and returns `true` iff `OMUFWins` holds
+with `q` = the number of Sign queries made. The game is stated for every `n`;
+§3.4's `n > 0` domain enters through `ATSyntax.Correct` and the security
+theorems.
 -/
 def OMUFGame (tok : ATSyntax ProbComp) (A : OMUFAdversary tok)
     (secParam n : Nat) : ProbComp Bool := do
