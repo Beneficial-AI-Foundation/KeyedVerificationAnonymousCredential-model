@@ -74,9 +74,11 @@ The advantage is the distinguishing advantage between the two worlds.
   (Figure 9), so "crs ∈ [KVAC.S(1^λ, n)]" ranges over the group description as
   well as `H`, and `p` grows with `λ`. This module takes `kvac.setup`
   abstractly and adds nothing. The μCMZ instance fixes the group and its
-  generator as parameters and returns only `H` from `setup`, so there the
-  quantifier ranges over every group of the class, every generator and every
-  `H ∈ 𝔾`, which is stronger than the paper's range but has no `λ` in it.
+  generator as parameters and returns only `H` from `setup`, which draws
+  `H ←$ 𝔾×` (issue #149), so there the quantifier ranges over every group of
+  the class, every generator and every nonzero `H ∈ 𝔾`. That range is wider
+  than the paper's in the group and generator, narrower in `H` (the `H = 0`
+  crs, where anonymity breaks, is excluded), and has no `λ` in it.
   Under that instance `Anonymous` and `AnonymousPoly` are meaningful only with
   a `λ`-indexed group family, issue #148, and the theorems about μCMZ bound
   `AnonAdv` at fixed parameters. The same holds for `Extractable` and

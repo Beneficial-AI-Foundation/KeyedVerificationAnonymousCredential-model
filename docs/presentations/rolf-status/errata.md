@@ -177,6 +177,43 @@ matter of the concrete bound only, since Q/p is negligible asymptotically. The
 general shape, a monomial that is nonzero as a formal polynomial but whose
 coefficient vanishes at the run's key, is the same for Claims 5.12 and 5.14.
 
+## 13. Figure 9 samples H ←$ 𝔾, but §2.1.1 presents G and H as generators (pp. 11, 34)
+
+Figure 9's setup draws H ←$ 𝔾, so H = 0<sub>𝔾</sub> with probability 1/p,
+while §2.1.1 (p. 11) introduces "generators G and H". Definition 4.4 (p. 30)
+quantifies over every crs ∈ [KVAC.S(1<sup>λ</sup>, n)], and at H = 0<sub>𝔾</sub>
+the presentation's C<sub>V</sub> := V′ + r′H collapses to V′ = s·U′, so a
+distinguisher holding sk wins with advantage above 1 − 4/p against every
+simulator: anonymity under Definition 4.4 fails and Theorem 5.8 is false as
+stated (corrected Example 1 on #149). The formalization draws H from
+𝔾<sup>×</sup> (`uniformNonzero` in `setup`, `Schemes/MicroCMZ/Construction.lean`;
+*Nonzero crs H ←$ 𝔾^×* in `docs/DESIGN_ALTERNATIVES.md`).
+
+## 14. Sim.P samples U′ ←$ 𝔾, but H5 needs U′ ≠ 0<sub>𝔾</sub> (pp. 40–41)
+
+Sim.P (p. 40) "samples random group elements U′, C<sub>V</sub> ←$ 𝔾<sup>2</sup>",
+and H5 (p. 41) argues U′ is "perfectly indistinguishable from the real one,
+since r is uniformly distributed and U ≠ 0<sub>𝔾</sub>". With
+r ←$ ℤ<sub>p</sub><sup>×</sup> (§5.1, *Credential presentation*, p. 33) and
+U ≠ 0<sub>𝔾</sub> (item 8) the real U′ = rU is uniform on 𝔾<sup>×</sup>, while
+the simulated U′ is 0<sub>𝔾</sub> with probability 1/p: statistical distance
+1/p. Sampling U′ ←$ 𝔾<sup>×</sup> in Sim.P makes the two agree exactly.
+Recorded on #149 (action 2); no simulator in the code yet (#163).
+
+## 15. Sim.P's Z omits the x<sub>r</sub>U′ term (pp. 34, 40–41)
+
+Sim.P and H5 compute "Z = x₀U′ + Σᵢ γᵢXᵢ − C<sub>V</sub>" (pp. 40–41), while
+Figure 9's server (p. 34) computes
+Z = (x₀ + x<sub>r</sub>)U′ + Σᵢ xᵢCᵢ − C<sub>V</sub>; the two differ by
+x<sub>r</sub>U′, so H5's "exactly the same in both distributions" fails.
+Sim.P(st<sub>Sim</sub>, φ) holds neither x<sub>r</sub> nor m (Definition 4.4;
+st<sub>Sim</sub> = (x₀, X₁, …, X<sub>n</sub>), p. 40), but with
+t ←$ ℤ<sub>p</sub><sup>×</sup> and U′ := tG it can add
+tX<sub>r</sub> = x<sub>r</sub>U′: then
+Z = x₀U′ + tX<sub>r</sub> + Σᵢ γᵢXᵢ − C<sub>V</sub> equals the server's, and U′
+is uniform on 𝔾<sup>×</sup> as item 14 requires. Recorded on #149 (action 3);
+no simulator in the code yet (#163).
+
 ## Status
 
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
@@ -186,6 +223,10 @@ presentation's architecture slide. Items 7 and 8 concern §5.6 and are
 recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
 `Schemes/MicroCMZ/ATVariant.lean`. Items 5 and 9–11 are recorded at their
 use site in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. Item 12 is
-recorded in `Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean`. This note
+recorded in `Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean`. Items
+13–15 concern §5.1 and §5.4: item 13 is recorded in
+`docs/DESIGN_ALTERNATIVES.md` and at `setup` in
+`Schemes/MicroCMZ/Construction.lean`; items 14 and 15 are requirements on the
+simulator under #163. This note
 reports findings about the paper; the formal-completion status of each module is tracked on the
 project's blueprint page.

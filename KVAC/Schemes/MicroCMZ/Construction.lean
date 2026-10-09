@@ -26,7 +26,12 @@ variable block (see `docs/STYLE_GUIDE.md`, *Prime-order group convention*).
 
 ## The construction (Figure 9, Base MAC)
 
-- `S(1^λ, n)`: sample `H ←$ G`; `crs := (Γ, H)`. Here `Γ = (G, p, G₀)` is the
+- `S(1^λ, n)`: sample `H ←$ G×` via `uniformNonzero`; `crs := (Γ, H)`. Figure 9
+  writes `H ←$ G`, so `H = 0_G` with probability `1/p`. At `H = 0` the anonymity
+  proof (Thm. 5.8) loses H5's Pedersen hiding argument, and since Definition 4.4
+  quantifies over every `crs ∈ [KVAC.S(1^λ, n)]`, anonymity is fully broken
+  for that crs, not weakened by a term. Sampling `G× = G ∖ {0}` removes `H = 0`
+  from the support of `setup` (issue #149). Here `Γ = (G, p, G₀)` is the
   typeclass *except for `G₀`*: `G`/`p` are the `PrimeOrderGroup` typeclass stack,
   while the generator `G₀` is **not** produced by `setup` (which returns only
   `H`). It is supplied by the caller as the parameter `gen : G` — see the
@@ -69,9 +74,9 @@ only `keygen` (`Xᵣ = xᵣ·gen`, `Xᵢ = xᵢ·gen`); `verify` never reads `pp
 choice of generator is irrelevant to correctness.
 
 It is *not* a route to a computable scheme: the constructions here remain
-`noncomputable` because scalar/group sampling (`$ᵗ F`, `$ᵗ G`, and
-`uniformNonzero`) is built on `Fintype.equivFin`, which is itself
-`noncomputable`. Removing `Classical.choice` for `G₀` removes *one* source of
+`noncomputable` because scalar/group sampling (`$ᵗ F` and `uniformNonzero`) is
+built on `Fintype.equivFin`, which is itself `noncomputable`. Removing
+`Classical.choice` for `G₀` removes *one* source of
 noncomputability (and stops using `choice` for data the paper carries
 explicitly); obtaining a computable example would additionally require
 computable `SampleableType` instances, which is an `Instances/` concern.
@@ -196,8 +201,20 @@ def macScalar {n : ℕ} (sk : Key F n) (m : Fin n → F) : F :=
   let (x₀, xᵣ, x) := sk
   x₀ + xᵣ + ∑ i, x i * m i
 
-/-- `S(1^λ, n)`: sample `H ←$ G`; the CRS is `H`. -/
-noncomputable def setup {G : Type} [SampleableType G] (_secParam _n : ℕ) : ProbComp G := $ᵗ G
+/-- `S(1^λ, n)`: sample `H ←$ G×` via `uniformNonzero` (the `≠ 0` witness
+projected away, as in `mac`); the CRS is `H`. Nonzeroness of `H` is recovered
+on demand from `mem_support_uniformNonzero`, so `Crs` stays a plain `G`. -/
+noncomputable def setup {G : Type} [AddCommGroup G] [Fintype G] [DecidableEq G]
+    [Nontrivial G] (_secParam _n : ℕ) : ProbComp G :=
+  uniformNonzero G
+
+/-- The crs element of O24 Figure 9, drawn from `𝔾×` (errata item 13), is a possible
+output of `setup` iff it is nonzero. Lets consumers obtain `H ≠ 0` from a `setup`
+premise by `simp`, without unfolding `setup` to `uniformNonzero`. -/
+@[simp] theorem mem_support_setup {G : Type} [AddCommGroup G] [Fintype G] [DecidableEq G]
+    [Nontrivial G] (secParam n : ℕ) (H : G) :
+    H ∈ support (setup secParam n) ↔ H ≠ 0 :=
+  mem_support_uniformNonzero H
 
 /-- `K(crs)`: the parameter `H` is the CRS that `setup` produced. -/
 noncomputable def keygen {n : ℕ} (H : G) (gen : G) : ProbComp (Key F n × Params G n) := do
@@ -259,7 +276,7 @@ never reads `pp`, so the choice of generator is irrelevant to correctness.
 `AlgebraicMACSyntax ProbComp` (the carrier families `Msg`, `Sk`, … are projected
 out of the structure value).
 
-Noncomputable: scalar/group sampling (`$ᵗ F`, `$ᵗ G`, and `uniformNonzero`) is
+Noncomputable: scalar/group sampling (`$ᵗ F` and `uniformNonzero`) is
 built on `Fintype.equivFin`, which is `noncomputable`. Taking `gen` as a
 parameter removes one source of noncomputability (the old `Classical.choice`
 generator) but does not make the scheme computable — a computable example would
