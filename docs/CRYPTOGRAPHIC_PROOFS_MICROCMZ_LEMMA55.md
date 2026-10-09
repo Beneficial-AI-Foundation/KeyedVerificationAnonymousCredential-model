@@ -17,8 +17,8 @@ the blueprint nodes `attribute_lifting`, `forgery_case_gap_dl` and
 The proofs here are intended as the reference for the Lean statements and
 proofs of that item. Where they touch corrections already recorded in
 `docs/presentations/rolf-status/errata.md` (items 1, 2 and 6, on the Lemma 5.4
-bound and the Theorem 5.1 bound assembled from Lemma 5.5; items 9–11, on
-Claim 5.6's `x_r` and Verify query) or in
+bound and the Theorem 5.1 bound assembled from Lemma 5.5; item 5, on the sign of Claim 5.6's extraction; 
+items 9–11, on Claim 5.6's `x_r` and Verify query) or in
 `docs/DESIGN_ALTERNATIVES.md` (its two Claim 5.7 entries), they agree with them
 and cite the item; corrections not in those documents are new here.
 
@@ -298,7 +298,7 @@ By Lemma 5.4 (corrected: `errata.md` items 1 and 2 — the printed `1/p` is `3/p
 
 **Claim 5.6's Verify formula is wrong as printed.** The paper (p. 39) gives `DDH(U, (Σᵢ bᵢmᵢ)⁻¹V − zU)`. Expanding with `V = d(m)U + c(m)xU` shows this equals `xU` only if `c(m)⁻¹d(m) = z`, which does not hold in general. The correct argument is `c(m)⁻¹(V − d(m)U)`, i.e. the inverse must multiply the whole difference, and `d(m)` must carry both `x_r` and `Σᵢ aᵢmᵢ`. The paper's simulated Verify in Claim 5.6 (p. 39) also omits the `U ≠ 0_𝔾` check that the real Verify (Figure 9) makes, in both branches: on `Verify(m,(0_𝔾,0_𝔾))` with `c(m) = 0` it answers 1, the real oracle 0. `Bgap`'s Verify row in the Oracle simulation table restores the check. Recorded as `errata.md` items 10 (the dropped `Σᵢ aᵢmᵢ`) and 11 (the misplaced inverse); those items write `c` for our `d(m)` and `d` for our `c(m)`. The Lean `gapDlOracleImpl` queries `DDH(c(m)·U, V − d(m)U)` instead, which avoids the inverse and covers the `c(m) = 0` branch, and checks `U ≠ 0_𝔾`.
 
-**Claim 5.6 has a sign error and a dropped index.** From case (i) one gets `(Σᵢ Δᵢaᵢ)G = −(Σᵢ Δᵢbᵢ)X`, with a minus sign the paper omits (p. 39); consequently the extracted value is `x = −(Σᵢ Δᵢaᵢ)(Σᵢ Δᵢbᵢ)⁻¹`. The paper also writes `m*` for `m*ᵢ` inside both sums. The Sign reply in the same Claim (p. 39) writes the signed message as `m_{j,i}` in its first sum and as `mᵢ` in its second; both should read `m_{j,i}`, the `j`-th query.
+**Claim 5.6 has a sign error and a dropped index.** From case (i) one gets `(Σᵢ Δᵢaᵢ)G = −(Σᵢ Δᵢbᵢ)X`, with a minus sign the paper omits (p. 39); consequently the extracted value is `x = −(Σᵢ Δᵢaᵢ)(Σᵢ Δᵢbᵢ)⁻¹`. The paper also writes `m*` for `m*ᵢ` inside both sums. The Sign reply in the same Claim (p. 39) writes the signed message as `m_{j,i}` in its first sum and as `mᵢ` in its second; both should read `m_{j,i}`, the `j`-th query. The sign is `errata.md` item 5; the index slips are proposed as item 20 in #217.
 
 **Both claims state their failure probability backwards.** (p. 39) Claim 5.6: _"The equation is non-trivial with overwhelming probability 1/p"_ — it is non-trivial with probability `1 − 1/p`. Claim 5.7: _"Assuming X₁ ≠ 0_G (which happens with probability 1/p)"_ — `Pr[X₁ ≠ 0_𝔾] = 1 − 1/p`.
 
