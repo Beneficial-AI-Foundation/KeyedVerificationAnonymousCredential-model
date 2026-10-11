@@ -177,9 +177,20 @@ matter of the concrete bound only, since Q/p is negligible asymptotically. The
 general shape, a monomial that is nonzero as a formal polynomial but whose
 coefficient vanishes at the run's key, is the same for Claims 5.12 and 5.14.
 
+## 16. Hybrid H2 of Theorem 5.8 charges ZKP<sub>cmz.iu</sub> for the simulation of π<sub>p</sub> (p. 41)
+
+Items 13 to 15 are added by #149. Hybrid H2 (p. 41) replaces π<sub>p</sub>
+by the output of the zero-knowledge simulator of ZKP<sub>cmz.p</sub>, and its
+displayed bound reads
+Adv<sup>H2</sup> ≥ Adv<sup>H1</sup> − Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,D′</sub>,
+with the subscript of H1. The system whose zero knowledge the step uses is
+ZKP<sub>cmz.p</sub>, as the statement of Theorem 5.8 (p. 40) prints it. The
+statement `μCMZ_anonymity` in `Schemes/MicroCMZ/Anonymity.lean` charges the
+second term to ZKP<sub>cmz.p</sub>.
+
 ## 17. Theorem 1 prints Adv<sup>simex</sup> where Theorem 5.8 prints Adv<sup>ksnd</sup> (pp. 4, 40, 42)
 
-Items 13 to 15 are added by #149. The anonymity advantage of Theorem 1 (p. 4) is
+The anonymity advantage of Theorem 1 (p. 4) is
 2Adv<sup>zk</sup><sub>ZKP</sub> + Adv<sup>simex</sup><sub>ZKP</sub>, while
 Theorem 5.8 (p. 40) bounds it by
 Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub> +
@@ -200,8 +211,8 @@ random-oracle domain.
 
 ## Status
 
-Item 17 concerns §5.4 and is recorded in `docs/DESIGN_ALTERNATIVES.md`
-and in `Core/NIZKP/Composition.lean`.
+Items 16 and 17 concern §5.4 and are recorded in `docs/DESIGN_ALTERNATIVES.md`
+and in `Schemes/MicroCMZ/Anonymity.lean`.
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the
