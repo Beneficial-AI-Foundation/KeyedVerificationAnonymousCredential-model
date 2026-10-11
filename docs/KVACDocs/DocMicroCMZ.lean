@@ -927,10 +927,39 @@ simulation oracle of {uses "ksnd_simulation_oracle"}[] with respect to
 of Theorem 5.8. The lemma {uses "remark_59"}[] discharges H3 with it.
 :::
 
-:::theorem "mucmz_anonymity" (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
-*O24 Theorem 5.8.* If ZKP proves the relation `R ⊇ R_cmz`
-({uses "zk_arguments"}[]), then μCMZ ({uses "mucmz_construction"}[]) is anonymous in the
-sense of {uses "kvac_anonymity"}[]: issuance and presentation are simulatable.
+:::definition "mucmz_anonymity_simulator" (lean := "KVAC.Schemes.MicroCMZ.μCMZSimState, KVAC.Schemes.MicroCMZ.μCMZAnonSimulator") (parent := "cmz_anonymity") (tags := "paper, O24 §5.4")
+The simulator `Sim = (Sim.I, Sim.P)` of the proof of O24 Theorem 5.8 (§5.4,
+p. 40) for the credential {uses "mucmz_construction"}[], over the simulators
+and the extractor of {uses "mucmz_simulators_extractor"}[]. `Sim.I` sends a
+random commitment with a simulated `π_iu` and extracts the issuer's `x₀` from
+`π_is` with a trace extractor. `Sim.P` sends random `U' = u'•G`,
+`C_V` and `Cᵢ = γᵢ•G`, computes `Z = x₀•U' + u'•Xᵣ + Σᵢ γᵢ•Xᵢ − C_V` and
+simulates `π_p`. The term `u'•Xᵣ` and the nonzero `U'` are errata items 15
+and 14 of issue #149.
+:::
+
+:::theorem "mucmz_anonymity" (lean := "KVAC.Schemes.MicroCMZ.μCMZ_anonymity") (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
+*O24 Theorem 5.8.* Fix a generator `gen ≠ 0`, a crs `H ≠ 0`, keys in the
+support of key generation, an attribute vector and a predicate holding of it.
+The anonymity advantage {uses "kvac_anonymity"}[] of μCMZ
+({uses "mucmz_construction"}[]) from the empty random-oracle table with respect
+to the simulator {uses "mucmz_anonymity_simulator"}[] is at most
+`Adv^zk_{ZKP_cmz.iu,A'} + Adv^zk_{ZKP_cmz.p,D'} + Adv^ksnd_{ZKP_cmz.is,A''}`
+for reductions `A'`, `D'` and `A''`. The terms are the zero-knowledge
+advantages of {uses "zk_game"}[] and the knowledge-soundness advantage of
+{uses "extraction_game"}[], as printed. The hypotheses are the condition of
+Remark 5.9, {uses "remark_59"}[]. Each proof system, with its simulator or
+its extractor, is confined to its own region of the random-oracle domain, and
+the three regions are pairwise disjoint. Under them the knowledge-soundness
+term suffices at hybrid H3 and the zero-knowledge term of `ZKP_cmz.p` at
+H2. Stated
+with `sorry`. The proof is the hybrid argument of §5.4, pp. 40 to 41. H1 and
+H2 replace `π_iu` and `π_p` by simulated proofs, charged to zero knowledge of
+`ZKP_cmz.iu` and `ZKP_cmz.p`. H3 extracts `(x₀, u)` from `π_is`, charged to
+{uses "ksnd_simulation_oracle"}[] and reduced to the printed knowledge-soundness
+term by {uses "remark_59"}[]. H4 and H5 replace the commitment and the
+presentation elements by uniform ones, at no cost by the perfect hiding of
+Pedersen commitments and the rerandomization of the MAC code.
 :::
 
 # Extractability (Section 5.5)

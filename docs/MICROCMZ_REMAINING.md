@@ -19,7 +19,7 @@ Branch `microcmz-remaining-statements`, worktree `KVAC-prj/kvac-statements`, fro
 **Theorem 5.8, anonymity (Track CMZ‑A)**
 
 9. Anonymity game, Definition 4.4, `Framework/Anonymity.lean` (node `kvac_anonymity`).
-10. Issuance and presentation simulators of §5.4, and the Theorem 5.8 bound (node `mucmz_anonymity`, not yet stated). Definition 4.4 is `Framework/Anonymity.lean` (PR #186).
+10. Issuance and presentation simulators of §5.4, and the Theorem 5.8 bound (node `mucmz_anonymity`, stated with `sorry` in `Schemes/MicroCMZ/Anonymity.lean`, with Remark 5.9 as the lemma `ksndSimAdv_le_ksndAdv_of_domainSeparated` of `Core/NIZKP/Composition.lean`, #10). Definition 4.4 is `Framework/Anonymity.lean` (PR #186).
 11. The corollary after Theorem 5.2, statistical anonymity of μCMZ[ZKP = Σ] under the hypothesis that Σ is statistically knowledge sound. Needs the Σ instantiation of item 4 and the bound of item 10.
 
 **Theorem 5.10, extractability (Track CMZ‑E)**
