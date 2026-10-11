@@ -912,6 +912,14 @@ fixed crs is the bridge between the pointwise crs of Definition 4.4 and the
 sampled crs of the §3.3 games.
 :::
 
+:::definition "mucmz_simulators_extractor" (lean := "KVAC.Schemes.MicroCMZ.RiuSimulator, KVAC.Schemes.MicroCMZ.RpSimulator, KVAC.Schemes.MicroCMZ.RisExtractor, KVAC.Schemes.MicroCMZ.riuSimToZK, KVAC.Schemes.MicroCMZ.rpSimToZK, KVAC.Schemes.MicroCMZ.risExtToTrace") (parent := "cmz_anonymity") (tags := "paper, O24 §5.4")
+The zero-knowledge simulators of `ZKP_cmz.iu` and `ZKP_cmz.p` and the trace
+extractor of `ZKP_cmz.is` ({uses "trace_extractor"}[]) at the crs `H`, the
+three objects from which the proof of O24 Theorem 5.8 (§5.4, p. 40) builds its
+simulator, with their conversions to the §3.3 views of
+{uses "mucmz_proof_systems_fixed_crs"}[].
+:::
+
 :::theorem "mucmz_anonymity" (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
 *O24 Theorem 5.8.* If ZKP proves the relation `R ⊇ R_cmz`
 ({uses "zk_arguments"}[]), then μCMZ ({uses "mucmz_construction"}[]) is anonymous in the
