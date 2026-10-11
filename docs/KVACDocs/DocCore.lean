@@ -165,6 +165,28 @@ theorem assumes more than §3.3 states, which the paper's own extractors
 satisfy (§5.5, p. 42, §9).
 :::
 
+:::definition "ksnd_simulation_oracle" (lean := "KVAC.Core.SimulationOracle, KVAC.Core.KSNDSimSpec, KVAC.Core.KSNDSimAdversary, KVAC.Core.ksndSimGame, KVAC.Core.KSNDSimAdv, KVAC.Core.Region, KVAC.Core.Region.restrict, KVAC.Core.Region.merge, KVAC.Core.Region.AgreeOutside, KVAC.Core.Region.Disjoint, KVAC.Core.Region.Confined, KVAC.Core.Region.liftImpl, KVAC.Core.TraceExtractor.ConfinedTo, KVAC.Core.ConfinedSystem, KVAC.Core.ZKSimulatorConfinedTo, KVAC.Core.DomainSeparated, KVAC.Core.regionROImpl, KVAC.Core.simulationOracleImpl, KVAC.Core.KSNDSimAdversary.toKSND") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9")
+Knowledge soundness of a proof system of {uses "extraction_game"}[] while the
+adversary holds a simulation oracle for other proof systems over the same
+random oracle. This is the property hybrid H3 of O24 Theorem 5.8 uses. The
+other proof systems enter as a simulation oracle over the shared cache.
+The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain separation is the condition of O24 Remark 5.9 in abstract
+form. A proof system, a simulator or an extractor is confined to a region of
+the random-oracle domain when it reads and writes inside it only. Domain
+separation confines the simulators of the other systems and the system under extraction to
+disjoint regions. The reduction serves the simulation region from a local table.
+:::
+
+:::theorem "remark_59" (lean := "KVAC.Core.ksndSimAdv_le_ksndAdv_of_domainSeparated") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9") (effort := "medium") (priority := "medium")
+*O24 Remark 5.9.* Under domain separation, the advantage in the
+game with a simulation oracle of {uses "ksnd_simulation_oracle"}[] is bounded by the
+knowledge-soundness advantage of {uses "extraction_game"}[] for a reduction.
+The reduction runs the simulators of the other systems on a local table of the region and
+forwards every other query. This is the Remark's assertion that "knowledge
+soundness suffices" when "the vector sizes mismatch", stated for any proof
+system with a region in place of the mismatch. Stated with `sorry`.
+:::
+
 # Keyed setup
 
 :::group "core_keyed_setup"

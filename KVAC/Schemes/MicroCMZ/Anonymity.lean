@@ -10,9 +10,8 @@ import KVAC.Core.NIZKP.Composition
 # Anonymity of μCMZ (O24 §5.4, Theorem 5.8)
 
 Toward the statement of O24 Theorem 5.8 for `μCMZCredentialSyntax` of
-Figure 9. This part adds the zero-knowledge simulators and the extractor of
-the three proof systems. The simulation oracle of Remark 5.9, the simulator of
-the proof and the theorem follow in later parts.
+Figure 9. This part adds the simulation oracle of Remark 5.9. The simulator of
+the proof and the theorem follow in the last part.
 -/
 
 namespace KVAC.Schemes.MicroCMZ
@@ -103,5 +102,36 @@ def rpSimToZK {n : ℕ} (H : G) (π : RpProofSystem HS G F n) (s : RpSimulator H
 def risExtToTrace (H : G) (π : RisProofSystem HS G F) (e : RisExtractor HS π) :
     TraceExtractor HS (risNIZKP HS gen H π) :=
   fun {_} crs x pr c => e crs x pr c
+
+variable (πiu : ∀ n, RiuProofSystem HS G F n) (πis : RisProofSystem HS G F)
+  (πp : ∀ n, RpProofSystem HS G F n)
+
+/-! ## The simulation oracle of Remark 5.9
+
+**Hybrid H3** (p. 41) extracts from a `π_is` that the issuer produced after
+receiving the simulated `π_iu` of H1. That is knowledge soundness of
+`ZKP_cmz.is` with a simulation oracle for `ZKP_cmz.iu`, the game `ksndSimGame`
+of `Core/NIZKP/Composition` with advantage `KSNDSimAdv`, not the printed
+`Adv^ksnd`.
+
+**Hybrid H2** runs, in its reduction, the same simulator of `ZKP_cmz.iu`
+inside the zero-knowledge game of `ZKP_cmz.p`.
+
+**The hypotheses.** The theorem takes the condition of Remark 5.9 as
+hypotheses. Each proof system, its simulator or its extractor, is confined to
+its own region of the random-oracle domain, and the regions are pairwise
+disjoint.
+
+**The oracle.** `riuSimulationOracle` is the simulator of `ZKP_cmz.iu` as the
+simulation oracle with respect to `ZKP_cmz.is`. The lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` discharges H3 with it. -/
+
+/-- The simulator of `ZKP_cmz.iu` as the simulation oracle with respect to
+`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3. -/
+noncomputable def riuSimulationOracle (n : ℕ) (H : G) (simIu : ∀ n, RiuSimulator HS (πiu n)) :
+    SimulationOracle HS (risNIZKP HS gen H πis) where
+  Query := fun _ => RiuStmt G F n
+  spec := fun _ _ => (πiu n).Proof
+  impl := fun H' x => simIu n H' x
 
 end KVAC.Schemes.MicroCMZ
