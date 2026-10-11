@@ -148,6 +148,8 @@ proof systems of {uses "mucmz_proof_system_parameters"}[], with setup and key
 generation those of the base MAC lifted through `liftM`. The issuance nonces
 and the presentation rerandomizer are drawn from the nonzero scalars, and the
 presentation server checks `U' ≠ 0` outside `R_cmz.p`, as Figure 9 does.
+The extraction game {uses "extractability_game"}[] and the anonymity game
+{uses "kvac_anonymity"}[] elaborate at this instance, in `CredentialGames.lean`.
 :::
 
 :::definition "riu_relation" (lean := "KVAC.Schemes.MicroCMZ.RiuStmt, KVAC.Schemes.MicroCMZ.RiuWitness, KVAC.Schemes.MicroCMZ.riuRel") (parent := "cmz_construction") (tags := "paper, O24 Eq 9")
