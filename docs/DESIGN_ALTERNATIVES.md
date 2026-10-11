@@ -721,6 +721,37 @@ not among the inputs of `TraceExtractor`. The instantiation of issue #3
 must therefore carry the representations in the proof or in the oracle table.
 The restriction keeps the printed `Adv^ksnd` applicable.
 
+## Theorem 5.8 with the printed knowledge-soundness term
+
+**Decision.** The bound of `μCMZ_anonymity` carries `KSNDAdv` of `ZKP_cmz.is`
+as Theorem 5.8 prints it. The theorem takes as hypotheses the condition of
+Remark 5.9 in the form of `ConfinedSystem` (`Core/NIZKP/Composition.lean`).
+Each of the three proof systems, with its simulator or its extractor, is
+confined to its own region of the random-oracle domain, and the regions are
+pairwise disjoint. The property hybrid H3 uses is `KSNDSimAdv`, knowledge
+soundness in the presence of simulated proofs of `ZKP_cmz.iu`. The lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term. The
+zero-knowledge step H2 needs the condition as much as H3. Its reduction runs
+the simulator of `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`,
+which offers the random oracle only. Remark 5.9 raises the point for
+extraction alone. Remark 5.9 states its case for `π_iu` after simulated `π_is`, the
+direction of Theorem 5.10, and H3 of Theorem 5.8 is the mirror case, which
+the lemma covers as well.
+
+**Rejected alternative.** Replacing the knowledge-soundness term by a
+simulation-extractability term `SEAdv`, as Theorem 1 (§1, p. 4) prints
+`Adv^simex` where Theorem 5.8 prints `Adv^ksnd`, or stating the bound with
+`KSNDSimAdv` directly.
+
+**Fidelity argument.** The bound of Theorem 5.8 is the one to formalize, and
+Remark 5.9 is the paper's own argument that knowledge soundness suffices for
+the Figure 9 proof systems. The Remark gives the argument for Schnorr proofs
+without a proof. The formalization therefore states it as a lemma over any
+proof system, with an explicit region of the random-oracle domain in place of
+"the vector sizes mismatch". The instance fact for the compiled Σ-protocols waits
+for issue #3. Errata item 17 records the difference between Theorem 1 and
+Theorem 5.8.
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`

@@ -177,8 +177,31 @@ matter of the concrete bound only, since Q/p is negligible asymptotically. The
 general shape, a monomial that is nonzero as a formal polynomial but whose
 coefficient vanishes at the run's key, is the same for Claims 5.12 and 5.14.
 
+## 17. Theorem 1 prints Adv<sup>simex</sup> where Theorem 5.8 prints Adv<sup>ksnd</sup> (pp. 4, 40, 42)
+
+Items 13 to 15 are added by #149. The anonymity advantage of Theorem 1 (p. 4) is
+2Adv<sup>zk</sup><sub>ZKP</sub> + Adv<sup>simex</sup><sub>ZKP</sub>, while
+Theorem 5.8 (p. 40) bounds it by
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub> +
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub> +
+Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub></sub>. The two differ in the
+extraction term, simulation extractability in the overview and knowledge
+soundness in the theorem. Hybrid H3 (p. 41) extracts from a π<sub>is</sub>
+the issuer produced after the simulated π<sub>iu</sub> of H1, which the
+knowledge-soundness game of §3.3 does not cover. Remark 5.9 states the mirror
+case, π<sub>iu</sub> after simulated π<sub>is</sub>, the direction of
+Theorem 5.10. Remark 5.9
+(p. 42) says that knowledge soundness suffices for Schnorr proofs because
+"the vector sizes mismatch", without a proof. No prose connects Theorem 1 and
+Remark 5.9. The formalization keeps the printed Theorem 5.8 and states the
+Remark as the lemma `ksndSimAdv_le_ksndAdv_of_domainSeparated` in
+`Core/NIZKP/Composition.lean`, with the mismatch as an explicit region of the
+random-oracle domain.
+
 ## Status
 
+Item 17 concerns §5.4 and is recorded in `docs/DESIGN_ALTERNATIVES.md`
+and in `Core/NIZKP/Composition.lean`.
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the
