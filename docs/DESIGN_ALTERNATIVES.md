@@ -678,6 +678,25 @@ Claims to
 evaluated events or add a Verify budget to the statements, a decision left to
 the proof phase.
 
+## Theorem 5.8 at a fixed crs
+
+**Decision.** The statement `μCMZ_anonymity` (`Schemes/MicroCMZ/Anonymity.lean`)
+bounds `AnonAdv` at a fixed crs `H` by the §3.3 advantages of the three proof
+systems viewed at that `H`. The views `riuNIZKP`, `risNIZKP` and `rpNIZKP`
+attach to the proof system parameters the setup `fun _ => pure H` and the
+relations `riuRel gen`, `risRel gen H` and `rpRel gen H`, through
+`ProofSystemFor.toNIZKPSyntax`.
+
+**Rejected alternative.** Views whose setup samples `H ←$ 𝔾` as the scheme's
+setup does, so that `ZKAdv` and `KSNDAdv` carry the paper's sampled crs.
+
+**Fidelity argument.** Definition 4.4 quantifies over every crs in the support
+of setup and the §3.3 games sample the crs inside. A bound of a pointwise
+advantage by sampled advantages does not hold in general, and
+`Framework/Anonymity.lean` leaves the bridge to the theorem. Fixing the crs in
+the views keeps both sides at the same `H`, and the asymptotic form over a
+λ-indexed group family is issue #148.
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`

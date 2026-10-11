@@ -9,6 +9,7 @@ import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.ProofSystems
 import KVAC.Schemes.MicroCMZ.Credential
+import KVAC.Schemes.MicroCMZ.Anonymity
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -900,6 +901,16 @@ simulators.
 *TODO (Track CMZ-A).* State and prove Theorem 5.8. Use the
 `SampleableGroup` typeclass (the game-construction variant of the
 prime-order-group typeclass).
+
+:::definition "mucmz_proof_systems_fixed_crs" (lean := "KVAC.Schemes.MicroCMZ.riuNIZKP, KVAC.Schemes.MicroCMZ.risNIZKP, KVAC.Schemes.MicroCMZ.rpNIZKP, KVAC.Schemes.MicroCMZ.riuDecRel, KVAC.Schemes.MicroCMZ.risDecRel, KVAC.Schemes.MicroCMZ.rpDecRel") (parent := "cmz_anonymity") (tags := "paper, O24 §5.4")
+The proof system parameters `ZKP_cmz.iu`, `ZKP_cmz.is` and `ZKP_cmz.p` of
+{uses "mucmz_construction"}[] read as proof systems of {uses "zk_arguments"}[]
+for the relations {uses "riu_relation"}[], {uses "ris_relation"}[] and
+{uses "rp_relation"}[] at the crs `H` of the Theorem 5.8 statement, through
+{uses "mucmz_proof_system_parameters"}[], with their relations decidable. The
+fixed crs is the bridge between the pointwise crs of Definition 4.4 and the
+sampled crs of the §3.3 games.
+:::
 
 :::theorem "mucmz_anonymity" (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
 *O24 Theorem 5.8.* If ZKP proves the relation `R ⊇ R_cmz`
