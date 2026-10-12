@@ -266,7 +266,10 @@ bridge and the polynomial-layer identity case, leaving `0 • gen`.
 *O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
 parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
 `X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
-reduction simulates {uses "agm_model"}[] holding no secret key. The
+reduction simulates {uses "agm_model"}[] holding no secret key. The η
+masks are drawn conditioned on `H ≠ 0` ({uses "sign_masks"}[]), since
+the real setup draws `H` from the nonzero elements, where Equation 13
+prints them unrestricted. The
 masks and the embedded basis points are bundled as two records; the
 reduction adversary runs the AGM adversary against
 {bpref "simulated_sign_oracle"}[] and extracts through
