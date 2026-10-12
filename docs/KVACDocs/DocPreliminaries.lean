@@ -134,7 +134,7 @@ pairwise-distinct message/token pairs. Mirrors the UF-CMVA game
 honest oracle implementation (the log's length is Figure 6's dynamic
 counter `q`), the experiment as a `ProbComp Bool` with the three-clause
 win condition `OMUFWins`, and the advantage `OMUFAdv`. Unlike the UF-CMVA
-forger, the adversary also has a private coin oracle, as VCV-io's adversaries
-with game oracles do. Static query-budget hypotheses belong to the security
-theorems over this game, not to the game itself.
+forger, the adversary also has a private coin oracle, as VCV-io's PRF, IND-CPA
+and Fischlin adversaries do. Static query-budget hypotheses belong to the
+security theorems over this game, not to the game itself.
 :::

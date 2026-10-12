@@ -47,7 +47,7 @@ not the server rejects it — Figure 6 increments `q` before the response.
 **The adversary has a private coin oracle.** Its oracle specification is
 `unifSpec + OMUFOracleSpec tok crs`, and `OMUFGame` answers that oracle in
 `ProbComp`. The comparison with fixed coins is in `DESIGN_ALTERNATIVES.md`,
-*Plain one-more forgers have a private coin oracle*.
+*One-more forgers have a private coin oracle*.
 -/
 
 namespace KVAC.Preliminaries

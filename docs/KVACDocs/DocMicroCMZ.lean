@@ -1075,7 +1075,8 @@ a hash.
 
 :::definition "agm_omuf_game" (lean := "KVAC.Schemes.MicroCMZ.AGMOMUFQuery.isSign, KVAC.Schemes.MicroCMZ.AGMOMUFQuery.instDecidablePredIsSign, KVAC.Schemes.MicroCMZ.AGMOMUFForgery, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.plain, KVAC.Schemes.MicroCMZ.AGMOMUFAdversary, KVAC.Schemes.MicroCMZ.AGMOMUFWins, KVAC.Schemes.MicroCMZ.AGM_OMUFGame, KVAC.Schemes.MicroCMZ.AGM_OMUFAdv") (parent := "cmz_omuf") (tags := "milestone")
 The AGM-instrumented one-more unforgeability game over the oracle
-{uses "agm_omuf_oracle"}[]: the algebraic adversary returning a list of
+{uses "agm_omuf_oracle"}[]: the algebraic adversary, with a private coin
+oracle beside the instrumented oracles, returning a list of
 forgeries, each with one representation per token component (O24
 Equation 19); the winning condition, namely the plain Figure 6 condition
 of {uses "omuf_game"}[] at `q` = the number of Sign queries made, refused
