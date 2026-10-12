@@ -266,10 +266,7 @@ bridge and the polynomial-layer identity case, leaving `0 • gen`.
 *O24 Equation 13.* The 3-DL challenge embedding of the μCMZ public
 parameters: each fixed secret exponent is masked as `a + χ·b`, so `H`,
 `X₀`, `Xᵣ` and `X₁` are built from the challenge powers alone and the
-reduction simulates {uses "agm_model"}[] holding no secret key. The η
-masks are drawn conditioned on `H ≠ 0` ({uses "sign_masks"}[]), since
-the real setup draws `H` from the nonzero elements, where Equation 13
-prints them unrestricted. The
+reduction simulates {uses "agm_model"}[] holding no secret key. The
 masks and the embedded basis points are bundled as two records; the
 reduction adversary runs the AGM adversary against
 {bpref "simulated_sign_oracle"}[] and extracts through
@@ -289,6 +286,9 @@ real games are distributed identically has to cite exactly them.
 
 O24 prints `X₀`'s `X`-coefficient as `(a_h·b₀ + b_h)`, dropping the `a₀`
 factor; the correct coefficient `a₀·b_h + b₀·a_h` is the one used here.
+Equation 13 draws the η masks unrestricted; here they are conditioned on
+`H ≠ 0` ({uses "sign_masks"}[]), matching the setup's `H` drawn from the
+nonzero elements.
 :::
 
 :::definition "simulated_sign_oracle" (lean := "KVAC.Schemes.MicroCMZ.SignRecord, KVAC.Schemes.MicroCMZ.RedLog, KVAC.Schemes.MicroCMZ.RedLog.tags, KVAC.Schemes.MicroCMZ.RedLog.msg, KVAC.Schemes.MicroCMZ.RedLog.aMask, KVAC.Schemes.MicroCMZ.RedLog.bMask, KVAC.Schemes.MicroCMZ.RedLog.maskedSubst, KVAC.Schemes.MicroCMZ.RedLog.maskedRepr, KVAC.Schemes.MicroCMZ.maskLift, KVAC.Schemes.MicroCMZ.maskLift_eval, KVAC.Schemes.MicroCMZ.embedTag_eq, KVAC.Schemes.MicroCMZ.exponentEval, KVAC.Schemes.MicroCMZ.exponentEval_eq, KVAC.Schemes.MicroCMZ.reductionSignStep, KVAC.Schemes.MicroCMZ.reductionVerifyStep, KVAC.Schemes.MicroCMZ.reductionHelpStep, KVAC.Schemes.MicroCMZ.reductionOracleImpl") (parent := "cmz_amac") (tags := "paper, O24 Eq 14")
@@ -357,9 +357,11 @@ emit to the per-index lambdas and bare substitution that the coupling, the
 shift lemma below and {uses "dlog_root_recovery"}[] are stated in. Two
 uniformity lemmas say the embedding hides its masks — a uniform scalar
 multiple of the generator is a uniform group element, and so is an affine
-shift of one — so each of `H`, `Xᵣ` and `X₁` in
-{uses "challenge_embedding"}[] is uniform taken by itself. `X₀` is
-excluded: it is not of this single-mask affine form. A
+shift of one — so each of `Xᵣ` and `X₁` in
+{uses "challenge_embedding"}[] is uniform taken by itself. `H`, whose
+masks are conditioned on `H ≠ 0`, takes its law from
+{bpref "sign_masks"}[] instead, and `X₀` is excluded: it is not of this
+single-mask affine form. A
 deterministic-map coupling brick lifts an equality of evaluation
 distributions to a relation between two computations, the form the `sign`
 arm needs on top of {uses "sign_masks"}[].
@@ -569,7 +571,9 @@ the AGM advantage is read as an event probability on the experiment.
 
 :::proof "run_level_coupling"
 The keygen reparametrization trades the honest key for the masks of
-{uses "challenge_embedding"}[] by a uniform-preserving shear; the per-step
+{uses "challenge_embedding"}[] by a uniform-preserving shear, the η pair,
+conditioned on `H ≠ 0`, taking the law of the nonzero crs from
+{uses "sign_masks"}[]; the per-step
 couplings {uses "sign_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[] are then lifted across the whole
 transcript by induction on the oracle calls, carrying the state invariant and

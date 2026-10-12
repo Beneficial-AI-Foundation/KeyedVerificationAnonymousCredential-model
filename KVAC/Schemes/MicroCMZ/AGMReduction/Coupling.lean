@@ -111,10 +111,11 @@ lemma evalDist_smul_gen_uniform :
   evalDist_map_bijective_uniform_cross (α := F) _ hgen.out
 
 /-- Shift by `c`, then scale the generator: a composition of bijections. Each of the
-reduction's `H`, `Xᵣ`, `X₁` has this affine form taken by itself — one part of
-the inline claim after `O24 Eq. 13`, namely the marginal uniformity of each affine
-parameter, not the joint law that claim asserts. `X₀` is separate: it is not of this
-single-mask affine form (`embedX0_eq`). -/
+reduction's `Xᵣ`, `X₁` has this affine form taken by itself — one part of the inline
+claim after `O24 Eq. 13`, namely the marginal uniformity of each affine parameter, not
+the joint law that claim asserts. `H` and `X₀` are separate: `H`'s masks are
+conditioned on `H ≠ 0` (`redTrace`, law from `sign_U_dist_eq`), and `X₀` is not of
+this single-mask affine form (`embedX0_eq`). -/
 lemma evalDist_affine_gen_uniform (c : F) :
     evalDist ((fun a : F => (a + c) • gen) <$> ($ᵗ F : ProbComp F)) =
       evalDist ($ᵗ G : ProbComp G) := by

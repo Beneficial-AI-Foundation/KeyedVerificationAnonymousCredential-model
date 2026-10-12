@@ -68,9 +68,9 @@ marginal are *identically distributed*: the embedded public elements (`H, X₀, 
 `X₁`) and every issued tag are identically distributed to the real game's — the
 conditioned η masks make `H` uniform on the nonzero elements, as `setup` draws it
 (`sign_U_dist_eq`, issue #149), the masks make `Xᵣ`, `X₁` uniform and the tags
-identically distributed, while `X₀ = x₀·H`
-(the key component `x₀ = a₀+x·b₀` acting on the embedded `H`) is carried by the
-reparametrization itself, not by a mask-uniformity lemma. The reconstructed secret
+identically distributed, while `X₀ = x₀·H` (the key component `x₀ = a₀+x·b₀` acting
+on the embedded `H`) is carried by the reparametrization itself, not by a
+mask-uniformity lemma. The reconstructed secret
 `sk = (a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)` plays the role of the real key, and the simulated
 oracle reproduces the honest oracle's observable behaviour.
 
@@ -165,11 +165,11 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
    `t.shiftPoint x = a + (x+1)·b` (`eval_shift_eq_zero_of_affineSubst_eq_zero`), so
    `badBit ⟹ szBit`.
 2. **The adaptive Schwartz–Zippel bound over the shear.** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
-   a uniform-preserving bijection on `F²` per variable, for the four fixed mask pairs and the
-   per-query `(auⱼ, buⱼ)` — A's view and hence `φ` depend only on the sheared masks while the
-   `b`-masks stay uniform and independent (for the conditioned η pair and the sign pairs by
-   `sign_U_bu_dist_eq`); `t.shiftPoint x` is then uniform over
-   `Var t.log.length → F` independent of `φ`, and `probEvent_eval_shift_eq_zero_le`
+   a uniform-preserving bijection on `F²` per variable for `x₀, xᵣ, x₁`, and for the η and
+   per-query `(auⱼ, buⱼ)` pairs, conditioned on a nonzero group element, a bijection onto
+   `{a ≠ 0} × F` (`sign_U_bu_dist_eq`) — A's view and hence `φ` depend only on the sheared
+   masks while the `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform
+   over `Var t.log.length → F` independent of `φ`, and `probEvent_eval_shift_eq_zero_le`
    (total degree `≤ 3`) gives `Pr[szBit] ≤ 3/p`. -/
 
 /-- **Shift implication.** `badBit ⟹ szBit` pointwise on the support (step 1 above), hence
@@ -202,7 +202,8 @@ docstring.)
 
 **The embedding (O24 Eqs. 13–14), made precise.** Each secret exponent is a
 *linear* form in the 3-DL challenge exponent `x`: the reduction samples masks
-`a v, b v ←$ F` for every variable `v ∈ {η, x₀, xᵣ, x₁, u₁, …, u_q}` and sets the
+`a v, b v ←$ F` for every variable `v ∈ {η, x₀, xᵣ, x₁, u₁, …, u_q}` (for `η` and
+each `uⱼ` conditioned on a nonzero `H`, resp. `Uⱼ`) and sets the
 real discrete log of `v` to `a v + x · b v`. These masks are *exactly* the
 `affineSubst a b` masks. The public elements then follow by substitution, read
 off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:

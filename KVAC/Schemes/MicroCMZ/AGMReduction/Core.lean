@@ -589,22 +589,19 @@ sample the fixed-variable masks, build the embedded public parameters `H, X₀, 
 embedding is built: `microCMZ3DLReduction` and the analysis experiment bind this
 and differ only in what they compute from the trace.
 
-The η masks `(aη, bη)` are drawn by `reductionMaskSample`, conditioned on
-`H = aη·g + bη·X ≠ 0`, where O24 Eq. 13 prints them unrestricted. The real game's
-`setup` draws `H` from the nonzero elements (`uniformNonzero`, issue #149), so an
-unconditioned pair, whose `H` vanishes with probability `1/p`, would make the game
-bridge `AGM_UF_CMVAGame_evalDist_eq` false. Under the condition `H` has the law of
-`uniformNonzero G` (`sign_U_dist_eq`) and `bη` stays uniform and independent of `H`
-(`sign_U_bu_dist_eq`), the same facts the sign arm uses for its tag base
-(`docs/DESIGN_ALTERNATIVES.md`, *Conditioned η masks*). -/
+O24 Eq. 13 samples the η masks unconditioned; conditioning on `H ≠ 0` matches
+`setup`'s `H ←$ 𝔾^×` (see `reductionMaskSample` and `docs/DESIGN_ALTERNATIVES.md`,
+*Conditioned η masks*). -/
 noncomputable def redTrace (X X' X'' : G) (A : AGMUFAdversary F G 1) :
     ProbComp (RedTrace F G) := do
-  let etaM ← reductionMaskSample (gen := gen) X
+  let abEta ← reductionMaskSample (gen := gen) X
+  let aEta := abEta.val.1
+  let bEta := abEta.val.2
   let a0 ← $ᵗ F; let b0 ← $ᵗ F
   let aXr ← $ᵗ F; let bXr ← $ᵗ F
   let aX1 ← $ᵗ F; let bX1 ← $ᵗ F
-  let aM : FixedMasks F := ⟨etaM.val.1, a0, aXr, aX1⟩
-  let bM : FixedMasks F := ⟨etaM.val.2, b0, bXr, bX1⟩
+  let aM : FixedMasks F := ⟨aEta, a0, aXr, aX1⟩
+  let bM : FixedMasks F := ⟨bEta, b0, bXr, bX1⟩
   -- each of H, Xᵣ, X₁ is honest at the challenge exponent: `embedMask_eq`
   let H := aM.eta • gen + bM.eta • X
   -- `X₀ = x₀·H` at the challenge exponent: `embedX0_eq`. O24 Eq. 13 prints X₀'s
