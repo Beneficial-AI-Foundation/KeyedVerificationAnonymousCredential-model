@@ -14,7 +14,9 @@ import KVAC.Framework.Extractability
 Defines the paper-level bundled object `KVAC` per Orrù, *Revisiting
 Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552,
 Definition 4.2: a `KVACSyntax ProbComp` paired with a proof of correctness
-(Definition 4.3).
+(Definition 4.3), and its counterpart `KVACRO H` at the oracle carrier
+`OracleComp (ZKRO H)`, where the proofs of a Fiat–Shamir credential share the
+random oracle.
 
 Re-exports `Syntax.lean` (the syntactic structure) and `Correctness.lean`
 (the correctness predicate), which is what the bundle is built from. It also
@@ -56,9 +58,10 @@ canonical statement), while anonymity and extractability are quantitative
 games kept as standalone predicates/advantages for the security theorems
 to bound.
 
-The bundle fixes `M := ProbComp` because correctness is distributional. The
-syntactic layer stays monad-polymorphic to leave room for symbolic
-interpretations.
+The bundle `KVAC` fixes `M := ProbComp` because correctness is distributional, and
+`KVACRO H` fixes `M := OracleComp (ZKRO H)`. For oracle-free schemes the two are
+related by `KVACSyntax.lift` (see `Correctness.lean`). The syntactic layer stays
+monad-polymorphic to leave room for symbolic interpretations.
 -/
 
 namespace KVAC.Framework
@@ -89,5 +92,11 @@ structure KVACRO (H : HashSpec) where
   /-- Correctness of the syntactic algorithms at the oracle carrier
   (O24 Definition 4.3). -/
   correct : CorrectRO H alg
+
+/-- A `KVAC` bundle at `ProbComp` lifts to the oracle carrier: the algorithms are
+lifted by `KVACSyntax.lift`, and correctness is transported by
+`correctRO_of_correct`. -/
+def KVAC.toKVACRO (H : HashSpec) (k : KVAC) : KVACRO H :=
+  ⟨k.alg.lift H, correctRO_of_correct H k.alg k.correct⟩
 
 end KVAC.Framework
