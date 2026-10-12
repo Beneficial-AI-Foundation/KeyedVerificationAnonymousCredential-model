@@ -140,7 +140,8 @@ noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
 /-- The gap-DL reduction for general `n` (Claim 5.6): embed the challenge
 `X = x•g` (`g = gen`) as `X₁,…,Xₙ` via self-sampled masks `aaᵢ, bbᵢ`
 (so `xᵢ = aaᵢ + bbᵢ·x`), and `X₀ = z•H`, `Xᵣ = xᵣ•g` with self-sampled `z, xᵣ`
-and crs `H ←$ G` (`pp = gapDlEmbedParams`); simulate `A` via `gapDlOracleImpl`;
+and crs `H ←$ G∖{0}` via `uniformNonzero`, as `setup` does
+(`pp = gapDlEmbedParams`); simulate `A` via `gapDlOracleImpl`;
 then on a *colliding* forgery (some queried `m⃗ⱼ ≠ m⃗*` with
 `Σᵢ mⱼ,ᵢ•Xᵢ = Σᵢ m*ᵢ•Xᵢ`) solve the linear relation
 `(Σᵢ (mⱼ,ᵢ−m*ᵢ)aaᵢ)•g = −(Σᵢ (mⱼ,ᵢ−m*ᵢ)bbᵢ)•X` for `x`:
@@ -168,7 +169,7 @@ noncomputable def gapDlReduction (A : AGMUFAdversary F G n) : GapDLogAdversary F
     let bb ← ($ᵗ (Fin n → F) : OracleComp (unifSpec + GapDLogOracleSpec G) (Fin n → F))
     let z ← ($ᵗ F : OracleComp (unifSpec + GapDLogOracleSpec G) F)
     let xr ← ($ᵗ F : OracleComp (unifSpec + GapDLogOracleSpec G) F)
-    let H ← ($ᵗ G : OracleComp (unifSpec + GapDLogOracleSpec G) G)
+    let H ← (uniformNonzero G : OracleComp (unifSpec + GapDLogOracleSpec G) G)
     let pp := gapDlEmbedParams gen aa bb z xr X H
     let ((mStar, _σStar, _ρU, _ρV), log) ←
       (simulateQ (gapDlOracleImpl gen aa bb z xr X H) (A.run H pp)).run []
