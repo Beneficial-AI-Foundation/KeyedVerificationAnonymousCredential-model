@@ -222,6 +222,24 @@ structure now.
 so Eq. 14's "identically distributed" holds only under the conditioning. 
 The `(Uⱼ, bᵤ)` joint law stays independent uniform (`sign_U_bu_dist_eq`), 
 so the masks' hiding is unaffected.
+
+## Conditioned η masks
+
+**Decision.** The 3-DL reduction's η masks `(aη, bη)` are sampled conditioned on
+`H = aη·G + bη·X ≠ 0`, by the sign-mask sampler `reductionMaskSample`
+(`AGMReduction/Core.lean`, `redTrace`).
+
+**Rejected alternative.** The paper's unrestricted `aη, bη ←$ ℤ_p` (Eq. 13, p. 37).
+
+**Fidelity argument.** The real game's `setup` draws `H` from `𝔾^×`
+(*Nonzero crs H ←$ 𝔾^×* below), while an unrestricted pair gives `H = 0` with
+probability `1/p`, one `aη` per `bη`. An adversary that acts only when `H ≠ 0`
+then wins with different probabilities in the two games, so the game bridge
+`AGM_UF_CMVAGame_evalDist_eq` would be false. Under the condition `H` has the
+law of `uniformNonzero G` (`sign_U_dist_eq`) and `bη` is uniform and independent
+of `H` (`sign_U_bu_dist_eq`), so the η coordinate of the shift point,
+`log H + bη`, stays uniform and the Schwartz–Zippel argument for `3/p` is unchanged.
+
 ## Structured hash domains
 
 **Decision.** `HashSpec.Dom` is an arbitrary type; each scheme picks a
