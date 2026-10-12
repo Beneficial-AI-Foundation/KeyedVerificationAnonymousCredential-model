@@ -77,8 +77,11 @@ noncomputable def agmOMUFTrace (A : AGMOMUFAdversary F G 1) : ProbComp (OMUFTrac
   let tok := μCMZATCoreSyntax F gen
   let H : G ← tok.setup secParam 1
   let (sk, pp) ← tok.keygen (secParam := secParam) (n := 1) H
-  let (out, log) ←
-    (simulateQ (agmOMUFOracleImpl gen secParam sk H pp) (A.run H pp)).run []
+  -- `HAdd.hAdd` rather than `+`, as in `AGM_OMUFGame`.
+  let impl := HAdd.hAdd
+    ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (AGMOMUFLog F G 1) ProbComp))
+    (agmOMUFOracleImpl gen secParam sk H pp)
+  let (out, log) ← (simulateQ impl (A.run H pp)).run []
   pure ⟨sk, H, pp, log, out⟩
 
 /-- The game is the trace followed by the decision, so the game's success

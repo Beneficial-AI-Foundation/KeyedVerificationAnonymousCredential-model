@@ -778,11 +778,9 @@ adversary and adding the gap-DL reduction for the collision case.
 the theorems that cite it, since anything provable about an unspecified body
 holds of every inhabitant. The discrete-log reduction takes the Sign budget
 `q`, which a selector over the `q` issuance positions of Claim 5.12 needs. The
-adversary shape carries no private coin oracle, so the transformation fixes its
-coins in the construction, with a fixed-coins argument, or the shape grows an
-oracle for uniform sampling in the adversary's oracle specification. Extra Sign
-queries are not a source of randomness, they break the budget and the one-more
-count.
+adversary has a private coin oracle (*One-more forgers have a private coin
+oracle*), so the transformation samples through it. Extra Sign queries are not
+a source of randomness, they break the budget and the one-more count.
 
 **Per-Claim reductions.** Claims 5.12 and 5.13 each name their own discrete-log
 reduction, `omufDLReductionU gen q A` (the selector over the `q` issuance
@@ -805,31 +803,41 @@ Claims to
 evaluated events or add a Verify budget to the statements, a decision left to
 the proof phase.
 
-## Plain one-more forgers have a private coin oracle
+## One-more forgers have a private coin oracle
 
-**Decision.** The plain one-more unforgeability adversary `OMUFAdversary` runs
-in `OracleComp (unifSpec + OMUFOracleSpec tok crs)`: a private coin oracle
-beside the game's Sign and Verify oracles. `OMUFGame` answers the private coin
-oracle in `ProbComp`.
+**Decision.** Both one-more unforgeability adversaries have a private coin
+oracle beside the game's oracles. The plain `OMUFAdversary` runs in
+`OracleComp (unifSpec + OMUFOracleSpec tok crs)`, the algebraic
+`AGMOMUFAdversary` in `OracleComp (unifSpec + AGMOMUFOracleSpec F G n)`.
+`OMUFGame` and `AGM_OMUFGame` answer the private coin oracle in `ProbComp`, and
+the budget predicate `AGMOMUFQuery.isSign` counts Sign queries only.
 
-**Rejected alternative.** *Fixed coins in the construction*, the adversary type
-without a private coin oracle. Every transformation that needs randomness must
-then fix its coins when it is built, and its proof needs a fixed-coins
-argument.
+**Rejected alternative.** *Fixed coins in the construction*, the adversary
+types without a private coin oracle. A transformation that needs randomness
+then takes its coins as an argument, and its proof needs a fixed-coins
+argument. This is the route of Lemma 5.5, whose `nTo1Adversary gen A r` takes
+the direction `r⃗` as an argument while `microCMZN3DLReduction` samples it, and
+it serves there because no forger the MAC track builds appears in its bounds.
+The `π_is` lifting lemma of #205 names the forger it builds in its bound, so
+fixed coins would make that term an average over a family of forgers, and that
+forger's coins, a lazily sampled random oracle and one simulator run per Sign
+query, are not a fixed tuple.
 
 **Fidelity argument.** O24's algorithms are p.p.t. with random coins (§3,
 *Notation*), and Figure 6 runs its adversary on `pp` alone, so the coins are
 its own. An `OracleComp` computation draws randomness only by querying an
-oracle, and VCV-io gives adversaries a private coin oracle beside the game
-oracles: `PRFOracleSpec`, `IND_CPA_oracleSpec`, and the Fischlin adversaries
-put `unifSpec` first. A transformation then samples inside the adversary it
-builds, as VCV-io's Fiat–Shamir `simulatedNmaAdv` runs its simulator inside the
-adversary it builds.
+oracle. VCV-io's PRF, IND-CPA and Fischlin adversaries have a private coin
+oracle beside the game oracles (`PRFOracleSpec`, `IND_CPA_oracleSpec`, and the
+Fischlin adversaries put `unifSpec` first), and a transformation then samples
+inside the adversary it builds, as VCV-io's Fiat–Shamir `simulatedNmaAdv` runs
+its simulator inside the adversary it builds.
 
-**Scope.** The algebraic `AGMOMUFAdversary` keeps its shape, without a private
-coin oracle. *Theorem 5.11 stated before its reductions exist* records the
-constraint this places on its transformations. Decided October 2026 (Track
-CMZ-OMUF, #205).
+**Scope.** The UF-CMVA forgers `UFAdversary` and `AGMUFAdversary` keep their
+shape, without a private coin oracle. The algebraic one-more forger has the
+oracle with the plain one because the bridge from the algebraic to the plain
+game maps an algebraic forger to a plain one, and a plain forger that samples,
+such as the one the lifting lemma of #205 builds, is such an image only if the
+algebraic forger samples too. Decided October 2026 (Track CMZ-OMUF, #205).
 
 ## Open alternatives
 
