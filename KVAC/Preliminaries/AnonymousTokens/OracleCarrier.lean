@@ -10,7 +10,7 @@ import KVAC.Core.NIZKP.Security
 # Anonymous tokens at the oracle carrier `OracleComp (ZKRO H)` (O24 §3.4, Figure 6)
 
 A scheme whose server attaches a Fiat–Shamir proof, such as the printed μCMZ_AT
-of O24 Figure 9 with its issuance proof `π_is`, runs over
+of Figure 9 with its issuance proof `π_is`, runs over
 `OracleComp (ZKRO H)`, not `ProbComp`. This file states correctness and
 one-more unforgeability at that carrier. The design is in
 `DESIGN_ALTERNATIVES.md`, *Two carriers for one-more unforgeability*.
@@ -27,14 +27,15 @@ one-more unforgeability at that carrier. The design is in
 
 The experiment runs through one `runRO` from the empty cache: setup, key
 generation, the server's proofs and the adversary's own hash queries all share
-it. The extraction game of `KVAC.Framework.Extractability` threads one cache
-through its phases the same way. Without sharing, an adversary could not check
-a proof against the oracle the server proved under.
+it. The extraction game of `KVAC.Framework.Extractability` shares one cache
+across its phases too, threading it through separate `runRO` calls. Without
+sharing, an adversary could not check a proof against the oracle the server
+proved under.
 -/
 
 namespace KVAC.Preliminaries
 
-open OracleSpec OracleComp ENNReal KVAC.Core
+open ENNReal KVAC.Core
 
 /-! ## Correctness -/
 

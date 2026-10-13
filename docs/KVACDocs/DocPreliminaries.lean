@@ -133,12 +133,12 @@ blind-issuance sessions the adversary must present `q + 1` valid
 pairwise-distinct message/token pairs. Mirrors the UF-CMVA game
 {bpref "ufcmva_game"}[]: a Sign/Verify query menu, a logged
 honest oracle implementation (the log's length is Figure 6's dynamic
-counter `q`), the experiment, over any oracle carrier and run as a
-`ProbComp Bool`, with the three-clause win condition `OMUFWins`, and the
-advantage `OMUFAdv`. Unlike the UF-CMVA forger, the adversary also has a
-private coin oracle, as VCV-io's PRF, IND-CPA and Fischlin adversaries do.
-Static query-budget hypotheses belong to the security theorems over this game,
-not to the game itself.
+counter `q`), the experiment `omufExp` with the three-clause win condition
+`OMUFWins`, the game `OMUFGame` at `ProbComp`, and the advantage `OMUFAdv`.
+Unlike the UF-CMVA game, the experiment runs over any carrier `OracleComp spec`,
+and the adversary also has a private coin oracle, as VCV-io's PRF, IND-CPA and
+Fischlin adversaries do. Static query-budget hypotheses belong to the security
+theorems over this game, not to the game itself.
 :::
 
 :::definition "omuf_game_ro" (lean := "KVAC.Preliminaries.OMUFAdversaryRO, KVAC.Preliminaries.OMUFGameRO, KVAC.Preliminaries.OMUFAdvRO") (parent := "pre_anontoken") (tags := "milestone")
