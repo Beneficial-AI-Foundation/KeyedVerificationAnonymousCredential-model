@@ -84,8 +84,8 @@ function, or deployment is committed to here.
 
 The base MAC of the construction and the credential around it, issuance
 and presentation over the three proof systems of Figure 9, are both
-delivered. Correctness of the credential at the oracle carrier follows
-separately.
+delivered. The theorem {bpref "mucmz_correctness"}[] proves the correctness of
+the credential at the oracle carrier.
 
 :::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_setup, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
 The μCMZ base MAC over an abstract prime-order group
@@ -156,12 +156,13 @@ which also proves that the message family is non-empty, the standing assumption
 of {bpref "kvac_anonymity"}[].
 :::
 
-:::theorem "mucmz_correctness" (lean := "KVAC.Core.mem_support_runRO_bind, KVAC.Core.mem_support_runRO_pure, KVAC.Schemes.MicroCMZ.ProofSystemFor.verify_of_perfectlyComplete, KVAC.Schemes.MicroCMZ.credIssue_correct, KVAC.Schemes.MicroCMZ.credPresent_correct, KVAC.Schemes.MicroCMZ.μCMZCredential_correctRO") (parent := "cmz_construction") (tags := "milestone")
+:::theorem "mucmz_correctness" (lean := "KVAC.Schemes.MicroCMZ.ProofSystemFor.CompleteRO, KVAC.Schemes.MicroCMZ.ProofSystemFor.verify_of_perfectlyComplete, KVAC.Schemes.MicroCMZ.credIssue_correct, KVAC.Schemes.MicroCMZ.credPresent_correct, KVAC.Schemes.MicroCMZ.μCMZCredential_correctRO") (parent := "cmz_construction") (tags := "milestone")
 The credential of {uses "mucmz_construction"}[] satisfies the oracle-carrier
 correctness {uses "kvac_correctness"}[]. The hypotheses are a nonzero
 generator and the perfect completeness of `π_iu`, `π_is` and `π_p` for the
 relations {uses "riu_relation"}[], {uses "ris_relation"}[] and
-{uses "rp_relation"}[], with the crs setup `H ←$ G`.
+{uses "rp_relation"}[], with the scheme's crs setup `H ←$ G×`. The
+abbreviation `ProofSystemFor.CompleteRO` states this completeness.
 :::
 
 :::proof "mucmz_correctness"

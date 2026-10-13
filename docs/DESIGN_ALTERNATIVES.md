@@ -293,8 +293,9 @@ runs `σ ← (KVAC.I.Usr ⇌ KVAC.I.Srv)` and then
 `b ← (KVAC.P.Srv ⇌ KVAC.P.Usr(pp, m⃗, σ, φ'))`. Issuance fails when the issuer
 rejects the user's message and returns `σ' = ⊥` (O24 §4.1), or when a `check`
 line of the user fails (Figure 9). The paper defines `KVAC.P.Usr` on credentials
-only, so the experiment assigns no value to `b` after a failed issuance. Both readings, `b = 0` on `⊥` and the success event
-`σ ≠ ⊥ ∧ b = 1`, give the same probability. The decision states the second
+only, so the experiment assigns no value to `b` after a failed issuance. Both
+readings, `b = 0` on `⊥` and the success event `σ ≠ ⊥ ∧ b = 1`, give the same
+probability. The decision states the second
 reading, which needs no convention on `⊥`.
 
 ## Schwartz–Zippel bound `3/p`, not the paper's `1/p`

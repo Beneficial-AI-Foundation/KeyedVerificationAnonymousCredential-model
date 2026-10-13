@@ -134,8 +134,8 @@ complete proofs an honest run fails with probability 1 − (1 − 1/p)<sup>3</su
 or 2/p − 1/p<sup>2</sup> for issuance alone. The error is negligible, so the
 figure still satisfies Definition 4.3, and the inconsistency, not the error, is
 the erratum. Drawing from ℤ<sub>p</sub><sup>×</sup> costs nothing and gives
-perfect correctness. The base MAC has the same mismatch, U ←$ 𝔾 in Figure 9
-against U ←$ 𝔾<sup>×</sup> in Eq. (1).
+perfect correctness. The base MAC has the same mismatch, with U ←$ 𝔾 in
+Figure 9 and U ←$ 𝔾<sup>×</sup> in Eq. (1).
 
 **How the formalization fixes it.** The formalization draws all three from
 ℤ<sub>p</sub><sup>×</sup> with `uniformUnits`, the issuance nonces in PR #146
@@ -239,9 +239,13 @@ no simulator in the code yet (#163).
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the
-presentation's architecture slide. Items 7 and 8 concern §5.6 and are
-recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
-`Schemes/MicroCMZ/ATVariant.lean`. Items 5 and 9–11 are recorded at their
+presentation's architecture slide. Item 7 concerns §5.6 and is recorded in
+`docs/DESIGN_ALTERNATIVES.md` and at its use sites in
+`Schemes/MicroCMZ/ATVariant.lean`. Item 8 concerns all of Figure 9. The
+credential in `Schemes/MicroCMZ/Credential.lean` records it at the three draws,
+and the anonymous-token core in `Schemes/MicroCMZ/ATVariant.lean` at the two
+issuance nonces. The header of `Framework/Correctness.lean` records its effect
+on correctness. Items 5 and 9–11 are recorded at their
 use site in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. Item 12 is
 recorded in `Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean`. Items
 13–15 concern §5.1 and §5.4: item 13 is recorded in

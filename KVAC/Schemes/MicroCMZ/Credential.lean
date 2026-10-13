@@ -52,8 +52,8 @@ On public parameters `pp = (X₀, Xᵣ, X⃗)`, attributes `m⃗` and predicate 
 Both issuance nonces `u`, `r` and the presentation rerandomizer `r` are drawn
 from the nonzero scalars, where Figure 9 prints `ℤ_p`. §5.1 states the
 rerandomization property for `r ≠ 0` and samples the presentation rerandomizer
-from `ℤ_p×`. Errata item 8 records the mismatch for the issuance nonces, and the
-anonymous-token core `ATVariant.lean` draws them the same way.
+from `ℤ_p×`. Errata item 8 records the mismatch for the three draws, and the
+anonymous-token core `ATVariant.lean` draws the issuance nonces the same way.
 
 The server's input is `sk` alone, so it recomputes the public bases `X⃗`, `X₀` and
 `Xᵣ` from the secret key and the crs.

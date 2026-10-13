@@ -55,7 +55,7 @@ Overwhelming does not imply probability one. Figure 9 as printed draws the
 issuance nonces `u` and `r` and the presentation rerandomizer `r` from `ℤ_p`,
 and a zero draw makes the honest run fail. With perfectly complete proofs it
 fails with the negligible probability `1 − (1 − 1/p)³ = 3/p − 3/p² + 1/p³`, so
-it satisfies Definition 4.3 yet not `Correct`. That is fine for the
+it satisfies Definition 4.3 yet not `CorrectRO`. That is fine for the
 perfectly-correct schemes we formalize; a future scheme with correctness error
 would need a probabilistic restatement.
 
