@@ -11,8 +11,9 @@ import KVAC.Framework.Anonymity
 # The security games at the μCMZ credential
 
 The extraction game `EXTGame` of Figure 8 and the anonymity game of Definition 4.4 elaborate at
-the μCMZ instance `μCMZCredentialSyntax` of Figure 9. This file holds only `example`s and declares
-nothing. The review note of issue #163 asks the Theorem 5.8 and Theorem 5.10 statements to write
+the μCMZ instance `μCMZCredentialSyntax` of Figure 9. This file holds `example`s and one theorem,
+`nonemptyMsg_μCMZCredentialSyntax`, the standing assumption of `Anonymous` at the instance. The
+review note of issue #163 asks the Theorem 5.8 and Theorem 5.10 statements to write
 `AnonAdv HS (μCMZCredentialSyntax …)` and `EXTAdv HS (μCMZCredentialSyntax …)` directly, so no
 local advantage is defined here. The statement files, their extractor and their simulator belong to
 issues #10 and #179.
@@ -47,7 +48,7 @@ variables of `Credential.lean`. The anonymity advantage `AnonAdv` needs no decid
 
 namespace KVAC.Schemes.MicroCMZ
 
-open OracleComp KVAC.Core KVAC.Framework ENNReal
+open KVAC.Core KVAC.Framework ENNReal
 
 set_option autoImplicit false
 
@@ -111,8 +112,9 @@ noncomputable example (issuer : AnonIssuer HS (μCMZCredentialSyntax F HS gen π
   AnonAdv HS (μCMZCredentialSyntax F HS gen πiu πis πp) issuer D sim
     (secParam := secParam) (n := n) crs sk pp m φ cache₀
 
-/-- The message family of the instance is non-empty, the standing assumption of `Anonymous`. -/
-example : NonemptyMsg (μCMZCredentialSyntax F HS gen πiu πis πp) :=
+/-- The message family of the μCMZ credential is non-empty, the standing assumption of
+`Anonymous`. The scalar `0 : F` witnesses it. -/
+theorem nonemptyMsg_μCMZCredentialSyntax : NonemptyMsg (μCMZCredentialSyntax F HS gen πiu πis πp) :=
   fun _ => ⟨(0 : F)⟩
 
 end KVAC.Schemes.MicroCMZ
