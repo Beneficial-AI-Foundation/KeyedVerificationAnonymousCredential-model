@@ -222,6 +222,24 @@ structure now.
 so Eq. 14's "identically distributed" holds only under the conditioning. 
 The `(Uⱼ, bᵤ)` joint law stays independent uniform (`sign_U_bu_dist_eq`), 
 so the masks' hiding is unaffected.
+
+## Conditioned η masks
+
+**Decision.** The 3-DL reduction's η masks `(aη, bη)` are sampled conditioned on
+`H = aη·G + bη·X ≠ 0`, by the sign-mask sampler `reductionMaskSample`
+(`AGMReduction/Core.lean`, `redTrace`).
+
+**Rejected alternative.** The paper's unrestricted `aη, bη ←$ ℤ_p` (Eq. 13, p. 37).
+
+**Fidelity argument.** The real game's `setup` draws `H` from `𝔾^×`
+(*Nonzero crs H ←$ 𝔾^×* below), while an unrestricted pair gives `H = 0` with
+probability `1/p`, one `aη` per `bη`. An adversary that acts only when `H ≠ 0`
+then wins with different probabilities in the two games, so the game bridge
+`AGM_UF_CMVAGame_evalDist_eq` would be false. Under the condition `H` has the
+law of `uniformNonzero G` (`sign_U_dist_eq`) and `bη` is uniform and independent
+of `H` (`sign_U_bu_dist_eq`), so the η coordinate of the shift point,
+`log H + bη`, stays uniform and the Schwartz–Zippel argument for `3/p` is unchanged.
+
 ## Structured hash domains
 
 **Decision.** `HashSpec.Dom` is an arbitrary type; each scheme picks a
@@ -433,6 +451,31 @@ own verifier rejects. Under the literal samplers honest issuance fails with
 probability `2/p − 1/p²`. Reductions replaying issuance must account for
 the per-nonce `1/p` distribution differences, as the AGM track already does for
 the tag base (*Conditioned sign masks* above).
+
+## Nonzero crs `H ←$ 𝔾^×` where Figure 9 prints `𝔾`
+
+**Decision.** `μCMZ.setup` samples the crs element `H` from the nonzero
+group elements `G ∖ {0}` via `uniformNonzero` (`Construction.lean`, issue
+#149). The crs type stays the plain `G`; `H ≠ 0` is recovered where a proof
+needs it from `mem_support_uniformNonzero`.
+
+**Rejected alternative.** Figure 9's literal `H ←$ 𝔾`, under which `H = 0_𝔾`
+with probability `1/p`.
+
+**Fidelity argument.** Unlike the nonzero nonces above, this is not a
+correctness convention: with `H = 0_𝔾` admissible, Definition 4.4 is false
+for μCMZ, and no choice of simulator repairs it.
+
+Indeed, Definition 4.4 (p. 30) quantifies over every
+`crs ∈ [KVAC.S(1^λ, n)]`, each taken as a parameter, so one admissible crs
+with non-negligible advantage refutes it. At `H = 0_𝔾` the presentation's
+`C_V := V′ + r′H` collapses to `C_V = V′ = s·U′`, and a distinguisher with
+advantage above `1 − 4/p` exists against every simulator; see the corrected
+Example 1 on issue #149 for the full analysis.
+
+Drawing `H` from `𝔾^×` removes `H = 0_𝔾` from the support of `setup`. The
+other properties are unaffected; the OMUF bound of Theorem 5.11 loosens by
+`(q + 3)/(p(p − 1))` (same analysis).
 
 ## Anonymity game at fixed setup, negligibility over instance families
 
@@ -707,9 +750,9 @@ and returns `crs := (Γ, H)`, the group description together with a random
 group element (Figure 9). The μCMZ instance fixes the group and its generator
 as type parameters and returns only `H` from `setup`, so the framework's
 quantifier "crs ∈ [KVAC.S(1^λ, n)]" ranges over every group of the class and
-every `H`, with no λ in it. The faithful crs is `Γ × 𝔾`. Issue #148 tracks the
-encodings, a deterministic family `GrGen : ℕ → Type` as the committed step,
-and sampled group descriptions as the fully faithful one. Until it closes the
-asymptotic predicates `Anonymous`, `AnonymousPoly`, `Extractable` and
-`ExtractablePoly` are not provable for μCMZ, and the theorems bound the
-advantages at fixed parameters.
+every nonzero `H` (#149), with no λ in it. The faithful crs is `Γ × 𝔾`. Issue
+#148 tracks the encodings, a deterministic family `GrGen : ℕ → Type` as the
+committed step, and sampled group descriptions as the fully faithful one.
+Until it closes the asymptotic predicates `Anonymous`, `AnonymousPoly`,
+`Extractable` and `ExtractablePoly` are not provable for μCMZ, and the
+theorems bound the advantages at fixed parameters.

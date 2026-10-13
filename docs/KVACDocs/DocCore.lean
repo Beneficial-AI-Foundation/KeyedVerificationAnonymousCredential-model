@@ -12,6 +12,7 @@ import KVAC.Core.NIZKP.Security
 import KVAC.Core.NIZKP.Extraction
 import KVAC.Core.AlgebraicMAC
 import KVAC.Core.AlgebraicMAC.Security
+import KVAC.Core.SimulateQGuarded
 
 open Verso.Genre Manual
 open Informal
@@ -27,8 +28,9 @@ tag := "core"
 Shared abstract algebra (Track 0). These typeclasses define the API contract
 that every higher chapter imports: a prime-order group, hash and
 random-oracle interfaces, a generic NIZK proof system, the CRS and
-key-generation skeleton shared by every keyed scheme, and the algebraic
-MAC syntax of O24, Section 3.2. The interfaces are designed once and
+key-generation skeleton shared by every keyed scheme, the algebraic
+MAC syntax of O24, Section 3.2, and a guarded-oracle transport for VCV-io's
+`simulateQ`. The interfaces are designed once and
 remain stable across the life of the project; concrete instantiations
 live in the *Concrete run* chapter.
 
@@ -199,4 +201,32 @@ for `n` attributes over a prime-order group: the algorithms `Setup`,
 (UF-CMVA) security game for an algebraic MAC {uses "algebraic_mac"}[]: the
 adversary holds signing and verification oracles and must forge a valid
 tag on an unqueried message vector.
+:::
+
+# Guarded oracle simulation
+
+:::group "core_guarded_oracle"
+Guarded oracle simulation
+:::
+
+:::theorem "guarded_oracle_projection" (lean := "KVAC.Core.guardImpl, KVAC.Core.guardImpl_run_pos, KVAC.Core.probFailure_guardImpl_run_neg, KVAC.Core.map_run_simulateQ_eq_of_guard_neverFails") (parent := "core_guarded_oracle") (tags := "milestone")
+Guarded oracle simulation. `guardImpl` wraps a stateful oracle implementation
+with a per-query predicate `good`: a good query runs the wrapped step lifted
+into `OptionT ProbComp`, a bad one fails, so the guarded run aborts at the
+first bad query and a zero failure probability certifies that no bad query is
+reachable in any execution. Under that certificate the state-projection
+theorem transports a simulated run along a state map `proj`: if every good
+step of the first implementation projects onto the corresponding step of the
+second, the two full runs agree under `proj`, as an equality of `ProbComp`
+computations.
+:::
+
+:::proof "guarded_oracle_projection"
+Induction on the oracle computation. At each query the never-fails
+hypothesis splits into goodness of the query and never-fails for every
+continuation reachable from the unguarded step; the induction hypothesis then
+rewrites each continuation under the support of that step, `bind_map_left`
+moves the projection onto the step, and the per-query hypothesis closes the
+goal. The per-query predicate is what VCV-io's state-invariant transport
+`map_run_simulateQ_eq_of_query_map_eq_inv'` cannot express.
 :::

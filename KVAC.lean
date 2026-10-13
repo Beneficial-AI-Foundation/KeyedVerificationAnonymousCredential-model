@@ -6,11 +6,13 @@ import KVAC.Core.AlgebraicMAC.Security
 import KVAC.Core.NIZKP
 import KVAC.Core.NIZKP.Security
 import KVAC.Core.NIZKP.Extraction
+import KVAC.Core.SimulateQGuarded
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.ProofSystems
 import KVAC.Schemes.MicroCMZ.Credential
 import KVAC.Schemes.MicroCMZ.CredentialCorrectness
+import KVAC.Schemes.MicroCMZ.CredentialGames
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
