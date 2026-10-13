@@ -12,9 +12,9 @@ import VCVio.CryptoFoundations.SecExp
 The one-more unforgeability (OMUF) game for an `ATSyntax ProbComp`,
 following O24 §3.4 and Figure 6, and mirroring the UF-CMVA layer
 (`KVAC.Core.AlgebraicMAC.Security`) construct for construct, except that the
-adversary also has a private coin oracle. After `q` blind-issuance sessions,
-the adversary must present `q + 1` valid pairwise-distinct message/token
-pairs.
+adversary also has a private coin oracle and the experiment is generic in the
+carrier. After `q` blind-issuance sessions, the adversary must present `q + 1`
+valid pairwise-distinct message/token pairs.
 
 ## Layout
 
@@ -28,7 +28,7 @@ pairs.
   for a fixed secret key, threading the `SignLog` via `StateT`.
 - `OMUFWins` — the Figure 6 winning condition, as a reusable decidable
   proposition.
-- `omufExp` — the experiment over any oracle carrier `OracleComp spec`.
+- `omufExp` — the experiment over any carrier `OracleComp spec`.
 - `OMUFGame` — `omufExp` at `ProbComp`.
 - `OMUFAdv` — the OMUF advantage `Pr[= true | OMUFGame]`.
 
@@ -52,8 +52,9 @@ not the server rejects it — Figure 6 increments `q` before the response.
 
 **Generic in the carrier.** `OMUFQuery`, `OMUFOracleSpec`, `SignLog`,
 `omufOracleImpl` and `OMUFWins` take a scheme over any monad `M`, and the
-experiment `omufExp` runs over any oracle carrier `OracleComp spec`;
-`OMUFAdversary`, `OMUFGame` and `OMUFAdv` are at `ProbComp`.
+experiment `omufExp` runs over any carrier `OracleComp spec`; `OMUFAdversary`,
+`OMUFGame` and `OMUFAdv` are at `ProbComp`. The design is in
+`DESIGN_ALTERNATIVES.md`, *Two carriers for one-more unforgeability*.
 -/
 
 namespace KVAC.Preliminaries
@@ -151,7 +152,7 @@ abbrev OMUFWins (tok : ATSyntax M) (crs : tok.Crs secParam n)
     ∀ p ∈ out, tok.verify crs sk p.1 p.2 = true
 
 /--
-The Figure 6 experiment over an oracle carrier `OracleComp spec`: setup and key
+The Figure 6 experiment over a carrier `OracleComp spec`: setup and key
 generation, then `run` with its `spec` queries forwarded to the carrier and its
 Sign / Verify queries answered by `omufOracleImpl`; `true` iff `OMUFWins` holds
 with `q` the number of Sign queries made.

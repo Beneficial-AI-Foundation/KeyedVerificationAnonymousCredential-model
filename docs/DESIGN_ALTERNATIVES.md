@@ -782,12 +782,12 @@ algebraic forger samples too. Decided October 2026 (Track CMZ-OMUF, #205).
 
 **Decision.** Anonymous tokens keep two carriers. The core μCMZ_AT and the
 plain Figure 6 game stay at `ProbComp`. A scheme whose server attaches a
-Fiat–Shamir proof, the printed μCMZ_AT with `π_is`, runs at
+Fiat–Shamir proof, such as the printed μCMZ_AT with `π_is`, runs at
 `OracleComp (ZKRO H)` and gets its own game, `OMUFGameRO`, which runs through
 one `runRO` from the empty cache, so the scheme's proofs and the adversary's
 hash queries share it (`AnonymousTokens/OracleCarrier.lean`). Both games run
-one experiment, `omufExp`, generic in the oracle carrier, over a query menu,
-oracle, log and winning condition generic in the monad.
+one experiment, `omufExp`, generic in the carrier `OracleComp spec`, over a
+query menu, oracle, log and winning condition generic in the monad.
 
 **Why.** The `π_is` lifting lemma of #205 bounds the scheme with `π_is` by the
 core, so its left side lives at the oracle carrier and its right side at
@@ -800,10 +800,13 @@ core, so its left side lives at the oracle carrier and its right side at
 - *One game over every carrier*, `OMUFGame` itself generic. A game ends in
   `ProbComp`, so a generic one needs a way to run its carrier to `ProbComp`,
   `runRO` with its cache for one carrier and the identity for the other; with
-  the experiment `omufExp` generic instead, each carrier's game fixes its own in
-  one line.
+  the experiment `omufExp` generic instead, each carrier's game supplies its
+  own runner in one line (`runRO H ∅` at the oracle carrier, none at
+  `ProbComp`).
 - *A copy of the building blocks for the oracle carrier.* The same declarations
-  twice, with nothing to keep them in step.
+  twice, with nothing to keep them in step. Only the adversary structure is
+  restated per carrier: `OMUFAdversaryRO` is `OMUFAdversary` with `ZKRO H` in
+  place of `unifSpec`.
 
 Decided October 2026 (Track CMZ-OMUF, #183).
 
