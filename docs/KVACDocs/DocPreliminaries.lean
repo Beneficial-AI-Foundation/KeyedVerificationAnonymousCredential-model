@@ -157,3 +157,19 @@ Correctness of {uses "anonymous_tokens"}[] at the oracle carrier
 issuance thread one random-oracle cache, so that a scheme's Fiat–Shamir proofs
 share the oracle.
 :::
+
+:::theorem "omuf_ro_bridge" (lean := "KVAC.Preliminaries.ATSyntax.toZKRO, KVAC.Preliminaries.omufToZKROImpl, KVAC.Preliminaries.OMUFAdversary.toZKRO, KVAC.Preliminaries.OMUFAdvRO_toZKRO") (parent := "pre_anontoken") (tags := "milestone")
+The bridge between the two carriers. A scheme over `ProbComp` lifts to the
+oracle carrier with its algorithms behind `liftM`, and an adversary of the
+plain game {uses "omuf_game"}[] lifts with its queries translated, neither
+querying the random oracle. The lifted pair has, in the game at the oracle
+carrier {uses "omuf_game_ro"}[], the advantage the original pair has in the
+plain game.
+:::
+
+:::proof "omuf_ro_bridge"
+Neither the lifted scheme nor the lifted adversary queries `H`, so the cache
+stays empty through the run and every sampling query reaches `ProbComp`
+unchanged, by {uses "runro_lift"}[] for the scheme's algorithms and by
+splitting the simulation of the summed specification for the adversary.
+:::
