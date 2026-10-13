@@ -752,6 +752,165 @@ proof system, with an explicit region of the random-oracle domain in place of
 for issue #3. Errata item 17 records the difference between Theorem 1 and
 Theorem 5.8.
 
+## Theorem 5.10 at the honest UF-CMVA game with Help
+
+**Decision.** The unforgeability term of `μCMZ_extractability`
+(`Schemes/MicroCMZ/Extractability.lean`) is `UF_CMVAHelpAdv`
+(`Schemes/MicroCMZ/UFCMVAHelp.lean`), the advantage in the honest game of Figure
+5 with the oracle `Help` of §5.3, answered by the challenger with the key. No
+query carries a representation, and the theorem puts no algebraic restriction on
+its single-user adversary, as the printed statement puts none on its adversary.
+
+**Rejected alternatives.** First, the plain advantage `UF_CMVAAdv` of the Figure
+5 game, which the statement of Theorem 5.1 for well-behaved algebraic
+adversaries (PR #220) bounds. Its `WellBehaved` hypothesis rejects every `Help`
+query, and the reduction `B` of §5.5 confirms the candidate `Z` through `Help`.
+Second, the advantage `AGM_UF_CMVAAdv` in the instrumented game
+`AGM_UF_CMVAGame` of `AlgebraicMAC.lean`, whose `verify` and `help` queries
+carry representations. That choice forces the reduction `B` to supply
+representations, which only the credential adversary holds. The theorem would
+then quantify over algebraic extraction adversaries in a duplicate of `EXTGame`
+with representation-carrying queries. The branch of #179 held that form for one
+day, 12 October 2026, and dropped it.
+
+**Fidelity argument.** Theorem 5.1 (p. 35) is proved "even if the adversary is
+given one additional oracle Help", which "will simplify the future analysis of
+the keyed-verification credential scheme". The proof of Theorem 5.10 (p. 43)
+uses the answer of `Help` for the first equality of its display. The term of the
+bound is therefore the advantage in the game with `Help`. The paper ties `Help`
+to no model. The algebraic group model is a hypothesis of Theorem 5.1 and of
+Lemma 5.4 (pp. 35, 36), where the reduction answers `Help` from the
+representations of an algebraic adversary (p. 38), and of nothing in §5.5. The
+printed Theorems 5.2 and 5.10 (pp. 35, 42) put no algebraic restriction on their
+adversary. The instrumented game is the device of that reduction, and its module
+docstring calls it "scaffolding, not the honest game". The bound of Theorem 5.1
+reaches the game with `Help` for algebraic adversaries through the bridge of
+issue #81, obligation 3. That is where the model enters when the two theorems
+are chained. `Help` reads the key `(x₀, xᵣ, x⃗)`, so the game is specific to
+μCMZ and not an extension of the generic `UF_CMVAGame` of
+`Core/AlgebraicMAC/Security.lean`.
+
+## The candidate `Z` of Theorem 5.10 is a function of the proof and the trace
+
+**Decision.** `ZCandidate` is a function of the crs, the statement of `R_cmz.p`
+without `Z`, the proof `π_p` and the random-oracle table, returning an optional
+group element. The hypothesis `ZCandidateSound` says that it returns the
+verifier's `Z` whenever `π_p` verifies on it from that table. The theorem takes
+both as arguments.
+
+**Rejected alternatives.** A `ProbComp`-valued recovery, since the recovery
+the paper describes uses no coins. A reuse of `TraceExtractor`, which needs
+the full statement, `Z` included, and returns a witness. A bound term for a
+failed recovery, which the printed bound does not carry.
+
+**Fidelity argument.** The paper assumes "that the proof itself can provide a
+candidate instance Z, and that the instance can be check for correctness via
+the oracle Help" (p. 42), and says that for Schnorr proofs the statement is
+recovered "by looking at the trace of random oracle queries". The hypothesis
+is that assumption. The instance fact for the Fiat–Shamir Σ-protocols belongs
+to issue #3, with the `ConfinedSystem` facts.
+
+## The extractor of Definition 4.5 takes the random-oracle table
+
+**Decision.** `Extractor` of `Framework/Extractability.lean` receives the
+random-oracle table as of the call and runs in `ProbComp`. The `Issue` oracle
+and the win condition of `EXTGame` pass it the table as of the call, before
+the server's own computation, as `ksndGame` does. `μCMZExtractor` wraps the
+trace extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`, with `Ext.P` recomputing
+`Z` from the secret key as the server does.
+
+**Rejected alternative.** The pure extractor without the table of the first
+version of the game, `Sk → Pred → IssueMsg → Option MsgVec`.
+
+**Fidelity argument.** Figure 8 (p. 31) writes `m := Ext.I(sk, φ, μ)` and
+`m* := Ext.P(sk, φ*, ρ*)`, and the proof of Theorem 5.10 (pp. 42 to 43)
+defines both from the extractors of the proof systems, which read the trace
+of random-oracle queries and are algorithms. A pure extractor without the
+table cannot be instantiated by them. The secret key stays an argument, since
+Figure 8 prints it and `Ext.P` uses it to compute `Z` (p. 43, "internally,
+the extractor checks that Z was correctly computed via the secret key").
+
+## Theorem 5.10 at the sampled crs
+
+**Decision.** The views `riuNIZKPSampled`, `risNIZKPSampled` and
+`rpNIZKPSampled` sample the crs as the credential's setup does, so the four
+advantages of the bound use the same distribution of `H` as the extraction game.
+
+**Rejected alternative.** The views at a fixed crs of `Anonymity.lean`.
+
+**Fidelity argument.** Definition 4.5 (p. 31) samples the crs inside the game
+and the §3.3 games sample it inside, so the reductions of §5.5 forward the
+crs of the game they play. Definition 4.4 quantifies over the crs pointwise,
+which is why Theorem 5.8 fixes it.
+
+## Theorem 5.10 with the printed knowledge-soundness terms and no query factors
+
+**Decision.** The bound of `μCMZ_extractability` carries `KSNDAdv` of
+`ZKP_cmz.iu` and of `ZKP_cmz.p` as Theorem 5.10 prints it, with no factor in the
+number of `Issue` or `Present` queries. The theorem takes as hypotheses the
+condition of Remark 5.9 in the form of `ConfinedSystem`. Each proof system is
+confined to its own region of the random-oracle domain, with the simulator of
+`ZKP_cmz.is` and the extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`, and the regions
+are pairwise disjoint. The property the proof uses is `KSNDSimAdv`, knowledge
+soundness in the presence of simulated proofs of `ZKP_cmz.is`, and the lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term.
+
+**Rejected alternatives.** A simulation-extractability term `SEAdv` in place
+of each `KSNDAdv`, and the factors `q_I` and `q_P + 1` on the two terms that
+issue #179 names.
+
+**Fidelity argument.** The bound of Theorem 5.10 is the one to formalize. Remark
+5.9 (p. 42) states its case for `π_iu` after simulated `π_is`, the case of this
+theorem. It asserts that knowledge soundness suffices for Schnorr proofs because
+"the vector sizes mismatch", without a proof. The lemma states the assertion for
+any proof system, with the mismatch as disjoint regions. The proof of Theorem
+5.10 says that the adversaries for knowledge soundness are "immediate" from the
+winning cases (i) and (ii) (p. 43) and prints no query factor. The extractors
+are public functions of the trace, so a reduction can run them at every `Issue`
+and `Present` query. It outputs the first proof they fail on, without guessing a
+query. The proof phase decides whether that argument closes, and a factor would
+be a departure to record then.
+
+## Theorem 5.10 in the single-user setting
+
+**Decision.** `μCMZ_extractability` quantifies over `SUEXTAdversary`, an
+adversary that queries `Issue`, `Present` and the random oracle and never
+`NewUsr` or `PresentUsr`, embedded in the full game of Figure 8 by
+`SUEXTAdversary.toEXTAdversary`. The game itself, `EXTGame` of
+`Framework/Extractability.lean`, keeps the four oracles.
+
+**Rejected alternative.** The full game with an adversary that queries
+`NewUsr` and `PresentUsr`.
+
+**Fidelity argument.** §4.4 (p. 32) says "when proving our keyed-verification
+credential systems, we do not consider the multi-user setting", and the
+reduction of Theorem 5.10 (p. 43) handles `Issue` and `Present` queries only. In
+the full game the printed bound fails for a proof system whose proofs are
+malleable. A presentation of an honest user with a modified proof verifies, lies
+outside `PQrs`, and its attributes lie outside `Qrs`, which Figure 8 fills from
+`Issue` only. The adversary wins whether or not the extractor opens it, while
+every hypothesis of the theorem holds. §4.4 says that strong simulation
+extractability is what the condition `(φ*, ρ*) ∉ PQrs` needs. The multi-user
+extension is step 8 of item 13 of `docs/MICROCMZ_REMAINING.md`.
+
+## The reductions of Theorem 5.10 are existential
+
+**Decision.** The four reductions `B`, `A'`, `A''` and `A'''` of
+`μCMZ_extractability` are existentially quantified after the adversary, as
+the three reductions of `μCMZ_anonymity` are.
+
+**Rejected alternative.** Explicit reductions as arguments of the bound, as
+`agm_ufcmva_le_explicit` names `microCMZN3DLReduction` and `gapDlReduction`.
+
+**Fidelity argument.** The paper states its bounds for reductions its proofs
+construct, and the explicit reductions of Theorem 5.10 are the content of its
+proof, steps 1 to 6 of item 13. The development fixes no efficiency notion on
+adversaries, as `Extractable` records, so the existential inequality holds for
+reductions of any cost. An unbounded `B` reaches advantage one in
+`UF_CMVAHelpGame` by trying every scalar at `Verify`. The module docstring
+states this, and the proof phase may replace the existential form by the
+explicit reductions once they exist.
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
