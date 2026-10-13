@@ -9,6 +9,7 @@ import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.Relations
 import KVAC.Schemes.MicroCMZ.ProofSystems
 import KVAC.Schemes.MicroCMZ.Credential
+import KVAC.Schemes.MicroCMZ.CredentialGames
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -137,7 +138,7 @@ response first and solves for the commitment; special soundness
 subtracts two accepting transcripts.
 :::
 
-:::definition "mucmz_construction" (lean := "KVAC.Schemes.MicroCMZ.credIssueCoins, KVAC.Schemes.MicroCMZ.credPresentCoins, KVAC.Schemes.MicroCMZ.credBases, KVAC.Schemes.MicroCMZ.credIssueUsr₁, KVAC.Schemes.MicroCMZ.credIssueSrv, KVAC.Schemes.MicroCMZ.credIssueUsr₂, KVAC.Schemes.MicroCMZ.credPresentUsr, KVAC.Schemes.MicroCMZ.credPresentSrv, KVAC.Schemes.MicroCMZ.μCMZCredKeyedSetup, KVAC.Schemes.MicroCMZ.μCMZCredentialSyntax") (parent := "cmz_construction") (tags := "paper, O24 Fig 9")
+:::definition "mucmz_construction" (lean := "KVAC.Schemes.MicroCMZ.credIssueCoins, KVAC.Schemes.MicroCMZ.credPresentCoins, KVAC.Schemes.MicroCMZ.credBases, KVAC.Schemes.MicroCMZ.credIssueUsr₁, KVAC.Schemes.MicroCMZ.credIssueSrv, KVAC.Schemes.MicroCMZ.credIssueUsr₂, KVAC.Schemes.MicroCMZ.credPresentUsr, KVAC.Schemes.MicroCMZ.credPresentSrv, KVAC.Schemes.MicroCMZ.μCMZCredKeyedSetup, KVAC.Schemes.MicroCMZ.μCMZCredentialSyntax, KVAC.Schemes.MicroCMZ.nonemptyMsg_μCMZCredentialSyntax") (parent := "cmz_construction") (tags := "paper, O24 Fig 9")
 *O24 Figure 9.* The μCMZ keyed-verification credential system
 construction (a variant of `MAC_GGM`), instantiating the KVAC syntax
 {uses "kvac_syntax"}[] from an algebraic MAC {uses "algebraic_mac"}[]; the boxed
@@ -148,6 +149,10 @@ proof systems of {uses "mucmz_proof_system_parameters"}[], with setup and key
 generation those of the base MAC lifted through `liftM`. The issuance nonces
 and the presentation rerandomizer are drawn from the nonzero scalars, and the
 presentation server checks `U' ≠ 0` outside `R_cmz.p`, as Figure 9 does.
+The extraction game {bpref "extractability_game"}[] and the anonymity game
+{bpref "kvac_anonymity"}[] elaborate at this instance, in `CredentialGames.lean`,
+which also proves that the message family is non-empty, the standing assumption
+of {bpref "kvac_anonymity"}[].
 :::
 
 :::definition "riu_relation" (lean := "KVAC.Schemes.MicroCMZ.RiuStmt, KVAC.Schemes.MicroCMZ.RiuWitness, KVAC.Schemes.MicroCMZ.riuRel") (parent := "cmz_construction") (tags := "paper, O24 Eq 9")
