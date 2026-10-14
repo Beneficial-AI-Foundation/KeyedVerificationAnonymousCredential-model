@@ -14,7 +14,9 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.Security
 enters that game through its forgetful translation `AGMUFAdversary.toUFAdversary`. The
 algebraic group model enters twice: through the adversary type, which outputs a representation
 for every group element it submits, and through the hypothesis `WellBehaved`, which makes those
-representations truthful and rules out Help queries.
+representations truthful and rules out Help queries. Issue #236 tracks the definition of the
+algebraic condition and the proof that `WellBehaved` is equivalent to it together with the
+absence of Help queries.
 
 The bound is that of Lemma 5.5 (`agm_ufcmva_le_explicit`), against the same two named
 reductions, `microCMZN3DLReduction` and `gapDlReduction`. It departs from O24's printed
