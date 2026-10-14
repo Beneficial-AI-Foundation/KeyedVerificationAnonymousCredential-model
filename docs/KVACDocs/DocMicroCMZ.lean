@@ -776,6 +776,8 @@ plain game of {uses "ufcmva_game"}[]: for a well-behaved algebraic adversary
 ({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
 of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
 this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
+Issue #236 tracks the algebraic condition and the proof that well-behavedness is
+that condition together with the absence of Help queries.
 :::
 
 :::proof "mucmz_mac_security"
@@ -786,7 +788,7 @@ advantage, which {uses "attribute_lifting"}[] bounds.
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
 *O24 Lemma 5.4.* Base case of {bpref "mucmz_mac_security"}[]: in the algebraic group
 model, single-attribute μCMZ is an algebraic MAC over `ℤ_p`, UF-CMVA
-secure in the game of {uses "ufcmva_game"}[] under 3-DL ({uses "hardness_assumptions"}[]),
+secure in the AGM game of {uses "agm_model"}[] under 3-DL ({uses "hardness_assumptions"}[]),
 with advantage at most the 3-DL advantage of its reduction plus `3/p`.
 :::
 
