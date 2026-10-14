@@ -124,7 +124,7 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
     - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
     - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40): `riuRel` / `riuSigma` with completeness and special soundness.
     - [x] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — landed (#41): `risRel` / `risSigma` and `rpRel` / `rpSigma`.
-    - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p (`Credential.lean`) — in progress (#163). The instance `μCMZCredentialSyntax` is delivered over the proof-system parameters of `ProofSystems.lean`. Its correctness `CorrectRO` follows.
+    - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p (`Credential.lean`) — in progress (#163). The instance `μCMZCredentialSyntax` is delivered over the proof-system parameters of `ProofSystems.lean`. The theorem `μCMZCredential_correctRO` of `CredentialCorrectness.lean` proves its correctness `CorrectRO` (PR #221).
 
 ## Wave 3 — security tracks (per scheme)
 
