@@ -90,9 +90,10 @@ def ForgeryConsistent (H : G) (pp : Params G n)
 2. every reachable forgery output is consistent over the final transcript.
 
 This is the formal content of "the adversary is algebraic *and plays the plain game*": its
-representations are always truthful, and it never uses the Help oracle absent from Figure 5. The
-gates of `agmOracleImpl` and the consistency conjunct of `AGM_UF_CMVAGame` never fire against
-such an adversary. -/
+representations are always truthful, and it never uses the Help oracle absent from Figure 5.
+Issue #236 tracks the definition of that condition and the proof that `WellBehaved` is equivalent
+to it. The gates of `agmOracleImpl` and the consistency conjunct of `AGM_UF_CMVAGame` never fire
+against such an adversary. -/
 def WellBehaved (secParam : ℕ) (A : AGMUFAdversary F G n) : Prop :=
   ∀ (sk : Key F n) (H : G) (pp : Params G n),
     Pr[⊥ | (simulateQ (guardedAgmOracleImpl gen secParam sk H pp) (A.run H pp)).run []] = 0 ∧
