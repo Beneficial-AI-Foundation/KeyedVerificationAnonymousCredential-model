@@ -685,6 +685,39 @@ keeps one sampler `$ᵗ (Fin n → F)` and one uniform `Xᵢ = rᵢ • X₁` cl
 instead of a distinguished index `0` in `Fin n` with its own case in every
 translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
+## `WellBehaved` quantifies over every key and crs, and forbids Help
+
+**Decision.** `WellBehaved` (`AGMBridge.lean`) is the hypothesis under which the
+AGM game of an algebraic adversary and the plain Figure 5 game of its
+translation agree. It asks for two conditions, a never-failing run of the
+oracle guarded by `agmGood` and a consistent forgery, at every key `sk`, crs
+`H` and public parameters `pp`. The guard `agmGood` rejects every Help query.
+
+**Rejected alternatives.** (i) The two conditions only where Figure 5 samples
+(O24 p. 25, `crs ← MAC.S(λ, n)` and `(sk, pp) ← MAC.K(crs)`), that is on the
+supports of `setup` and `keygen`. (ii) Admitting Help queries, the oracle O24
+adds after Theorem 5.1 (p. 35) for its stronger claim.
+
+**Fidelity argument.** (i) The bridge (#81) rewrites under the binds of
+`setup` and `keygen`. It applies the never-fails condition to the transport
+theorem `map_run_simulateQ_eq_of_guard_neverFails` (`Core/SimulateQGuarded.lean`)
+and the consistency condition to the win bit of each reachable forgery, so it
+uses both only at sampled values. Quantifying over every value keeps
+`WellBehaved` a property of the adversary alone, free of the supports of
+`setup` and `keygen`, as the algebraic group model states algebraicity on every
+input. An adversary that computes each group element it submits from the
+elements it received, with the representation it reports, meets both
+conditions at every `(sk, H, pp)`.
+
+(ii) Theorem 5.1 is stated for the Figure 5 game, whose oracles are Sign and
+Verify (`UFOracleSpec`). A plain-game adversary has no Help oracle, so the AGM
+adversaries that translate plain-game adversaries are those that never query
+Help. The Help-strengthened claim is the Lemma 5.5 bound in the AGM game, which
+keeps Help (`agm_ufcmva_le_explicit`). Help's test
+`Z = (x₀ + xᵣ)A₀ + Σᵢ xᵢAᵢ` reads the μCMZ key, so it has no place in
+Figure 5, which is stated for every algebraic MAC of Definition 3.1. Decided
+October 2026 (Track CMZ-AGM, Theorem 5.1).
+
 ## Theorem 5.11 stated before its reductions exist
 
 **Decision.** `OneMoreUnforgeability/Statements.lean` states Theorem 5.11 (`n = 1` as
