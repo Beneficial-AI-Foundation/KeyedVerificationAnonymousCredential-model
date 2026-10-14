@@ -107,7 +107,7 @@ it never needs them to exist. Exhibiting them is a scheme-level
 obligation, discharged when μCMZ and μBBS build their predicate-family
 instances.
 
-:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
+:::definition "kvac_correctness" (lean := "KVAC.Framework.Correct, KVAC.Framework.KVAC, KVAC.Framework.CorrectOutcome, KVAC.Framework.RunSem, KVAC.Framework.GenCorrect, KVAC.Framework.probRunSem, KVAC.Framework.roRunSem, KVAC.Framework.CorrectRO, KVAC.Framework.KVACRO") (parent := "framework_correctness") (tags := "paper, O24 Def 4.3")
 *O24 Definition 4.3.* Correctness for a KVAC scheme {uses "kvac_syntax"}[]:
 honestly issued credentials always produce accepting presentations for
 the predicates they satisfy. Stated as two halves, issuance never
@@ -124,6 +124,24 @@ stateless support-based semantics. `CorrectRO` is `GenCorrect` at
 `issue` and `present` by `runRO`, the statement a Fiat–Shamir scheme over
 the oracle carrier proves. Its first consumer is the proof that the extraction
 game's `NewUsr` oracle never takes its `none` arm, in the stacked PR #140.
+
+`KVACRO H` is the bundle at the oracle carrier, the syntax paired with
+`CorrectRO H`, as `NIZKP H` is for proof systems.
+:::
+
+:::theorem "correct_lift_bridge" (lean := "KVAC.Framework.KVACSyntax.lift, KVAC.Framework.lift_setup, KVAC.Framework.lift_keygen, KVAC.Framework.lift_issue, KVAC.Framework.lift_present, KVAC.Framework.correct_of_correctRO, KVAC.Framework.correctRO_of_correct, KVAC.Framework.KVAC.toKVACRO") (parent := "framework_correctness") (tags := "milestone")
+The two carriers of {uses "kvac_correctness"}[] agree on oracle-free schemes. A
+credential system of {uses "kvac_syntax"}[] given at `ProbComp` embeds into the
+oracle carrier by lifting each algorithm, and the O24 Definition 4.3 statement
+at `ProbComp` is equivalent to the statement at the oracle carrier for the lift.
+`KVAC.toKVACRO` carries a bundle across.
+:::
+
+:::proof "correct_lift_bridge"
+A lifted algorithm never queries the oracle, so every cache of the run is the
+empty table, and each `Runs` fact translates by the support lemma of
+{uses "runro_lift"}[]. The derived issuance and presentation of the lift are the
+lifts of the originals, since `liftM` commutes with `bind`.
 :::
 
 # Anonymity (Definition 4.4)
