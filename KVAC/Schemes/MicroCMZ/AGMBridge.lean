@@ -30,7 +30,7 @@ vocabulary connecting the two:
   UFAdversary (μCMZBaseMACSyntax F gen)`: forward `sign`/`verify` queries with the
   representations dropped, answer `help` queries locally by `false` (`WellBehaved` rules them out
   in the AGM game), and drop the forgery representations from the output. At attribute counts
-  other than `n` the translated adversary outputs a junk forgery.
+  other than `n` the translated adversary outputs the zero forgery.
 
 Quantifying `WellBehaved` over *all* `(sk, H, pp)` — not just those reachable from
 `setup`/`keygen` — is a harmless strengthening: a genuinely algebraic adversary computes its
@@ -161,7 +161,7 @@ def AGMUFAdversary.toUFAdversaryBody {secParam : ℕ} (A : AGMUFAdversary F G n)
 /-- The forgetful translation of an algebraic adversary to a plain UF-CMVA adversary, from the
 AGM game of §5.3 to the plain Figure 5 game: representations are dropped from queries and
 output. `UFAdversary.run` quantifies over all attribute counts while the algebraic adversary is
-fixed at `n`, so the translation runs `A` at `n` and outputs a junk forgery elsewhere. -/
+fixed at `n`, so the translation runs `A` at `n` and outputs the zero forgery elsewhere. -/
 def AGMUFAdversary.toUFAdversary (A : AGMUFAdversary F G n) :
     UFAdversary (μCMZBaseMACSyntax F gen) where
   run {_} {n'} crs pp :=

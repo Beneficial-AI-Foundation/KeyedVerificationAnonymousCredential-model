@@ -258,7 +258,7 @@ becomes an adversary of the plain game {uses "ufcmva_game"}[] against the
 base MAC {uses "mucmz_base_mac"}[]: `sign` and `verify` queries are forwarded
 with their representations dropped, `help` queries are answered `false`
 locally, and the forgery is output without its representations. At attribute
-counts other than the adversary's own the translation outputs a junk forgery;
+counts other than the adversary's own the translation outputs the zero forgery;
 at the matching count its run unfolds to running the algebraic adversary on
 the translated queries and dropping the forgery representations.
 :::
