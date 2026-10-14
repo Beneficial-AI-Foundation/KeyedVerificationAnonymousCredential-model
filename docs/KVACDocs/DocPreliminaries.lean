@@ -158,18 +158,19 @@ issuance thread one random-oracle cache, so that a scheme's Fiat–Shamir proofs
 share the oracle.
 :::
 
-:::theorem "omuf_ro_bridge" (lean := "KVAC.Preliminaries.ATSyntax.toZKRO, KVAC.Preliminaries.omufToZKROImpl, KVAC.Preliminaries.OMUFAdversary.toZKRO, KVAC.Preliminaries.OMUFAdvRO_toZKRO") (parent := "pre_anontoken") (tags := "milestone")
+:::theorem "omuf_ro_bridge" (lean := "KVAC.Preliminaries.ATSyntax.lift, KVAC.Preliminaries.omufLiftImpl, KVAC.Preliminaries.OMUFAdversary.lift, KVAC.Preliminaries.omufAdvRO_lift") (parent := "pre_anontoken") (tags := "milestone")
 The bridge between the two carriers. A scheme over `ProbComp` lifts to the
 oracle carrier with its algorithms behind `liftM`, and an adversary of the
-plain game {uses "omuf_game"}[] lifts with its queries translated, neither
-querying the random oracle. The lifted pair has, in the game at the oracle
-carrier {uses "omuf_game_ro"}[], the advantage the original pair has in the
-plain game.
+plain game {uses "omuf_game"}[] lifts with its queries translated. The lifted
+pair has, in the game at the oracle carrier {uses "omuf_game_ro"}[], the
+advantage the original pair has in the plain game.
 :::
 
 :::proof "omuf_ro_bridge"
-Neither the lifted scheme nor the lifted adversary queries `H`, so the cache
-stays empty through the run and every sampling query reaches `ProbComp`
-unchanged, by {uses "runro_lift"}[] for the scheme's algorithms and by
-splitting the simulation of the summed specification for the adversary.
+Neither the lifted scheme nor the lifted adversary queries `H`. The lifted
+experiment is the plain one embedded by `liftM`: the scheme's algorithms are
+`liftM`s by definition, and the adversary's run follows by induction over its
+simulation, each translated query answered as the plain game answers it. By
+{uses "runro_lift"}[], running the embedded experiment from the empty cache
+leaves the cache empty and gives the plain experiment's outputs.
 :::

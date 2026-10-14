@@ -997,10 +997,12 @@ statement over them is a `ProbComp` statement.
   twice, with nothing to keep them in step. Only the adversary structure is
   restated per carrier: `OMUFAdversaryRO` is `OMUFAdversary` with `ZKRO H` in
   place of `unifSpec`.
-- *VCV-io's `evalDist_liftComp` for the bridge.* It needs the larger
-  specification to be uniform, and `ZKRO H` answers `H` by a lazy random oracle
-  through `runRO`, so the bridge is stated over `runRO`, where `runRO_liftM`
-  applies.
+- *VCV-io's `evalDist_liftComp` for the bridge.* It needs `IsUniformSpec` on
+  both specifications, which `ZKRO H` lacks, and it reads a computation through
+  `evalDist`, where every query, a repeated `H` query included, is an
+  independent draw. The game answers `H` through the cache of `runRO`, so a
+  repeated query gets the same answer, and the bridge is an equation between
+  games run through `runRO`, the setting of `runRO_liftM`.
 
 Decided October 2026 (Track CMZ-OMUF, #183).
 

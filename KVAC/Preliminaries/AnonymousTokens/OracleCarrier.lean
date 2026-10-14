@@ -24,12 +24,12 @@ unforgeability*.
 - `OMUFAdversaryRO`, `OMUFGameRO`, `OMUFAdvRO` — the Figure 6 game at the
   oracle carrier: `omufExp` of `KVAC.Preliminaries.AnonymousTokens.Security`
   run through `runRO`.
-- `ATSyntax.toZKRO` — a `ProbComp` scheme at the oracle carrier, its algorithms
+- `ATSyntax.lift` — a `ProbComp` scheme at the oracle carrier, its algorithms
   lifted through `liftM`.
-- `omufToZKROImpl`, `OMUFAdversary.toZKRO` — a `ProbComp` adversary at the
-  oracle carrier, its queries translated through `simulateQ`.
-- `OMUFAdvRO_toZKRO` — the bridge: a lifted scheme and adversary never query
-  `H`, and their advantage at the oracle carrier is their `ProbComp` advantage.
+- `omufLiftImpl`, `OMUFAdversary.lift` — a `ProbComp` adversary at the oracle
+  carrier, its queries translated through `simulateQ`.
+- `omufAdvRO_lift` — the bridge: the advantage of a lifted scheme and adversary
+  at the oracle carrier is their `ProbComp` advantage.
 
 ## The cache
 
@@ -92,10 +92,10 @@ noncomputable abbrev OMUFAdvRO (H : HashSpec) (tok : ATSyntax (OracleComp (ZKRO 
 
 /-! ## The bridge -/
 
-/-- A `ProbComp` scheme at the oracle carrier: the same carriers and
-verification, every algorithm lifted through `liftM`, so that none queries
-`H`. -/
-def ATSyntax.toZKRO (H : HashSpec) (tok : ATSyntax ProbComp) :
+/-- A `ProbComp` scheme at the oracle carrier: the same types and `verify`,
+with setup, key generation and the three issuance moves lifted through
+`liftM`. -/
+def ATSyntax.lift (H : HashSpec) (tok : ATSyntax ProbComp) :
     ATSyntax (OracleComp (ZKRO H)) where
   __ := tok
   setup secParam n := liftM (tok.setup secParam n)
@@ -104,25 +104,22 @@ def ATSyntax.toZKRO (H : HashSpec) (tok : ATSyntax ProbComp) :
   issueSrv crs sk μ := liftM (tok.issueSrv crs sk μ)
   issueUsr₂ crs st resp := liftM (tok.issueUsr₂ crs st resp)
 
-/-- The query translation behind `OMUFAdversary.toZKRO`: a sampling query goes
+/-- The query translation behind `OMUFAdversary.lift`: a sampling query goes
 to the sampling arm of `ZKRO H`, and a Sign or Verify query to the same query of
 the lifted scheme. -/
-def omufToZKROImpl (H : HashSpec) (tok : ATSyntax ProbComp)
+def omufLiftImpl (H : HashSpec) (tok : ATSyntax ProbComp)
     {secParam n : Nat} (crs : tok.Crs secParam n) :
     QueryImpl (unifSpec + OMUFOracleSpec tok crs)
-      (OracleComp (ZKRO H + OMUFOracleSpec (tok.toZKRO H) crs))
-  | .inl t => query (spec := ZKRO H + OMUFOracleSpec (tok.toZKRO H) crs) (.inl (.inl t))
-  | .inr (.sign μ) =>
-      query (spec := ZKRO H + OMUFOracleSpec (tok.toZKRO H) crs) (.inr (.sign μ))
-  | .inr (.verify m σ) =>
-      query (spec := ZKRO H + OMUFOracleSpec (tok.toZKRO H) crs) (.inr (.verify m σ))
+      (OracleComp (ZKRO H + OMUFOracleSpec (tok.lift H) crs))
+  | .inl t => query (spec := unifSpec) t
+  | .inr (.sign μ) => query (spec := OMUFOracleSpec (tok.lift H) crs) (.sign μ)
+  | .inr (.verify m σ) => query (spec := OMUFOracleSpec (tok.lift H) crs) (.verify m σ)
 
-/-- A `ProbComp` adversary against the lifted scheme at the oracle carrier: the
-same program with its queries translated by `omufToZKROImpl`, so that it never
-queries `H`. -/
-def OMUFAdversary.toZKRO (H : HashSpec) {tok : ATSyntax ProbComp}
-    (A : OMUFAdversary tok) : OMUFAdversaryRO H (tok.toZKRO H) where
-  run crs pp := simulateQ (omufToZKROImpl H tok crs) (A.run crs pp)
+/-- A `ProbComp` adversary as an adversary against `tok.lift H` at the oracle
+carrier: the same program, its queries translated by `omufLiftImpl`. -/
+def OMUFAdversary.lift (H : HashSpec) {tok : ATSyntax ProbComp}
+    (A : OMUFAdversary tok) : OMUFAdversaryRO H (tok.lift H) where
+  run crs pp := simulateQ (omufLiftImpl H tok crs) (A.run crs pp)
 
 /--
 **The bridge between the two carriers.** A `ProbComp` scheme and adversary,
@@ -131,9 +128,9 @@ game: neither queries `H`, so the cache stays empty and every sampling query
 reaches `ProbComp` unchanged. Through it, a bound on a scheme at the oracle
 carrier can end at the `ProbComp` game of an oracle-free scheme.
 -/
-theorem OMUFAdvRO_toZKRO (H : HashSpec) (tok : ATSyntax ProbComp) (A : OMUFAdversary tok)
+theorem omufAdvRO_lift (H : HashSpec) (tok : ATSyntax ProbComp) (A : OMUFAdversary tok)
     (secParam n : Nat) :
-    OMUFAdvRO H (tok.toZKRO H) (A.toZKRO H) secParam n = OMUFAdv tok A secParam n := by
+    OMUFAdvRO H (tok.lift H) (A.lift H) secParam n = OMUFAdv tok A secParam n := by
   sorry
 
 end KVAC.Preliminaries
