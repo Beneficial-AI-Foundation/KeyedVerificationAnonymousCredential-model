@@ -46,9 +46,9 @@ variable (gen : G)
 /-! ## Per-query goodness and the guarded oracle -/
 
 /-- Goodness of one instrumented query against the current transcript: `sign` is always good,
-`verify` is good iff the submitted tag representations are transcript-consistent (the exact
-condition the `verify` arm of `agmOracleImpl` gates on), and `help` is never good (the plain
-Figure 5 game has no Help oracle). -/
+`verify` is good iff the representations of the submitted MAC code are transcript-consistent
+(the exact condition the `verify` arm of `agmOracleImpl` gates on), and `help` is never good (the
+plain Figure 5 game has no Help oracle). -/
 def agmGood (H : G) (pp : Params G n) : AGMQuery F G n → AGMLog F G n → Prop
   | .sign _, _ => True
   | .verify _ σ ρU ρV, log =>
@@ -72,8 +72,8 @@ noncomputable abbrev guardedAgmOracleImpl (secParam : ℕ) (sk : Key F n) (H : G
 /-! ## Well-behaved algebraic adversaries -/
 
 /-- Consistency of a forgery output over its final transcript: the representations `ρU`/`ρV`
-evaluate to the submitted tag halves against the basis extended by all issued tags. Same shape as
-the `consistent` conjunct of `AGM_UF_CMVAGame`'s win condition. -/
+evaluate to the two components of the submitted MAC code against the basis extended by all issued
+MAC codes. Same shape as the `consistent` conjunct of `AGM_UF_CMVAGame`'s win condition. -/
 def ForgeryConsistent (H : G) (pp : Params G n)
     (z : ((Fin n → F) × (G × G) × AGMRepr F n × AGMRepr F n) × AGMLog F G n) : Prop :=
   match z with
@@ -100,7 +100,8 @@ def WellBehaved (secParam : ℕ) (A : AGMUFAdversary F G n) : Prop :=
         ((simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []),
       ForgeryConsistent gen H pp z
 
-/-- The all-zero representation: every basis coefficient `0`, no tag coefficients. -/
+/-- The all-zero representation: every basis coefficient `0`, no coefficients for issued MAC
+codes. -/
 def zeroRepr : AGMRepr F n := ⟨0, 0, 0, 0, 0, []⟩
 
 /-- The trivial algebraic adversary: makes no oracle queries and outputs the zero forgery with

@@ -19,7 +19,7 @@ the `AGMPolynomial`-free foundation: the game definitions the Lemma 5.4 reductio
 consumes, but not the reduction itself (that lands in `AGMReduction`), and not the
 sign-arm distribution lemmas (those live in the sibling module `SignMask`).
 
-A word of caution on naming: this is scaffolding, not the honest game. The
+A word of caution on naming: this is the instrumented game, not the honest game. The
 oracles here are *gated* — they answer honestly only when the submitted
 representation is consistent, and return `false` otherwise. So the game matches
 the honest UF-CMVA game only for *well-behaved* adversaries, the ones that never
@@ -299,8 +299,8 @@ scope).
 
 The bridging lemma to the plain `UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security`
 is deferred; its runtime hypothesis `WellBehaved` lives in
-`KVAC.Schemes.MicroCMZ.AGMBridge`. Both games cross the
-`AlgebraicMACSyntax` seam at `μCMZBaseMACSyntax F gen` (setup/keygen/MAC/verify are
+`KVAC.Schemes.MicroCMZ.AGMBridge`. Both games go through the interface
+`AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen` (setup/keygen/MAC/verify are
 delegated to the interface value, not inlined). -/
 
 end KVAC.Schemes.MicroCMZ
