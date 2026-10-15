@@ -685,7 +685,7 @@ keeps one sampler `$ᵗ (Fin n → F)` and one uniform `Xᵢ = rᵢ • X₁` cl
 instead of a distinguished index `0` in `Fin n` with its own case in every
 translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
-## `WellBehaved` quantifies over every key and crs, and forbids Help
+## `WellBehaved` and the translation to the plain game
 
 **Decision.** `WellBehaved` (`AGMBridge.lean`) is the hypothesis under which the
 AGM game of an algebraic adversary and the plain Figure 5 game of its
@@ -693,10 +693,22 @@ translation agree. It asks for two conditions, a never-failing run of the
 oracle guarded by `agmGood` and a consistent forgery, at every key `sk`, crs
 `H` and public parameters `pp`. The guard `agmGood` rejects every Help query.
 
+O24 (p. 24) calls an adversary algebraic when it returns, with each group
+element, a representation over the elements it received: a plain-game
+adversary with the representations as side information. Here an algebraic
+adversary is an `AGMUFAdversary` of the instrumented game, and Theorem 5.1 is
+stated for its translation `AGMUFAdversary.toUFAdversary` (`AGMBridge.lean`),
+which makes two choices the paper does not need. It answers a Help query with
+`false` (`forgetReprImpl`). At attribute counts other than the adversary's own
+`n`, it outputs the zero forgery `(fun _ => 0, (0, 0))`.
+
 **Rejected alternatives.** (i) The two conditions only where Figure 5 samples
 (O24 p. 25, `crs ← MAC.S(λ, n)` and `(sk, pp) ← MAC.K(crs)`), that is on the
 supports of `setup` and `keygen`. (ii) Admitting Help queries, the oracle O24
-adds after Theorem 5.1 (p. 35) for its stronger claim.
+adds after Theorem 5.1 (p. 35) for its stronger claim. (iii) An algebraic
+adversary type over Sign and Verify only, so that the translation has no Help
+query to answer. (iv) An algebraic adversary that runs at every attribute
+count, like `UFAdversary`, so that the translation has no other count to fill.
 
 **Fidelity argument.** (i) The bridge (#81) rewrites under the binds of
 `setup` and `keygen`. It applies the never-fails condition to the transport
@@ -715,8 +727,24 @@ adversaries that translate plain-game adversaries are those that never query
 Help. The Help-strengthened claim is the Lemma 5.5 bound in the AGM game, which
 keeps Help (`agm_ufcmva_le_explicit`). Help's test
 `Z = (x₀ + xᵣ)A₀ + Σᵢ xᵢAᵢ` reads the μCMZ key, so it has no place in
-Figure 5, which is stated for every algebraic MAC of Definition 3.1. Decided
-October 2026 (Track CMZ-AGM, Theorem 5.1).
+Figure 5, which is stated for every algebraic MAC of Definition 3.1.
+
+(iii) The Lemma 5.5 bound `agm_ufcmva_le_explicit` is stated for
+`AGMUFAdversary`, whose oracles include Help, so a Help-free type would need its
+own embedding into that game before the bound applies. The plain game has no
+Help oracle, and the translated adversary holds no key, so it cannot compute
+the Help bit and answers with a constant. `agmGood` rejects every Help query,
+so under `WellBehaved` no Help query is reachable and the constant is never
+read.
+
+(iv) `UFAdversary.run` (`Core/AlgebraicMAC/Security.lean`) takes the attribute
+count as an argument, because Figure 5 is stated for every algebraic MAC, while
+`AGMUFAdversary F G n`, the AGM game and the reductions of Lemmas 5.4 and 5.5
+are fixed at `n`. `UF_CMVAAdv` at `n` runs the translation only at `n`, where
+`toUFAdversary_run` unfolds it to the algebraic adversary. The output at any
+other count therefore never enters the bound, and the zero forgery is the
+simplest value of the output type. Decided October 2026 (Track CMZ-AGM,
+Theorem 5.1).
 
 ## Theorem 5.11 stated before its reductions exist
 

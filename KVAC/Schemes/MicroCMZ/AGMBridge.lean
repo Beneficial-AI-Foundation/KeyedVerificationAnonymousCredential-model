@@ -8,7 +8,7 @@ import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Core.SimulateQGuarded
 
 /-!
-# Well-behaved algebraic adversaries for the AGM ↔ plain UF-CMVA bridge
+# Well-behaved algebraic adversaries and their translation to the plain game
 
 `AGM_UF_CMVAGame` (`KVAC.Schemes.MicroCMZ.AlgebraicMAC`) is the *instrumented* unforgeability
 game: its oracles demand algebraic representations and gate their answers on transcript
@@ -26,6 +26,11 @@ vocabulary connecting the two:
   `agmGood`-guarded run never fails — no reachable inconsistent representation, no reachable
   `help` query (`guardImpl` aborts on the first bad query, so `Pr[⊥ | ·] = 0` certifies both) —
   and (2) every reachable forgery output is consistent over the final transcript.
+- `AGMUFAdversary.toUFAdversary` — the forgetful translation `AGMUFAdversary F G n →
+  UFAdversary (μCMZBaseMACSyntax F gen)`: forward `sign`/`verify` queries with the
+  representations dropped, answer `help` queries locally by `false` (`WellBehaved` rules them out
+  in the AGM game), and drop the forgery representations from the output. At attribute counts
+  other than `n` the translated adversary outputs the zero forgery.
 
 Quantifying `WellBehaved` over *all* `(sk, H, pp)` — not just those reachable from
 `setup`/`keygen` — is a harmless strengthening: a genuinely algebraic adversary computes its
@@ -127,5 +132,47 @@ lemma wellBehaved_trivialAdversary (secParam : ℕ) :
     -- `simp only`: the full simp set times out on `AddCommGroup F` instance search here.
     simp only [ForgeryConsistent, zeroRepr, AGMRepr.eval, List.zipWith_nil_left, List.sum_nil,
       zero_smul, Pi.zero_apply, Finset.sum_const_zero, add_zero, and_self]
+
+/-! ## The forgetful translation to the plain game -/
+
+/-- Translate instrumented queries to plain `UFQuery`s by dropping the representations: `sign`
+and `verify` forward, `help` is answered locally by `false` (the plain game has no Help oracle;
+`WellBehaved` rules out reachable `help` queries in the AGM game). `MsgVec crs` and `Tag crs` of
+`μCMZBaseMACSyntax` unfold to `Fin n → F` and `G × G`, so queries and answers transport without
+casts. -/
+def forgetReprImpl {secParam : ℕ}
+    (crs : (μCMZBaseMACSyntax F gen).Crs secParam n) :
+    QueryImpl (AGMOracleSpec F G n)
+      (OracleComp (UFOracleSpec (μCMZBaseMACSyntax F gen) crs))
+  | .sign m => query (spec := UFOracleSpec (μCMZBaseMACSyntax F gen) crs) (UFQuery.sign m)
+  | .verify m σ .. =>
+      query (spec := UFOracleSpec (μCMZBaseMACSyntax F gen) crs) (UFQuery.verify m σ)
+  | .help .. => pure false
+
+/-- The body of `AGMUFAdversary.toUFAdversary` at the matching attribute count: run the
+algebraic adversary with its queries translated by `forgetReprImpl`, then drop the forgery
+representations from its output. -/
+def AGMUFAdversary.toUFAdversaryBody {secParam : ℕ} (A : AGMUFAdversary F G n)
+    (crs : (μCMZBaseMACSyntax F gen).Crs secParam n) (pp : (μCMZBaseMACSyntax F gen).Pp crs) :
+    OracleComp (UFOracleSpec (μCMZBaseMACSyntax F gen) crs)
+      ((μCMZBaseMACSyntax F gen).MsgVec crs × (μCMZBaseMACSyntax F gen).Tag crs) :=
+  (fun out => (out.1, out.2.1)) <$> simulateQ (forgetReprImpl gen crs) (A.run crs pp)
+
+/-- The forgetful translation of an algebraic adversary to a plain UF-CMVA adversary, from the
+AGM game of §5.3 to the plain Figure 5 game: representations are dropped from queries and
+output. `UFAdversary.run` quantifies over all attribute counts while the algebraic adversary is
+fixed at `n`, so the translation runs `A` at `n` and outputs the zero forgery elsewhere. -/
+def AGMUFAdversary.toUFAdversary (A : AGMUFAdversary F G n) :
+    UFAdversary (μCMZBaseMACSyntax F gen) where
+  run {_} {n'} crs pp :=
+    if h : n' = n then by subst h; exact A.toUFAdversaryBody gen crs pp
+    else pure (fun _ => (0 : F), ((0 : G), (0 : G)))
+
+/-- Unfolding lemma for `AGMUFAdversary.toUFAdversary` at the matching attribute count: the
+`dite` reduces to `AGMUFAdversary.toUFAdversaryBody`. -/
+lemma AGMUFAdversary.toUFAdversary_run (A : AGMUFAdversary F G n) {secParam : ℕ}
+    (crs : (μCMZBaseMACSyntax F gen).Crs secParam n) (pp : (μCMZBaseMACSyntax F gen).Pp crs) :
+    (A.toUFAdversary gen).run crs pp = A.toUFAdversaryBody gen crs pp :=
+  dif_pos rfl
 
 end KVAC.Schemes.MicroCMZ

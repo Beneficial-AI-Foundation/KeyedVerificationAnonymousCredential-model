@@ -44,8 +44,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
-- `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries for the
-  AGM ↔ plain UF-CMVA bridge — Track CMZ-M.
+- `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries and their
+  translation to the plain UF-CMVA game — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`, and
   `SignCoupling.lean`) — Section 5.3, Lemma 5.4 reduction core, coupling
   lemmas, and the sign-arm coupling — Track CMZ-M.
@@ -250,6 +250,17 @@ parameters, its guarded run never fails and every reachable forgery is
 consistent over its final transcript. The query-free adversary returning the
 zero forgery with all-zero representations is well behaved, so the predicate
 is satisfiable.
+:::
+
+:::definition "plain_game_adversary" (lean := "KVAC.Schemes.MicroCMZ.forgetReprImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary.toUFAdversaryBody, KVAC.Schemes.MicroCMZ.AGMUFAdversary.toUFAdversary, KVAC.Schemes.MicroCMZ.AGMUFAdversary.toUFAdversary_run") (parent := "cmz_amac") (tags := "milestone")
+The forgetful translation. An algebraic adversary of {uses "agm_model"}[]
+becomes an adversary of the plain game {uses "ufcmva_game"}[] against the
+base MAC {uses "mucmz_base_mac"}[]: `sign` and `verify` queries are forwarded
+with their representations dropped, `help` queries are answered `false`
+locally, and the forgery is output without its representations. At attribute
+counts other than the adversary's own the translation outputs the zero forgery;
+at the matching count its run unfolds to running the algebraic adversary on
+the translated queries and dropping the forgery representations.
 :::
 
 :::theorem "identity_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.spec, KVAC.Schemes.MicroCMZ.AGMPoly.identity_case, KVAC.Schemes.MicroCMZ.AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero") (parent := "cmz_amac") (tags := "milestone")
