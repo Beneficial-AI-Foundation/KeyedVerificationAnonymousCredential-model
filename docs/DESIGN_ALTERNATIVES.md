@@ -406,12 +406,13 @@ of `docs/presentations/rolf-status/errata.md`.
 
 **Decision.** The formalized anonymous-token scheme is the *core* with both
 issuance proofs removed, and is named accordingly (`μCMZATCore`,
-`ATVariant.lean`). The `π_is`-carrying variant, together with a lifting lemma
-bounding its one-more unforgeability by the core's plus one zero-knowledge
-term for `ZKP_cmz.is`, is deferred until the upstream erratum settles; the
-printed Theorem 5.3 blueprint node stays an unanchored stub meanwhile.
+`ATVariant.lean`). The `π_is`-carrying variant is `μCMZATSyntax`
+(`ATVariantPiIs.lean`), at the oracle carrier with its own game `OMUFGameRO`.
+A lifting lemma bounding its one-more unforgeability by the core's plus one
+zero-knowledge term for `ZKP_cmz.is` is deferred until the upstream erratum
+settles; the printed Theorem 5.3 blueprint node stays unanchored meanwhile.
 
-**Rejected alternatives.** (i) Formalizing the printed variant, which keeps
+**Rejected alternatives.** (i) Formalizing the printed variant alone, which keeps
 `π_is` — Figure 9's caption boxes only the user proof `π_iu` as removable.
 (ii) Reading Theorem 5.3 as a statement about a `π_is`-less scheme outright,
 dropping `π_is` from the variant.
