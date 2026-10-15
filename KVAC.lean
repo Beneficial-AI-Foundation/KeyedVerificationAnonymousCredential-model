@@ -22,6 +22,7 @@ import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.ATVariant
+import KVAC.Schemes.MicroCMZ.ATVariantPiIs
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 import KVAC.Preliminaries.Assumptions
 import KVAC.Preliminaries.AnonymousTokens
