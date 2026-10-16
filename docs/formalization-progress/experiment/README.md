@@ -14,7 +14,7 @@ Requires the Lean 4 toolchain pinned in [`lean-toolchain`](lean-toolchain) (curr
 
 ## Documentation
 
-The Verso blueprint at https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/ is the live, rendered view of the formalization, with per-chapter prose tied to the Lean declarations as they land. The markdown documents below cover the formalization plan, work breakdown, and contribution workflow.
+The Verso blueprint at https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/ is the live, rendered view of the formalization, with per-chapter prose tied to the Lean declarations as they are merged. The markdown documents below cover the formalization plan, work breakdown, and contribution workflow.
 
 | File                                                              | What it is                                                                                                                                              |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -43,7 +43,7 @@ When a track is split into sub-issues, list them as nested bullets under the tra
 
 - [ ] **Wave 0** — `KVAC/Core/` typeclasses 🚧 WIP
   - [X] `Core/Group.lean` ([#18]) — 🟢 O24 §3.1
-  - [ ] `Core/Hash.lean` ([#19]) — ⚪ still a stub
+  - [ ] `Core/Hash.lean` ([#19]) — ⚪ still a placeholder
   - [X] `Core/ZKProof.lean` ([#20])
   - [X] `Core/NIZKP/Basic.lean` ([#20]) — 🟢 O24 §3.3 (agnostic spec)
   - [X] `Core/AlgebraicMAC.lean` ([#21]) — 🟢 O24 Definition 3.1, Figure 5

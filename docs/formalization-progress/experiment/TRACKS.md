@@ -85,14 +85,14 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
 - [ ] **Track 0** — Shared API contract (`KVAC/Core/`)
   - Modules: `KVAC/Core/Group.lean`, `KVAC/Core/Hash.lean`, `KVAC/Core/ZKProof.lean`, `KVAC/Core/AlgebraicMAC.lean`
   - Depends on: nothing
-  - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should land first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
+  - **Critical path:** Tracks Pre, Σ, F1, CMZ-C, BBS-C all import these. The PR is reviewed and agreed centrally — no Wave 1 PR that depends on it should be merged first. The four files together contain the abstract prime-order group typeclass, the random-oracle interfaces, the generic NIZK / proof-of-knowledge typeclass, and the algebraic MAC syntax. See [`PLAN.md`](PLAN.md) (section "Module breakdown / `KVAC/Core/`") for what each file is meant to contain.
   - **Status** (split into sub-issues #18–#21):
-    - [x] `Group.lean` — landed (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`. Tracker: 🟢 O24 §3.1.
-    - [ ] `Hash.lean` — still a stub (#19). Tracker: ⚪.
-    - [x] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec landed (#20; PR #26); refinement PR #34 closed (superseded by the paper-faithful NIZKP work). Tracker: 🟢 O24 §3.3 (agnostic `SimulationExtractable`).
-    - [x] `AlgebraicMAC.lean` — landed (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5). Tracker: 🟢 O24 Definition 3.1, Figure 5.
+    - [x] `Group.lean` — merged (#18; PRs #22/#23): `PrimeOrderGroup` + `SampleableGroup`. Tracker: 🟢 O24 §3.1.
+    - [ ] `Hash.lean` — still a placeholder (#19). Tracker: ⚪.
+    - [x] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec merged (#20; PR #26); refinement PR #34 closed (superseded by the paper-faithful NIZKP work). Tracker: 🟢 O24 §3.3 (agnostic `SimulationExtractable`).
+    - [x] `AlgebraicMAC.lean` — merged (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5). Tracker: 🟢 O24 Definition 3.1, Figure 5.
 
-## Wave 1 — start once Track 0 lands
+## Wave 1 — start once Track 0 is merged
 
 These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merged.
 
@@ -101,7 +101,7 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Depends on: Track 0
   - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
   - **Status** (partial):
-    - [x] `Assumptions.lean` — q-DL + gap-DL landed (#38; PR #30). Tracker: 🟢 O24 §3.1.
+    - [x] `Assumptions.lean` — q-DL + gap-DL merged (#38; PR #30). Tracker: 🟢 O24 §3.1.
     - [ ] Remaining with #2: `ZKArguments.lean`, `AnonymousTokens.lean`, and q-DDHI (only needed by the §8.2 rate-limiting extension, Track Ext-RL).
 - [ ] **Track Σ** — Proof systems
   - Modules: `KVAC/ProofSystems/SigmaProtocol.lean`, `FiatShamir.lean`, `StraightLineExtraction.lean`
@@ -124,8 +124,8 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Depends on: Track 0, Track Pre, Track Σ, Track F1
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
   - **Status** (split into sub-issues #39–#41 under #6):
-    - [x] Base MAC (`Construction.lean`) — landed (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness. Tracker: 🟢 O24 Figure 9.
-    - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — landed (#40; PR #32). Tracker: 🟢 O24 Equation 9.
+    - [x] Base MAC (`Construction.lean`) — merged (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness. Tracker: 🟢 O24 Figure 9.
+    - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — merged (#40; PR #32). Tracker: 🟢 O24 Equation 9.
     - [ ] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — in review (#41; PR #33; depends on PR #32). Tracker: ⚪ (not yet on main / uncited).
     - [ ] Credential Issuance / Presentation — remaining with #6; needs Track F1's KVAC syntax and the relations above.
 - [ ] **Track BBS-C** — μBBS construction
@@ -188,13 +188,13 @@ The tracks below are deferred — see [`PLAN.md`](PLAN.md) (section "Future work
 
 - **Track Ext-T** — Time-based policies (O24 §8.1). Lowest cost (~1–2 weeks). A predicate over a credential attribute.
 - **Track Ext-RL** — Rate-limiting (O24 §8.2). Combines a Dodis–Yampolskiy PRF with the OMUF property of the underlying KVAC. ~3–4 weeks.
-- **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has landed first.
+- **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has been merged first.
 - **Track DV** — Designated-verifier SNARKs / dvKZG (O24 §7). Substantial cryptographic content; probably warrants a separate repository. Indefinitely deferred.
 - **μBBS Examples** — concrete μBBS run on a ≈300–384-bit curve. Out of scope until a verified larger-curve instance is available.
 
 ## Updating this file
 
-When you start a track, comment on its issue and (optionally) append your handle in parentheses next to the checkbox. When a track lands on `main`, tick the box in the same PR or a follow-up.
+When you start a track, comment on its issue and (optionally) append your handle in parentheses next to the checkbox. When a track is merged into `main`, tick the box in the same PR or a follow-up.
 
 ```diff
 - - [ ] **Track CMZ-C** — μCMZ construction
