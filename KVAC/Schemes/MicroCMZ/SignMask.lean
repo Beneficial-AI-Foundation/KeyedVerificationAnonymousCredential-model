@@ -11,10 +11,10 @@ import VCVio.OracleComp.QueryTracking.Unpredictability
 /-!
 # μCMZ sign-mask uniformity (O24 §5.3)
 
-Per-query output-distribution lemmas for the Sign oracle: sampling the non-vanishing
+Per-query output-distribution lemmas for simulating the Sign oracle: sampling the non-vanishing
 signing masks and forming the base `U` of the MAC code has, per query, the same law as the real
 oracle's `U ←$ {g // g ≠ 0}`. These are distributional facts only; the downstream
-security use — the reduction's Sign step consuming them by name — is
+security use — the reduction's simulated Sign oracle consuming them by name — is
 `reductionSignStep_relTriple` (`AGMReduction/SignCoupling.lean`). Kept in their own
 `AGMPolynomial`-free module so that reduction (which imports `MvPolynomial`) can reuse
 them without re-elaborating the proofs in an `MvPolynomial`-heavy instance context, where the
@@ -47,8 +47,8 @@ These lemmas establish a single-query output law: sampling `Uⱼ = aᵤ·gen + b
 `U ←$ {g // g ≠ 0}`. They are facts about one query's output distribution; composing
 them into a full reduction / transcript coupling is deferred. -/
 
-/-- `SampleableType` for the signing masks `(aᵤ, bᵤ)` whose base
-`Uⱼ = aᵤ·gen + bᵤ·X` is nonzero: a `Fintype` subtype, nonempty via `(1, 0)` since
+/-- `SampleableType` for the signing masks `(aᵤ, bᵤ)` that make the base
+`Uⱼ = aᵤ·gen + bᵤ·X` nonzero: a `Fintype` subtype, nonempty via `(1, 0)` since
 `gen ≠ 0`. Sampling masks here makes `Uⱼ` uniform over `G^×`, and the `bᵤ`-marginal
 stays uniform (`sign_U_bu_dist_eq`). Conditioning on `Uⱼ ≠ 0` *correlates* `(aᵤ, bᵤ)`
 (each `b` excludes one `a`), so the Schwartz–Zippel `+1/p` argument under that

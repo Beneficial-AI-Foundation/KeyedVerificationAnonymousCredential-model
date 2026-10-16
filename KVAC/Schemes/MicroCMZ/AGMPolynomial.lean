@@ -113,7 +113,8 @@ noncomputable def keyPoly (m : F) : P F q := x₀ + xᵣ + C m * x₁
 of O24 Eq. 12) over the `n = 1` transcript basis
 `(G, H, X₀, Xᵣ, X₁, U₁…U_q, V₁…V_q)`. This is the polynomial-layer mirror of
 the game-layer structure `AGMRepr F 1`; `AGMRepr.toReprCoeffs` (`AGMReduction/Core.lean`)
-converts between the two. -/
+converts the former into the latter, and `agmRepr_eval_eq_eval_toPoly` is the bridge lemma
+between their evaluations. -/
 structure ReprCoeffs (F : Type) (q : ℕ) where
   /-- Coefficient of `G` (the generator). -/
   cg : F
