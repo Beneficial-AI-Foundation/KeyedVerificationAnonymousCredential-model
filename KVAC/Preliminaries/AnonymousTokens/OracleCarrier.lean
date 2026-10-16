@@ -12,8 +12,10 @@ import KVAC.Core.NIZKP.Security
 A scheme whose server attaches a Fiat–Shamir proof, such as the printed μCMZ_AT
 of Figure 9 with its issuance proof `π_is`, runs over
 `OracleComp (ZKRO H)`, not `ProbComp`. This file states correctness and
-one-more unforgeability at that carrier. The design is in
-`DESIGN_ALTERNATIVES.md`, *Two carriers for one-more unforgeability*.
+one-more unforgeability at that carrier, and equates the OMUF advantage of a
+lifted `ProbComp` scheme and adversary with their `ProbComp` advantage. The
+design is in `DESIGN_ALTERNATIVES.md`, *Two carriers for one-more
+unforgeability*.
 
 ## Layout
 
@@ -22,6 +24,12 @@ one-more unforgeability at that carrier. The design is in
 - `OMUFAdversaryRO`, `OMUFGameRO`, `OMUFAdvRO` — the Figure 6 game at the
   oracle carrier: `omufExp` of `KVAC.Preliminaries.AnonymousTokens.Security`
   run through `runRO`.
+- `ATSyntax.lift` — a `ProbComp` scheme at the oracle carrier, its algorithms
+  lifted through `liftM`.
+- `omufLiftImpl`, `OMUFAdversary.lift` — a `ProbComp` adversary at the oracle
+  carrier, its queries translated through `simulateQ`.
+- `omufAdvRO_lift` — the bridge: the advantage of a lifted scheme and adversary
+  at the oracle carrier is their `ProbComp` advantage.
 
 ## The cache
 
@@ -82,5 +90,48 @@ def OMUFGameRO (H : HashSpec) (tok : ATSyntax (OracleComp (ZKRO H)))
 noncomputable abbrev OMUFAdvRO (H : HashSpec) (tok : ATSyntax (OracleComp (ZKRO H)))
     (A : OMUFAdversaryRO H tok) (secParam n : Nat) : ℝ≥0∞ :=
   Pr[= true | OMUFGameRO H tok A secParam n]
+
+/-! ## The bridge -/
+
+/-- A `ProbComp` scheme at the oracle carrier: the same types and `verify`,
+with setup, key generation and the three issuance moves lifted through
+`liftM`. -/
+def ATSyntax.lift (H : HashSpec) (tok : ATSyntax ProbComp) :
+    ATSyntax (OracleComp (ZKRO H)) where
+  __ := tok
+  setup secParam n := liftM (tok.setup secParam n)
+  keygen crs := liftM (tok.keygen crs)
+  issueUsr₁ crs pp m := liftM (tok.issueUsr₁ crs pp m)
+  issueSrv crs sk μ := liftM (tok.issueSrv crs sk μ)
+  issueUsr₂ crs st resp := liftM (tok.issueUsr₂ crs st resp)
+
+/-- The query translation behind `OMUFAdversary.lift`: a sampling query goes
+to the sampling arm of `ZKRO H`, and a Sign or Verify query to the same query of
+the lifted scheme. -/
+def omufLiftImpl (H : HashSpec) (tok : ATSyntax ProbComp)
+    {secParam n : Nat} (crs : tok.Crs secParam n) :
+    QueryImpl (unifSpec + OMUFOracleSpec tok crs)
+      (OracleComp (ZKRO H + OMUFOracleSpec (tok.lift H) crs))
+  | .inl t => query (spec := unifSpec) t
+  | .inr (.sign μ) => query (spec := OMUFOracleSpec (tok.lift H) crs) (.sign μ)
+  | .inr (.verify m σ) => query (spec := OMUFOracleSpec (tok.lift H) crs) (.verify m σ)
+
+/-- A `ProbComp` adversary as an adversary against `tok.lift H` at the oracle
+carrier: the same program, its queries translated by `omufLiftImpl`. -/
+def OMUFAdversary.lift (H : HashSpec) {tok : ATSyntax ProbComp}
+    (A : OMUFAdversary tok) : OMUFAdversaryRO H (tok.lift H) where
+  run crs pp := simulateQ (omufLiftImpl H tok crs) (A.run crs pp)
+
+/--
+**The bridge between the two carriers.** A `ProbComp` scheme and adversary,
+lifted to the oracle carrier, have the advantage they have in the `ProbComp`
+game: neither queries `H`, so the cache stays empty and every sampling query
+reaches `ProbComp` unchanged. Through it, a bound on a scheme at the oracle
+carrier can end at the `ProbComp` game of an oracle-free scheme.
+-/
+theorem omufAdvRO_lift (H : HashSpec) (tok : ATSyntax ProbComp) (A : OMUFAdversary tok)
+    (secParam n : Nat) :
+    OMUFAdvRO H (tok.lift H) (A.lift H) secParam n = OMUFAdv tok A secParam n := by
+  sorry
 
 end KVAC.Preliminaries

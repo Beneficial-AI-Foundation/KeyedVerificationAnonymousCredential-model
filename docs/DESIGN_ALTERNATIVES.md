@@ -848,13 +848,16 @@ Fiat–Shamir proof, such as the printed μCMZ_AT with `π_is`, runs at
 one `runRO` from the empty cache, so the scheme's proofs and the adversary's
 hash queries share it (`AnonymousTokens/OracleCarrier.lean`). Both games run
 one experiment, `omufExp`, generic in the carrier `OracleComp spec`, over a
-query menu, oracle, log and winning condition generic in the monad.
+query menu, oracle, log and winning condition generic in the monad. For an
+oracle-free scheme, one bridge relates them: `ATSyntax.lift` lifts a `ProbComp`
+scheme through `liftM`, `OMUFAdversary.lift` lifts an adversary, and
+`omufAdvRO_lift` equates the lifted advantage with the `ProbComp` one.
 
 **Why.** The `π_is` lifting lemma of #205 bounds the scheme with `π_is` by the
 core, so its left side lives at the oracle carrier and its right side at
-`ProbComp`. With the experiment generic in the carrier, `OMUFGame` and
-`OMUFAdv` are `ProbComp` definitions, and every statement over them is a
-`ProbComp` statement.
+`ProbComp`; the bridge is the step between them. With the experiment generic
+in the carrier, `OMUFGame` and `OMUFAdv` are `ProbComp` definitions, and every
+statement over them is a `ProbComp` statement.
 
 **Rejected alternatives.**
 
@@ -868,6 +871,12 @@ core, so its left side lives at the oracle carrier and its right side at
   twice, with nothing to keep them in step. Only the adversary structure is
   restated per carrier: `OMUFAdversaryRO` is `OMUFAdversary` with `ZKRO H` in
   place of `unifSpec`.
+- *VCV-io's `evalDist_liftComp` for the bridge.* It needs `IsUniformSpec` on
+  both specifications, which `ZKRO H` lacks, and it reads a computation through
+  `evalDist`, where every query, a repeated `H` query included, is an
+  independent draw. The game answers `H` through the cache of `runRO`, so a
+  repeated query gets the same answer, and the bridge is an equation between
+  games run through `runRO`, the setting of `runRO_liftM`.
 
 Decided October 2026 (Track CMZ-OMUF, #183).
 
