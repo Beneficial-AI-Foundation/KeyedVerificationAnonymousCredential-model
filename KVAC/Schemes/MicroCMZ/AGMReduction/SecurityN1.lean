@@ -65,9 +65,9 @@ variable (secParam : ℕ)
 
 /-- **Keygen + oracle reparametrization.** The real UF-CMVA game and `redFull`'s `winBit`
 marginal are *identically distributed*: the embedded public elements (`H, X₀, Xᵣ`,
-`X₁`) and every issued tag are identically distributed to the real game's — the
+`X₁`) and every issued MAC code are identically distributed to the real game's — the
 conditioned η masks make `H` uniform on the nonzero elements, as `setup` draws it
-(`sign_U_dist_eq`, issue #149), the masks make `Xᵣ`, `X₁` uniform and the tags
+(`sign_U_dist_eq`, issue #149), the masks make `Xᵣ`, `X₁` uniform and the MAC codes
 identically distributed, while `X₀ = x₀·H` (the key component `x₀ = a₀+x·b₀` acting
 on the embedded `H`) is carried by the reparametrization itself, not by a
 mask-uniformity lemma. The reconstructed secret
@@ -76,9 +76,9 @@ oracle reproduces the honest oracle's observable behaviour.
 
 Route: couple `reductionOracleImpl` (`Core.lean`) against `agmOracleImpl`
 (`AlgebraicMAC.lean`) under the state invariant `redLogHonestInv` (`Coupling.lean`),
-after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the `sign` arm
+after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle
 through `sign_masked_tag_dist_eq` (`SignMask.lean`, whose module doc records why the
-mask sample is kept opaque there), the `verify`/`help` arms through
+mask sample is kept opaque there), the Verify and Help oracles through
 `represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). -/
 lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
     evalDist (AGM_UF_CMVAGame gen secParam A)
@@ -99,7 +99,7 @@ lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
   rw [microCMZ3DLReductionAdv, ← probEvent_eq_eq_probOutput, ← hmap, probEvent_map]; rfl
 
 /-- What one run of `redTrace` at the challenge powers certifies about its trace: the
-embedding holds at the challenge exponent (`RedEmbedding`), and every logged tag is honest
+embedding holds at the challenge exponent (`RedEmbedding`), and every logged MAC code is honest
 (`redLog_honest`) and in `U`-form (`redLog_U_form`). The one place `redTrace`'s support is
 destructured. -/
 lemma redTrace_support_facts {x : F} (A : AGMUFAdversary F G 1) (t : RedTrace F G)

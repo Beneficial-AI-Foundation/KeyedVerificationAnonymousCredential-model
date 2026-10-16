@@ -48,7 +48,7 @@ variable {n : ℕ}
 
 /-! ## The embedded parameters -/
 
-/-- **Nonzero-scalar sampler for the simulator's `sign` arm.** Definitionally
+/-- **Nonzero-scalar sampler for the simulator's Sign oracle.** Definitionally
 `uniformUnits F` (`Construction.lean`), kept as a named `@[irreducible]`
 definition, like `reductionMaskSample`, so the proof leaf reasons about the
 `sign` branch through named distribution lemmas instead of unfolding the sampler.
@@ -78,7 +78,7 @@ The *implicit* secret key is embedded as `xᵢ = aaᵢ + bbᵢ·x` (so `Xᵢ = a
 bbᵢ•X`), `x₀ = z` (so `X₀ = z•H`), and `xᵣ` honestly known (so `Xᵣ = xᵣ•g`):
 `pp = gapDlEmbedParams`. Writing `(c, d) = gapDlKeyParts` for `c := z + xᵣ +
 Σᵢ aaᵢ·mᵢ` and `d := Σᵢ bbᵢ·mᵢ`, the game's key on message `m⃗` is
-`key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each arm reproduces `agmOracleImpl`'s
+`key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each simulated oracle reproduces `agmOracleImpl`'s
 behaviour under this embedding (the representation-consistency check `consistent`
 is a pure function of the *known* group elements `g, H, pp` and the logged MAC
 codes, so the reduction computes it directly):
