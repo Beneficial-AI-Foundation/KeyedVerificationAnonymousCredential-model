@@ -22,7 +22,7 @@ corresponding to O24, Section 6. μBBS improves on BBDT17 and BBS-MAC:
 one fewer group element per signature, alignment with the IETF BBS
 draft, and security in the algebraic group model under (q+2)-DL.
 
-Five planned files under `KVAC/Schemes/MicroBBS/` (none landed yet), parallel in structure to
+Five planned files under `KVAC/Schemes/MicroBBS/` (none merged yet), parallel in structure to
 *μCMZ*:
 
 - `Construction.lean` — Section 6.1 — Track BBS-C.
@@ -41,7 +41,7 @@ the *Concrete run* chapter.
 :::group "bbs_construction"
 The four protocol algorithms: `KeyGen`, `Setup`, `Issue`, and `Present`.
 Like *μCMZ Construction*, stated over the abstract group API
-(`SampleableGroup F G`; setup and tag bases sample group elements).
+(`SampleableGroup F G`; setup samples group elements).
 :::
 
 *TODO (Track BBS-C).* Implement the four algorithms following Section
