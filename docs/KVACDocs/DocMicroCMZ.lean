@@ -91,7 +91,7 @@ already combines anonymity and extractability); the variant claim is
 
 The four protocol algorithms: `KeyGen`, `Setup`, `Issue` (with predicate
 `φ`), and `Present`. Stated over the abstract `SampleableGroup F G`
-(setup and the MAC's base `U` sample group elements) — no curve, hash
+(setup samples group elements, and the MAC samples its base `U`) — no curve, hash
 function, or deployment is committed to here.
 
 The base MAC of the construction and the credential around it, issuance
@@ -364,8 +364,8 @@ mask-derived univariate and each represented transcript polynomial is
 degree `≤ 3` in the challenge exponent, so the answer is a fixed
 combination of `g, X, X', X''` that agrees with evaluation at the
 unknown exponent. As with {uses "challenge_embedding"}[], the two
-identities the coupling will cite are named: each issued MAC code is the honest
-key multiple of its own base at the challenge exponent, and each
+identities the coupling will cite are named: each issued MAC code `(Uⱼ, Vⱼ)` has `Vⱼ`
+the honest key multiple of `Uⱼ` at the challenge exponent, and each
 mask-derived univariate evaluates there to the mask it lifts. The
 fidelity sentence — each issued MAC code honestly distributed — is discharged
 per query in {bpref "sign_oracle_coupling"}[]; the run-level coupling
@@ -857,7 +857,7 @@ does under the embedded key `xᵢ = rᵢx₁`, on all inputs.
 :::
 
 :::proof "collapse_oracle_coupling"
-Case split on the query; each answer is decided in the exponent, where the two
+Case split on the oracle; each answer is decided in the exponent, where the two
 evaluation bridges of {uses "attribute_collapse_dictionary"}[] rewrite the
 collapsed check into the `n`-attribute one at the embedded key.
 :::
