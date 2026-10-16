@@ -98,6 +98,14 @@ the MAC games, the oracle carries no query bound. The Theorem 5.11 statements ad
 a static hypothesis on the adversary (`IsQueryBoundP` over the Sign arm, at most
 `q` queries) so that their `q`-dependent bounds are well-formed.
 
+**The adversary has a private coin oracle.** Its oracle specification is
+`unifSpec + AGMOMUFOracleSpec F G n`, as for the plain `OMUFAdversary`, and
+`AGM_OMUFGame` answers that oracle in `ProbComp`, leaving the log untouched.
+Sampled scalars are not group elements, so they do not extend the
+representation basis. The comparison with fixed coins, and with the UF-CMVA
+forgers, is in `DESIGN_ALTERNATIVES.md`, *One-more forgers have a private coin
+oracle*.
+
 **Carrier.** `ProbComp`, as for the core scheme and the MAC games. The core never
 calls a hash, so no random oracle is threaded. The `π_is`-carrying variant of
 item 18 lives over `OracleComp (ZKRO H)` and gets its own game.
@@ -190,20 +198,23 @@ theorem AGMOMUFLog.tags_length_le (log : AGMOMUFLog F G n) :
   List.length_filterMap_le _ _
 
 /--
-The Sign arm as a predicate on queries: the one the static query-budget
-hypotheses of the Theorem 5.11 statements count, as
-`IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` (at most `q` Sign queries,
-Verify queries free). Refused Sign queries are Sign queries.
+The Sign arm as a predicate on the adversary's queries, its private coin oracle
+included: the one the static query-budget hypotheses of the Theorem 5.11
+statements count, as `IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` (at
+most `q` Sign queries, Verify and coin queries free). Refused Sign queries are
+Sign queries.
 -/
-def AGMOMUFQuery.isSign : AGMOMUFQuery F G n → Prop
-  | .sign _ _ => True
-  | .verify _ _ _ _ => False
+def AGMOMUFQuery.isSign : ℕ ⊕ AGMOMUFQuery F G n → Prop
+  | .inl _ => False
+  | .inr (.sign _ _) => True
+  | .inr (.verify _ _ _ _) => False
 
 /-- `IsQueryBoundP` needs the predicate decidable. -/
 instance AGMOMUFQuery.instDecidablePredIsSign :
     DecidablePred (AGMOMUFQuery.isSign (F := F) (G := G) (n := n))
-  | .sign _ _ => isTrue trivial
-  | .verify _ _ _ _ => isFalse id
+  | .inl _ => isFalse id
+  | .inr (.sign _ _) => isTrue trivial
+  | .inr (.verify _ _ _ _) => isFalse id
 
 /--
 One forgery of the algebraic adversary (O24 Equation 19): the attribute vector
@@ -229,15 +240,17 @@ def AGMOMUFForgery.plain (e : AGMOMUFForgery F G n) : (Fin n → F) × Code G :=
 /--
 An algebraic one-more unforgeability adversary against μCMZ_AT for `n`
 attributes (O24 §5.6): given the crs `H` and the public parameters
-`(X₀, Xᵣ, X⃗)`, it queries the instrumented oracles and outputs its list of
-forgeries, `q + 1` of them to win. The shape of `AGMUFAdversary` and the plain
-`OMUFAdversary`, with the same inherited limitation: no private coin oracle.
+`(X₀, Xᵣ, X⃗)`, it queries a private coin oracle and the instrumented oracles
+and outputs its list of forgeries, `q + 1` of them to win. The shape of the
+plain `OMUFAdversary`, private coin oracle included (*The adversary has a
+private coin oracle* in the module docstring).
 -/
 structure AGMOMUFAdversary (F G : Type) (n : ℕ) where
-  /-- The adversary's program: from `(H, pp)`, query the instrumented Sign and
-  Verify arms and output the forgeries with their representations. -/
+  /-- The adversary's program: from `(H, pp)`, query the private coin oracle and
+  the instrumented Sign and Verify arms and output the forgeries with their
+  representations. -/
   run : G → Params G n →
-    OracleComp (AGMOMUFOracleSpec F G n) (List (AGMOMUFForgery F G n))
+    OracleComp (unifSpec + AGMOMUFOracleSpec F G n) (List (AGMOMUFForgery F G n))
 
 end Data
 
@@ -347,7 +360,8 @@ abbrev AGMOMUFWins (secParam : ℕ) (sk : Key F n) (H : G) (pp : Params G n)
 The AGM one-more unforgeability experiment for μCMZ_AT (O24 Figure 6,
 instrumented per §5.6). Setup and key generation delegate to
 `μCMZATCoreSyntax F gen`, as the plain `OMUFGame` delegates to its scheme; the
-adversary runs against `agmOMUFOracleImpl` from the empty log; returns `true`
+adversary runs from the empty log with its private coin oracle answered by
+`ProbComp` and its instrumented queries by `agmOMUFOracleImpl`; returns `true`
 iff `AGMOMUFWins` holds for the final log and the output. Stated for every `n`
 and every `secParam` (unused by the core, kept threaded as in the plain game).
 The correspondence with the plain `OMUFGame` is the deferred bridge described
@@ -358,8 +372,12 @@ noncomputable def AGM_OMUFGame (secParam : ℕ) (A : AGMOMUFAdversary F G n) :
   let tok := μCMZATCoreSyntax F gen
   let H : G ← tok.setup secParam n
   let (sk, pp) ← tok.keygen (secParam := secParam) (n := n) H
-  let (out, log) ←
-    (simulateQ (agmOMUFOracleImpl gen secParam sk H pp) (A.run H pp)).run []
+  -- `HAdd.hAdd` rather than `+`: the binop elaborator's instance search for `+`
+  -- times out in the `F`-instance context of this file.
+  let impl := HAdd.hAdd
+    ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (AGMOMUFLog F G n) ProbComp))
+    (agmOMUFOracleImpl gen secParam sk H pp)
+  let (out, log) ← (simulateQ impl (A.run H pp)).run []
   pure (decide (AGMOMUFWins gen secParam sk H pp log out))
 
 /-- The AGM OMUF advantage `Pr[= true | AGM_OMUFGame …]`, a function of `secParam`
