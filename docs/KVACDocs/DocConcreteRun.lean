@@ -70,5 +70,5 @@ catches abstraction mismatches between *Core*, *Framework*, and
 *Deferred to post-v1.* μBBS requires a roughly 300 to 384-bit curve (for
 example the BLS12-381 base curve, used without pairings) for 128-bit
 security under q-DL. A verified larger-curve instance is not yet
-available; once one exists, a parallel μBBS example would mirror this
+available; once one is delivered, a parallel μBBS example would mirror this
 chapter.

@@ -41,7 +41,7 @@ the *Concrete run* chapter.
 :::group "bbs_construction"
 The four protocol algorithms: `KeyGen`, `Setup`, `Issue`, and `Present`.
 Like *μCMZ Construction*, stated over the abstract group API
-(`SampleableGroup F G`; setup samples group elements).
+(`SampleableGroup F G`; setup and MAC-code bases sample group elements).
 :::
 
 *TODO (Track BBS-C).* Implement the four algorithms following Section
