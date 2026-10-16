@@ -71,7 +71,7 @@ abbrev MsgVec (crs : ks.Crs secParam n) : Type := Fin n → ks.Msg crs
 end KeyedSetupSyntax
 
 /--
-The three-move issuance protocol shared by every keyed scheme with blind
+The state threading of three-move issuance shared by every keyed scheme with blind
 issuance: the user's first move yields private state and a request, the
 server answers the request or rejects (`none`), and the user finalizes from
 its state and the response, or aborts (`none`). `KVACSyntax.issue`

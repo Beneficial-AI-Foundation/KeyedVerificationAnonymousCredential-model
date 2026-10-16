@@ -87,8 +87,9 @@ answering a Boolean — honestly, whether `Z = x·A` for the challenge exponent
 `x` (the "DH of the challenge `X = x·g` and `A`"). -/
 abbrev GapDLogOracleSpec (G : Type) : OracleSpec (G × G) := (G × G) →ₒ Bool
 
-/-- A gap-DL adversary: receives `(g, x·g)`; may sample uniformly (`unifSpec`) and
-query the DDH-decision oracle (`GapDLogOracleSpec G`); tries to output `x`. -/
+/-- A gap-DL adversary: receives `(g, x·g)`; may sample uniformly (the `unifSpec`
+summand) and query the DDH-decision oracle (the `GapDLogOracleSpec G` summand); tries to
+output `x`. -/
 def GapDLogAdversary (F G : Type) :=
   G → G → OracleComp (unifSpec + GapDLogOracleSpec G) F
 
