@@ -657,7 +657,7 @@ def check_conformance(nodes: list[Node], summary_html_path: Path) -> None:
     sorries — the metrics with identical semantics on both pages. Deliberately
     NOT compared: the Summary's "Ready now" (actionable-stage gated) versus
     our "Ready to start" (either axis `ready`; matches the table's Ready-next
-    columns), and "no proof" (counts theorem-like stubs only, while our
+    columns), and "no proof" (counts only theorem-like nodes without a proof, while our
     per-axis statuses cover definitions too). Both exclusions are documented
     in BLUEPRINT_MAINTENANCE.md."""
     text = summary_html_path.read_text(encoding="utf-8")

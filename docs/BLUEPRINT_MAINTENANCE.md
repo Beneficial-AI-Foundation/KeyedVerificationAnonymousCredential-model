@@ -16,7 +16,7 @@ behind them.
    `(lean := "…")` list or add a node (see conventions). Paper elements come
    from `docs/formalization-progress/element_summaries.toml`; work that is not
    a paper element gets a `milestone` node.
-4. Wire dependencies. Statement dependencies as `{uses "label"}[]` in the node
+4. Declare dependencies. Statement dependencies as `{uses "label"}[]` in the node
    body; proof dependencies inside the node's `:::proof` block. Prose links
    that must not create an edge use `{bpref "label"}[]`.
 5. Build and check:
@@ -38,12 +38,12 @@ behind them.
   pull requests reads as complete from the first one. Bundle freely within a
   node as long as the whole bundle is delivered together; split along the
   boundary where it is not, and name each node for its content. Steps still
-  to come are registered as unanchored stubs, listed through `uses` in the
+  to come are registered as unanchored nodes, listed through `uses` in the
   `:::proof` block of the element they serve, so the denominator stays honest
-  and each PR of a stack anchors its own stub. Example: the scalar identity
-  (`masked_key_normal_form_bridge`) and the sign-arm coupling
+  and each PR of a stack anchors its own node. Example: the scalar identity
+  (`masked_key_normal_form_bridge`) and the Sign-oracle coupling
   (`sign_oracle_coupling`) are delivered by different pull requests, so they
-  are separate nodes, and the rest of the Lemma 5.4 chain sits as stubs under
+  are separate nodes, and the rest of the Lemma 5.4 chain sits as unanchored nodes under
   `single_attribute_mac`.
 - **One node per tracker element** (Definition/Theorem/Lemma/Claim/Corollary/
   Figure/Equation/§-interface), labels are descriptive snake_case
@@ -110,7 +110,7 @@ secure-messaging landing page.
   excluded from the CI conformance check): the landing's "Ready to start" =
   either axis `ready` (matches the table's Ready-next columns), while the
   Summary's "Ready now" is actionable-stage gated; the Summary's "no proof"
-  counts theorem-like stubs only. Compared and enforced equal: total
+  counts only theorem-like nodes without a proof. Compared and enforced equal: total
   entries, completed, deps incomplete, sorries.
 - **Chapters**: a node's chapter is the first path component of its manifest
   `href`; the mapping lives in `CHAPTER_ORDER`/`CHAPTER_TITLES` in the
@@ -186,7 +186,7 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
   `bpref` and keeps its Track-Σ TODOs for the generic FS transform and
   straight-line extraction.
 - **Registry covers all undimmed tracker elements** (2026-07). Unformalized
-  elements are registered as unanchored stubs so the summary's denominator is
+  elements are registered as unanchored nodes so the summary's denominator is
   honest; content and anchors are written for merged work only.
 - **`keyed_setup` is a milestone, not a paper element** (2026-08).
   `KeyedSetupSyntax` factors the CRS/keygen preamble shared by O24
@@ -224,7 +224,7 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
   the scheme it analyzes also drops the server proof `π_is`. The merged
   instance formalizes that `π_is`-less core under a name that records this
   (`μCMZATCore`); the printed Theorem 5.3 element stays an unanchored
-  stub until the upstream erratum (keep `π_is`, add one zero-knowledge term
+  node until the upstream erratum (keep `π_is`, add one zero-knowledge term
   via a lifting lemma) is settled. Alternative (anchoring the core to the
   Figure 9 element or to Theorem 5.3) rejected by the anchoring honesty rule.
 

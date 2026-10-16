@@ -200,7 +200,7 @@ push to `main`** (and on manual dispatch). It sets up Python (no poppler; the
 paper side reads the committed extraction), syncs with `main`, regenerates,
 validates with `--check` and `xref`, and only then commits the result when it
 changed, as `github-actions[bot]` — so a regeneration that fails validation
-never lands on `main`. The regeneration step runs:
+never reaches `main`. The regeneration step runs:
 
 ```bash
 python3 docs/formalization-progress/formalization_progress.py \
