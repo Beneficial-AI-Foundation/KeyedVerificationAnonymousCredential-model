@@ -31,7 +31,7 @@ Theorem 5.3 plan, part 17a of item 17 (issue #189).
 
 `AGMRepr.toReprCoeffs` of `AGMReduction/Core.lean` converts a game
 representation to polynomial-layer coefficients at a given arity, reading
-absent tag slots as `0`, which under the exact-length gate is the right value.
+absent issued-pair slots as `0`, which under the exact-length gate is the right value.
 The arity is the number of issued pairs, not the Sign budget, since a refused
 Sign query issues no pair and gets no variable, while the winning condition
 counts every Sign query.

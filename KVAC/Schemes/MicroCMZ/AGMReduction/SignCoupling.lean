@@ -9,9 +9,9 @@ import VCVio.OracleComp.SimSemantics.StateT.PreservesInv
 /-!
 # μCMZ AGM unforgeability — the deterministic core
 
-The *deterministic* half of the reduction ↔ honest-game coupling: the `sign`
-oracle arm, the transcript invariants it establishes, and the lemmas at
-abstract arity the remaining arms consume:
+The *deterministic* half of the reduction ↔ honest-game coupling: the coupling
+for the `sign` oracle, the transcript invariants it establishes, and the lemmas at
+abstract arity the couplings for the Verify and Help oracles consume:
 
 - **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
@@ -38,7 +38,7 @@ key in the explicit form `x₀ + xᵣ + m·x₁` instead, and this is the lemma 
 one form to the other; each lemma at abstract arity converts in its own proof, at
 the boundary.
 
-The `verify` and `help` oracle arms are deferred; the run-level coupling is
+The couplings for the `verify` and `help` oracles are deferred; the run-level coupling is
 `AGM_UF_CMVAGame_evalDist_eq` in `SecurityN1.lean`.
 
 Everything here is deterministic algebra plus one distributional equality lifted
@@ -81,10 +81,10 @@ open OracleComp.ProgramLogic.Relational
 /-- **Sign-step coupling** (the novel core; the fidelity sentence of O24 Eq. 14). The
 reduction's `sign` step (`reductionSignStep`) and the honest `sign` step
 (`agmOracleImpl (.sign _)` at `Coupling`'s `maskedKey x aM bM`, the honest key read at the
-masked secrets `(a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)`) produce identically-distributed tags and preserve
-`redLogHonestInv`: `sign_masked_tag_dist_eq` and `Core`'s `embedTag_eq` make the computed tag
+masked secrets `(a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)`) produce identically-distributed MAC codes and preserve
+`redLogHonestInv`: `sign_masked_tag_dist_eq` and `Core`'s `embedTag_eq` make the computed MAC code
 `(U, V = key·U)`'s distribution match `mac (maskedKey x aM bM) m`;
-`relTriple_map_eq` lifts this to the "computed tag = sampled tag" relation,
+`relTriple_map_eq` lifts this to the "computed MAC code = sampled MAC code" relation,
 `relTriple_post_mono` adds the `redLogHonestInv`-preservation conjunct, and `relTriple_map`
 threads both through the state append (the new red log entry `(m,(U,V),au,bu)` projects to the
 new honest log entry `(m,(U,V))`, and `V = key·U` extends honesty). -/
@@ -158,8 +158,8 @@ end SignStepCoupling
 /-! ## Log invariants -/
 
 /-- **(log-honesty invariant), preservation.** The reduction's simulated oracle, run with the
-genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`, preserves `redLogInv`: the `sign` arm appends
-only honest entries (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`; the `U`-form is
+genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`, preserves `redLogInv`: the Sign oracle
+appends only honest entries (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`; the `U`-form is
 definitional), and `verify`/`help` leave the log unchanged. -/
 lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) :
     QueryImpl.PreservesInv
@@ -183,11 +183,12 @@ lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : Embe
       subst hz; exact hσ0
 
 /-- **(log-honesty invariant).** With the genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
-every tag the reduction's simulated oracle logs is honest — `Vⱼ = macScalar (maskedKey …) mⱼ · Uⱼ`,
-the same `macScalar` form `redLogHonestInv` states the relation in, so a caller can move between
-the two without a conversion. The `sign` branch appends only honest tags (`embedTag_eq`, retyped
-by `macScalar_maskedKey_eq`); `verify`/`help` leave the log unchanged. Restated from
-`reductionOracleImpl_preservesInv` by `simulateQ_run_preservesInv`. -/
+every MAC code the reduction's simulated oracle logs is honest —
+`Vⱼ = macScalar (maskedKey …) mⱼ · Uⱼ`, the same `macScalar` form `redLogHonestInv` states the
+relation in, so a caller can move between the two without a conversion. The `sign` branch appends
+only honest MAC codes (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`); `verify`/`help` leave
+the log unchanged. Restated from `reductionOracleImpl_preservesInv` by
+`simulateQ_run_preservesInv`. -/
 lemma redLog_honest (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
     {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
@@ -197,7 +198,7 @@ lemma redLog_honest (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
   fun e he => (simulateQ_run_preservesInv _ _ (reductionOracleImpl_preservesInv gen x aM bM ep)
     oa [] (List.forall_mem_nil _) out hout e he).2
 
-/-- Companion to `redLog_honest`: every logged tag's `Uⱼ` is `auⱼ·g + buⱼ·X` (`X = x·g`) — the
+/-- Companion to `redLog_honest`: every logged MAC code's `Uⱼ` is `auⱼ·g + buⱼ·X` (`X = x·g`) — the
 oracle builds it that way and records `(auⱼ, buⱼ)`, so the `sign` case is definitional. Supplies
 the coefficients of `gamePoint_eq_embed_affine`'s `htag` in membership form; that lemma takes them
 indexed by `Fin tags.length`, and the conversion is the pending `transcript_index_transport` step,
@@ -213,7 +214,7 @@ lemma redLog_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
 
 omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G]
   [SampleableGroup F G] in
-/-- The issued-tag list has one entry per log entry; names the `Fin.cast` proof the
+/-- The list of issued MAC codes has one entry per log entry; names the `Fin.cast` proof the
 transcript-indexed statements below go through. -/
 lemma RedLog.length_tags (L : RedLog F G) : L.tags.length = L.length :=
   List.length_map _
@@ -221,9 +222,9 @@ lemma RedLog.length_tags (L : RedLog F G) : L.tags.length = L.length :=
 omit hgen in
 /-- **Transcript facts, index-transported.** Log-honesty (`Vⱼ = keyⱼ·Uⱼ` at the real logs
 `xₖ = aₖ + x·bₖ`) and the embedded `U`-form (`Uⱼ = auⱼ·g + buⱼ·X`), carried from their
-per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the tag list `L.tags`
-indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`, the masks
-`L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` form; a caller
+per-log-entry forms onto the transcript, in `Coupling`'s normal forms: the list `L.tags` of
+issued MAC codes indexed by `Fin L.length` through `RedLog.length_tags`, the message `L.msg j`,
+the masks `L.aMask j` / `L.bMask j`. The key keeps the `macScalar (maskedKey …)` form; a caller
 using `Core`'s evaluation bridge converts the index type and the key form at the use site.
 
 Its inputs are the two components of `redLogHonestInv`'s per-entry conjunction — split as

@@ -17,7 +17,7 @@ pairwise-distinct message/token pairs.
 
 ## Layout
 
-- `OMUFQuery` — an inductive type enumerating the two oracle arms.
+- `OMUFQuery` — an inductive type enumerating the two oracles.
 - `OMUFOracleSpec` — the `OracleSpec` parametrised by `OMUFQuery`.
 - `OMUFAdversary` — adversaries: `OracleComp`-valued programs that take
   `(crs, pp)` and return candidate message/token pairs.
@@ -51,7 +51,7 @@ open OracleSpec OracleComp ENNReal
 variable {secParam n : Nat}
 
 /--
-The two oracle arms an OMUF adversary can query against an anonymous-token
+The two oracles an OMUF adversary can query against an anonymous-token
 scheme for a fixed `crs`:
 
 - `sign µ` — submit an issuance request `µ` to the server (Figure 6's
@@ -59,7 +59,7 @@ scheme for a fixed `crs`:
 - `verify m σ` — ask whether `σ` is a valid token for `m` (Figure 6's
   `Verify`).
 
-Mirrors `KVAC.Core.UFQuery`. Note the Sign arm takes the *user message*
+Mirrors `KVAC.Core.UFQuery`. Note the Sign oracle takes the *user message*
 `µ`, not an attribute vector: the adversary blinds for itself, which is
 what makes the issuance blind.
 -/
@@ -71,7 +71,7 @@ inductive OMUFQuery (tok : ATSyntax ProbComp)
   | verify : tok.MsgVec crs → tok.Token crs → OMUFQuery tok crs
 
 /--
-The `OracleSpec` for OMUF: each `OMUFQuery` arm maps to the response type
+The `OracleSpec` for OMUF: each `OMUFQuery` oracle maps to the response type
 the adversary expects.
 
 - `sign µ` ↦ `Option (tok.BlindToken crs)` (`none` = the server rejected)

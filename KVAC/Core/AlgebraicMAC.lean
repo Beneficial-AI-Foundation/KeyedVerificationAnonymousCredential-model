@@ -64,7 +64,7 @@ structure AlgebraicMAC where
   randomness fixed to `ProbComp`. -/
   alg : AlgebraicMACSyntax ProbComp
   /-- Correctness of the syntactic algorithms — every honestly produced
-  tag verifies. -/
+  MAC code verifies. -/
   correct : Correct alg
 
 end KVAC.Core

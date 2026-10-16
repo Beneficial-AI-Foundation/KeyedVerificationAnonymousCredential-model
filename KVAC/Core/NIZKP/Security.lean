@@ -52,7 +52,7 @@ prover runs through `zkROImpl` on the same cache and so shares its answers.
 - `ZKRO` / `zkROImpl` — unifSpec + the lazy random oracle `H.spec`.
 - `NIZKPSyntax.DecidableRelation` — decidability of the relation family, for
   the `(x, w) ∈ R` guard of Proveᵦ.
-- `ZKQuery` / `ZKProveSpec` — the `Prove` oracle arm.
+- `ZKQuery` / `ZKProveSpec` — the `Prove` oracle.
 - `ZKAdversary` — an `OracleComp`-valued program with `Prove` and RO access,
   returning a guess bit.
 - `zkProveReal` / `zkProveSim` — the two `QueryImpl`s answering `Prove` with the
@@ -98,13 +98,13 @@ def zkROImpl (H : HashSpec) :
   (QueryImpl.ofLift unifSpec ProbComp).liftTarget
     (StateT (H.spec.QueryCache) ProbComp) + H.roImpl
 
-/-- The `Prove` oracle arm for a fixed crs: `prove x w` requests a proof for the
+/-- The `Prove` oracle for a fixed crs: `prove x w` requests a proof for the
 witnessed instance `(x, w)`. -/
 inductive ZKQuery (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     {secParam : Nat} (crs : zkp.Crs secParam) : Type where
   | prove : zkp.Stmt crs → zkp.Witness crs → ZKQuery H zkp crs
 
-/-- The `OracleSpec` of the `Prove` arm: `prove x w` answers with a proof, or
+/-- The `OracleSpec` of the `Prove` oracle: `prove x w` answers with a proof, or
 `none` (the paper's implicit ⊥) when `(x, w) ∉ R`.
 
 Formalizes the Proveᵦ oracle of O24 §3.3, the oracle A calls in `A^Proveᵦ(crs)`. -/
@@ -113,7 +113,7 @@ def ZKProveSpec (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
   | .prove _ _ => Option (zkp.Proof crs)
 
 /-- The full oracle interface a zero-knowledge adversary sees for a fixed crs:
-the `Prove` arm together with `ZKRO`.
+the `Prove` oracle together with `ZKRO`.
 
 Formalizes the oracle access of `A^Proveᵦ` in O24 §3.3: the Proveᵦ oracle and the
 random oracle together. -/
@@ -230,7 +230,7 @@ this lift to reuse `ProbComp` algorithms inside a credential at the oracle
 carrier, for instance the μCMZ base MAC's `setup` and `keygen` (issue #118). -/
 
 /-- The implementation `zkROImpl` unfolds to VCV-io's forwarding handler for the
-uniform arm summed with the lazy random oracle. -/
+uniform-sampling oracle `unifSpec` summed with the lazy random oracle. -/
 lemma zkROImpl_eq_unifFwd_add (H : HashSpec) :
     zkROImpl H = unifFwdImpl H.spec + H.roImpl := rfl
 

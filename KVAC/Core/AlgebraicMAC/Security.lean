@@ -18,12 +18,12 @@ Game-based unforgeability under chosen-message-and-verify-attack
 The game gives the adversary `OracleComp` access to two oracles —
 **Sign** (the honest MAC oracle) and **Verify** (the honest verification
 oracle) — and tracks the messages signed so far in a `SignedLog`. The
-adversary wins by producing a fresh message-tag pair `(m*, σ*)` such
-that `m*` was never signed and `verify(sk, m*, σ*) = true`.
+adversary wins by producing a pair `(m*, σ*)` of a message and a MAC code
+such that `m*` was never signed and `verify(sk, m*, σ*) = true`.
 
 ## Layout
 
-- `UFQuery` — an inductive type enumerating the two oracle arms.
+- `UFQuery` — an inductive type enumerating the two oracles.
 - `UFOracleSpec` — the `OracleSpec` parametrised by `UFQuery`.
 - `UFAdversary` — adversaries: `OracleComp`-valued programs that take
   `(crs, pp)` and return a forgery `(m*, σ*)`.
@@ -46,14 +46,14 @@ open OracleSpec OracleComp ENNReal
 variable {secParam n : Nat}
 
 /--
-The two oracle arms a UF-CMVA adversary can query against an algebraic
+The two oracles a UF-CMVA adversary can query against an algebraic
 MAC for a fixed `crs`:
 
-- `sign m` — request a fresh MAC tag on the attribute vector `m`.
-- `verify m σ` — ask whether `σ` is a valid tag for `m`.
+- `sign m` — request a fresh MAC code on the attribute vector `m`.
+- `verify m σ` — ask whether `σ` is a valid MAC code for `m`.
 
 The inductive is indexed by `mac` and `crs` so that the message-vector
-and tag types refer to the concrete CRS.
+and MAC-code types refer to the concrete CRS.
 -/
 inductive UFQuery (mac : AlgebraicMACSyntax ProbComp)
     (crs : mac.Crs secParam n) : Type where
@@ -61,7 +61,7 @@ inductive UFQuery (mac : AlgebraicMACSyntax ProbComp)
   | verify : mac.MsgVec crs → mac.Tag crs → UFQuery mac crs
 
 /--
-The `OracleSpec` for UF-CMVA: each `UFQuery` arm maps to the response
+The `OracleSpec` for UF-CMVA: each `UFQuery` oracle maps to the response
 type the adversary expects.
 
 - `sign m` ↦ `mac.Tag crs`

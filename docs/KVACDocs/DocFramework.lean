@@ -23,9 +23,9 @@ The abstract KVAC framework of O24, Section 4. The files under
 `KVAC/Framework.lean` is the umbrella that bundles the syntax with a
 correctness proof:
 
-- `PredicateFamily.lean` — Definition 4.1 — Track F1, landed.
-- `Syntax.lean` — Definition 4.2 — Track F1, landed.
-- `Correctness.lean` — Definition 4.3 — Track F1, landed.
+- `PredicateFamily.lean` — Definition 4.1 — Track F1, merged.
+- `Syntax.lean` — Definition 4.2 — Track F1, merged.
+- `Correctness.lean` — Definition 4.3 — Track F1, merged.
 - `Anonymity.lean` — Definition 4.4 — Track F2, not yet written.
 - `Extractability.lean` — Definition 4.5 — Track F2, not yet written.
 
@@ -123,7 +123,7 @@ stateless support-based semantics. `CorrectRO` is `GenCorrect` at
 `roRunSem`, which threads one random-oracle cache through `setup`, `keygen`,
 `issue` and `present` by `runRO`, the statement a Fiat–Shamir scheme over
 the oracle carrier proves. Its first consumer is the proof that the extraction
-game's `NewUsr` oracle never takes its `none` arm, in the stacked PR #140.
+game's `NewUsr` oracle never takes its `none` branch, in the stacked PR #140.
 
 `KVACRO H` is the bundle at the oracle carrier, the syntax paired with
 `CorrectRO H`, as `NIZKP H` is for proof systems.
@@ -205,12 +205,12 @@ against the adversary's issuance and presentation transcripts.
 
 :::theorem "newusr_never_fails" (lean := "KVAC.Framework.support_zkROImpl_inl_run, KVAC.Framework.roImpl_run_some, KVAC.Framework.roImpl_run_none, KVAC.Framework.roImpl_step_of_le, KVAC.Framework.zkROImpl_step_of_le, KVAC.Framework.runRO_support_of_le, KVAC.Framework.newUsr_mac_isSome") (parent := "framework_extract") (tags := "milestone")
 The `NewUsr` oracle of {uses "extractability_game"}[] never takes its
-failure arm. Under the oracle-carrier correctness {uses "kvac_correctness"}[],
+failure branch. Under the oracle-carrier correctness {uses "kvac_correctness"}[],
 every result of the honest MAC code generation run from any random-oracle
 cache at least as large as the keygen cache is a credential, so the user
 counter always advances as in O24 Figure 8. The run is transported back to
 the keygen cache by a cache transport lemma for `runRO`, built from one-step
-support lemmas for the uniform and hash arms of the random-oracle handler.
+support lemmas for the uniform-sampling and hash oracles of the random-oracle handler.
 :::
 
 :::proof "newusr_never_fails"

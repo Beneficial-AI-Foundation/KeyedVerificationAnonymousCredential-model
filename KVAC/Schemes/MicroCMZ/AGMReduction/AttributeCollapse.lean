@@ -27,9 +27,9 @@ This file holds the pure algebra of that collapse and the wrapper
 built on it.
 
 - The two representation translations: `AGMRepr.collapseRepr` for a single
-  represented element (the `verify`/`help` arms and the forgery) and
+  represented element (submitted to the Verify and Help oracles, and the forgery) and
   `AGMRepr.linCombCollapse` for the weighted sum `Σᵢ rᵢ • Aᵢ` of represented
-  elements (the `help` arm).
+  elements (submitted to the Help oracle).
 - The wrapper `nTo1Adversary A r`: a 1-attribute adversary that runs the
   `n`-attribute adversary `A` along a fixed direction `r⃗`. It builds the
   `n`-attribute public parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` from the
@@ -59,8 +59,8 @@ variable {n : ℕ}
 /-- Collapse an `n`-attribute algebraic representation onto a 1-attribute one
 along a direction `r⃗`: every field is preserved except the attribute
 coefficients, which are combined into `Σᵢ rᵢ · ρ.x i` (the single `x₁`
-coefficient). Tag coefficients `uv` are carried unchanged, since the issued
-tags are the same list in both games. It is built so that, against the
+coefficient). The coefficients `uv` for issued MAC codes are carried unchanged, since
+the issued MAC codes are the same list in both games. It is built so that, against the
 1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, it evaluates as `ρ` does
 against the embedded basis `(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`; that
 evaluation bridge is not in this file. -/
@@ -72,10 +72,10 @@ def AGMRepr.collapseRepr (r : Fin n → F) (ρ : AGMRepr F n) : AGMRepr F 1 wher
   x := fun _ => ∑ i, r i * ρ.x i
   uv := ρ.uv
 
-/-- Length of the combined tag-coefficient list for `linCombCollapse`: the
+/-- Length of the combined list of coefficients for issued MAC codes in `linCombCollapse`: the
 maximum of the per-attribute `uv` list lengths. Beyond this length every
 `(ρA i).uv.getD k (0, 0)` is `(0, 0)`, so, in the intended evaluation bridge,
-both sides contribute `0` to that tag position (via `List.getD`'s default). -/
+both sides contribute `0` at that position (via `List.getD`'s default). -/
 def linCombCollapseUVLen (ρA : Fin n → AGMRepr F n) : ℕ :=
   (Finset.univ : Finset (Fin n)).sup fun i => ((ρA i).uv).length
 
@@ -83,13 +83,13 @@ def linCombCollapseUVLen (ρA : Fin n → AGMRepr F n) : ℕ :=
 `Σᵢ rᵢ • Aᵢ`, where each `Aᵢ` carries the `n`-attribute representation `ρA i`.
 It is built to evaluate, against the 1-attribute basis
 `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, to `Σᵢ rᵢ • (ρA i).eval` against the embedded
-basis `(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)`. The `help` arm of `nTo1Adversary`
-collapses an `n`-attribute help query through it, and this evaluation identity
+basis `(g₀, H, X₀, Xᵣ, fun j => rⱼ • X₁)`. The Help oracle that `nTo1Adversary`
+simulates collapses an `n`-attribute help query through it, and this evaluation identity
 is what the coupling `collapse_oracle_coupling` needs.
 
 The scalar-coefficient fields are the weighted sums; the single attribute
 coefficient is `Σᵢ Σⱼ rᵢ·rⱼ·(ρA i).x j` (the collapsed attribute coefficient
-of the weighted representation); the tag coefficients combine per position up
+of the weighted representation); the coefficients for issued MAC codes combine per position up
 to `linCombCollapseUVLen`. -/
 def AGMRepr.linCombCollapse (r : Fin n → F) (ρA : Fin n → AGMRepr F n) :
     AGMRepr F 1 where
@@ -123,11 +123,11 @@ oracle does. The check is needed because the honest `help` check is per attribut
 `n ≥ 2` (individually wrong representations whose weighted errors cancel). A
 genuine algebraic adversary never trips it (its `Aᵢ = (ρA i).eval`). The
 pre-check is what lets the `sign`/`verify`/`help` answers be coupled exactly with
-the embedded-key `n`-attribute oracle; that coupling is the blueprint stub
+the embedded-key `n`-attribute oracle; that coupling is the unanchored blueprint node
 `collapse_oracle_coupling`, not in this file.
 
-The oracle tracks the issued-tag list `List (G × G)` as its state (each forwarded
-`sign` appends the returned tag) so that the `help` consistency `eval` uses the
+The oracle tracks the list `List (G × G)` of issued MAC codes as its state (each
+forwarded `sign` appends the returned MAC code) so that the `help` consistency `eval` uses the
 same transcript the honest oracle would. The closed-over `(H, pp_n)` is the
 embedded `n`-attribute basis `(H, X₀, Xᵣ, X⃗)`. -/
 noncomputable def collapseOracleImpl (r : Fin n → F) (H : G)
@@ -156,7 +156,7 @@ noncomputable def collapseOracleImpl (r : Fin n → F) (H : G)
 
 /-- The `n → 1` attribute-collapse wrapper adversary (Claim 5.7). For a fixed
 direction `r⃗`, a 1-attribute adversary that runs `A` against
-`collapseOracleImpl` and returns the collapsed forgery. The tag-tracking state
+`collapseOracleImpl` and returns the collapsed forgery. The state of issued MAC codes
 starts empty and is projected away (`StateT.run' []`). -/
 noncomputable def nTo1Adversary (A : AGMUFAdversary F G n) (r : Fin n → F) :
     AGMUFAdversary F G 1 where
