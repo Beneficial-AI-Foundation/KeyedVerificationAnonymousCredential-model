@@ -9,9 +9,9 @@ import VCVio.OracleComp.SimSemantics.StateT.PreservesInv
 /-!
 # μCMZ AGM unforgeability — the deterministic core
 
-The *deterministic* half of the reduction ↔ honest-game coupling: the `sign`
-oracle, the transcript invariants it establishes, and the lemmas at
-abstract arity the Verify and Help oracles consume:
+The *deterministic* half of the reduction ↔ honest-game coupling: the coupling
+for the `sign` oracle, the transcript invariants it establishes, and the lemmas at
+abstract arity the couplings for the Verify and Help oracles consume:
 
 - **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
@@ -38,7 +38,7 @@ key in the explicit form `x₀ + xᵣ + m·x₁` instead, and this is the lemma 
 one form to the other; each lemma at abstract arity converts in its own proof, at
 the boundary.
 
-The `verify` and `help` oracles are deferred; the run-level coupling is
+The couplings for the `verify` and `help` oracles are deferred; the run-level coupling is
 `AGM_UF_CMVAGame_evalDist_eq` in `SecurityN1.lean`.
 
 Everything here is deterministic algebra plus one distributional equality lifted
@@ -158,7 +158,7 @@ end SignStepCoupling
 /-! ## Log invariants -/
 
 /-- **(log-honesty invariant), preservation.** The reduction's simulated oracle, run with the
-genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`, preserves `redLogInv`: the `sign` branch
+genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`, preserves `redLogInv`: the Sign oracle
 appends only honest entries (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`; the `U`-form is
 definitional), and `verify`/`help` leave the log unchanged. -/
 lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) :

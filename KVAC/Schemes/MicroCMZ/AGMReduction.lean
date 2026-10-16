@@ -30,7 +30,7 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   plus the lemmas at abstract arity derived from the embedding — the
   consistency⇒vanishing step (Eq. 12 evaluated in the relative discrete
   logarithms), its identity-branch companion `Ustar_eq_zero_of_verifPoly_zero`,
-  and the represented-value bridge the Verify and Help oracles consume;
+  and the represented-value bridge the couplings for the Verify and Help oracles consume;
 - `RedFull` — the analysis experiment `redFull`: the reduction's run at the
   genuine challenge powers, returning the record `RedBits` (win, extraction,
   Schwartz–Zippel bad and shift bits);
