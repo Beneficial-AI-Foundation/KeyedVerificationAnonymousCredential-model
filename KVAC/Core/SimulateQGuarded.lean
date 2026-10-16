@@ -8,7 +8,7 @@ import VCVio.EvalDist.Instances.OptionT
 import VCVio.OracleComp.SimSemantics.StateT.StateProjection
 
 /-!
-# Guarded oracles for `simulateQ` and never-fails-conditioned state projection
+# `simulateQ` oracle implementations: guarded oracles and never-fails-conditioned state projection
 
 `guardImpl` wraps a stateful oracle implementation with a per-query assertion `good`: on a query
 satisfying `good` it lifts the wrapped oracle's step into `OptionT ProbComp`, otherwise it

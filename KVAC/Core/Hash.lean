@@ -59,7 +59,7 @@ an indexed carrier is a family into `Type`. Declared per use site when a
 scheme needs it.
 
 `HashSpec` originated in the zero-knowledge game of
-`Core/NIZKP/Security.lean` (PR #47), which imports it from here.
+`Core/NIZKP/Security.lean` (PR #47), which imports it from here now that both are merged.
 -/
 
 namespace KVAC.Core
@@ -90,8 +90,8 @@ attribute [instance] HashSpec.domDecEq HashSpec.rngSampleable
 
 namespace HashSpec
 
-/-- The VCV-io oracle signature of a hash: one query per domain element,
-answered in the range. A computation with hash access takes `H.spec` (or a
+/-- The VCV-io oracle signature of a hash: a single oracle taking a domain
+element and answering in the range. A computation with hash access takes `H.spec` (or a
 sum containing it) as its `OracleSpec`.
 
 An `abbrev` (not a `def`) so that instance resolution sees through it — e.g.

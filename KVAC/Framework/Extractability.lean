@@ -88,7 +88,7 @@ def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) : EXTState kvac crs :=
   ⟨[], [], []⟩
 
-/-! ## The oracle monad and the lifting into it -/
+/-! ## The oracle monad, the lifting into it and its state threading -/
 
 /-- The monad the O24 Figure 8 oracles run in: the shared random-oracle cache and
 the game state `EXTState` carried in one `StateT`, over `ExceptT Unit` (the
@@ -433,8 +433,8 @@ lemma roImpl_step_of_le (H : HashSpec) (d : H.Dom) {c₁ c : H.spec.QueryCache} 
 
 /-- **One-step cache transport for `zkROImpl`.** A step of the random-oracle handler from
 `c` that answers `u` and ends at `c'` can be replayed from any `c₁ ≤ c`, answering the same
-`u` and ending at some `c₁' ≤ c'`. The uniform-sampling oracle ignores the cache; the hash oracle
-is `roImpl_step_of_le`. -/
+`u` and ending at some `c₁' ≤ c'`. The uniform-sampling oracle ignores the cache; the hash-oracle
+case is `roImpl_step_of_le`. -/
 lemma zkROImpl_step_of_le (H : HashSpec) (t : ℕ ⊕ H.Dom) {c₁ c : H.spec.QueryCache}
     (h : c₁ ≤ c) {u : (ZKRO H).Range t} {c' : H.spec.QueryCache}
     (hu : (u, c') ∈ support ((zkROImpl H t).run c)) :

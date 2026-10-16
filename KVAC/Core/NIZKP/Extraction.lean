@@ -144,7 +144,7 @@ abbrev SEState (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
 
 /-- Implementation of the O24 §3.3 simulation-extractability oracles: `sim`
 runs the zero-knowledge simulator on the shared cache (so it may reprogram it)
-and logs the returned pair; `ZKRO` queries run through `zkROImpl` on the same cache. -/
+and logs the returned pair; the `ZKRO` summand runs through `zkROImpl` on the same cache. -/
 def seOracleImpl (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (sim : ZKSimulator H zkp) {secParam : Nat} (crs : zkp.Crs secParam) :
     QueryImpl (SEAdvSpec H zkp crs) (StateT (SEState H zkp crs) ProbComp)

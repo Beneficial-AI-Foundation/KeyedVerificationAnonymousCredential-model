@@ -71,7 +71,7 @@ inductive OMUFQuery (tok : ATSyntax ProbComp)
   | verify : tok.MsgVec crs → tok.Token crs → OMUFQuery tok crs
 
 /--
-The `OracleSpec` for OMUF: each `OMUFQuery` constructor maps to the response type
+The `OracleSpec` for OMUF: each `OMUFQuery` oracle maps to the response type
 the adversary expects.
 
 - `sign µ` ↦ `Option (tok.BlindToken crs)` (`none` = the server rejected)

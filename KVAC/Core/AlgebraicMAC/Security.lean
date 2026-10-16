@@ -18,8 +18,8 @@ Game-based unforgeability under chosen-message-and-verify-attack
 The game gives the adversary `OracleComp` access to two oracles —
 **Sign** (the honest MAC oracle) and **Verify** (the honest verification
 oracle) — and tracks the messages signed so far in a `SignedLog`. The
-adversary wins by producing a fresh message and MAC code `(m*, σ*)` such
-that `m*` was never signed and `verify(sk, m*, σ*) = true`.
+adversary wins by producing a pair `(m*, σ*)` of a message and a MAC code
+such that `m*` was never signed and `verify(sk, m*, σ*) = true`.
 
 ## Layout
 
@@ -61,7 +61,7 @@ inductive UFQuery (mac : AlgebraicMACSyntax ProbComp)
   | verify : mac.MsgVec crs → mac.Tag crs → UFQuery mac crs
 
 /--
-The `OracleSpec` for UF-CMVA: each `UFQuery` constructor maps to the response
+The `OracleSpec` for UF-CMVA: each `UFQuery` oracle maps to the response
 type the adversary expects.
 
 - `sign m` ↦ `mac.Tag crs`
