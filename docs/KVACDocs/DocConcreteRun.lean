@@ -18,7 +18,7 @@ tag := "concrete_run"
 %%%
 
 A planned small evaluable Lean script exercising the *μCMZ* protocol
-end-to-end against a verified Ristretto255 instance; nothing has landed
+end-to-end against a verified Ristretto255 instance; nothing has been merged
 yet. The chapter covers both pieces of Track Ex (the project's last
 Wave):
 
@@ -30,7 +30,7 @@ Wave):
 
 Track Ex bundles three changes into a single PR: this example file, the
 `Instances/Ristretto.lean` binding, and the addition of
-`curve25519-dalek-lean-verify` to `lakefile.toml`. Until Track Ex lands,
+`curve25519-dalek-lean-verify` to `lakefile.toml`. Until Track Ex is merged,
 none of these files exists and the lakefile does not import dalek.
 
 *Why not μBBS here?* μBBS requires a curve larger than Ristretto255
@@ -40,7 +40,7 @@ chapter. A μBBS concrete run is deferred to post-v1.
 # Ristretto255 instance
 
 :::group "ex_instance"
-The single concrete plug-in into the abstract typeclass stack:
+The single concrete instantiation of the abstract typeclass stack:
 `Ristretto255` is instantiated as a `PrimeOrderGroup` and a
 `SampleableGroup` over `ZMod p` (for `p` the Ristretto group order). Two
 import rules make the boundary enforceable: only `Examples/` and the
@@ -63,12 +63,12 @@ catches abstraction mismatches between *Core*, *Framework*, and
 :::
 
 *TODO (Track Ex).* Write the end-to-end example in
-`KVAC/Examples/ConcreteRun.lean`. Aim for 50 to 100 lines of glue.
+`KVAC/Examples/ConcreteRun.lean`. Aim for 50 to 100 lines.
 
 # Optional: μBBS over a larger curve
 
 *Deferred to post-v1.* μBBS requires a roughly 300 to 384-bit curve (for
 example the BLS12-381 base curve, used without pairings) for 128-bit
 security under q-DL. A verified larger-curve instance is not yet
-available; once one lands, a parallel μBBS example would mirror this
+available; once one exists, a parallel μBBS example would mirror this
 chapter.

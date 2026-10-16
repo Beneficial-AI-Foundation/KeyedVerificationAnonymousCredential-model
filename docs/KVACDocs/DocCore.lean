@@ -230,7 +230,7 @@ by a CRS, and the algorithms `setup` and `keygen`. `MsgVec` abbreviates
 the attribute vector `Fin n → Msg crs`, the paper's `m⃗ ∈ M^n`.
 `DecidableEqMsg` carries decidable equality on the message space, which
 the security games need for their freshness checks. `issueChain` is the
-three-move blind-issuance plumbing (user request, optional server
+three-move blind-issuance protocol (user request, optional server
 response, user finalize) that the credential and anonymous-token
 `issue` algorithms both instantiate.
 :::
@@ -259,7 +259,7 @@ for `n` attributes over a prime-order group: the algorithms `Setup`,
 *O24 Figure 5.* The unforgeability-under-chosen-message-and-verification
 (UF-CMVA) security game for an algebraic MAC {uses "algebraic_mac"}[]: the
 adversary holds signing and verification oracles and must forge a valid
-tag on an unqueried message vector.
+MAC code on an unqueried message vector.
 :::
 
 # Guarded oracle simulation
