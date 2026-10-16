@@ -32,9 +32,10 @@ deferred together with μBBS; we therefore defer formalizing q-DDHI to future wo
 
 Experiments are `ProbComp Bool` in the style of VCVio's `dlogExp`; advantages
 are `ℝ≥0∞` via `Pr[= true | ·]`, matching `KVAC.Core.UF_CMVAAdv`. The gap-DL
-adversary is an `OracleComp` over `unifSpec + GapDLogOracleSpec G` — the left arm
-provides uniform sampling, the right arm the DDH-decision oracle — simulated
-with `QueryImpl.ofLift` / `simulateQ` as in VCVio's `FiatShamir`.
+adversary is an `OracleComp` over `unifSpec + GapDLogOracleSpec G` — the `unifSpec`
+summand provides uniform sampling, the `GapDLogOracleSpec G` summand the
+DDH-decision oracle — simulated with `QueryImpl.ofLift` / `simulateQ` as in VCVio's
+`FiatShamir`.
 
 This is a game-construction file, so it uses the `SampleableGroup` binder block
 (see `docs/STYLE_GUIDE.md`, *Prime-order group convention*).
@@ -86,8 +87,8 @@ answering a Boolean — honestly, whether `Z = x·A` for the challenge exponent
 `x` (the "DH of the challenge `X = x·g` and `A`"). -/
 abbrev GapDLogOracleSpec (G : Type) : OracleSpec (G × G) := (G × G) →ₒ Bool
 
-/-- A gap-DL adversary: receives `(g, x·g)`; may sample uniformly (left oracle
-arm) and query the DDH-decision oracle (right arm); tries to output `x`. -/
+/-- A gap-DL adversary: receives `(g, x·g)`; may sample uniformly (`unifSpec`) and
+query the DDH-decision oracle (`GapDLogOracleSpec G`); tries to output `x`. -/
 def GapDLogAdversary (F G : Type) :=
   G → G → OracleComp (unifSpec + GapDLogOracleSpec G) F
 
