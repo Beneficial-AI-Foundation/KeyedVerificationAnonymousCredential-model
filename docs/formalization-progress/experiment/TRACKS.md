@@ -92,7 +92,7 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
     - [x] `ZKProof.lean` / `NIZKP/Basic.lean` — model-agnostic NIZKP spec merged (#20; PR #26); refinement PR #34 closed (superseded by the paper-faithful NIZKP work). Tracker: 🟢 O24 §3.3 (agnostic `SimulationExtractable`).
     - [x] `AlgebraicMAC.lean` — merged (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5). Tracker: 🟢 O24 Definition 3.1, Figure 5.
 
-## Wave 1 — start once Track 0 is merged
+## Wave 1 — start once Track 0 is delivered
 
 These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merged.
 
@@ -188,13 +188,13 @@ The tracks below are deferred — see [`PLAN.md`](PLAN.md) (section "Future work
 
 - **Track Ext-T** — Time-based policies (O24 §8.1). Lowest cost (~1–2 weeks). A predicate over a credential attribute.
 - **Track Ext-RL** — Rate-limiting (O24 §8.2). Combines a Dodis–Yampolskiy PRF with the OMUF property of the underlying KVAC. ~3–4 weeks.
-- **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has been merged first.
+- **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has been delivered first.
 - **Track DV** — Designated-verifier SNARKs / dvKZG (O24 §7). Substantial cryptographic content; probably warrants a separate repository. Indefinitely deferred.
 - **μBBS Examples** — concrete μBBS run on a ≈300–384-bit curve. Out of scope until a verified larger-curve instance is available.
 
 ## Updating this file
 
-When you start a track, comment on its issue and (optionally) append your handle in parentheses next to the checkbox. When a track is merged into `main`, tick the box in the same PR or a follow-up.
+When you start a track, comment on its issue and (optionally) append your handle in parentheses next to the checkbox. When a track's last PR is merged into `main`, tick the box in the same PR or a follow-up.
 
 ```diff
 - - [ ] **Track CMZ-C** — μCMZ construction
