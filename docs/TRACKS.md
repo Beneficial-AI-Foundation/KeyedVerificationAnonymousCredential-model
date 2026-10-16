@@ -79,7 +79,7 @@ Wave colour key: **purple** = foundational; **blue** = depends on Wave 0; **gree
     - [x] `AlgebraicMAC.lean` — merged (#21; PR #24): Construction / Correctness / Security split with the UF-CMVA game (O24 Figure 5).
     - Follow-up from the #57 review: `HashSpec.programFresh` (#60) is tracked under Track Σ, its first consumer.
 
-## Wave 1 — start once Track 0 is merged
+## Wave 1 — start once Track 0 is delivered
 
 These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merged.
 
@@ -87,7 +87,7 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Modules: `KVAC/Preliminaries/Assumptions.lean`, `KVAC/Preliminaries/AnonymousTokens.lean` with `AnonymousTokens/Construction.lean`, `Correctness.lean`, `Security.lean`
   - Depends on: Track 0
   - Section 3 of O24: cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL — bound to VCV-io's `CryptoFoundations/HardnessAssumptions/`: DL and DDH from VCV-io upstream; q-DL, q-DDHI, gap-DL added project-locally or contributed upstream); abstract NIZK syntax (knowledge soundness, simulation extractability); anonymous-token syntax with the OMUF game. AGM and GGM are proof-theoretic adversary models and stay in the security tracks where reductions are stated.
-  - **Status:** #2 closed. The §3.4 anonymous-token items were re-homed as sub-issues of #12 (#144 merged, #145 in review) and their checkboxes live under Track CMZ-OMUF.
+  - **Status:** #2 closed. The §3.4 anonymous-token items were re-homed as sub-issues of #12 (#144 delivered, #145 in review) and their checkboxes live under Track CMZ-OMUF.
     - [x] `Assumptions.lean` — q-DL + gap-DL merged (#38; PR #30). q-DDHI deferred with the §8.2 rate-limiting extension (Track Ext-RL).
     - [x] `ZKArguments.lean` — superseded. The abstract NIZK syntax and its security games live in `KVAC/Core/NIZKP/` (#20).
     - [x] `AnonymousTokens/Construction.lean`, `Correctness.lean` — anonymous-token syntax and correctness merged (#144; PR #142).
@@ -120,7 +120,7 @@ These tracks can be picked up in parallel once `KVAC/Core/` is reviewed and merg
   - Modules: `KVAC/Schemes/MicroCMZ/Construction.lean`, `KVAC/Schemes/MicroCMZ/Relations.lean`, `KVAC/Schemes/MicroCMZ/Credential.lean`
   - Depends on: Track 0, Track F1, Track Σ (Fiat–Shamir proofs), #104, #118
   - The protocol description from §5.1 of O24: KeyGen, Setup, Issue (with predicate $\phi$), Present.
-  - **Status** (split into sub-issues #39–#41 and #163 under #6; #6 was closed on 2026-07-21 before Part 4 was merged and is reopened):
+  - **Status** (split into sub-issues #39–#41 and #163 under #6; #6 was closed on 2026-07-21 before Part 4 was delivered and is reopened):
     - [x] Base MAC (`Construction.lean`) — merged (#39; PR #31): `μCMZBaseMAC` over the abstract `SampleableGroup`, with perfect (support-based) correctness.
     - [x] R_iu Σ-protocol, Eq. (9) (`Relations.lean`) — merged (#40): `riuRel` / `riuSigma` with completeness and special soundness.
     - [x] R_is + R_p Σ-protocols, Eqs. (10)–(11) (`Relations.lean`) — merged (#41): `risRel` / `risSigma` and `rpRel` / `rpSigma`.
@@ -173,14 +173,14 @@ The tracks below are deferred — see [`PLAN.md`](PLAN.md) (section "Future work
 
 - **Track Ext-T** — Time-based policies (O24 §8.1). Lowest cost (~1–2 weeks). A predicate over a credential attribute.
 - **Track Ext-RL** — Rate-limiting (O24 §8.2). Combines a Dodis–Yampolskiy PRF with the OMUF property of the underlying KVAC. ~3–4 weeks.
-- **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has been merged first.
+- **Track Ext-Pseu** — Pseudonyms (O24 §8.3). Reuses 70%+ of rate-limiting infrastructure. ~3–4 weeks if rate-limiting has been delivered first.
 - **Track DV** — Designated-verifier SNARKs / dvKZG (O24 §7). Substantial cryptographic content; probably warrants a separate repository. Indefinitely deferred.
 - **μBBS scheme** — the μBBS construction (§6.1) and its whole security stack: algebraic-MAC unforgeability (§6.3, Theorems 6.6/6.8/6.9), anonymity (§6.4), extractability (§6.5), and one-more unforgeability (§6.6, Theorem 6.12). Deferred out of v1. μBBS needs a curve larger than Ristretto255 for 128-bit security, so no verified instance can exercise it yet, and its AGM security stack (including the DDH-oracle augmentation of §6.5) is a large body of work orthogonal to the μCMZ v1 goal. The former Wave 2/3 tracks BBS-C, BBS-M, BBS-A, BBS-E, and BBS-OMUF, with issues #7, #13, #14, #15, and #16, are closed as not planned.
 - **μBBS Examples** — concrete μBBS run on a ≈300–384-bit curve. Out of scope until a verified larger-curve instance is available.
 
 ## Updating this file
 
-When you start a track, comment on its issue and (optionally) append your handle in parentheses next to the checkbox. When a track is merged into `main`, tick the box in the same PR or a follow-up.
+When you start a track, comment on its issue and (optionally) append your handle in parentheses next to the checkbox. When a track's last PR is merged into `main`, tick the box in the same PR or a follow-up.
 
 ```diff
 - - [ ] **Track CMZ-C** — μCMZ construction

@@ -16,7 +16,7 @@ behind them.
    `(lean := "…")` list or add a node (see conventions). Paper elements come
    from `docs/formalization-progress/element_summaries.toml`; work that is not
    a paper element gets a `milestone` node.
-4. Declare dependencies. Statement dependencies as `{uses "label"}[]` in the node
+4. Wire dependencies. Statement dependencies as `{uses "label"}[]` in the node
    body; proof dependencies inside the node's `:::proof` block. Prose links
    that must not create an edge use `{bpref "label"}[]`.
 5. Build and check:
@@ -110,7 +110,7 @@ secure-messaging landing page.
   excluded from the CI conformance check): the landing's "Ready to start" =
   either axis `ready` (matches the table's Ready-next columns), while the
   Summary's "Ready now" is actionable-stage gated; the Summary's "no proof"
-  counts only theorem-like nodes without a proof. Compared and enforced equal: total
+  counts only unanchored theorem-like nodes. Compared and enforced equal: total
   entries, completed, deps incomplete, sorries.
 - **Chapters**: a node's chapter is the first path component of its manifest
   `href`; the mapping lives in `CHAPTER_ORDER`/`CHAPTER_TITLES` in the
