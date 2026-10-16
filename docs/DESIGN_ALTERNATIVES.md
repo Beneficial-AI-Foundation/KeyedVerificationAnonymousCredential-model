@@ -8,7 +8,7 @@ live here. An alternative that still awaits a decision gets an issue; once
 resolved, its outcome is summarized here and the issue is closed.
 
 Each entry states the decision, the rejected alternative, the fidelity
-argument, and when and where it was decided.
+argument, and where the decision was delivered.
 
 ## Security-model-agnostic specification set aside
 
@@ -339,7 +339,7 @@ extraction lemma and its coefficient identity, where `C★` is one rewrite off a
 already-proven evaluation law.
 
 Either way the `3` is `totalDegree_verifPoly_le`, the only step of the Eq. 16
-degree-bound chain the `C★` route consults; `natDegree_affineSubst_le` bounds the
+degree tower the `C★` route consults; `natDegree_affineSubst_le` bounds the
 `RedLog.maskedRepr` polynomials fed to `exponentEval`, a different step. Both
 bounds are documented at the head of the Eq. 16 section in `AGMPolynomial.lean`,
 which also records why the at-most-3-roots bound extraction was once cited for is
@@ -634,7 +634,7 @@ UF-CMVA(+Help) game (`AlgebraicMAC.lean`), whose `Verify`/`Help` queries and
 forgery carry algebraic representations over the `n`-attribute basis. `B`
 therefore translates every coefficient list to the 1-attribute basis:
 `AGMRepr.collapseRepr` for a single represented element and
-`AGMRepr.linCombCollapse` for the `Help` query's weighted sum `Σᵢ rᵢ • Aᵢ`
+`AGMRepr.linCombCollapse` for the `Help` oracle's weighted sum `Σᵢ rᵢ • Aᵢ`
 (`AttributeCollapse.lean`). The evaluation bridges, that each translation
 evaluates against `(g₀, H, X₀, Xᵣ, X₁)` as the original does against
 `Xᵢ = rᵢ • X₁`, are a proof obligation the paper does not have. The direction
@@ -769,7 +769,7 @@ adversary and adding the gap-DL reduction for the collision case.
   below 1 for the same solver, trivial at 1 or above.
 - *`sorry` under the binders* (`def f (A) := sorry`). Makes `f A₁ = f A₂` hold
   by `rfl`, an accidental input-independence later proofs could lean on.
-- *Fresh named reductions at arity `n`* for the general statement, neutral
+- *Fresh reductions with `sorry` bodies at arity `n`* for the general statement, neutral
   about the proof. Rejected for now in favour of the paper's route, which
   keeps the number of declarations with `sorry` bodies smaller and makes the transformation the concrete
   object of the open question whether it reuses the Lemma 5.5 embedding.
@@ -794,7 +794,7 @@ two, run with probabilities `q/(q + 1)` and `1/(q + 1)`, so that
 Equation 23. The paper leaves this step implicit, writing `(q + 1)·Adv^dl` for
 the reductions of Claims 5.12 and 5.13 without naming an adversary, and the
 mixture makes that sum precise. Only Claim 5.12 carries the budget hypothesis, since only its
-constant is the budget. A shared discrete-log reduction cited by both Claims was
+constant is the budget. A shared discrete-log reduction with a `sorry` body cited by both Claims was
 rejected. Its natural body is a `(q + 1)`-way selector over the `q` positions
 and the crs, which supports the factor `q + 1` in each Claim, not the paper's
 `q` and `1`. The case events are the paper's formal items. The extraction
