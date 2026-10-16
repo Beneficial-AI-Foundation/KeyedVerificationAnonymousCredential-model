@@ -56,7 +56,7 @@ July 30th, 2026
 ![The μCMZ protocol, three boxes](assets/fig9.png)
 
 - <a href="#basemac">**Base MAC**</a> — the algebraic MAC underneath. Construction and perfect correctness machine-checked; Theorem 5.1's AGM unforgeability stated, reduction in progress.
-- <a href="#issuance">**Credential Issuance**</a> — blind issuance of a tag on committed attributes. The box's proof relations and Σ-protocols machine-checked; the protocol flow in progress.
+- <a href="#issuance">**Credential Issuance**</a> — blind issuance of a MAC code on committed attributes. The box's proof relations and Σ-protocols machine-checked; the protocol flow in progress.
 - <a href="#presentation">**Credential Presentation**</a> — anonymous showing under a policy φ. The box's proof relation R<sub>p</sub> (Eq. 11) and its Σ-protocol machine-checked; the flow in progress.
 > Paper references (equations, figures, pages, theorem numbers) follow the ePrint 2024/1552 revision of 2026-03-27.
 
@@ -110,7 +110,7 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 - `Msg`: interface type `Msg : {secParam n : Nat} → Crs secParam n → Type` — the per-attribute carrier, selected by the crs; a full message is a vector `Fin n → Msg crs`.
 - `Sk`: interface type `Sk : {secParam n : Nat} → Crs secParam n → Type` — the secret-key space.
 - `Pp`: interface type `Pp : {secParam n : Nat} → Crs secParam n → Type` — the public-parameter space.
-- `Tag`: interface type `Tag : {secParam n : Nat} → Crs secParam n → Type` — the tag space.
+- `Tag`: interface type `Tag : {secParam n : Nat} → Crs secParam n → Type` — the type of MAC codes.
 - `DecidableEqMsg`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → DecidableEq (Msg crs)` — the UF-CMVA challenger computes the freshness check, so attribute equality must be decidable; equality on message vectors is derived from it pointwise.
 - `setup`: interface type `(secParam n : Nat) → M (Crs secParam n)`.
 - `keygen`: interface type `{secParam n : Nat} → (crs : Crs secParam n) → M (Sk crs × Pp crs)`.
@@ -238,7 +238,7 @@ def macScalar {n : ℕ} (sk : Key F n)
 ```
 
 - Base MAC writes U ←$ 𝔾; µCMZ's defining equation (Eq. 6, §2.3.1, p. 16) writes U ←$ 𝔾<sup>×</sup>. The formalization follows Eq. 6, reading 𝔾<sup>×</sup> as the nonzero elements (explicit in CMZ14: u ∈ G ∖ {1}, p. 4): `uniformNonzero G`.
-  * Nonzero sampling removes the 1/p mass where the honest tag (0, 0) would fail verification: every tag in `mac`'s support verifies. The cost: the signing oracle's distribution changes, so Lemma 5.4's counting argument must be redone under it (deferred, groundwork in `SignMask`; see <a href="#divergences">design decisions</a>). `verify` still checks U ≠ 0 against adversarial tags (next slide).
+  * Nonzero sampling removes the 1/p mass where the honest MAC code (0, 0) would fail verification: every MAC code in `mac`'s support verifies. The cost: the signing oracle's distribution changes, so Lemma 5.4's counting argument must be redone under it (deferred, groundwork in `SignMask`; see <a href="#divergences">design decisions</a>). `verify` still checks U ≠ 0 against adversarial MAC codes (next slide).
 - One definition, `macScalar`, is called by both sides: `mac` returns `(U, macScalar sk m • U)`, `verify` tests `V = macScalar sk m • U`; no drift possible.
 - `Eq. 6`: the µCMZ credential pair, O24 p. 16:  (U ←$ 𝔾<sup>×</sup>,  V = (x₀ + xᵣ + Σᵢ xᵢmᵢ) U).
 
@@ -303,9 +303,9 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 - The proof is set in the algebraic group model: every group element the adversary outputs carries a representation over the elements it has seen, and the forgery must be transcript-consistent and fresh.
 - **The game shown is the stronger one O24 proves**: its oracles include the paper's Help oracle (§5.3), whose strength the credential-level proofs (Theorem 5.2's extractability via 5.11) consume downstream — proving it once spares every consumer a separate argument.
 - **Scope, stated up front.** The theorem is about this AGM game; the bridge to the plain UF-CMVA game of `KVAC.Core` is a separate, tracked deliverable (its own blueprint node) — sequenced, not forgotten.
-> Everything on this slide is merged. main carries zero `sorry`s and zero axiom declarations — Lean's kernel accepts the library from `propext`/`Classical.choice`/`Quot.sound` alone — and CI rebuilds every PR before it lands.
+> Everything on this slide is merged. main carries zero `sorry`s and zero axiom declarations — Lean's kernel accepts the library from `propext`/`Classical.choice`/`Quot.sound` alone — and CI rebuilds every PR before it is merged.
 - `AGMUFAdversary`: an adversary whose oracles (`agmOracleImpl`) log the representations of all group elements it submits; the algebraic group model of Fuchsbauer, Kiltz, and Loss (CRYPTO 2018).
-- `agmOracleImpl`: the representation-logging oracle with three arms: sign, verify, and Help(A₀, A, Z), which answers whether Z = (x₀+xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ for adversary-chosen group elements. Simulating Help without the key is what brings the gap-DL assumption into the reduction (its collision branch, Claim 5.6).
+- `agmOracleImpl`: the representation-logging oracle answering three queries: sign, verify, and Help(A₀, A, Z), which answers whether Z = (x₀+xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ for adversary-chosen group elements. Simulating Help without the key is what brings the gap-DL assumption into the reduction (its collision branch, Claim 5.6).
 - `Theorem 5.1`: the GrGen subscripts in the bound sample the group at each λ; the per-group formalization instead states the 3-DL and DL games at the fixed (G, gen) — `threeDlogAdv`, `dlogAdv` in `Assumptions.lean` — so both sides of the inequality live in the same model. The paper's form follows by averaging over GrGen's output.
 
 ---
@@ -326,7 +326,7 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 Adv<sup>ufcmva</sup>(A)  ≤  Adv<sup>3-dl</sup>(B₁) + Adv<sup>gap-dl</sup>(B<sub>gap</sub>) + 5/p
 5/p  =  3/p (Schwartz–Zippel, degree 3)  +  1/p (keygen shear)  +  1/p (gap-DL denominator)
 
-- **The 1/p non-vanishing bound (p. 38).** The paper asserts the substituted forgery polynomial ψ stays nonzero "except with probability 1/p" — stated bare, no derivation. The bad event is the hidden shift landing on a root of ϕ, and ϕ has total degree 3 (a degree-2 representation term times the degree-1 key polynomial); Schwartz–Zippel gives 3/p. A 1/p bound is what degree 1 would give.
+- **The 1/p non-vanishing bound (p. 38).** The paper asserts the substituted forgery polynomial ψ stays nonzero "except with probability 1/p" — stated bare, no derivation. The bad event is the hidden shift being a root of ϕ, and ϕ has total degree 3 (a degree-2 representation term times the degree-1 key polynomial); Schwartz–Zippel gives 3/p. A 1/p bound is what degree 1 would give.
 - **Eq. 13 coefficient.** X₀'s X-coefficient is printed aₕb₀ + bₕ; the correct coefficient is aₕb₀ + a₀bₕ (documented at its use site in the open PR #88 diff).
   - Definitions (Eqs. 12, 16):  η = log<sub>G</sub> H = aₕ + x·bₕ,  and  x₀ = log<sub>H</sub> X₀ = a₀ + x·b₀.
   - Expansion:  log X₀ = x₀·η = (a₀ + x·b₀)(aₕ + x·bₕ) = a₀aₕ + x·(a₀bₕ + b₀aₕ) + x²·(b₀bₕ).
@@ -426,7 +426,7 @@ theorem risSigma_speciallySound (gen H : G) :
 ```
 
 - Special soundness is proven for `riuSigma` and `risSigma`, the Σ-protocols for R<sub>iu</sub> and R<sub>is</sub>: `riuSigma_speciallySoundAt` and `risSigma_speciallySound` (both above), proved by the same argument.
-- R<sub>is</sub> has no policy (φ) arm: its equations pin the witness (x₀, u) completely, so its proof is statement-independent (`SpeciallySound`, every statement). R<sub>iu</sub>'s φ arm is not checked by the verification equation, which is why its theorem is per-statement, under `Enforces`.
+- R<sub>is</sub> has no policy (φ) conjunct: its equations pin the witness (x₀, u) completely, so its proof is statement-independent (`SpeciallySound`, every statement). R<sub>iu</sub>'s φ conjunct is not checked by the verification equation, which is why its theorem is per-statement, under `Enforces`.
 - `SpeciallySound`: the unconditional variant: `SpeciallySoundAt` at every statement (∀ x, SpeciallySoundAt σ x). R<sub>is</sub> carries no policy, so nothing conditions the statement.
 <!-- - `SigmaProtocol S W PC SC Ω P p`: A Σ-protocol over statements S, witnesses W, announcements PC, prover states SC, challenges Ω, responses P, and a relation p : S → W → Bool, packaged with the algorithms commit, respond, verify, sim, and extract. -->
 - `SpeciallySoundAt`: A predicate that states perfect special soundness at a statement: whenever two transcripts share an announcement, have distinct challenges, and both verify, every output of extract on them is a witness for the relation. No probability, no hardness assumption.
@@ -460,10 +460,10 @@ def rpRel (gen H : G) : RpStmt G F n → RpWitness F n → Bool :=
       Z = (∑ i, r i • X i) - r' • H) && φ m
 ```
 
-- `witness (r', r, m)`: the attributes m, the per-commitment randomness r (one rᵢ for each Cᵢ = mᵢ•U′ + rᵢ•gen), and the scalar r' that masks the tag as C<sub>V</sub> = V′ + r'•H.
+- `witness (r', r, m)`: the attributes m, the per-commitment randomness r (one rᵢ for each Cᵢ = mᵢ•U′ + rᵢ•gen), and the scalar r' that masks V′ as C<sub>V</sub> = V′ + r'•H.
 - `RpStmt G F n`: the statement (U′, X, C, Z, φ) : G × PublicBases G n × (Fin n → G) × G × Policy F n. X and C are the paper's vectors X₁, …, Xₙ and C₁, …, Cₙ, modeled as functions from Fin n; that is why the code applies them as `X i` and `C i`.
 - `RpWitness F n`: the witness (r', r, m) : F × (Fin n → F) × (Fin n → F). r and m are the paper's vectors r₁, …, rₙ and m₁, …, mₙ, functions from Fin n like X and C in the statement.
-- **R<sub>p</sub> in the box.** The user re-randomizes the credential σ = (U, V) into (U′, V′) = (r·U, r·V), commits to each attribute as Cᵢ, masks the tag as C<sub>V</sub>, and proves R<sub>p</sub> (ZKP<sub>cmz.p</sub>.P) with witness (r', r, m); the server checks U′ ≠ 0 and the proof.
+- **R<sub>p</sub> in the box.** The user re-randomizes the credential σ = (U, V) into (U′, V′) = (r·U, r·V), commits to each attribute as Cᵢ, masks V′ as C<sub>V</sub>, and proves R<sub>p</sub> (ZKP<sub>cmz.p</sub>.P) with witness (r', r, m); the server checks U′ ≠ 0 and the proof.
 - **The two Z's.** The user computes Z = Σᵢ rᵢ•Xᵢ − r'•H from its randomness; the server recomputes Z = (x₀+xᵣ)•U′ + Σᵢ xᵢ•Cᵢ − C<sub>V</sub> from its key. The two agree exactly when V′ = (x₀+xᵣ+Σᵢxᵢmᵢ)•U′, so an accepting proof convinces the server the presented commitments open to a validly MAC'd m, with σ never revealed.
 
 ---
@@ -536,7 +536,7 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 
 - ✅ The box's proof relation (`rpRel`, Eq. 11).
 - ✅ Its interactive Σ-protocol `rpSigma`: perfect completeness (`rpSigma_complete`), special soundness with policy enforcement (`rpSigma_speciallySoundAt`), and HVZK via an explicit simulated transcript (`rpSigma_hvzk`, `rpSimTranscript`). The policy layer is shared with Issuance.
-- ⬜ The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked tag C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (framework layer in review, PR #77).
+- ⬜ The flow itself (re-randomization (U′, V′) = (r·U, r·V), the masked V′, C<sub>V</sub>, the server-side Z recomputation), on the same Definition 4.2 track as Issuance (framework layer in review, PR #77).
 - ⬜ Fiat–Shamir compilation into π<sub>p</sub>.
 - ⬜ The credential-level guarantees that consume it (anonymity and extractability, Theorem 5.2).
 
@@ -552,8 +552,8 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
 - **Per-group, not GrGen.** Every theorem is an advantage inequality at one fixed group.
   - Γ becomes the typeclass plus `gen`; the crs reduces to H; secParam and n are phantom arguments.
   - Why: it is the form O24's proofs natively establish, it needs no polynomial-time cost model, and it is what a deployment instantiates (<a href="per-group-analysis.html">full analysis</a>).
-- **Perfect correctness, not statistical.** Honest tags verify with probability exactly 1.
-  - O24 is itself split: its defining equation samples U from the nonzero elements of 𝔾, while the figures write U ←$ 𝔾, under which the honest tag (0, 0) fails verification with mass 1/p.
+- **Perfect correctness, not statistical.** Honest MAC codes verify with probability exactly 1.
+  - O24 is itself split: its defining equation samples U from the nonzero elements of 𝔾, while the figures write U ←$ 𝔾, under which the honest MAC code (0, 0) fails verification with mass 1/p.
   - The Lean formalization follows the defining equation (`uniformNonzero`) and proves perfect (support-based) correctness.
   - The cost: the signing distribution is conditioned, and the reduction's counting argument under that law is deferred (`SignMask`).
 - **Encodings, not semantics.** Representations a proof checker can compute with, and names that cannot collide.
@@ -574,8 +574,8 @@ theorem rpSigma_speciallySoundAt (gen H : G) (Up : G) (X : PublicBases G n)
   - Why: the perfect properties are proven once at the Σ level and consumed by the compiled proofs.
 - **Perfect special soundness, policy as a hypothesis.**
   - VCV-io's `SpeciallySoundAt` is transcript-level and λ-free, the information-theoretic counterpart of DG23's computational notion (Definition 4.6).
-  - The φ arm is an `Enforces` hypothesis, discharged today only for `trivialPolicy`; a proper φ needs a combined proof binding φ to the same extracted witness.
-  - Why: per-group there is no λ to be negligible in, and `verify` checks only the linear arm.
+  - The φ conjunct is an `Enforces` hypothesis, discharged today only for `trivialPolicy`; a proper φ needs a combined proof binding φ to the same extracted witness.
+  - Why: per-group there is no λ to be negligible in, and `verify` checks only the linear conjuncts.
 - **AGM baked into the unforgeability game.**
   - The game `AGM_UF_CMVAGame` instruments Figure 5 with two distinct changes: representation logging (a restriction to algebraic adversaries) and the Help oracle.
   - The Help oracle follows O24's proof preamble: unforgeability is proven in the stronger form where the adversary also gets Help, at no cost to the bound, because Theorem 5.11 (µCMZ<sub>AT</sub> one-more unforgeability) consumes exactly that stronger claim.
