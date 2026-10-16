@@ -16,7 +16,7 @@ The instrumented algebraic group model (AGM) UF-CMVA(+Help) game
 of the μCMZ base MAC (`μCMZBaseMAC`), following Orrù, *Revisiting
 Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, §5.3. This is
 the `AGMPolynomial`-free foundation: the game definitions the Lemma 5.4 reduction
-consumes, but not the reduction itself (that is in `AGMReduction`), and not the
+consumes, but not the reduction itself (that is included in `AGMReduction`), and not the
 Sign-oracle distribution lemmas (those live in the sibling module `SignMask`).
 
 A word of caution on naming: this is the instrumented game, not the honest game. The

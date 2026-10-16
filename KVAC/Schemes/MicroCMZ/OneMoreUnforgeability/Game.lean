@@ -42,7 +42,7 @@ Equation 19 for the forgeries). The representation type is the MAC game's
 MAC, so the fixed basis is the same, and the Sign answers are pairs of group
 elements like the MAC codes, so they extend the basis the same way.
 
-The MAC game gates the group-element *arguments* of its Verify and Help oracles,
+The MAC oracle gates the group-element *arguments* of its Verify and Help oracles,
 while its Sign oracle takes a message and no group element. Here Sign takes a group
 element, the commitment, so it is the first oracle in the repository to gate an
 issuance request on the way in. That is what the Theorem 5.11 proof needs, since
@@ -95,7 +95,7 @@ the polynomial bookkeeping of the proof indexes by issuance.
 
 **Dynamic count here, static budget in the theorems.** As in the plain game and
 the MAC games, the oracle carries no query bound. The Theorem 5.11 statements add
-a static hypothesis on the adversary (`IsQueryBoundP` over Sign queries, at most
+a static hypothesis on the adversary (`IsQueryBoundP` over the Sign oracle, at most
 `q` queries) so that their `q`-dependent bounds are well-formed.
 
 **The adversary has a private coin oracle.** Its oracle specification is
@@ -117,8 +117,8 @@ representation basis in issuance order, so the log appends, as `AGMLog` does.
 **What carries over from the MAC track.** The representation type and the
 coefficient conversion `AGMRepr.toReprCoeffs` apply to exact-length lists as
 they are. The MAC track's evaluation bridge `agmRepr_eval_eq_eval_toPoly` does
-not, since a blind-issuance answer `V' = (x₀ + xᵣ)·U' + u·C'` is not a MAC code
-on a known message. The Equation 18 bridge is new work for the Theorem 5.11
+not, since a blind-issuance answer `(U', V')`, with `V' = (x₀ + xᵣ)·U' + u·C'`, is not a
+MAC code on a known message. The Equation 18 bridge is new work for the Theorem 5.11
 proof.
 -/
 
@@ -198,11 +198,11 @@ theorem AGMOMUFLog.tags_length_le (log : AGMOMUFLog F G n) :
   List.length_filterMap_le _ _
 
 /--
-The predicate selecting Sign queries among the adversary's queries, its private
-coin oracle included: the one the static query-budget hypotheses of the
-Theorem 5.11 statements count, as
-`IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` (at most `q` Sign queries,
-Verify and coin queries free). Refused Sign queries are Sign queries.
+The Sign query as a predicate on the adversary's queries, its private coin oracle
+included: the one the static query-budget hypotheses of the Theorem 5.11
+statements count, as `IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` (at
+most `q` Sign queries, Verify and coin queries free). Refused Sign queries are
+Sign queries.
 -/
 def AGMOMUFQuery.isSign : ℕ ⊕ AGMOMUFQuery F G n → Prop
   | .inl _ => False
