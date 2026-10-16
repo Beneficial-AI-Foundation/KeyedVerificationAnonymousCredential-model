@@ -12,8 +12,8 @@ import KVAC.Preliminaries.AnonymousTokens.Security
 
 The algebraic group model (AGM) one-more unforgeability game for the μCMZ_AT
 core scheme (`μCMZATCoreSyntax`), following Orrù, *Revisiting Keyed-Verification
-Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the
-AGM UF-CMVA(+Help) scaffolding of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
+Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the instrumented
+AGM UF-CMVA(+Help) game of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
 step A4 of #12 (Track CMZ-OMUF, issue #181), delivered in two parts: first the
 representation gate, the query type, the oracle spec, the transcript log, and
 the instrumented oracles; then the algebraic adversary, the winning condition,
@@ -21,7 +21,7 @@ the experiment `AGM_OMUFGame`, and its advantage `AGM_OMUFAdv`, together with
 the decidable Sign predicate the static query-budget hypotheses of Theorem 5.11
 count.
 
-A word of caution on naming, as in the MAC module: this is scaffolding, not the
+A word of caution on naming, as in the MAC module: this is the instrumented game, not the
 honest Figure 6 game. The oracles are *gated*. They answer honestly only when
 the submitted representation is consistent, and refuse otherwise, so the game
 matches the plain `OMUFGame` of `KVAC.Preliminaries.AnonymousTokens.Security`
@@ -40,11 +40,11 @@ the basis it has seen so far: the fixed elements `G₀, H, X₀, Xᵣ, X⃗` and
 Equation 19 for the forgeries). The representation type is the MAC game's
 `AGMRepr`, unchanged: the core shares setup and key generation with the base
 MAC, so the fixed basis is the same, and the Sign answers are pairs of group
-elements like the MAC tags, so they extend the basis the same way.
+elements like the MAC codes, so they extend the basis the same way.
 
-The MAC oracle gates the group-element *arguments* of its Verify and Help arms,
-while its Sign arm takes a message and no group element. Here Sign takes a group
-element, the commitment, so it is the first arm in the repository to gate an
+The MAC game gates the group-element *arguments* of its Verify and Help oracles,
+while its Sign oracle takes a message and no group element. Here Sign takes a group
+element, the commitment, so it is the first oracle in the repository to gate an
 issuance request on the way in. That is what the Theorem 5.11 proof needs, since
 Equation 18 substitutes each commitment's representation into the server's
 answer.
@@ -60,8 +60,8 @@ computable from the adversary's own view, so a refusal reveals nothing about
 the secret key, an adversary loses nothing by pre-checking its own queries, and
 the stricter conventions below cannot strengthen it.
 
-**Exact-length tag coefficients.** The representation's tag-coefficient list
-must have exactly one entry per blinded pair issued so far, else the query is
+**Exact-length issued-pair coefficients.** The representation's list of issued-pair
+coefficients must have exactly one entry per blinded pair issued so far, else the query is
 refused. This departs from `AGMRepr.eval`'s permissive `zipWith`, which ignores
 excess entries and reads missing ones as zero. The rule is a simplification, not
 a soundness requirement. It buys one guarantee: `AGMRepr.eval` of an accepted
@@ -95,7 +95,7 @@ the polynomial bookkeeping of the proof indexes by issuance.
 
 **Dynamic count here, static budget in the theorems.** As in the plain game and
 the MAC games, the oracle carries no query bound. The Theorem 5.11 statements add
-a static hypothesis on the adversary (`IsQueryBoundP` over the Sign arm, at most
+a static hypothesis on the adversary (`IsQueryBoundP` over Sign queries, at most
 `q` queries) so that their `q`-dependent bounds are well-formed.
 
 **Carrier.** `ProbComp`, as for the core scheme and the MAC games. The core never
@@ -109,7 +109,7 @@ representation basis in issuance order, so the log appends, as `AGMLog` does.
 **What carries over from the MAC track.** The representation type and the
 coefficient conversion `AGMRepr.toReprCoeffs` apply to exact-length lists as
 they are. The MAC track's evaluation bridge `agmRepr_eval_eq_eval_toPoly` does
-not, since a blind-issuance answer `V' = (x₀ + xᵣ)·U' + u·C'` is not a MAC tag
+not, since a blind-issuance answer `V' = (x₀ + xᵣ)·U' + u·C'` is not a MAC code
 on a known message. The Equation 18 bridge is new work for the Theorem 5.11
 proof.
 -/
@@ -130,7 +130,7 @@ section Data
 variable {F G : Type} {n : ℕ}
 
 /--
-The two oracle arms of the AGM one-more unforgeability game for μCMZ_AT (O24
+The two oracles of the AGM one-more unforgeability game for μCMZ_AT (O24
 Figure 6, instrumented per §5.6).
 -/
 inductive AGMOMUFQuery (F G : Type) (n : ℕ) : Type where
@@ -140,7 +140,7 @@ inductive AGMOMUFQuery (F G : Type) (n : ℕ) : Type where
   | sign : G → AGMRepr F n → AGMOMUFQuery F G n
   /-- `verify m⃗ (U, V) ρ_U ρ_V` — a verification query for the token `(U, V)` on
   the attributes `m⃗`, each component with a representation, gated like the MAC
-  game's `verify` arm and with the same exact-length rule as `sign`. -/
+  game's Verify oracle and with the same exact-length rule as `sign`. -/
   | verify : (Fin n → F) → Code G → AGMRepr F n → AGMRepr F n → AGMOMUFQuery F G n
 
 /--
@@ -163,7 +163,7 @@ docstring).
 -/
 abbrev AGMOMUFLog (F G : Type) (n : ℕ) : Type := List (G × AGMRepr F n × Option (G × G))
 
-/-- The blinded pairs actually issued so far, in issuance order: the tag part of
+/-- The blinded pairs actually issued so far, in issuance order: the issued-pair part of
 the representation basis. Refused queries contribute nothing. -/
 def AGMOMUFLog.tags (log : AGMOMUFLog F G n) : List (G × G) :=
   log.filterMap fun e => e.2.2
@@ -190,7 +190,7 @@ theorem AGMOMUFLog.tags_length_le (log : AGMOMUFLog F G n) :
   List.length_filterMap_le _ _
 
 /--
-The Sign arm as a predicate on queries: the one the static query-budget
+The predicate selecting Sign queries: the one the static query-budget
 hypotheses of the Theorem 5.11 statements count, as
 `IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` (at most `q` Sign queries,
 Verify queries free). Refused Sign queries are Sign queries.
@@ -235,7 +235,7 @@ forgeries, `q + 1` of them to win. The shape of `AGMUFAdversary` and the plain
 -/
 structure AGMOMUFAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program: from `(H, pp)`, query the instrumented Sign and
-  Verify arms and output the forgeries with their representations. -/
+  Verify oracles and output the forgeries with their representations. -/
   run : G → Params G n →
     OracleComp (AGMOMUFOracleSpec F G n) (List (AGMOMUFForgery F G n))
 
@@ -250,8 +250,8 @@ variable {n : ℕ}
 /--
 The gate of the AGM OMUF game: a representation `ρ` *matches* a group element
 `y` over the fixed basis `(g₀, H, X₀, Xᵣ, X⃗)` and the issued pairs `tags` iff its
-tag-coefficient list has exactly one entry per issued pair and it evaluates to
-`y` (see *Exact-length tag coefficients* in the module docstring). An `abbrev`,
+list of issued-pair coefficients has exactly one entry per issued pair and it evaluates to
+`y` (see *Exact-length issued-pair coefficients* in the module docstring). An `abbrev`,
 so decidability is derived and the oracles and the winning condition `decide`
 it. The length conjunct is the only difference from the MAC game's consistency
 check. It is not stable under extension of `tags`; `AGMRepr.eval` of an
@@ -262,8 +262,8 @@ abbrev reprMatches (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
   ρ.uv.length = tags.length ∧ ρ.eval g₀ H X₀ Xᵣ X tags = y
 
 /--
-The exact-length payoff (see *Exact-length tag coefficients* in the module
-docstring): a representation with one tag coefficient per pair in `tags`
+The exact-length payoff (see *Exact-length issued-pair coefficients* in the module
+docstring): a representation with one coefficient per pair in `tags`
 evaluates identically over any extension `tags ++ suffix`, since `zipWith`
 stops at the shorter list. Lemmas about a commitment accepted at an earlier
 transcript read its representation through this, never by re-checking the gate.
@@ -287,8 +287,8 @@ theorem reprMatches_eval_append {ρ : AGMRepr F n} {g₀ H X₀ Xᵣ : G} {X : F
 variable (gen : G)
 
 /--
-Honest instrumented oracles over the core scheme `μCMZATCoreSyntax F gen` (the
-seam this game crosses, as the MAC game crosses `μCMZBaseMACSyntax`), for the
+Honest instrumented oracles over the interface `μCMZATCoreSyntax F gen` of the core scheme
+(as the MAC game's are over `μCMZBaseMACSyntax`), for the
 generator `gen` (a section variable, hence the first explicit argument), the
 security parameter, the secret key `sk`, the crs `H`, and the public parameters
 `pp = (X₀, Xᵣ, X⃗)`. Noncomputable through the core's sampling.

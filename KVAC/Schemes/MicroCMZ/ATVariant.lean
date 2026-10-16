@@ -56,7 +56,7 @@ verification equation of the base MAC holds by construction, so
 The printed Figure 9 samples *both* issuance nonces from the full field
 (`u ←$ ℤ_p` and `r ←$ ℤ_p`). We sample both from the nonzero scalars
 `F× = F ∖ {0}` (via `uniformUnits`, definitionally `uniformNonzero F`),
-the same convention as the base MAC's tag base `U ←$ G×`
+the same convention as the base MAC's nonzero `U ←$ G×`
 (`Construction.lean`, *Nonzero `U` and perfect correctness*):
 
 - `u = 0` would make the honest run abort at the user's `U' ≠ 0` check;
@@ -68,7 +68,7 @@ Under the literal samplers an honest issuance thus fails with
 probability `2/p − 1/p²` — mass that the repo's support-based
 (probability-one) `ATSyntax.Correct` cannot account for. Reductions
 replaying the server or the user must account for these per-nonce `1/p`
-distribution differences, exactly as they do for the base MAC's tag base.
+distribution differences, exactly as they do for the base MAC's `U`.
 
 Correctness additionally needs the generator to be nonzero
 (`hgen : gen ≠ 0`): the honest token base is `(r·u)·gen`, which the
@@ -163,7 +163,7 @@ The issuance carriers are
 - `UsrState _ := F` — the blinding scalar `s`;
 - `IssueMsg _ := G` — the Pedersen commitment `C'`;
 - `BlindToken _ := G × G` — the server's blinded pair `(U', V')`;
-- `Token _ := Code G` — the unblinded MAC tag `(U, V)`.
+- `Token _ := Code G` — the unblinded MAC code `(U, V)`.
 
 The generator `gen : G` (O24's `G₀ ∈ Γ`) is an explicit scheme
 parameter, exactly as for `μCMZBaseMACSyntax`. Noncomputable for the
@@ -212,7 +212,7 @@ theorem μCMZATCore_correct (gen : G) (hgen : gen ≠ 0) :
   simp only [atIssueUsr₂, if_neg hU', support_bind, mem_support_uniformUnits,
     support_pure, Set.mem_iUnion, Set.mem_singleton_iff, exists_prop] at hσ?
   obtain ⟨r, hr, rfl⟩ := hσ?
-  -- The unblinded pair is a valid MAC tag.
+  -- The unblinded pair is a valid MAC code.
   refine ⟨_, rfl, ?_⟩
   simp only [μCMZATCoreSyntax, verify, macScalar, Bool.and_eq_true,
     decide_eq_true_eq]

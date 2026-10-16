@@ -11,10 +11,10 @@ import VCVio.OracleComp.QueryTracking.Unpredictability
 /-!
 # μCMZ sign-mask uniformity (O24 §5.3)
 
-Per-query output-distribution lemmas for the sign arm: sampling the non-vanishing
-signing masks and forming the code tag has, per query, the same law as the real
+Per-query output-distribution lemmas for the Sign oracle: sampling the non-vanishing
+signing masks and forming the base `U` of the MAC code has, per query, the same law as the real
 oracle's `U ←$ {g // g ≠ 0}`. These are distributional facts only; the downstream
-security use — the reduction's sign arm consuming them by name — is
+security use — the reduction's Sign step consuming them by name — is
 `reductionSignStep_relTriple` (`AGMReduction/SignCoupling.lean`). Kept in their own
 `AGMPolynomial`-free module so that reduction (which imports `MvPolynomial`) can reuse
 them without re-elaborating the proofs in an `MvPolynomial`-heavy instance context, where the
@@ -47,7 +47,7 @@ These lemmas establish a single-query output law: sampling `Uⱼ = aᵤ·gen + b
 `U ←$ {g // g ≠ 0}`. They are facts about one query's output distribution; composing
 them into a full reduction / transcript coupling is deferred. -/
 
-/-- `SampleableType` for the signing masks `(aᵤ, bᵤ)` whose tag
+/-- `SampleableType` for the signing masks `(aᵤ, bᵤ)` whose base
 `Uⱼ = aᵤ·gen + bᵤ·X` is nonzero: a `Fintype` subtype, nonempty via `(1, 0)` since
 `gen ≠ 0`. Sampling masks here makes `Uⱼ` uniform over `G^×`, and the `bᵤ`-marginal
 stays uniform (`sign_U_bu_dist_eq`). Conditioning on `Uⱼ ≠ 0` *correlates* `(aᵤ, bᵤ)`
@@ -128,7 +128,7 @@ noncomputable def signMaskEquiv (x : F) :
       ({g : G // g ≠ 0} × F) :=
   Equiv.ofBijective (signMaskFun (gen := gen) x) (signMaskFun_bijective (gen := gen) x)
 
-/-- **Sign-coupling core: masked tag `Uⱼ` is uniform over `G^×`.** Sampling the
+/-- **Sign-coupling core: masked base `Uⱼ` is uniform over `G^×`.** Sampling the
 non-vanishing masks and projecting `Uⱼ = aᵤ·gen + bᵤ·X` (`X = x·gen`) has exactly the
 real oracle's `U ←$ {g // g ≠ 0}` law: uniform over `G^×`. Proved by pointwise
 `probOutput` fiber-counting: for `y ≠ 0` the fiber `{(aᵤ,bᵤ) // Uⱼ = y}` has `|F|`
@@ -229,12 +229,12 @@ lemma sign_U_dist_eq (x : F) :
     rw [mul_one] at hkey
     exact hkey.trans (one_div _)
 
-/-- **Masked tag = honest tag (`AGMPolynomial`-free).** Sampling the non-vanishing
+/-- **Masked MAC code = honest MAC code (`AGMPolynomial`-free).** Sampling the non-vanishing
 masks and forming the honest pair `(U, key·U)` at `U = aᵤ·g + bᵤ·X` (`X = x·g`) has
 exactly the law of `(U ←$ {g ≠ 0}; (U, key·U))`: both are
 `(fun g => (g, key·g)) <$> uniformNonzero G`, and the `U`-laws agree by
 `sign_U_dist_eq`. This builds the honest pair *directly*; rewriting Eq. 14's degree-2
-tag `Vⱼ` (in the 3-DL challenge bases) to `key·U` is `embedTag_eq`
+component `Vⱼ` (in the 3-DL challenge bases) to `key·U` is `embedTag_eq`
 (`AGMReduction/Core.lean`); `reductionSignStep_relTriple` applies both. The mask sample is
 the opaque `reductionMaskSample`, so the reduction applies this by name without
 surfacing the raw `$ᵗ`. -/
