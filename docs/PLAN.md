@@ -4,7 +4,7 @@ This document is the canonical formalization plan for the project. It describes 
 
 The reference paper, cited throughout as **O24**, is Michele Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, [IACR ePrint 2024/1552](https://eprint.iacr.org/2024/1552). Section numbers refer to this paper.
 
-> **Status:** This plan is a tentative working proposal, not a fixed contract. Phase boundaries, module layout, scope decisions, and security targets reflect the current understanding of the paper. They may evolve — sometimes substantially — as the team digs deeper into the proofs. Significant revisions are discussed on the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before they land here.
+> **Status:** This plan is a tentative working proposal, not a fixed contract. Phase boundaries, module layout, scope decisions, and security targets reflect the current understanding of the paper. They may evolve — sometimes substantially — as the team digs deeper into the proofs. Significant revisions are discussed on the [Signal Shot Zulip channel](https://leanprover.zulipchat.com/#narrow/channel/583276-Signal-Shot) before they are made here.
 
 ## Background
 
@@ -42,7 +42,7 @@ The paper's structure is bottom-up: an abstract KVAC framework is defined; two c
                   (Sec. 7) — deferred
 ```
 
-The **bidirectional point**: any scheme that proves it satisfies the abstract framework automatically inherits the framework's downstream consequences (composition with extensions, security implications). A new scheme can be plugged in without touching extensions, and a new extension can be applied to any existing scheme.
+The **bidirectional point**: any scheme that proves it satisfies the abstract framework automatically inherits the framework's downstream consequences (composition with extensions, security implications). A new scheme can be added without touching extensions, and a new extension can be applied to any existing scheme.
 
 ## Specification vs. implementation
 
@@ -55,7 +55,7 @@ A consequence concerning oracle semantics: BAIF uses the [VCV-io Lean library](h
 
 The abstract surfaces in `KVAC/Core/` and `KVAC/Framework/` are still scheme-agnostic — they commit to *general* VCV-io / Mathlib typeclasses (e.g. `SampleableType`, `Module F G`), not to any particular curve, hash function, or deployment.
 
-All concrete bindings — the verified Ristretto255 instance and any future concrete plug-ins — live in `KVAC/Instances/` and only there. Two import rules make the boundary enforceable:
+All concrete bindings — the verified Ristretto255 instance and any future concrete instances — live in `KVAC/Instances/` and only there. Two import rules make the boundary enforceable:
 
 - `Examples/` and security tracks may import from `Instances/`.
 - No other directory may. Theorems and definitions outside `Examples/` and `Instances/` are stated against the abstract typeclasses in `Core/` and `Framework/`, never against a concrete type.
@@ -181,7 +181,7 @@ graph TD
 The `[Track X]` annotations in TRACKS.md indicate which independent work track owns each file. Tracks are organised into four **waves** based on the dependencies between them:
 
 - **Wave 0** (Track 0) — foundational; start immediately. Gating step before Wave 1 can begin.
-- **Wave 1** (Tracks Pre, Σ, F1) — start once Track 0 lands.
+- **Wave 1** (Tracks Pre, Σ, F1) — start once Track 0 is merged.
 - **Wave 2** (Tracks F2, CMZ-C, BBS-C) — Framework anonymity/extractability, plus each scheme's construction.
 - **Wave 3** (Tracks CMZ-{M,A,E,OMUF}, BBS-{M,A,E,OMUF}) — the two schemes' security tracks.
 - **Wave 4** (Track Ex) — concrete run, Ristretto binding, and Lake dependency on `curve25519-dalek-lean-verify` all bundled into one PR.
@@ -250,7 +250,7 @@ The second concrete instantiation, parallel in structure to MicroCMZ. Improvemen
 
 The only place Ristretto255 appears. Two import rules make the boundary enforceable: only `Examples/` and security tracks may import from `Instances/`; no other directory may.
 
-- **`Instances/Ristretto.lean`** (Track Ex) — local binding of the abstract `PrimeOrderGroup` / `SampleableGroup` typeclasses to the verified Ristretto255 instance from `curve25519-dalek-lean-verify`. Produced as part of Track Ex; the Lake dependency on `curve25519-dalek-lean-verify` is added in the same PR. Until Track Ex lands, this file does not exist and the lakefile does not import dalek. **μBBS curve note:** Ristretto255 is a valid concrete instance only for μCMZ — μBBS requires a curve larger than Ristretto255 for 128-bit security, which is out of v1 scope.
+- **`Instances/Ristretto.lean`** (Track Ex) — local binding of the abstract `PrimeOrderGroup` / `SampleableGroup` typeclasses to the verified Ristretto255 instance from `curve25519-dalek-lean-verify`. Produced as part of Track Ex; the Lake dependency on `curve25519-dalek-lean-verify` is added in the same PR. Until Track Ex is merged, this file does not exist and the lakefile does not import dalek. **μBBS curve note:** Ristretto255 is a valid concrete instance only for μCMZ — μBBS requires a curve larger than Ristretto255 for 128-bit security, which is out of v1 scope.
 
 ### `KVAC/Examples/` — concrete protocol run (Track Ex)
 
@@ -258,7 +258,7 @@ The only place Ristretto255 appears. Two import rules make the boundary enforcea
 
 Track Ex bundles three things into a single PR: this example file, the `Instances/Ristretto.lean` binding, and the addition of `curve25519-dalek-lean-verify` to `lakefile.toml`. None of these is needed before Wave 4 — every Wave 1–3 track works against the abstract prime-order group, so deferring the Lake dependency to Track Ex keeps earlier builds light.
 
-No theorem in the formalization plan strictly requires `Examples/`. It can be cut if scope pressure becomes severe; for v1 the cost is low (~50–100 lines, written once when Track CMZ-C has landed) and the sanity-check value is high.
+No theorem in the formalization plan strictly requires `Examples/`. It can be cut if scope pressure becomes severe; for v1 the cost is low (~50–100 lines, written once when Track CMZ-C has been merged) and the sanity-check value is high.
 
 ## Security results targeted
 
@@ -284,7 +284,7 @@ The supporting cryptographic assumptions (DL, DDH, q-DL, q-DDHI, gap-DL) live in
 
 ## Future works
 
-The items below are explicitly **deferred from v1**. They are valuable contributions that build on what v1 produces, but they are not prerequisites for landing a complete v1. Within this section, items are listed in priority order: cleanup and hardening of the v1 codebase comes first; new features come after.
+The items below are explicitly **deferred from v1**. They are valuable contributions that build on what v1 produces, but they are not prerequisites for delivering a complete v1. Within this section, items are listed in priority order: cleanup and hardening of the v1 codebase comes first; new features come after.
 
 ### Cleanup / hardening passes (top priority post-v1)
 
@@ -297,11 +297,11 @@ These items consolidate what's needed to take the v1 codebase from "complete" to
 
 ### Credential extensions (O24, Sec. 8)
 
-The paper defines three extensions that compose with any KVAC system satisfying the abstract framework. None is in v1; all become accessible once `Framework/` and at least one scheme have landed.
+The paper defines three extensions that compose with any KVAC system satisfying the abstract framework. None is in v1; all become accessible once `Framework/` and at least one scheme have been merged.
 
 - **Time-based policies (§8.1).** Attach an expiration time to a credential; prove at presentation that the current time is within the validity window. Lowest cost — implemented as a predicate over a credential attribute. Deployment analogue: CPZ19's "redemption date." Expected work: 1–2 weeks.
 - **Rate-limiting (§8.2).** A user can produce at most $\ell$ valid presentations per scope. Combines a Dodis–Yampolskiy PRF (Theorem 8.7, q-DDHI assumption) with the one-more unforgeability of the underlying KVAC. Expected work: 3–4 weeks. Deployment analogue: Apple iCloud Private Relay, RFC 9578.
-- **Pseudonyms (§8.3).** A user produces a stable pseudonym per scope, unlinkable across scopes. Reuses 70%+ of the rate-limiting PRF infrastructure. Expected work: 3–4 weeks if rate-limiting has landed, ~6 if it's the first PRF-based extension. Deployment analogue: Tor, anonymous login systems, IETF KB25 draft.
+- **Pseudonyms (§8.3).** A user produces a stable pseudonym per scope, unlinkable across scopes. Reuses 70%+ of the rate-limiting PRF infrastructure. Expected work: 3–4 weeks if rate-limiting has been merged, ~6 if it's the first PRF-based extension. Deployment analogue: Tor, anonymous login systems, IETF KB25 draft.
 
 If any extension is added to active scope later, recommended order: rate-limiting → pseudonyms → time-based.
 
@@ -321,7 +321,7 @@ Deferred indefinitely. Mentioned here for future contributors who may want to ta
 
 Three strategic notes worth keeping in mind from day one.
 
-1. **Drive `Framework/` from O24's Definitions 4.2–4.5, not from μCMZ's algebra.** Definitions 4.2–4.5 are scheme-agnostic; if the typeclass shapes mirror them directly, both μCMZ and μBBS will fit without contortions. If `Framework/` ends up "shaped like" μCMZ (which lands first), μBBS will fight the typeclasses. The defence against this is to write Framework/ against a paper proof rather than against the first scheme being implemented.
+1. **Drive `Framework/` from O24's Definitions 4.2–4.5, not from μCMZ's algebra.** Definitions 4.2–4.5 are scheme-agnostic; if the typeclass shapes mirror them directly, both μCMZ and μBBS will fit without contortions. If `Framework/` ends up "shaped like" μCMZ (which is formalized first), μBBS will fight the typeclasses. The defence against this is to write Framework/ against a paper proof rather than against the first scheme being implemented.
 
 2. **Build the sigma-protocol DSL and straight-line extraction infrastructure with proven meta-theory early.** The paper's security proofs in Sec. 5 and Sec. 6 lean heavily on straight-line extraction (Sec. 9). Treating the proof system as an axiom is faster initially but forfeits the savings in every later phase, since every credential proof becomes one-line instantiation against the DSL once the meta-theorems are in place.
 

@@ -14,7 +14,7 @@ Requires the Lean 4 toolchain pinned in [`lean-toolchain`](lean-toolchain) (curr
 
 ## Documentation
 
-The Verso blueprint at https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/ is the live, rendered view of the formalization, with per-chapter prose tied to the Lean declarations as they land. The markdown documents below cover the formalization plan, work breakdown, and contribution workflow.
+The Verso blueprint at https://beneficial-ai-foundation.github.io/KeyedVerificationAnonymousCredential-model/ is the live, rendered view of the formalization, with per-chapter prose tied to the Lean declarations as they are merged. The markdown documents below cover the formalization plan, work breakdown, and contribution workflow.
 
 | File                                                              | What it is                                                                                                                                              |
 | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -42,7 +42,7 @@ When a track is split into sub-issues, list them as nested bullets under the tra
   - [x] `Core/AlgebraicMAC.lean` ([#21])
 - [ ] **Wave 1** — preliminaries, proof systems, framework correctness
   - [x] Track Pre — Preliminaries ([#2]); the §3.4 anonymous-token items continue under Track CMZ-OMUF ([#144], [#145])
-  - [ ] Track Σ — Proof systems ([#3]); being rescoped: the concrete Σ-protocols landed under Track CMZ-C and the NIZKP games under `Core/NIZKP/`, the Fiat–Shamir transform and §9 straight-line extraction remain
+  - [ ] Track Σ — Proof systems ([#3]); being rescoped: the concrete Σ-protocols were merged under Track CMZ-C and the NIZKP games under `Core/NIZKP/`, the Fiat–Shamir transform and §9 straight-line extraction remain
   - [x] Track F1 — Framework syntax and correctness ([#4])
 - [ ] **Wave 2** — framework anonymity/extractability, scheme constructions
   - [ ] Track F2 — Framework anonymity and extractability ([#5])
