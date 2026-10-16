@@ -48,7 +48,7 @@ Coefficient matching on `MvPolynomial` directly requires heavy `Finsupp`
 monomial bookkeeping. Instead, each coefficient claim is extracted by
 specializing the identity through an algebra map `F[η,x₀,xᵣ,x₁,u⃗] →ₐ F[X]`
 (`spec`), assigning the two or three variables relevant to the claim distinct
-powers of `X` (and `0` to the rest) so that the target coefficient lands on a
+powers of `X` (and `0` to the rest) so that the target coefficient is sent to a
 degree occupied by nothing else, then reading off a `Polynomial.coeff`. The
 monomials chosen per claim follow O24's proof of Lemma 5.4:
 
@@ -95,7 +95,7 @@ noncomputable def x₀ : P F q := X .x0
 noncomputable def xᵣ : P F q := X .xr
 /-- The key component `x₁`. -/
 noncomputable def x₁ : P F q := X .x1
-/-- `uⱼ = log_G Uⱼ`, the exponent of the `j`-th issued tag. -/
+/-- `uⱼ = log_G Uⱼ`, the exponent of the base of the `j`-th issued MAC code. -/
 noncomputable def u (j : Fin q) : P F q := X (.u j)
 
 /-- The "key polynomial" `x₀ + xᵣ + m·x₁`: the μCMZ MAC scalar for a message
@@ -112,8 +112,8 @@ noncomputable def keyPoly (m : F) : P F q := x₀ + xᵣ + C m * x₁
 /-- The coefficients of an algebraic representation (the paper's `α⃗` or `β⃗`
 of O24 Eq. 12) over the `n = 1` transcript basis
 `(G, H, X₀, Xᵣ, X₁, U₁…U_q, V₁…V_q)`. This is the polynomial-layer mirror of
-the game-layer structure `AGMRepr F 1`; that structure and the glue between
-the two are introduced in a later PR. -/
+the game-layer structure `AGMRepr F 1`; `AGMRepr.toReprCoeffs` (`AGMReduction/Core.lean`)
+converts between the two. -/
 structure ReprCoeffs (F : Type) (q : ℕ) where
   /-- Coefficient of `G` (the generator). -/
   cg : F
@@ -183,7 +183,7 @@ lemma ReprCoeffs.eval_toPoly (pt : Var q → F) (ρ : ReprCoeffs F q) (msgs : Fi
   simp only [ReprCoeffs.toPoly, keyPoly, η, x₀, xᵣ, x₁, u, map_add, map_mul, map_sum,
     eval_C, eval_X]
 
-/-- `spec` with all `uⱼ ↦ 0`: the tag terms vanish. -/
+/-- `spec` with all `uⱼ ↦ 0`: the terms of the issued MAC codes vanish. -/
 private lemma spec_toPoly_uZero (E P0 Pr P1 : Polynomial F) (ρ : ReprCoeffs F q)
     (msgs : Fin q → F) :
     spec E P0 Pr P1 (fun _ => 0) (ρ.toPoly msgs) =
@@ -193,8 +193,8 @@ private lemma spec_toPoly_uZero (E P0 Pr P1 : Polynomial F) (ρ : ReprCoeffs F q
   rw [spec_toPoly]
   simp
 
-/-- `spec` with `u_k ↦ U` and the other `uⱼ ↦ 0`: only the `k`-th tag term
-survives. -/
+/-- `spec` with `u_k ↦ U` and the other `uⱼ ↦ 0`: only the term of the `k`-th
+issued MAC code survives. -/
 private lemma spec_toPoly_uSingle (E P0 Pr P1 U : Polynomial F) (k : Fin q)
     (ρ : ReprCoeffs F q) (msgs : Fin q → F) :
     spec E P0 Pr P1 (fun j => if j = k then U else 0) (ρ.toPoly msgs) =

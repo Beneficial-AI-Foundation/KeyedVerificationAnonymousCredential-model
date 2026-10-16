@@ -52,8 +52,8 @@ variable (gen : G)
 
 /-- Goodness of one instrumented query against the current transcript: `sign` is always good,
 `verify` is good iff the representations of the submitted MAC code are transcript-consistent
-(the exact condition the `verify` arm of `agmOracleImpl` gates on), and `help` is never good (the
-plain Figure 5 game has no Help oracle). -/
+(the exact condition the Verify oracle of `agmOracleImpl` gates on), and `help` is never good
+(the plain Figure 5 game has no Help oracle). -/
 def agmGood (H : G) (pp : Params G n) : AGMQuery F G n → AGMLog F G n → Prop
   | .sign _, _ => True
   | .verify _ σ ρU ρV, log =>
@@ -137,9 +137,9 @@ lemma wellBehaved_trivialAdversary (secParam : ℕ) :
 
 /-- Translate instrumented queries to plain `UFQuery`s by dropping the representations: `sign`
 and `verify` forward, `help` is answered locally by `false` (the plain game has no Help oracle;
-`WellBehaved` rules out reachable `help` queries in the AGM game). `MsgVec crs` and `Tag crs` of
-`μCMZBaseMACSyntax` unfold to `Fin n → F` and `G × G`, so queries and answers transport without
-casts. -/
+`WellBehaved` rules out reachable `help` queries in the AGM game). `MsgVec crs` and `Tag crs`
+(the message-vector and MAC-code types of `μCMZBaseMACSyntax`) unfold to `Fin n → F` and
+`G × G`, so queries and answers transport without casts. -/
 def forgetReprImpl {secParam : ℕ}
     (crs : (μCMZBaseMACSyntax F gen).Crs secParam n) :
     QueryImpl (AGMOracleSpec F G n)
