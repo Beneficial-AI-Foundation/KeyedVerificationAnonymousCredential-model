@@ -18,6 +18,7 @@ import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.ATVariant
+import KVAC.Schemes.MicroCMZ.ATVariantPiIs
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 
 open Verso.Genre Manual
@@ -1105,10 +1106,36 @@ both and says so in its name. The cost of dropping `π_is` is the
 anonymity clause of Theorem 5.3: the anonymity simulator extracts from
 `π_is` and the bound carries its knowledge-soundness term, so that clause
 is stated only for the `π_is`-carrying variant, while the core is the
-scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant
-follows with a zero-knowledge lifting lemma once the upstream erratum is
-settled, and the printed Theorem 5.3 node {bpref "mucmz_at_omuf"}[] stays
-a paper-element stub meanwhile.
+scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant is
+{bpref "mucmz_at_pi_is"}[]; a zero-knowledge lifting lemma relating the two
+follows once the upstream erratum is settled, and the printed Theorem 5.3
+node {bpref "mucmz_at_omuf"}[] stays unanchored meanwhile.
+:::
+
+:::definition "mucmz_at_pi_is" (lean := "KVAC.Schemes.MicroCMZ.atIssueSrvPiIs, KVAC.Schemes.MicroCMZ.atIssueUsr₁PiIs, KVAC.Schemes.MicroCMZ.μCMZATSyntax") (parent := "cmz_omuf") (tags := "milestone")
+The anonymous-token variant `μCMZ_AT` of O24 Figure 9, the user proof `π_iu`
+removed and the issuer's proof `π_is` kept, at the oracle carrier of
+{bpref "omuf_game_ro"}[] with the proof system for `R_cmz.is` a parameter
+({uses "mucmz_proof_system_parameters"}[]). Setup, key generation and the
+user's second move come from the credential {uses "mucmz_construction"}[], the
+user's first move is that of the core {uses "mucmz_at_core"}[] lifted to the
+oracle carrier, verification is that of the base MAC {uses "mucmz_base_mac"}[],
+and the server is the credential's server without the `π_iu` check.
+:::
+
+:::theorem "mucmz_at_pi_is_correctness" (lean := "KVAC.Schemes.MicroCMZ.μCMZAT_correctRO") (parent := "cmz_omuf") (tags := "milestone")
+The variant {uses "mucmz_at_pi_is"}[] satisfies the oracle-carrier
+correctness {uses "at_correctness_ro"}[]. The hypotheses are a nonzero
+generator and the perfect completeness of `π_is` for {uses "ris_relation"}[]
+with the crs setup `H ←$ G×`, stated by `ProofSystemFor.CompleteRO` of
+{uses "mucmz_correctness"}[].
+:::
+
+:::proof "mucmz_at_pi_is_correctness"
+As for the issuance half of {uses "mucmz_correctness"}[]: the completeness of
+`π_is` discharges its verification, the nonzero `u` and generator pass the
+check `U' ≠ 0`, and the unblinding algebra `V' − s·U' = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U'`
+gives the MAC equation of {uses "mucmz_base_mac"}[].
 :::
 
 :::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.reprMatches, KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_length_le, KVAC.Schemes.MicroCMZ.AGMRepr.eval_append_of_length_eq, KVAC.Schemes.MicroCMZ.reprMatches_eval_append, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
@@ -1155,10 +1182,10 @@ The correspondence with the plain game is a deferred bridge.
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
-({uses "zk_arguments"}[]), the variant `μCMZ_AT` of {uses "mucmz_construction"}[] is an
+({uses "zk_arguments"}[]), the variant `μCMZ_AT` {uses "mucmz_at_pi_is"}[] is an
 anonymous token ({uses "anonymous_tokens"}[]) with both an anonymity
 advantage and, in the algebraic group model, a one-more unforgeability
-advantage in the game of {uses "omuf_game"}[].
+advantage in the game of {uses "omuf_game_ro"}[].
 :::
 
 :::proof "mucmz_at_omuf"
