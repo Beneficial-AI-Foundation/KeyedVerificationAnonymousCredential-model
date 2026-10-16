@@ -105,20 +105,20 @@ noncomputable abbrev KSNDAdv (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO
 
 /-! ## Simulation extractability -/
 
-/-- The simulation-oracle arm of the O24 §3.3 stronger notion: `sim x`
+/-- The simulation oracle of the O24 §3.3 stronger notion: `sim x`
 requests a simulated proof for the bare statement, no witness. -/
 inductive SEQuery (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     {secParam : Nat} (crs : zkp.Crs secParam) : Type where
   | sim : zkp.Stmt crs → SEQuery H zkp crs
 
-/-- `OracleSpec` of the O24 §3.3 simulation arm: `sim x` answers with a
+/-- `OracleSpec` of the O24 §3.3 simulation oracle: `sim x` answers with a
 proof. -/
 def SESpec (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     {secParam : Nat} (crs : zkp.Crs secParam) : OracleSpec (SEQuery H zkp crs)
   | .sim _ => zkp.Proof crs
 
 /-- Oracle interface of an O24 §3.3 simulation-extractability adversary: the
-simulation arm together with `ZKRO`. -/
+simulation oracle together with `ZKRO`. -/
 abbrev SEAdvSpec (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     {secParam : Nat} (crs : zkp.Crs secParam) :
     OracleSpec (SEQuery H zkp crs ⊕ (ℕ ⊕ H.Dom)) :=
@@ -144,7 +144,7 @@ abbrev SEState (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
 
 /-- Implementation of the O24 §3.3 simulation-extractability oracles: `sim`
 runs the zero-knowledge simulator on the shared cache (so it may reprogram it)
-and logs the returned pair; the random-oracle arm updates the cache. -/
+and logs the returned pair; `ZKRO` queries run through `zkROImpl` on the same cache. -/
 def seOracleImpl (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (sim : ZKSimulator H zkp) {secParam : Nat} (crs : zkp.Crs secParam) :
     QueryImpl (SEAdvSpec H zkp crs) (StateT (SEState H zkp crs) ProbComp)

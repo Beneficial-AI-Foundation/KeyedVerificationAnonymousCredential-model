@@ -93,7 +93,7 @@ def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) : EXTState kvac crs :=
   ⟨[], [], []⟩
 
-/-! ## The oracle monad and its plumbing -/
+/-! ## The oracle monad and the lifting into it -/
 
 /-- The monad the O24 Figure 8 oracles run in: the shared random-oracle cache and
 the game state `EXTState` carried in one `StateT`, over `ExceptT Unit` (the
@@ -105,7 +105,7 @@ abbrev EXTComp (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
 /-- Lift a credential computation into the oracle monad: run it against the shared
 random-oracle table via `runRO`, write the table back, leave the game state alone.
 
-IMPORTANT. This is the single site of the cache plumbing the whole game depends
+IMPORTANT. This is the single site of the cache threading the whole game depends
 on. It projects the cache out of the state, runs the credential algorithm at the
 `ProbComp` layer, and threads the updated cache back, so all four Figure 8 oracles
 share one random-oracle table and a Fiat–Shamir credential's proofs stay
@@ -138,7 +138,7 @@ Fiat–Shamir credential's proofs share one random oracle. The `Issue` abort of
 Figure 8 is `throw ()` in the `ExceptT Unit` layer, short-circuiting the run; the
 game reads a thrown abort as an adversary win.
 
-The `newUsr` arm keeps a `none` branch for honest-issuance failure. That branch
+The `NewUsr` oracle keeps a `none` branch for honest-issuance failure. That branch
 is never taken on the happy trace: `newUsr_mac_isSome` shows it is unreachable
 under `CorrectRO`. The obligation is not discharged here — a definition carries no
 proof — nor by `newUsr_mac_isSome` alone, which only states the fact given
@@ -153,7 +153,7 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- return (ctr := ctr + 1). Runs the honest MAC `kvac.mac`; on a credential it
   -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
   -- user's index).
-  -- The `none` arm below is the honest-issuance failure. For a correct scheme
+  -- The `none` branch below is the honest-issuance failure. For a correct scheme
   -- it never fires. Issuance under the exact-attribute predicate `φ_m` always
   -- yields `some` (`CorrectRO` specialised at `φ = φ_m` via `holds_exactPred`),
   -- so `usrs` always grows and the counter matches the paper's unconditional
@@ -359,14 +359,14 @@ def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
 
 /-! ## Cache transport for `runRO`
 
-`runRO H c k` interprets `k` through `zkROImpl H`, whose uniform arm never touches the
-cache and whose hash arm is VCV-io's lazy `randomOracle`. The lemmas below expose the
-support of one step of each arm and combine them into the cache transport
+`runRO H c k` interprets `k` through `zkROImpl H`, whose uniform-sampling oracle never
+touches the cache and whose hash oracle is VCV-io's lazy `randomOracle`. The lemmas below expose the
+support of one step of each oracle and combine them into the cache transport
 `runRO_support_of_le`: a run from a cache `c` replays, query by query, from any smaller
 cache `c₁ ≤ c`. -/
 
-/-- The uniform arm of `zkROImpl` answers with a uniform sample and leaves the cache as it
-found it: one step from `c` is a pair `(u, c)`, for every `u`. -/
+/-- The uniform-sampling oracle of `zkROImpl` answers with a uniform sample and leaves the cache
+as it found it: one step from `c` is a pair `(u, c)`, for every `u`. -/
 lemma support_zkROImpl_inl_run (H : HashSpec) (n : ℕ) (c : H.spec.QueryCache) :
     support ((zkROImpl H (Sum.inl n)).run c) = Set.range (fun u => (u, c)) := by
   simp only [add_apply_inl, zkROImpl, QueryImpl.ofLift_eq_id', QueryImpl.add_apply_inl,
@@ -435,21 +435,21 @@ lemma roImpl_step_of_le (H : HashSpec) (d : H.Dom) {c₁ c : H.spec.QueryCache} 
 
 /-- **One-step cache transport for `zkROImpl`.** A step of the random-oracle handler from
 `c` that answers `u` and ends at `c'` can be replayed from any `c₁ ≤ c`, answering the same
-`u` and ending at some `c₁' ≤ c'`. The uniform arm ignores the cache; the hash arm is
-`roImpl_step_of_le`. -/
+`u` and ending at some `c₁' ≤ c'`. The uniform-sampling oracle ignores the cache; the hash oracle
+is `roImpl_step_of_le`. -/
 lemma zkROImpl_step_of_le (H : HashSpec) (t : ℕ ⊕ H.Dom) {c₁ c : H.spec.QueryCache}
     (h : c₁ ≤ c) {u : (ZKRO H).Range t} {c' : H.spec.QueryCache}
     (hu : (u, c') ∈ support ((zkROImpl H t).run c)) :
     ∃ c₁', c₁' ≤ c' ∧ (u, c₁') ∈ support ((zkROImpl H t).run c₁) := by
   rcases t with n | d
-  · -- Uniform arm: the cache is untouched on both sides.
+  · -- Uniform-sampling oracle: the cache is untouched on both sides.
     rw [support_zkROImpl_inl_run] at hu
     obtain ⟨v, hv⟩ := hu
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj hv
     refine ⟨c₁, h, ?_⟩
     rw [support_zkROImpl_inl_run]
     exact ⟨v, rfl⟩
-  · -- Hash arm: `zkROImpl H (Sum.inr d)` is `H.roImpl d` by definition.
+  · -- Hash oracle: `zkROImpl H (Sum.inr d)` is `H.roImpl d` by definition.
     exact roImpl_step_of_le H d h hu
 
 /-- **Cache transport for `runRO`.** Any result a computation can produce when run
@@ -493,10 +493,10 @@ theorem runRO_support_of_le {α : Type} (H : HashSpec) {c₁ c : H.spec.QueryCac
 
 /-- Under `CorrectRO`, honest issuance for the `NewUsr` oracle never fails. Every
 result of `kvac.mac` run from any cache `c` at least as large as the keygen cache
-`c₁` is `some`. The game's `NewUsr` arm runs `kvac.mac` through `liftRO` from the
+`c₁` is `some`. The game's `NewUsr` oracle runs `kvac.mac` through `liftRO` from the
 cache the game state holds, which the adversary may have enlarged through direct
 oracle queries and the other three oracles, so `c₁ ≤ c` is exactly the situation
-at the call site. Hence the `none` arm of `extOracleImpl`'s `newUsr` is
+at the call site. Hence the `none` branch of `extOracleImpl`'s `newUsr` is
 unreachable and the counter always advances, as in O24 Figure 8's unconditional
 `ctr := ctr + 1`.
 

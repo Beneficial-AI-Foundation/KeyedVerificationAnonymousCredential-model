@@ -22,7 +22,7 @@ interface together with a concrete VCV-io binding:
   on the domain to cache queries, sampleability of the range to answer fresh
   ones).
 - `HashSpec.spec` — the induced VCV-io oracle signature `Dom →ₒ Rng`, the
-  single arm a computation queries to hash.
+  single oracle a computation queries to hash.
 - `HashSpec.roImpl` — the concrete binding: VCV-io's lazy caching
   `randomOracle` over a `QueryCache`, answering each fresh query uniformly
   and repeated queries consistently.
@@ -59,8 +59,7 @@ an indexed carrier is a family into `Type`. Declared per use site when a
 scheme needs it.
 
 `HashSpec` originated in the zero-knowledge game of
-`Core/NIZKP/Security.lean` (PR #47), which should import it from here once
-both land.
+`Core/NIZKP/Security.lean` (PR #47), which imports it from here.
 -/
 
 namespace KVAC.Core
@@ -91,8 +90,8 @@ attribute [instance] HashSpec.domDecEq HashSpec.rngSampleable
 
 namespace HashSpec
 
-/-- The VCV-io oracle signature of a hash: one arm per domain element,
-answering in the range. A computation with hash access takes `H.spec` (or a
+/-- The VCV-io oracle signature of a hash: one query per domain element,
+answered in the range. A computation with hash access takes `H.spec` (or a
 sum containing it) as its `OracleSpec`.
 
 An `abbrev` (not a `def`) so that instance resolution sees through it — e.g.

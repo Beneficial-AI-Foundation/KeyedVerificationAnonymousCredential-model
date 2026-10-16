@@ -8,7 +8,7 @@ import VCVio.EvalDist.Instances.OptionT
 import VCVio.OracleComp.SimSemantics.StateT.StateProjection
 
 /-!
-# `simulateQ` plumbing: guarded oracles and never-fails-conditioned state projection
+# Guarded oracles for `simulateQ` and never-fails-conditioned state projection
 
 `guardImpl` wraps a stateful oracle implementation with a per-query assertion `good`: on a query
 satisfying `good` it lifts the wrapped oracle's step into `OptionT ProbComp`, otherwise it
@@ -30,9 +30,10 @@ state that a different query is welcome to see. The conclusion is a term-level e
 `ProbComp` computations, so any `probOutput`/`probEvent`/`evalDist` consequence follows by
 `congrArg`.
 
-Pure `OracleComp`/`StateT`/`OptionT` plumbing with no `F`/`G`/`MvPolynomial`, so it lives in this
-VCVio-only leaf. It is specialised to `ProbComp`; generalising the base monad to `OracleComp spec'`,
-as VCVio's `map_run_simulateQ_eq_of_query_map_eq_inv'` is, would make it upstreamable.
+Pure `OracleComp`/`StateT`/`OptionT` state threading with no `F`/`G`/`MvPolynomial`, so it lives in
+this VCVio-only leaf. It is specialised to `ProbComp`; generalising the base monad to
+`OracleComp spec'`, as VCVio's `map_run_simulateQ_eq_of_query_map_eq_inv'` is, would make it
+upstreamable.
 -/
 
 set_option autoImplicit false
