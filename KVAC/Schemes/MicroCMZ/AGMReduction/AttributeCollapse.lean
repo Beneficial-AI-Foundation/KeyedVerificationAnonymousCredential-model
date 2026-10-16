@@ -27,9 +27,9 @@ This file holds the pure algebra of that collapse and the wrapper
 built on it.
 
 - The two representation translations: `AGMRepr.collapseRepr` for a single
-  represented element (the `verify`/`help` queries and the forgery) and
+  represented element (submitted to the Verify and Help oracles, and the forgery) and
   `AGMRepr.linCombCollapse` for the weighted sum `Σᵢ rᵢ • Aᵢ` of represented
-  elements (the `help` query).
+  elements (submitted to the Help oracle).
 - The wrapper `nTo1Adversary A r`: a 1-attribute adversary that runs the
   `n`-attribute adversary `A` along a fixed direction `r⃗`. It builds the
   `n`-attribute public parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` from the

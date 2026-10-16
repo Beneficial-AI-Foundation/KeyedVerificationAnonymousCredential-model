@@ -76,9 +76,9 @@ oracle reproduces the honest oracle's observable behaviour.
 
 Route: couple `reductionOracleImpl` (`Core.lean`) against `agmOracleImpl`
 (`AlgebraicMAC.lean`) under the state invariant `redLogHonestInv` (`Coupling.lean`),
-after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle
+after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle's case
 through `sign_masked_tag_dist_eq` (`SignMask.lean`, whose module doc records why the
-mask sample is kept opaque there), the Verify and Help oracles through
+mask sample is kept opaque there), the Verify and Help oracles' cases through
 `represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). -/
 lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
     evalDist (AGM_UF_CMVAGame gen secParam A)

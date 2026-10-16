@@ -16,7 +16,7 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
   and substitution down to the per-index lambdas the coupling lemmas use;
 - marginal uniformity of the affine embedded elements
   (`evalDist_{smul,affine}_gen_uniform`);
-- `relTriple_map_eq`, the deterministic-map coupling lemma for the Sign oracle;
+- `relTriple_map_eq`, the deterministic-map coupling lemma for the Sign oracle's coupling;
 - `redLogInv` / `redLogHonestInv`, the log honesty and reduction ↔ honest state invariants, and
   their `maskedKey`;
 - the **static** (view-independent) Schwartz–Zippel bound: the `C★` shift lemma,
@@ -26,7 +26,7 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
 A *coupling* pairs the two runs — the reduction's simulated oracle and the
 honest one — on a single probability space, so that a state invariant relating
 their logs survives each query; the consequence is that the two views then have
-the same distribution. This file provides the supporting lemmas for that
+the same distribution. This file includes the supporting lemmas for that
 argument, not the conclusion itself.
 
 The distribution-layer bad-event bound built on these lives further down the
@@ -131,7 +131,7 @@ variable [IsUniformSpec specR₁] [IsUniformSpec specR₂]
 /-- **Deterministic map coupling.** If `f <$> a` matches `b` in distribution, then `a` and `b`
 are coupled by `f x = y`. Witness: the graph coupling `evalDist a >>= fun x => pure (x, f x)`.
 
-The per-query constituent lemma for the Sign oracle (`reductionSignStep` vs
+The per-query constituent lemma for the Sign oracle's coupling (`reductionSignStep` vs
 `agmOracleImpl (.sign _)`): `embedTag_eq` puts the reduction's MAC code in the honest shape
 `(U, key·U)` and `sign_masked_tag_dist_eq` matches its distribution to `mac`'s; this lifts that
 equality to “computed MAC code = sampled MAC code”, which `relTriple_post_mono` and

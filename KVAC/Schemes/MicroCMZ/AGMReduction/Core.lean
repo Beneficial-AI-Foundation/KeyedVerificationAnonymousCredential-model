@@ -24,8 +24,8 @@ variable {n : ℕ}
 /-! ## The game ↔ polynomial dictionary -/
 
 /-- Polynomial-layer coefficients of a game-layer `AGMRepr F 1` over a transcript
-with `q` issued MAC codes. Coefficients past the `q`-th MAC code default to `0`, matching
-the `zipWith` truncation in `AGMRepr.eval`. -/
+with `q` issued MAC codes. Coefficients for issued MAC codes past the `q`-th default to `0`,
+matching the `zipWith` truncation in `AGMRepr.eval`. -/
 def AGMRepr.toReprCoeffs (ρ : AGMRepr F 1) (q : ℕ) : AGMPoly.ReprCoeffs F q where
   cg := ρ.g
   ch := ρ.h
@@ -338,8 +338,8 @@ survives into a proof: `exponentEval_eq` is the only way to relate this to a rea
 evaluation and it takes `p.natDegree ≤ 3`, so every call site owes that bound —
 `maskLift` is degree `≤ 1` and `RedLog.maskedRepr` degree `≤ 2`
 (`AGMPoly.totalDegree_toPoly_le`, `AGMPoly.natDegree_affineSubst_le`), giving
-`≤ 3` for the products the Verify and Help steps build. A degree-bounded carrier (a `Fin 4 → F`
-vector, or a `natDegree ≤ 3` subtype) would move that obligation into the type; it
+`≤ 3` for the products the reduction's Verify and Help oracles build. A degree-bounded carrier
+(a `Fin 4 → F` vector, or a `natDegree ≤ 3` subtype) would move that obligation into the type; it
 is not worth the arithmetic it would add to every use site while the bound is
 discharged once per call anyway. -/
 def exponentEval (g X X' X'' : G) (p : Polynomial F) : G :=
@@ -431,7 +431,7 @@ lemma macScalar_eq_keyCoeff (aM bM : FixedMasks F) (x m : F) :
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- What makes `maskLift` a lift: at the challenge exponent it returns the real mask
-`a + x·b`. The `keyUniv`/`x1Univ` arguments the Verify and Help steps supply to
+`a + x·b`. The `keyUniv`/`x1Univ` arguments the reduction's Verify and Help oracles supply to
 `exponentEval` are read through this. -/
 lemma maskLift_eval (a b x : F) : (maskLift a b).eval x = a + x * b := by
   simp only [maskLift, Polynomial.eval_add, Polynomial.eval_C, Polynomial.eval_mul,
@@ -491,7 +491,7 @@ noncomputable def reductionHelpStep (X X' X'' : G) (aM bM : FixedMasks F)
 The reduction's **simulated oracle** — answers `A`'s queries with no secret key
 `sk`, using only the embedded public elements `(H, X₀, Xᵣ, X₁)`, the 3-DL powers
 `(X, X', X'')` over `gen`, and the masks. Each branch is a thin call to its
-factored `step` def: the `verify`/`help` branches carry `MvPolynomial`/`affineSubst`
+factored `step` def: the Verify and Help oracle implementations carry `MvPolynomial`/`affineSubst`
 terms whose instance search loops in this import context, so splitting them keeps
 reduction on a `.sign` query from re-elaborating the others. -/
 noncomputable def reductionOracleImpl (X X' X'' : G)
