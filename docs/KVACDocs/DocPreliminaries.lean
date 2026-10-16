@@ -8,6 +8,7 @@ import VersoBlueprint
 import KVAC.Preliminaries.Assumptions
 import KVAC.Preliminaries.AnonymousTokens
 import KVAC.Preliminaries.AnonymousTokens.Security
+import KVAC.Preliminaries.AnonymousTokens.OracleCarrier
 
 open Verso.Genre Manual
 open Informal
@@ -125,16 +126,34 @@ token systems satisfying the stronger §4 anonymity instead); it is
 accordingly not formalized here.
 :::
 
-:::definition "omuf_game" (lean := "KVAC.Preliminaries.OMUFQuery, KVAC.Preliminaries.OMUFOracleSpec, KVAC.Preliminaries.OMUFAdversary, KVAC.Preliminaries.SignLog, KVAC.Preliminaries.omufOracleImpl, KVAC.Preliminaries.OMUFWins, KVAC.Preliminaries.OMUFGame, KVAC.Preliminaries.OMUFAdv") (parent := "pre_anontoken") (tags := "paper, O24 Fig 6")
+:::definition "omuf_game" (lean := "KVAC.Preliminaries.OMUFQuery, KVAC.Preliminaries.OMUFOracleSpec, KVAC.Preliminaries.OMUFAdversary, KVAC.Preliminaries.SignLog, KVAC.Preliminaries.omufOracleImpl, KVAC.Preliminaries.OMUFWins, KVAC.Preliminaries.omufExp, KVAC.Preliminaries.OMUFGame, KVAC.Preliminaries.OMUFAdv") (parent := "pre_anontoken") (tags := "paper, O24 Fig 6")
 *O24 Figure 6.* The one-more unforgeability game for an anonymous token
 scheme {uses "anonymous_tokens"}[] with non-interactive issuance: after `q`
 blind-issuance sessions the adversary must present `q + 1` valid
 pairwise-distinct message/token pairs. Mirrors the UF-CMVA game
 {bpref "ufcmva_game"}[]: a Sign/Verify query menu, a logged
 honest oracle implementation (the log's length is Figure 6's dynamic
-counter `q`), the experiment as a `ProbComp Bool` with the three-clause
-win condition `OMUFWins`, and the advantage `OMUFAdv`. Unlike the UF-CMVA
-forger, the adversary also has a private coin oracle, as VCV-io's PRF, IND-CPA
-and Fischlin adversaries do. Static query-budget hypotheses belong to the
-security theorems over this game, not to the game itself.
+counter `q`), the experiment `omufExp` with the three-clause win condition
+`OMUFWins`, the game `OMUFGame` at `ProbComp`, and the advantage `OMUFAdv`.
+Unlike the UF-CMVA game, the experiment runs over any carrier `OracleComp spec`,
+and the adversary also has a private coin oracle, as VCV-io's PRF, IND-CPA and
+Fischlin adversaries do. Static query-budget hypotheses belong to the security
+theorems over this game, not to the game itself.
+:::
+
+:::definition "omuf_game_ro" (lean := "KVAC.Preliminaries.OMUFAdversaryRO, KVAC.Preliminaries.OMUFGameRO, KVAC.Preliminaries.OMUFAdvRO") (parent := "pre_anontoken") (tags := "milestone")
+The one-more unforgeability game of {uses "omuf_game"}[] at the oracle carrier
+`OracleComp (ZKRO H)` of {uses "zk_game"}[], for a scheme whose algorithms
+query the random oracle, such as one whose server attaches a Fiat–Shamir
+proof. The adversary queries the same oracle beside Sign and Verify, and the
+experiment runs through one random-oracle cache from empty, so the server's
+proofs and the adversary's hash queries share it. The experiment is that of
+the plain game, generic in the carrier.
+:::
+
+:::definition "at_correctness_ro" (lean := "KVAC.Preliminaries.ATSyntax.CorrectRO") (parent := "pre_anontoken") (tags := "milestone")
+Correctness of {uses "anonymous_tokens"}[] at the oracle carrier
+`OracleComp (ZKRO H)` of {uses "zk_game"}[]: setup, key generation and
+issuance thread one random-oracle cache, so that a scheme's Fiat–Shamir proofs
+share the oracle.
 :::
