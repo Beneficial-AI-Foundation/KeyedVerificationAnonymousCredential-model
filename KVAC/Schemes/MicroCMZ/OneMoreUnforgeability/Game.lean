@@ -198,7 +198,7 @@ theorem AGMOMUFLog.tags_length_le (log : AGMOMUFLog F G n) :
   List.length_filterMap_le _ _
 
 /--
-The Sign arm as a predicate on the adversary's queries, its private coin oracle
+The Sign query as a predicate on the adversary's queries, its private coin oracle
 included: the one the static query-budget hypotheses of the Theorem 5.11
 statements count, as `IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` (at
 most `q` Sign queries, Verify and coin queries free). Refused Sign queries are
@@ -247,7 +247,7 @@ private coin oracle* in the module docstring).
 -/
 structure AGMOMUFAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program: from `(H, pp)`, query the private coin oracle and
-  the instrumented Sign and Verify arms and output the forgeries with their
+  the instrumented Sign and Verify oracles and output the forgeries with their
   representations. -/
   run : G → Params G n →
     OracleComp (unifSpec + AGMOMUFOracleSpec F G n) (List (AGMOMUFForgery F G n))

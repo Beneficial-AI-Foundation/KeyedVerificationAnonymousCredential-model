@@ -830,7 +830,11 @@ oracle. VCV-io's PRF, IND-CPA and Fischlin adversaries have a private coin
 oracle beside the game oracles (`PRFOracleSpec`, `IND_CPA_oracleSpec`, and the
 Fischlin adversaries put `unifSpec` first), and a transformation then samples
 inside the adversary it builds, as VCV-io's Fiat–Shamir `simulatedNmaAdv` runs
-its simulator inside the adversary it builds.
+its simulator inside the adversary it builds. The formal forger class contains
+the paper's and is larger: a p.p.t. forger is an inhabitant, each of its
+`A.rl(λ)` coins a `unifSpec` query at index 1, while `OracleComp` bounds no
+running time and `unifSpec` answers a query at index `n` with an exactly
+uniform element of `Fin (n + 1)`, for any `n` and any number of queries.
 
 **Scope.** The UF-CMVA forgers `UFAdversary` and `AGMUFAdversary` keep their
 shape, without a private coin oracle. The algebraic one-more forger has the
