@@ -826,9 +826,10 @@ the views keeps both sides at the same `H`, and the asymptotic form over a
 
 ## The anonymity simulator takes a trace extractor
 
-**Decision.** The simulator of Theorem 5.8 takes the extractor of `ZKP_cmz.is` as a
-`TraceExtractor`, a function of the crs, the statement, the proof and
-the random-oracle cache. `TraceExtractor.toKSND` embeds it into the
+**Decision.** The extractor of `ZKP_cmz.is` that the simulator of Theorem 5.8
+invokes is a `TraceExtractor` (`Core/NIZKP/Composition.lean`), a function of
+the crs, the statement, the proof and the random-oracle cache. The map
+`TraceExtractor.toKSND` embeds it into the
 white-box `KSNDExtractor` of the knowledge-soundness game, and the lemma
 `KnowledgeSound.of_trace` states that knowledge soundness with a trace
 extractor implies the §3.3 notion.
@@ -840,13 +841,16 @@ takes the adversary value.
 simulator cannot depend on the adversary. The §3.3 extractor "takes as input
 the random coins and the code of the p.p.t. adversary". The proof of
 Theorem 5.8 (§5.4, p. 40) has `Sim.I` invoke the extractor without resolving
-the order of quantifiers. The §9 extractor of the algebraic group model has
-the shape of a trace extractor in that it never rewinds, which §9 calls
-straight-line (p. 77). It also reads the algebraic representations the
+the order of quantifiers, while §2.6 (p. 21) and §9 (p. 77) name the
+straight-line extraction that credentials need. The §9 extractor of the
+algebraic group model has the shape of a trace extractor in that it never
+rewinds. It also reads the algebraic representations the
 adversary supplies with every group element (Equation 41, p. 78), which are
 not among the inputs of `TraceExtractor`. The instantiation of issue #3
 must therefore carry the representations in the proof or in the oracle table.
-The restriction keeps the printed `Adv^ksnd` applicable.
+The restriction keeps the printed `Adv^ksnd` applicable. Extractors carry no
+running-time bound, so the restriction is a modelling discipline as long as
+`OracleComp` carries no cost model, which issue #148 lists as out of scope.
 
 ## Open alternatives
 
