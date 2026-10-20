@@ -111,17 +111,37 @@ lemma). The formalization states the core as `μCMZATCore`
 π<sub>is</sub>-carrying variant and the lifting lemma to Phase B of the
 Theorem 5.3 plan (issue #12). Reported to the author in August 2026.
 
-## 8. Figure 9 samples r ←$ ℤ<sub>p</sub>, but §5.1 requires r ≠ 0 (pp. 33–34)
+## 8. Figure 9 writes ℤ<sub>p</sub> where §5.1 and correctness need ℤ<sub>p</sub><sup>×</sup> (pp. 33–34)
 
-Figure 9's unblinding step samples the user re-randomizer as r ←$ ℤ<sub>p</sub>.
-§5.1 (p. 33) states the re-randomization property for r ≠ 0, and the
-presentation step samples the same operation with r ←$ ℤ<sub>p</sub><sup>×</sup>.
-An honest run with r = 0 emits the token (0, 0), which the scheme's own
-verifier rejects. Same family as the U ←$ 𝔾 versus Eq. (1) U ←$ 𝔾<sup>×</sup>
-mismatch for the base MAC. Under the literal samplers honest issuance fails
-with probability 2/p − 1/p<sup>2</sup> (u = 0 aborts at the user's check,
-r = 0 mis-issues). The formalization draws both nonces from
-ℤ<sub>p</sub><sup>×</sup> (`uniformUnits`, PR #146 and PR #147).
+**Where.** Figure 9 (p. 34) draws three scalars from ℤ<sub>p</sub>. They are
+the server's issuance nonce u (U′ := uG), the user's issuance rerandomizer r
+(U := rU′) and the user's presentation rerandomizer r ((U′, V′) := (rU, rV)).
+The prose of §5.1 (p. 33) states the rerandomization property for r ≠ 0 and
+draws the presentation rerandomizer from ℤ<sub>p</sub><sup>×</sup>.
+
+**Why it is a problem.** The figure and the prose disagree, and only the
+nonzero draws give a working run. A zero draw produces an honest value that a
+check of the scheme then rejects, even when every proof verifies.
+
+| Draw | Effect of a zero draw |
+| --- | --- |
+| Issuance nonce u | U′ = 0, rejected by the user's check U′ ≠ 0G |
+| Issuance rerandomizer r | The credential (0, 0), rejected at presentation |
+| Presentation rerandomizer r | U′ = 0, rejected by the server's check U′ ≠ 0G |
+
+As printed, Figure 9 is therefore not perfectly correct. With perfectly
+complete proofs an honest run fails with probability 1 − (1 − 1/p)<sup>3</sup>,
+or 2/p − 1/p<sup>2</sup> for issuance alone. The error is negligible, so the
+figure still satisfies Definition 4.3, and the inconsistency, not the error, is
+the erratum. Drawing from ℤ<sub>p</sub><sup>×</sup> costs nothing and gives
+perfect correctness. The base MAC has the same mismatch, with U ←$ 𝔾 in
+Figure 9 and U ←$ 𝔾<sup>×</sup> in Eq. (1).
+
+**How the formalization fixes it.** The formalization draws all three from
+ℤ<sub>p</sub><sup>×</sup> with `uniformUnits`, the issuance nonces in PR #146
+and PR #147 and the presentation rerandomizer in PR #206. No zero draw remains,
+so the honest run never fails, and `μCMZCredential_correctRO` proves
+correctness with probability one (PR #221).
 
 ## 9. Claim 5.6 never defines X<sub>r</sub> (p. 39)
 
@@ -177,15 +197,60 @@ matter of the concrete bound only, since Q/p is negligible asymptotically. The
 general shape, a monomial that is nonzero as a formal polynomial but whose
 coefficient vanishes at the run's key, is the same for Claims 5.12 and 5.14.
 
+## 13. Figure 9 samples H ←$ 𝔾, but §2.1.1 presents G and H as generators (pp. 11, 34)
+
+Figure 9's setup draws H ←$ 𝔾, so H = 0<sub>𝔾</sub> with probability 1/p,
+while §2.1.1 (p. 11) introduces "generators G and H". Definition 4.4 (p. 30)
+quantifies over every crs ∈ [KVAC.S(1<sup>λ</sup>, n)], and at H = 0<sub>𝔾</sub>
+the presentation's C<sub>V</sub> := V′ + r′H collapses to V′ = s·U′, so a
+distinguisher holding sk wins with advantage above 1 − 4/p against every
+simulator: anonymity under Definition 4.4 fails and Theorem 5.8 is false as
+stated (corrected Example 1 on #149). The formalization draws H from
+𝔾<sup>×</sup> (`uniformNonzero` in `setup`, `Schemes/MicroCMZ/Construction.lean`;
+*Nonzero crs H ←$ 𝔾^×* in `docs/DESIGN_ALTERNATIVES.md`).
+
+## 14. Sim.P samples U′ ←$ 𝔾, but H5 needs U′ ≠ 0<sub>𝔾</sub> (pp. 40–41)
+
+Sim.P (p. 40) "samples random group elements U′, C<sub>V</sub> ←$ 𝔾<sup>2</sup>",
+and H5 (p. 41) argues U′ is "perfectly indistinguishable from the real one,
+since r is uniformly distributed and U ≠ 0<sub>𝔾</sub>". With
+r ←$ ℤ<sub>p</sub><sup>×</sup> (§5.1, *Credential presentation*, p. 33) and
+U ≠ 0<sub>𝔾</sub> (item 8) the real U′ = rU is uniform on 𝔾<sup>×</sup>, while
+the simulated U′ is 0<sub>𝔾</sub> with probability 1/p: statistical distance
+1/p. Sampling U′ ←$ 𝔾<sup>×</sup> in Sim.P makes the two agree exactly.
+Recorded on #149 (action 2); no simulator in the code yet (#163).
+
+## 15. Sim.P's Z omits the x<sub>r</sub>U′ term (pp. 34, 40–41)
+
+Sim.P and H5 compute "Z = x₀U′ + Σᵢ γᵢXᵢ − C<sub>V</sub>" (pp. 40–41), while
+Figure 9's server (p. 34) computes
+Z = (x₀ + x<sub>r</sub>)U′ + Σᵢ xᵢCᵢ − C<sub>V</sub>; the two differ by
+x<sub>r</sub>U′, so H5's "exactly the same in both distributions" fails.
+Sim.P(st<sub>Sim</sub>, φ) holds neither x<sub>r</sub> nor m (Definition 4.4;
+st<sub>Sim</sub> = (x₀, X₁, …, X<sub>n</sub>), p. 40), but with
+t ←$ ℤ<sub>p</sub><sup>×</sup> and U′ := tG it can add
+tX<sub>r</sub> = x<sub>r</sub>U′: then
+Z = x₀U′ + tX<sub>r</sub> + Σᵢ γᵢXᵢ − C<sub>V</sub> equals the server's, and U′
+is uniform on 𝔾<sup>×</sup> as item 14 requires. Recorded on #149 (action 3);
+no simulator in the code yet (#163).
+
 ## Status
 
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the
-presentation's architecture slide. Items 7 and 8 concern §5.6 and are
-recorded in `docs/DESIGN_ALTERNATIVES.md` and at their use sites in
-`Schemes/MicroCMZ/ATVariant.lean`. Items 5 and 9–11 are recorded at their
+presentation's architecture slide. Item 7 concerns §5.6 and is recorded in
+`docs/DESIGN_ALTERNATIVES.md` and at its use sites in
+`Schemes/MicroCMZ/ATVariant.lean`. Item 8 concerns all of Figure 9. The
+credential in `Schemes/MicroCMZ/Credential.lean` records it at the three draws,
+and the anonymous-token core in `Schemes/MicroCMZ/ATVariant.lean` at the two
+issuance nonces. The header of `Framework/Correctness.lean` records its effect
+on correctness. Items 5 and 9–11 are recorded at their
 use site in `Schemes/MicroCMZ/AGMReduction/GapDLReduction.lean`. Item 12 is
-recorded in `Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean`. This note
+recorded in `Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean`. Items
+13–15 concern §5.1 and §5.4: item 13 is recorded in
+`docs/DESIGN_ALTERNATIVES.md` and at `setup` in
+`Schemes/MicroCMZ/Construction.lean`; items 14 and 15 are requirements on the
+simulator under #163. This note
 reports findings about the paper; the formal-completion status of each module is tracked on the
 project's blueprint page.

@@ -222,6 +222,24 @@ structure now.
 so Eq. 14's "identically distributed" holds only under the conditioning. 
 The `(Uⱼ, bᵤ)` joint law stays independent uniform (`sign_U_bu_dist_eq`), 
 so the masks' hiding is unaffected.
+
+## Conditioned η masks
+
+**Decision.** The 3-DL reduction's η masks `(aη, bη)` are sampled conditioned on
+`H = aη·G + bη·X ≠ 0`, by the sign-mask sampler `reductionMaskSample`
+(`AGMReduction/Core.lean`, `redTrace`).
+
+**Rejected alternative.** The paper's unrestricted `aη, bη ←$ ℤ_p` (Eq. 13, p. 37).
+
+**Fidelity argument.** The real game's `setup` draws `H` from `𝔾^×`
+(*Nonzero crs H ←$ 𝔾^×* below), while an unrestricted pair gives `H = 0` with
+probability `1/p`, one `aη` per `bη`. An adversary that acts only when `H ≠ 0`
+then wins with different probabilities in the two games, so the game bridge
+`AGM_UF_CMVAGame_evalDist_eq` would be false. Under the condition `H` has the
+law of `uniformNonzero G` (`sign_U_dist_eq`) and `bη` is uniform and independent
+of `H` (`sign_U_bu_dist_eq`), so the η coordinate of the shift point,
+`log H + bη`, stays uniform and the Schwartz–Zippel argument for `3/p` is unchanged.
+
 ## Structured hash domains
 
 **Decision.** `HashSpec.Dom` is an arbitrary type; each scheme picks a
@@ -256,6 +274,29 @@ parameter would let a scheme instantiate the games with a non-exact predicate,
 silently changing what the security notions mean; a field with a semantic law
 is checked once per scheme. The rest of the partial-disclosure family stays a
 scheme-level obligation (the TODO recorded in `Framework/Correctness.lean`).
+
+## Correctness requires issuance to succeed before presentation runs
+
+**Decision.** `CorrectOutcome` (`Framework/Correctness.lean`) asks every
+issuance outcome to be `some σ`, and only then asks every presentation bit
+from that `σ` to be `true`. A failed issuance violates correctness on its own,
+with no presentation bit. The types enforce the order, since `issueUsr₂`
+returns `Option Cred` and `presentUsr` takes a `Cred`.
+
+**Rejected alternative.** A presentation that also accepts `⊥`, with the
+convention that the server rejects it, so that `σ = ⊥` yields `b = 0`. The
+experiment would then compute a `Bool` on every run, at the cost of an
+`Option Cred` input to `presentUsr` that no scheme uses.
+
+**Fidelity argument.** The paper leaves this case implicit. O24 Definition 4.3
+runs `σ ← (KVAC.I.Usr ⇌ KVAC.I.Srv)` and then
+`b ← (KVAC.P.Srv ⇌ KVAC.P.Usr(pp, m⃗, σ, φ'))`. Issuance fails when the issuer
+rejects the user's message and returns `σ' = ⊥` (O24 §4.1), or when a `check`
+line of the user fails (Figure 9). The paper defines `KVAC.P.Usr` on credentials
+only, so the experiment assigns no value to `b` after a failed issuance. Both
+readings, `b = 0` on `⊥` and the success event `σ ≠ ⊥ ∧ b = 1`, give the same
+probability. The decision states the second
+reading, which needs no convention on `⊥`.
 
 ## Schwartz–Zippel bound `3/p`, not the paper's `1/p`
 
@@ -411,6 +452,31 @@ own verifier rejects. Under the literal samplers honest issuance fails with
 probability `2/p − 1/p²`. Reductions replaying issuance must account for
 the per-nonce `1/p` distribution differences, as the AGM track already does for
 the tag base (*Conditioned sign masks* above).
+
+## Nonzero crs `H ←$ 𝔾^×` where Figure 9 prints `𝔾`
+
+**Decision.** `μCMZ.setup` samples the crs element `H` from the nonzero
+group elements `G ∖ {0}` via `uniformNonzero` (`Construction.lean`, issue
+#149). The crs type stays the plain `G`; `H ≠ 0` is recovered where a proof
+needs it from `mem_support_uniformNonzero`.
+
+**Rejected alternative.** Figure 9's literal `H ←$ 𝔾`, under which `H = 0_𝔾`
+with probability `1/p`.
+
+**Fidelity argument.** Unlike the nonzero nonces above, this is not a
+correctness convention: with `H = 0_𝔾` admissible, Definition 4.4 is false
+for μCMZ, and no choice of simulator repairs it.
+
+Indeed, Definition 4.4 (p. 30) quantifies over every
+`crs ∈ [KVAC.S(1^λ, n)]`, each taken as a parameter, so one admissible crs
+with non-negligible advantage refutes it. At `H = 0_𝔾` the presentation's
+`C_V := V′ + r′H` collapses to `C_V = V′ = s·U′`, and a distinguisher with
+advantage above `1 − 4/p` exists against every simulator; see the corrected
+Example 1 on issue #149 for the full analysis.
+
+Drawing `H` from `𝔾^×` removes `H = 0_𝔾` from the support of `setup`. The
+other properties are unaffected; the OMUF bound of Theorem 5.11 loosens by
+`(q + 3)/(p(p − 1))` (same analysis).
 
 ## Anonymity game at fixed setup, negligibility over instance families
 
@@ -619,6 +685,67 @@ keeps one sampler `$ᵗ (Fin n → F)` and one uniform `Xᵢ = rᵢ • X₁` cl
 instead of a distinguished index `0` in `Fin n` with its own case in every
 translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
+## `WellBehaved` and the translation to the plain game
+
+**Decision.** `WellBehaved` (`AGMBridge.lean`) is the hypothesis under which the
+AGM game of an algebraic adversary and the plain Figure 5 game of its
+translation agree. It asks for two conditions, a never-failing run of the
+oracle guarded by `agmGood` and a consistent forgery, at every key `sk`, crs
+`H` and public parameters `pp`. The guard `agmGood` rejects every Help query.
+
+O24 (p. 24) calls an adversary algebraic when it returns, with each group
+element, a representation over the elements it received: a plain-game
+adversary with the representations as side information. Here an algebraic
+adversary is an `AGMUFAdversary` of the instrumented game, and Theorem 5.1 is
+stated for its translation `AGMUFAdversary.toUFAdversary` (`AGMBridge.lean`),
+which makes two choices the paper does not need. It answers a Help query with
+`false` (`forgetReprImpl`). At attribute counts other than the adversary's own
+`n`, it outputs the zero forgery `(fun _ => 0, (0, 0))`.
+
+**Rejected alternatives.** (i) The two conditions only where Figure 5 samples
+(O24 p. 25, `crs ← MAC.S(λ, n)` and `(sk, pp) ← MAC.K(crs)`), that is on the
+supports of `setup` and `keygen`. (ii) Admitting Help queries, the oracle O24
+adds after Theorem 5.1 (p. 35) for its stronger claim. (iii) An algebraic
+adversary type over Sign and Verify only, so that the translation has no Help
+query to answer. (iv) An algebraic adversary that runs at every attribute
+count, like `UFAdversary`, so that the translation has no other count to fill.
+
+**Fidelity argument.** (i) The bridge (#81) rewrites under the binds of
+`setup` and `keygen`. It applies the never-fails condition to the transport
+theorem `map_run_simulateQ_eq_of_guard_neverFails` (`Core/SimulateQGuarded.lean`)
+and the consistency condition to the win bit of each reachable forgery, so it
+uses both only at sampled values. Quantifying over every value keeps
+`WellBehaved` a property of the adversary alone, free of the supports of
+`setup` and `keygen`, as the algebraic group model states algebraicity on every
+input. An adversary that computes each group element it submits from the
+elements it received, with the representation it reports, meets both
+conditions at every `(sk, H, pp)`.
+
+(ii) Theorem 5.1 is stated for the Figure 5 game, whose oracles are Sign and
+Verify (`UFOracleSpec`). A plain-game adversary has no Help oracle, so the AGM
+adversaries that translate plain-game adversaries are those that never query
+Help. The Help-strengthened claim is the Lemma 5.5 bound in the AGM game, which
+keeps Help (`agm_ufcmva_le_explicit`). Help's test
+`Z = (x₀ + xᵣ)A₀ + Σᵢ xᵢAᵢ` reads the μCMZ key, so it has no place in
+Figure 5, which is stated for every algebraic MAC of Definition 3.1.
+
+(iii) The Lemma 5.5 bound `agm_ufcmva_le_explicit` is stated for
+`AGMUFAdversary`, whose oracles include Help, so a Help-free type would need its
+own embedding into that game before the bound applies. The plain game has no
+Help oracle, and the translated adversary holds no key, so it cannot compute
+the Help bit and answers with a constant. `agmGood` rejects every Help query,
+so under `WellBehaved` no Help query is reachable and the constant is never
+read.
+
+(iv) `UFAdversary.run` (`Core/AlgebraicMAC/Security.lean`) takes the attribute
+count as an argument, because Figure 5 is stated for every algebraic MAC, while
+`AGMUFAdversary F G n`, the AGM game and the reductions of Lemmas 5.4 and 5.5
+are fixed at `n`. `UF_CMVAAdv` at `n` runs the translation only at `n`, where
+`toUFAdversary_run` unfolds it to the algebraic adversary. The output at any
+other count therefore never enters the bound, and the zero forgery is the
+simplest value of the output type. Decided October 2026 (Track CMZ-AGM,
+Theorem 5.1).
+
 ## Theorem 5.11 stated before its reductions exist
 
 **Decision.** `OneMoreUnforgeability/Statements.lean` states Theorem 5.11 (`n = 1` as
@@ -704,9 +831,9 @@ and returns `crs := (Γ, H)`, the group description together with a random
 group element (Figure 9). The μCMZ instance fixes the group and its generator
 as type parameters and returns only `H` from `setup`, so the framework's
 quantifier "crs ∈ [KVAC.S(1^λ, n)]" ranges over every group of the class and
-every `H`, with no λ in it. The faithful crs is `Γ × 𝔾`. Issue #148 tracks the
-encodings, a deterministic family `GrGen : ℕ → Type` as the committed step,
-and sampled group descriptions as the fully faithful one. Until it closes the
-asymptotic predicates `Anonymous`, `AnonymousPoly`, `Extractable` and
-`ExtractablePoly` are not provable for μCMZ, and the theorems bound the
-advantages at fixed parameters.
+every nonzero `H` (#149), with no λ in it. The faithful crs is `Γ × 𝔾`. Issue
+#148 tracks the encodings, a deterministic family `GrGen : ℕ → Type` as the
+committed step, and sampled group descriptions as the fully faithful one.
+Until it closes the asymptotic predicates `Anonymous`, `AnonymousPoly`,
+`Extractable` and `ExtractablePoly` are not provable for μCMZ, and the
+theorems bound the advantages at fixed parameters.
