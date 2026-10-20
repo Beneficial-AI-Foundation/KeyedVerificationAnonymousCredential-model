@@ -997,7 +997,7 @@ simulators.
 `SampleableGroup` typeclass (the game-construction variant of the
 prime-order-group typeclass).
 
-:::definition "mucmz_proof_systems_fixed_crs" (lean := "KVAC.Schemes.MicroCMZ.riuNIZKP, KVAC.Schemes.MicroCMZ.risNIZKP, KVAC.Schemes.MicroCMZ.rpNIZKP, KVAC.Schemes.MicroCMZ.riuDecRel, KVAC.Schemes.MicroCMZ.risDecRel, KVAC.Schemes.MicroCMZ.rpDecRel") (parent := "cmz_anonymity") (tags := "paper, O24 §5.4")
+:::definition "mucmz_proof_systems_fixed_crs" (lean := "KVAC.Schemes.MicroCMZ.riuNIZKP, KVAC.Schemes.MicroCMZ.risNIZKP, KVAC.Schemes.MicroCMZ.rpNIZKP, KVAC.Schemes.MicroCMZ.riuDecRel, KVAC.Schemes.MicroCMZ.risDecRel, KVAC.Schemes.MicroCMZ.rpDecRel") (parent := "cmz_anonymity") (tags := "milestone")
 The proof system parameters `ZKP_cmz.iu`, `ZKP_cmz.is` and `ZKP_cmz.p` of
 {uses "mucmz_construction"}[] read as proof systems of {uses "zk_arguments"}[]
 for the relations {uses "riu_relation"}[], {uses "ris_relation"}[] and

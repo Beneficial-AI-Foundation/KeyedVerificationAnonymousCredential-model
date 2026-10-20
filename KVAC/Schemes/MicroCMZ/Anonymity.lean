@@ -16,7 +16,7 @@ Remark 5.9, the simulator of the proof and the theorem follow in later parts.
 
 namespace KVAC.Schemes.MicroCMZ
 
-open OracleComp KVAC.Core KVAC.Framework ENNReal
+open KVAC.Core KVAC.Framework
 
 set_option autoImplicit false
 
@@ -34,17 +34,17 @@ credential are §3.3 proof systems for `R_cmz.iu`, `R_cmz.is` and `R_cmz.p`.
 (`docs/DESIGN_ALTERNATIVES.md`). -/
 
 /-- `ZKP_cmz.iu` as a §3.3 proof system at the crs `H` for `R_cmz.iu` (O24 Eq. 9). -/
-noncomputable def riuNIZKP {n : ℕ} (H : G) (π : RiuProofSystem HS G F n) :
+def riuNIZKP {n : ℕ} (H : G) (π : RiuProofSystem HS G F n) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun _ x w => riuRel gen x w = true)
 
 /-- `ZKP_cmz.is` as a §3.3 proof system at the crs `H` for `R_cmz.is` (O24 Eq. 10). -/
-noncomputable def risNIZKP (H : G) (π : RisProofSystem HS G F) :
+def risNIZKP (H : G) (π : RisProofSystem HS G F) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun H' x w => risRel gen H' x w = true)
 
 /-- `ZKP_cmz.p` as a §3.3 proof system at the crs `H` for `R_cmz.p` (O24 Eq. 11). -/
-noncomputable def rpNIZKP {n : ℕ} (H : G) (π : RpProofSystem HS G F n) :
+def rpNIZKP {n : ℕ} (H : G) (π : RpProofSystem HS G F n) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun H' x w => rpRel gen H' x w = true)
 
