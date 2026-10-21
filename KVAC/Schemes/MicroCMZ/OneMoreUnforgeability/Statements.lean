@@ -73,12 +73,10 @@ reduction, are declared with `sorry` bodies, the first sorried definitions in
 the repository, and are built with the proofs of the Claims over the polynomial
 layer of Equations 17 to 22 (`Polynomial.lean`, `CaseEvents.lean`). Whether the
 transformation reuses the Lemma 5.5 embedding of the MAC track is open with
-Semar (question C2 of the Theorem 5.3 plan). One constraint is on record: the
-adversary shape carries no private coin oracle, so a transformation that needs
-randomness must fix its coins in the construction, with a fixed-coins argument
-in the proof, or the shape must grow an oracle for uniform sampling in the
-adversary's oracle specification (Phase B). Extra Sign queries are not a source
-of randomness, they break the budget and the one-more count.
+Semar (question C2 of the Theorem 5.3 plan). The adversary has a private coin
+oracle (`Game.lean`, *The adversary has a private coin oracle*), so a
+transformation that needs randomness samples through it. Extra Sign queries are
+not a source of randomness, they break the budget and the one-more count.
 
 ## Why named reductions
 
@@ -272,15 +270,13 @@ The attribute-lifting transformation of the general `n` proof of O24 Theorem
 Lemma 5.5 embedding): from an `n`-attribute algebraic one-more forger it builds
 a single-attribute one against which the `n = 1` reductions run. Declared with
 a `sorry` body until built; whether it reuses the MAC track's Lemma 5.5
-embedding is question C2 of the Theorem 5.3 plan. Two constraints on the
+embedding is question C2 of the Theorem 5.3 plan. One constraint on the
 construction: it must preserve the Sign budget, forwarding each Sign query of
 the `n`-attribute forger exactly once and making none of its own, since
 `agm_omuf_le` runs the `n = 1` reductions at the same `q`, while translating
 the representation gates and the transcript and carrying a distinct-combination
-win into a single-attribute win; and the adversary shape has no private coin
-oracle (module docstring), so its coins are fixed in the construction or the
-shape grows an oracle for uniform sampling in the adversary's oracle
-specification.
+win into a single-attribute win. Its coins, if it needs any, come from the
+adversary's private coin oracle (module docstring).
 -/
 noncomputable def omufToN1 :
     ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
@@ -292,9 +288,8 @@ The gap-DL reduction of the collision case of O24 Theorem 5.11 at general `n`
 (p. 46, two forgeries with equal attribute combination `Σᵢ mᵢ·Xᵢ`, "reduced to
 DL using an argument similar to Theorem 5.5", the paper's text citing its
 Lemma 5.5 as a theorem), built from an `n`-attribute algebraic one-more
-forger. Unlike the transformation, it may randomise freely, since
-`GapDLogAdversary` has an oracle for uniform sampling. Declared with a `sorry`
-body until built.
+forger. It may randomise freely, since `GapDLogAdversary` has an oracle for
+uniform sampling. Declared with a `sorry` body until built.
 -/
 noncomputable def omufGapDLReduction :
     ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
