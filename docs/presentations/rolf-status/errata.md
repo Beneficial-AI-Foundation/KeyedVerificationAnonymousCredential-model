@@ -249,7 +249,9 @@ knowledge-soundness game of §3.3 does not cover. Remark 5.9 states the mirror
 case, π<sub>iu</sub> after simulated π<sub>is</sub>, the direction of
 Theorem 5.10. Remark 5.9
 (p. 42) says that knowledge soundness suffices for Schnorr proofs because
-"the vector sizes mismatch", without a proof. No prose connects Theorem 1 and
+"the vector sizes mismatch", without a proof. Theorem 5.8 is printed for any
+"proof system for the relation R ⊇ R<sub>cmz</sub>", while the Remark's
+justification covers Schnorr proofs alone. No prose connects Theorem 1 and
 Remark 5.9. The formalization keeps the printed Theorem 5.8 and states the
 Remark as the lemma `ksndSimAdv_le_ksndAdv_of_domainSeparated` in
 `Core/NIZKP/Composition.lean`, with the mismatch as an explicit region of the

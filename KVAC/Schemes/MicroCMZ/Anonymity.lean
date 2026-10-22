@@ -118,10 +118,16 @@ of `Core/NIZKP/Composition` with advantage `KSNDSimAdv`, not the printed
 **Hybrid H2** runs, in its reduction, the same simulator of `ZKP_cmz.iu`
 inside the zero-knowledge game of `ZKP_cmz.p`.
 
-**The hypotheses.** The theorem takes the condition of Remark 5.9 as
-hypotheses. Each proof system, its simulator or its extractor, is confined to
-its own region of the random-oracle domain, and the regions are pairwise
-disjoint.
+**The hypotheses.** Theorem 5.8 (p. 40) is printed for any "proof system for
+the relation R ⊇ R_cmz", and its proof holds under the condition of Remark
+5.9, which the paper verifies for Schnorr proofs alone. The theorem states
+what the printed proof proves and takes the condition as hypotheses, since no
+proof of the printed form exists. Each proof system, its simulator or its
+extractor, is confined to its own region of the random-oracle domain, and the
+regions are pairwise disjoint. That is the Remark's "different random
+oracles" within one oracle, wider than the Schnorr instance. No call site can
+discharge the hypotheses before the compiled Σ-protocols of issue #3 exist, so
+Theorem 5.3 and Theorem 1 carry them as well.
 
 **The oracle.** `riuSimulationOracle` is the simulator of `ZKP_cmz.iu` as the
 simulation oracle with respect to `ZKP_cmz.is`. The lemma

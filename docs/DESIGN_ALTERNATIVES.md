@@ -876,12 +876,20 @@ simulation-extractability term `SEAdv`, as Theorem 1 (§1, p. 4) prints
 
 **Fidelity argument.** The bound of Theorem 5.8 is the one to formalize, and
 Remark 5.9 is the paper's own argument that knowledge soundness suffices for
-the Figure 9 proof systems. The Remark gives the argument for Schnorr proofs
-without a proof. The formalization therefore states it as a lemma over any
+the Figure 9 proof systems. Theorem 5.8 (p. 40) is printed for any "proof
+system for the relation R ⊇ R_cmz", while the Remark gives its argument for
+Schnorr proofs alone, without a proof. The formal theorem states what the
+printed proof proves and takes the condition as hypotheses, since no proof of
+the printed form exists. The formalization states the Remark as a lemma over any
 proof system, with an explicit region of the random-oracle domain in place of
-"the vector sizes mismatch". The instance fact for the compiled Σ-protocols waits
-for issue #3. Errata item 17 records the difference between Theorem 1 and
-Theorem 5.8.
+"the vector sizes mismatch". `DomainSeparated` is the Remark's "different
+random oracles" within one oracle, the mechanism the Remark names, and is
+wider than the Schnorr instance. The Remark's own requirement, that the
+simulated proofs "cannot be turned into proofs" of the other relation, has no
+formal counterpart. The instance fact for the compiled Σ-protocols waits
+for issue #3, and until then no call site discharges the hypotheses, so
+Theorem 5.3 and Theorem 1 carry them. Errata item 17 records the difference
+between Theorem 1 and Theorem 5.8.
 
 ## Open alternatives
 

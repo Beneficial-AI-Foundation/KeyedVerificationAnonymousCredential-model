@@ -22,6 +22,17 @@ regions of the random-oracle domain of `DomainSeparated`.
 Hybrid H2 needs the same condition, since its reduction runs the simulator of
 `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`.
 
+**The discrepancy.** Theorem 5.8 (p. 40) is printed for any "proof system for
+the relation R ⊇ R_cmz", and its proof holds under the Remark's condition,
+which the paper verifies for Schnorr proofs alone. The formal theorem
+`μCMZ_anonymity` states what the printed proof proves and takes the condition
+as hypotheses, since no proof of the printed form exists. `DomainSeparated` is
+the Remark's "different random oracles" within one oracle, the mechanism the
+Remark names, and is wider than the Schnorr instance. The Remark's own
+requirement, that the simulated proofs "cannot be turned into proofs" of the
+other relation, and the Schnorr instance have no formal counterpart. The
+instance waits for the compiled Σ-protocols of issue #3.
+
 ## Trace extractors
 
 The knowledge-soundness extractor of §3.3 (p. 26) is white-box. It "takes as
@@ -203,7 +214,8 @@ def ZKSimulatorConfinedTo {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H)
     (sim : ZKSimulator H zkp) (P : Region H) : Prop :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam) (x : zkp.Stmt crs), P.Confined (sim crs x)
 
-/-- The condition of O24 Remark 5.9. The simulators of the other systems are confined to one
+/-- The "different random oracles" of O24 Remark 5.9 within one oracle, the mechanism the
+Remark names and not its requirement. The simulators of the other systems are confined to one
 region, and setup, the verifier and the extractor of `zkp` to a disjoint one.
 The Remark's "vector sizes mismatch" is the disjointness. -/
 structure DomainSeparated (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))

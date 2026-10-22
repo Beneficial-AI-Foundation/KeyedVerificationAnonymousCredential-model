@@ -173,8 +173,8 @@ Knowledge soundness of a proof system of {uses "extraction_game"}[] while the
 adversary holds a simulation oracle for other proof systems over the same
 random oracle. This is the property hybrid H3 of O24 Theorem 5.8 uses. The
 other proof systems enter as a simulation oracle over the shared cache.
-The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain separation is the condition of O24 Remark 5.9 in abstract
-form. A proof system, a simulator or an extractor is confined to a region of
+The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain separation is the "different random oracles" of O24 Remark 5.9
+within one oracle, the mechanism the Remark names and not its requirement. A proof system, a simulator or an extractor is confined to a region of
 the random-oracle domain when it reads and writes inside it only. Domain
 separation confines the simulators of the other systems and the system under extraction to
 disjoint regions. The reduction serves the simulation region from a local table.
@@ -187,7 +187,11 @@ knowledge-soundness advantage of {uses "extraction_game"}[] for a reduction.
 The reduction runs the simulators of the other systems on a local table of the region and
 forwards every other query. This is the Remark's assertion that "knowledge
 soundness suffices" when "the vector sizes mismatch", stated for any proof
-system with a region in place of the mismatch.
+system with a region in place of the mismatch. The Remark gives that assertion
+for Schnorr proofs alone and without a proof, while Theorems 5.8 and 5.10 are
+printed for any proof system for a relation containing `R_cmz`. The Remark's own
+requirement, that simulated proofs "cannot be turned into proofs" of the other
+relation, and the Schnorr instance have no formal counterpart.
 :::
 
 :::proof "remark_59"
