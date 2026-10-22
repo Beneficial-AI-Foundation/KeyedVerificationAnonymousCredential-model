@@ -61,21 +61,23 @@ variable (HS : HashSpec) (gen : G)
 /-! ## Extractability -/
 
 /-- The extraction advantage at the instance, for any extractor and any adversary. -/
-noncomputable example (ext : Extractor (μCMZCredentialSyntax F HS gen πiu πis πp))
+noncomputable example (ext : Extractor HS (μCMZCredentialSyntax F HS gen πiu πis πp))
     (A : EXTAdversary HS (μCMZCredentialSyntax F HS gen πiu πis πp)) (secParam n : ℕ) :
     ℝ≥0∞ :=
   EXTAdv HS (μCMZCredentialSyntax F HS gen πiu πis πp) ext A secParam n
 
-/-- An extractor of the instance from components typed over the Figure 9 carriers. The key is
-`Key F n`, the predicate `Policy F n`, the issuance message `(C', π_iu)`, the presentation
-message `(U', C_V, C⃗, π_p)` and the attribute vector `Fin n → F`. The carriers unfold by
+/-- An extractor of the instance from components typed over the Figure 9 carriers. Each
+component receives the random-oracle table and runs in `ProbComp`. The key is `Key F n`, the
+predicate `Policy F n`, the issuance message `(C', π_iu)`, the presentation message
+`(U', C_V, C⃗, π_p)` and the attribute vector `Fin n → F`. The carriers unfold by
 definition. -/
 example
-    (extI : ∀ {n : ℕ}, Key F n → Policy F n → G × (πiu n).Proof → Option (Fin n → F))
-    (extP : ∀ {n : ℕ}, Key F n → Policy F n → G × G × (Fin n → G) × (πp n).Proof →
-      Option (Fin n → F)) :
-    Extractor (μCMZCredentialSyntax F HS gen πiu πis πp) :=
-  ⟨fun sk φ μ => extI sk φ μ, fun sk φ ρ => extP sk φ ρ⟩
+    (extI : ∀ {n : ℕ}, HS.Cache → Key F n → Policy F n → G × (πiu n).Proof →
+      ProbComp (Option (Fin n → F)))
+    (extP : ∀ {n : ℕ}, HS.Cache → Key F n → Policy F n → G × G × (Fin n → G) × (πp n).Proof →
+      ProbComp (Option (Fin n → F))) :
+    Extractor HS (μCMZCredentialSyntax F HS gen πiu πis πp) :=
+  ⟨fun c sk φ μ => extI c sk φ μ, fun c sk φ ρ => extP c sk φ ρ⟩
 
 /-- The challenge `(φ*, ρ*)` of an extraction adversary at the instance, a policy and a
 presentation message `(U', C_V, C⃗, π_p)`. -/

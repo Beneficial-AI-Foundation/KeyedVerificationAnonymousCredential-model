@@ -25,18 +25,23 @@ open OracleComp OracleSpec KVAC.Core ENNReal
 variable {M : Type → Type} [Monad M]
 
 /-- The extractor `Ext = (Ext.I, Ext.P)` of O24 Definition 4.5, a parameter of
-the extraction game rather than a scheme algorithm. Each component recovers an
-attribute vector and returns `none` on extraction failure (the paper's abort).
-Generic over the carrier `M`, since extraction is pure; the game pins `M` where
-it must reduce to `ProbComp`. -/
-structure Extractor (kvac : KVACSyntax M) where
-  /-- `Ext.I(sk, φ, μ)`: the attribute vector behind an issuance message `μ`. The
-  crs is implicit, inferred from `sk`, so this reads as the paper's signature. -/
-  extI : {secParam n : Nat} → {crs : kvac.Crs secParam n} →
-    kvac.Sk crs → kvac.Pred crs → kvac.IssueMsg crs → Option (kvac.MsgVec crs)
-  /-- `Ext.P(sk, φ, ρ)`: the attribute vector behind a presentation message `ρ`. -/
-  extP : {secParam n : Nat} → {crs : kvac.Crs secParam n} →
-    kvac.Sk crs → kvac.Pred crs → kvac.PresentMsg crs → Option (kvac.MsgVec crs)
+the extraction game rather than a scheme algorithm. Each component is a
+probabilistic algorithm that recovers an attribute vector and returns `none` on
+extraction failure (the paper's abort). Besides the arguments Figure 8 prints,
+each component receives the random-oracle table as of the call, before the
+server's own computation. The extractors of O24 §5.5 (p. 42) are those of the
+proof systems, which for Schnorr proofs recover the statement "by looking at the
+trace of random oracle queries". -/
+structure Extractor (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H))) where
+  /-- `Ext.I(sk, φ, μ)`: the attribute vector behind an issuance message `μ`,
+  given the random-oracle table. The crs is implicit, inferred from `sk`, so this
+  reads as the paper's signature. -/
+  extI : {secParam n : Nat} → {crs : kvac.Crs secParam n} → H.spec.QueryCache →
+    kvac.Sk crs → kvac.Pred crs → kvac.IssueMsg crs → ProbComp (Option (kvac.MsgVec crs))
+  /-- `Ext.P(sk, φ, ρ)`: the attribute vector behind a presentation message `ρ`,
+  given the random-oracle table. -/
+  extP : {secParam n : Nat} → {crs : kvac.Crs secParam n} → H.spec.QueryCache →
+    kvac.Sk crs → kvac.Pred crs → kvac.PresentMsg crs → ProbComp (Option (kvac.MsgVec crs))
 
 /-! ## The four oracles of Figure 8 -/
 
@@ -141,7 +146,7 @@ proof — nor by `newUsr_mac_isSome` alone, which only states the fact given
 proof (O24 Thm 5.2/5.10, Track CMZ-E, issue #11), once the concrete μCMZ scheme
 supplies `CorrectRO`. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
-    (ext : Extractor kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
+    (ext : Extractor H kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
     (sk : kvac.Sk crs) (pp : kvac.Pp crs) :
     QueryImpl (EXTOracleSpec kvac crs) (EXTComp H kvac crs)
   -- Figure 8  Oracle NewUsr(m): σ ← KVAC.M(sk, m); Usrs[ctr] := (m, σ);
@@ -165,14 +170,15 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
         return i
   -- Figure 8  Oracle Issue(φ, µ): σ' ← KVAC.I.Srv(sk, φ, µ); if σ' = ⊥ return ⊥;
   -- m := Ext.I(sk, φ, µ); if φ(m) = 0 abort; Qrs := Qrs ∪ {m}; return σ'. On ⊥
-  -- it answers `none`; otherwise it applies the pure extractor `Ext.I`, aborts
-  -- with `throw ()` if extraction fails or `φ(m) = 0` (the game counts it a win),
-  -- else records `m` in `qrs` and answers with σ'.
+  -- it answers `none`; otherwise it runs the extractor `Ext.I` on the table as
+  -- of the call, aborts with `throw ()` if extraction fails or `φ(m) = 0` (the
+  -- game counts it a win), else records `m` in `qrs` and answers with σ'.
   | .issue φ μ => do
+      let (cache, _) ← get
       match ← liftRO H (kvac.issueSrv crs sk φ μ) with
       | none    => return none
       | some σ' =>
-        match ext.extI sk φ μ with
+        match ← ext.extI cache sk φ μ with
         | none   => throw ()
         | some m =>
           if kvac.holds crs φ m then
@@ -242,7 +248,7 @@ honest presentation (`∉ PQrs`), and the extracted `m* := Ext.P(sk, φ*, ρ*)` 
 never issued (`∉ Qrs`) or fails `φ*`. A failed `Ext.P` (its `none`) counts as the
 last disjunct, matching the abort convention for `Ext.I`. -/
 def EXTGame (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
-    (ext : Extractor kvac) (A : EXTAdversary H kvac) (secParam n : Nat) :
+    (ext : Extractor H kvac) (A : EXTAdversary H kvac) (secParam n : Nat) :
     ProbComp Bool := do
   let (crs, cache₁) ← runRO H ∅ (kvac.setup secParam n)
   let ((sk, pp), cache₂) ← runRO H cache₁ (kvac.keygen crs)
@@ -262,9 +268,11 @@ def EXTGame (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
       -- that nonetheless verifies. We read it as satisfying the last disjunct
       -- `(m* ∉ Qrs ∨ φ*(m*) = 0)`, an adversary win, on the same footing as the `Ext.I`
       -- abort in `Issue`. A verifying presentation the extractor cannot open is the
-      -- strongest form of the winning event.
+      -- strongest form of the winning event. The extractor runs on the table as of
+      -- the end of the adversary's run, before `presentSrv`, as `ksndGame` does.
+      let mStar? ← ext.extP cache₃ sk φStar ρStar
       let freshOrUnsat :=
-        match ext.extP sk φStar ρStar with
+        match mStar? with
         | none       => true
         | some mStar => decide (mStar ∉ st.qrs) || !kvac.holds crs φStar mStar
       pure (accepts && notHonest && freshOrUnsat)
@@ -274,7 +282,7 @@ probability that `EXTGame` returns `true`. This is `Adv^ext_{KVAC,Ext,A}` of O24
 Definition 4.5, the quantity `Extractable` asks to be negligible. An `abbrev`, so
 it unfolds in the Theorem 5.2 reduction. -/
 noncomputable abbrev EXTAdv (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
-    (ext : Extractor kvac) (A : EXTAdversary H kvac) (secParam n : Nat) : ℝ≥0∞ :=
+    (ext : Extractor H kvac) (A : EXTAdversary H kvac) (secParam n : Nat) : ℝ≥0∞ :=
   Pr[= true | EXTGame H kvac ext A secParam n]
 
 /-! ## Extractability (O24 Definition 4.5) -/
@@ -283,7 +291,7 @@ noncomputable abbrev EXTAdv (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO 
 count `n` and extractor `ext`: the advantage `Adv^ext` as a function of the
 adversary and the security parameter. -/
 noncomputable def extSecurityGame (H : HashSpec)
-    (kvac : KVACSyntax (OracleComp (ZKRO H))) (ext : Extractor kvac) (n : Nat) :
+    (kvac : KVACSyntax (OracleComp (ZKRO H))) (ext : Extractor H kvac) (n : Nat) :
     SecurityGame (EXTAdversary H kvac) where
   advantage A secParam := EXTAdv H kvac ext A secParam n
 
@@ -309,7 +317,7 @@ parameter renders the paper's "for any p.p.t. A" faithfully, and a concrete
 instantiation supplies the efficiency notion. -/
 def Extractable (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (isPPT : EXTAdversary H kvac → Prop) (n : Nat) : Prop :=
-  ∃ ext : Extractor kvac, (extSecurityGame H kvac ext n).secureAgainst isPPT
+  ∃ ext : Extractor H kvac, (extSecurityGame H kvac ext n).secureAgainst isPPT
 
 /-! ## The `n ≤ poly(λ)` side condition (O24 Definition 4.5) -/
 
@@ -334,7 +342,7 @@ belongs to the μCMZ extractability proof, Track CMZ-E (issue #11). -/
 def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (isPPT : EXTAdversary H kvac → Prop) : Prop :=
   ∀ n : ℕ → ℕ, PolyBounded n →
-    ∃ ext : Extractor kvac,
+    ∃ ext : Extractor H kvac,
       (SecurityGame.mk (fun A secParam => EXTAdv H kvac ext A secParam (n secParam))
         : SecurityGame (EXTAdversary H kvac)).secureAgainst isPPT
 
