@@ -971,6 +971,76 @@ outside `PQrs`, and its attributes lie outside `Qrs`, which Figure 8 fills from
 every hypothesis of the theorem holds. §4.4 says that strong simulation
 extractability is what the condition `(φ*, ρ*) ∉ PQrs` needs. The multi-user
 extension is step 8 of item 13 of `docs/MICROCMZ_REMAINING.md`.
+## The anonymity simulator takes a trace extractor
+
+**Decision.** The extractor of `ZKP_cmz.is` that the simulator of Theorem 5.8
+invokes is a `TraceExtractor` (`Core/NIZKP/Composition.lean`), a function of
+the crs, the statement, the proof and the random-oracle cache. The map
+`TraceExtractor.toKSND` embeds it into the
+white-box `KSNDExtractor` of the knowledge-soundness game, and the lemma
+`KnowledgeSound.of_trace` states that knowledge soundness with a trace
+extractor implies the §3.3 notion.
+
+**Rejected alternative.** A simulator that invokes a `KSNDExtractor`, which
+takes the adversary value.
+
+**Fidelity argument.** Definition 4.4 places `∃ Sim` before `∀ A`, so the
+simulator cannot depend on the adversary. The §3.3 extractor "takes as input
+the random coins and the code of the p.p.t. adversary". The proof of
+Theorem 5.8 (§5.4, p. 40) has `Sim.I` invoke the extractor without resolving
+the order of quantifiers, while §2.6 (p. 21) and §9 (p. 77) name the
+straight-line extraction that credentials need. The §9 extractor of the
+algebraic group model has the shape of a trace extractor in that it never
+rewinds. It also reads the algebraic representations the
+adversary supplies with every group element (Equation 41, p. 78), which are
+not among the inputs of `TraceExtractor`. The instantiation of issue #3
+must therefore carry the representations in the proof or in the oracle table.
+The restriction keeps the printed `Adv^ksnd` applicable. Extractors carry no
+running-time bound, so the restriction is a modelling discipline as long as
+`OracleComp` carries no cost model, which issue #148 lists as out of scope.
+
+## Theorem 5.8 with the printed knowledge-soundness term
+
+**Decision.** The bound of `μCMZ_anonymity` (`Schemes/MicroCMZ/Anonymity.lean`)
+carries `KSNDAdv` of `ZKP_cmz.is` as Theorem 5.8 prints it. The theorem takes
+as hypotheses the condition of Remark 5.9 in four forms of
+`Core/NIZKP/Composition.lean`. `ConfinedSystem` confines the setup, prover and
+verifier of each of the three proof systems to a region of the random-oracle
+domain, `ZKSimulatorConfinedTo` confines the simulators of `ZKP_cmz.iu` and
+`ZKP_cmz.p` to the region of their system, `TraceExtractor.ConfinedTo`
+confines the extractor of `ZKP_cmz.is` to the region of its system, and
+`Region.Disjoint` makes the three regions pairwise disjoint. The property
+hybrid H3 uses is `KSNDSimAdv`, knowledge soundness in the presence of
+simulated proofs of `ZKP_cmz.iu`. The lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term. The
+zero-knowledge step H2 needs the condition as much as H3. Its reduction runs
+the simulator of `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`,
+which offers the random oracle only, while Remark 5.9 raises the point for
+extraction alone. The Remark states its case for `π_iu` after simulated
+`π_is`, the direction of Theorem 5.10, and H3 of Theorem 5.8 is the mirror
+case, which the lemma covers as well.
+
+**Rejected alternative.** Replacing the knowledge-soundness term by a
+simulation-extractability term `SEAdv`, as Theorem 1 (§1, p. 4) prints
+`Adv^simex` where Theorem 5.8 prints `Adv^ksnd`, or stating the bound with
+`KSNDSimAdv` directly.
+
+**Fidelity argument.** The bound of Theorem 5.8 is the one to formalize, and
+Remark 5.9 is the paper's own argument that knowledge soundness suffices for
+the Figure 9 proof systems. Theorem 5.8 (p. 40) is printed for any "proof
+system for the relation R ⊇ R_cmz", while the Remark gives its argument for
+Schnorr proofs alone, without a proof. The formal theorem states what the
+printed proof proves and takes the condition as hypotheses, since no proof of
+the printed form exists. The formalization states the Remark as a lemma over any
+proof system, with an explicit region of the random-oracle domain in place of
+"the vector sizes mismatch". `DomainSeparated` is the Remark's "different
+random oracles" within one oracle, the mechanism the Remark names, and is
+wider than the Schnorr instance. The Remark's own requirement, that the
+simulated proofs "cannot be turned into proofs" of the other relation, has no
+formal counterpart. The instance fact for the compiled Σ-protocols waits
+for issue #3, and until then no call site discharges the hypotheses, so
+Theorem 5.3 and Theorem 1 carry them. Errata item 17 records the difference
+between Theorem 1 and Theorem 5.8.
 
 ## Open alternatives
 
