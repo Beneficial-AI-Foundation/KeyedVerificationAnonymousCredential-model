@@ -1042,6 +1042,54 @@ for issue #3, and until then no call site discharges the hypotheses, so
 Theorem 5.3 and Theorem 1 carry them. Errata item 17 records the difference
 between Theorem 1 and Theorem 5.8.
 
+## Theorem 5.10 with the printed knowledge-soundness terms and no query factors
+
+**Decision.** The bound of `μCMZ_extractability` carries `KSNDAdv` of
+`ZKP_cmz.iu` and of `ZKP_cmz.p` as Theorem 5.10 prints it, with no factor in the
+number of `Issue` or `Present` queries. The theorem takes as hypotheses the
+condition of Remark 5.9 in the form of `ConfinedSystem`. Each proof system is
+confined to its own region of the random-oracle domain, with the simulator of
+`ZKP_cmz.is` and the extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`, and the regions
+are pairwise disjoint. The property the proof uses is `KSNDSimAdv`, knowledge
+soundness in the presence of simulated proofs of `ZKP_cmz.is`, and the lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term.
+
+**Rejected alternatives.** A simulation-extractability term `SEAdv` in place
+of each `KSNDAdv`, and the factors `q_I` and `q_P + 1` on the two terms that
+issue #179 names.
+
+**Fidelity argument.** The bound of Theorem 5.10 is the one to formalize. Remark
+5.9 (p. 42) states its case for `π_iu` after simulated `π_is`, the case of this
+theorem. It asserts that knowledge soundness suffices for Schnorr proofs because
+"the vector sizes mismatch", without a proof. The lemma states the assertion for
+any proof system, with the mismatch as disjoint regions. The proof of Theorem
+5.10 says that the adversaries for knowledge soundness are "immediate" from the
+winning cases (i) and (ii) (p. 43) and prints no query factor. The extractors
+are public functions of the trace, so a reduction can run them at every `Issue`
+and `Present` query. It outputs the first proof they fail on, without guessing a
+query. The proof phase decides whether that argument closes, and a factor would
+be a departure to record then.
+
+## The reductions of Theorem 5.10 are existential
+
+**Decision.** The four reductions `B`, `A'`, `A''` and `A'''` of
+`μCMZ_extractability` are existentially quantified after the adversary, as
+the three reductions of `μCMZ_anonymity` are.
+
+**Rejected alternative.** Explicit reductions as arguments of the bound, as
+`agm_ufcmva_le_explicit` names `microCMZN3DLReduction` and `gapDlReduction`.
+
+**Fidelity argument.** The paper states its bounds for reductions its proofs
+construct, and the explicit reductions of Theorem 5.10 are the content of its
+proof, steps 1 to 6 of item 13. The development fixes no efficiency notion on
+adversaries, as `Extractable` records, so the existential inequality holds for
+reductions of any cost. An unbounded `B` reaches advantage one in
+`UF_CMVAHelpGame` by trying every scalar at `Verify`. The module docstring
+states this. The statement is therefore provisional in strength until issue
+#240 fixes the efficiency notion of adversaries, and `UFCMVA.lean` and the OMUF
+statements name their reductions for this reason. The proof phase may replace
+the existential form by the explicit reductions once they exist.
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
