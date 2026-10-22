@@ -143,9 +143,9 @@ noncomputable def μCMZBaseMAC (gen : G) : AlgebraicMAC :=
 
 ```lean
 noncomputable def setup {G : Type}
-    [SampleableType G] (_secParam _n : ℕ) :
-    ProbComp G :=
-  $ᵗ G
+    [AddCommGroup G] [Fintype G] [DecidableEq G] [Nontrivial G]
+    (_secParam _n : ℕ) : ProbComp G :=
+  uniformNonzero G
 ```
 
 - The formalization is per-group, not asymptotic: each security theorem is an advantage inequality at one arbitrary fixed group, e.g. Theorem 5.1's Adv<sup>ufcmva</sup>(A) ≤ Adv<sup>3-dl</sup>(B₁) + Adv<sup>dl</sup>(B₂) + 3/p. No λ, no GrGen sampling, no negligibility; at ristretto255 the statistical term is 3/p ≈ 2<sup>−250</sup>.
@@ -204,7 +204,7 @@ noncomputable def keygen {n : ℕ}
 - The paper's single draw sk ←$ ℤ<sub>q</sub><sup>n+2</sup> (Figure 9's notation; the surrounding text writes ℤ<sub>p</sub>) is three draws here: x₀, xᵣ, and the vector x, jointly uniform on Key F n.
 - X₀ = x₀·H uses the CRS element H, while Xᵣ and X use `gen` (the paper's generator G; Lean names it gen because G is the carrier type), matching the paper's two base roles.
 - `ProbComp (Key F n × Params G n)`: the return type: a probabilistic computation producing sk : Key F n = (x₀, xᵣ, x) together with pp : Params G n = (X₀, Xᵣ, X), the paper's "return sk, pp".
-- `H`: the crs: sampled once by `setup`, public. X₀ = x₀·H determines x₀ information-theoretically whenever H ≠ 0 (x ↦ x·H is injective; setup's uniform H is 0 with probability 1/p, an edge the paper glosses). This perfect binding of pp to sk is one ingredient of the statistical-anonymity design (O24 §2.3.1).
+- `H`: the crs: sampled once by `setup` from the nonzero elements of G (`uniformNonzero`, #149), public. X₀ = x₀·H determines x₀ information-theoretically since H ≠ 0 (x ↦ x·H is injective; under the paper's H ←$ G, H = 0 with probability 1/p, and at H = 0 anonymity breaks, issue #149). This perfect binding of pp to sk is one ingredient of the statistical-anonymity design (O24 §2.3.1).
 - `pure`: the monad's return: embeds a value as a probabilistic computation that samples nothing (a point-mass distribution). All of keygen's randomness happens in the three draws above.
 - `F`: the scalar field of the group's prime order (Figure 9 writes ℤ<sub>q</sub>, the surrounding text and §5 write ℤ<sub>p</sub>: same object, likely a figure typo). The key is not one F: sk lives in `Key F n` = F × F × (Fin n → F), matching Base MAC's draw.
 - `two base roles`: a base is a fixed nonidentity group element others are written against: X = x·B, with x the discrete logarithm of X to base B. µCMZ publishes X₀ over H and (Xᵣ, X) over `gen` in separate components; the separation is the fix over MAC<sub>GGM</sub>, whose combined X₀ = x₀H + xᵣG was only computationally binding (a collision is a DL of H base G), while separate components bind each scalar by injectivity alone. The unknown H-to-gen relation does its work elsewhere: unforgeability's AGM analysis treats log<sub>gen</sub> H as an independent indeterminate η.

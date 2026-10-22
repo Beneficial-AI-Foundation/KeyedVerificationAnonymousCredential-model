@@ -250,4 +250,19 @@ lemma mem_support_runRO_liftM_iff {α : Type} (H : HashSpec) (cache : H.spec.Que
     (a, c') ∈ support (runRO H cache (liftM p)) ↔ a ∈ support p ∧ c' = cache := by
   simp [runRO_liftM, support_map, Set.mem_image, eq_comm]
 
+/-- The support of `runRO` on a bind. The pair `(b, c'')` is an outcome of `x >>= f` from the cache
+`c` iff some outcome `(a, c')` of `x` from `c` has `(b, c'')` as an outcome of `f a` from `c'`. -/
+lemma mem_support_runRO_bind {α β : Type} (H : HashSpec) (c : H.spec.QueryCache)
+    (x : OracleComp (ZKRO H) α) (f : α → OracleComp (ZKRO H) β) (b : β)
+    (c'' : H.spec.QueryCache) :
+    (b, c'') ∈ support (runRO H c (x >>= f)) ↔
+      ∃ a c', (a, c') ∈ support (runRO H c x) ∧ (b, c'') ∈ support (runRO H c' (f a)) := by
+  simp only [runRO, simulateQ_bind, StateT.run_bind, mem_support_bind_iff, Prod.exists]
+
+/-- The support of `runRO` on `pure a` from the cache `c` is the single pair `(a, c)`. -/
+lemma mem_support_runRO_pure {α : Type} (H : HashSpec) (c : H.spec.QueryCache) (a b : α)
+    (c' : H.spec.QueryCache) :
+    (b, c') ∈ support (runRO H c (pure a : OracleComp (ZKRO H) α)) ↔ b = a ∧ c' = c := by
+  simp [runRO]
+
 end KVAC.Core

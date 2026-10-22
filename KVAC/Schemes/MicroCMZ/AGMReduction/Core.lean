@@ -587,10 +587,16 @@ structure RedTrace (F G : Type) where
 sample the fixed-variable masks, build the embedded public parameters `H, X₀, Xᵣ, X₁`
 (O24 Eq. 13), and run `A` against `reductionOracleImpl` (no `sk`). The one place the
 embedding is built: `microCMZ3DLReduction` and the analysis experiment bind this
-and differ only in what they compute from the trace. -/
+and differ only in what they compute from the trace.
+
+O24 Eq. 13 samples the η masks unconditioned; conditioning on `H ≠ 0` matches
+`setup`'s `H ←$ 𝔾^×` (see `reductionMaskSample` and `docs/DESIGN_ALTERNATIVES.md`,
+*Conditioned η masks*). -/
 noncomputable def redTrace (X X' X'' : G) (A : AGMUFAdversary F G 1) :
     ProbComp (RedTrace F G) := do
-  let aEta ← $ᵗ F; let bEta ← $ᵗ F
+  let abEta ← reductionMaskSample (gen := gen) X
+  let aEta := abEta.val.1
+  let bEta := abEta.val.2
   let a0 ← $ᵗ F; let b0 ← $ᵗ F
   let aXr ← $ᵗ F; let bXr ← $ᵗ F
   let aX1 ← $ᵗ F; let bX1 ← $ᵗ F

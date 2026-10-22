@@ -16,7 +16,7 @@ the proof and the theorem follow in the last part.
 
 namespace KVAC.Schemes.MicroCMZ
 
-open OracleComp KVAC.Core KVAC.Framework ENNReal
+open KVAC.Core KVAC.Framework
 
 set_option autoImplicit false
 
@@ -34,17 +34,17 @@ credential are §3.3 proof systems for `R_cmz.iu`, `R_cmz.is` and `R_cmz.p`.
 (`docs/DESIGN_ALTERNATIVES.md`). -/
 
 /-- `ZKP_cmz.iu` as a §3.3 proof system at the crs `H` for `R_cmz.iu` (O24 Eq. 9). -/
-noncomputable def riuNIZKP {n : ℕ} (H : G) (π : RiuProofSystem HS G F n) :
+def riuNIZKP {n : ℕ} (H : G) (π : RiuProofSystem HS G F n) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun _ x w => riuRel gen x w = true)
 
 /-- `ZKP_cmz.is` as a §3.3 proof system at the crs `H` for `R_cmz.is` (O24 Eq. 10). -/
-noncomputable def risNIZKP (H : G) (π : RisProofSystem HS G F) :
+def risNIZKP (H : G) (π : RisProofSystem HS G F) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun H' x w => risRel gen H' x w = true)
 
 /-- `ZKP_cmz.p` as a §3.3 proof system at the crs `H` for `R_cmz.p` (O24 Eq. 11). -/
-noncomputable def rpNIZKP {n : ℕ} (H : G) (π : RpProofSystem HS G F n) :
+def rpNIZKP {n : ℕ} (H : G) (π : RpProofSystem HS G F n) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun H' x w => rpRel gen H' x w = true)
 
@@ -73,18 +73,19 @@ produces `π_iu` from the statement `(C', X, φ)` alone. The extractor of
 zero-knowledge simulator of `ZKP_cmz.p` produces `π_p` from the statement
 `(U', X, C, Z, φ')` alone.
 
-The extractor is a `TraceExtractor`, a function of the statement, the proof and
-the oracle table, departure 1 of the module docstring. -/
+The extractor is a `TraceExtractor`, a function of the crs, the statement, the
+proof and the oracle table, departure 1 of the module docstring. -/
 
-/-- The zero-knowledge simulator of `ZKP_cmz.iu` at the crs `H : G`. -/
+/-- The zero-knowledge simulator of `ZKP_cmz.iu`, a function of the crs `H : G`.
+It does not fix `H`, since Definition 4.4 fixes the simulator before the crs. -/
 abbrev RiuSimulator {n : ℕ} (π : RiuProofSystem HS G F n) : Type :=
   G → RiuStmt G F n → StateT HS.Cache ProbComp π.Proof
 
-/-- The zero-knowledge simulator of `ZKP_cmz.p` at the crs `H : G`. -/
+/-- The zero-knowledge simulator of `ZKP_cmz.p`, a function of the crs `H : G`. -/
 abbrev RpSimulator {n : ℕ} (π : RpProofSystem HS G F n) : Type :=
   G → RpStmt G F n → StateT HS.Cache ProbComp π.Proof
 
-/-- The trace extractor of `ZKP_cmz.is` at the crs `H : G`. -/
+/-- The trace extractor of `ZKP_cmz.is`, a function of the crs `H : G`. -/
 abbrev RisExtractor (π : RisProofSystem HS G F) : Type :=
   G → RisStmt G → π.Proof → HS.Cache → ProbComp (Option (RisWitness F))
 

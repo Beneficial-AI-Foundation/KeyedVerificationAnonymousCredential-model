@@ -126,12 +126,14 @@ oracle of {uses "random_oracle_hashes"}[] with a reprogrammable cache,
 and the distinguishing advantage `ZKAdv`.
 :::
 
-:::theorem "runro_lift" (lean := "KVAC.Core.zkROImpl_eq_unifFwd_add, KVAC.Core.runRO_liftM, KVAC.Core.mem_support_runRO_liftM_iff") (parent := "core_zkproof") (tags := "milestone")
+:::theorem "runro_lift" (lean := "KVAC.Core.zkROImpl_eq_unifFwd_add, KVAC.Core.runRO_liftM, KVAC.Core.mem_support_runRO_liftM_iff, KVAC.Core.mem_support_runRO_bind, KVAC.Core.mem_support_runRO_pure") (parent := "core_zkproof") (tags := "milestone")
 Oracle-free computations under `runRO`. A `ProbComp` computation lifted into
 the `OracleComp (ZKRO H)` carrier of {uses "zk_game"}[] never queries the
 random oracle, so `runRO` returns the cache it was given paired with each
 output of the original computation (`runRO_liftM`), with the support form
-`mem_support_runRO_liftM_iff`. A scheme uses this lift to reuse oracle-free
+`mem_support_runRO_liftM_iff`. The lemmas `mem_support_runRO_bind` and
+`mem_support_runRO_pure` give the support of `runRO` on a bind and on `pure`.
+A scheme uses this lift to reuse oracle-free
 algorithms at the oracle carrier, for instance the μCMZ base MAC's `setup`
 and `keygen` (issue #118), and the oracle-carrier correctness `CorrectRO`
 relies on it.
@@ -150,19 +152,20 @@ statement (O24 Section 3.3, p. 25). The `verify` no-sampling constraint is
 deferred (issue #101).
 :::
 
-:::definition "trace_extractor" (lean := "KVAC.Core.TraceExtractor, KVAC.Core.TraceExtractor.toKSND, KVAC.Core.KnowledgeSoundWith, KVAC.Core.KnowledgeSound, KVAC.Core.TraceKnowledgeSound, KVAC.Core.KnowledgeSound.of_trace") (parent := "core_zkproof") (tags := "paper, O24 §3.3")
-An extractor from the trace of a run, the crs, the statement, the proof and
-the random-oracle table, without the adversary's code and coins that the
-white-box extractor of {uses "extraction_game"}[] receives. The simulator of
-O24 Theorem 5.8 invokes the extractor inside the anonymity game, where no
-adversary is in scope, since Definition 4.4 fixes the simulator before the
-adversary, so this is the extractor it can call. `toKSND` embeds a trace
-extractor into the white-box type, so the printed knowledge-soundness
-advantage applies to it. The lemma `KnowledgeSound.of_trace` states that
-knowledge soundness with a trace extractor implies the §3.3 notion, "there
-exists an extractor Ext" with negligible advantage. The converse fails, so the
-theorem assumes more than §3.3 states, which the paper's own extractors
-satisfy (§5.5, p. 42, §9).
+:::definition "trace_extractor" (lean := "KVAC.Core.TraceExtractor, KVAC.Core.TraceExtractor.toKSND, KVAC.Core.KnowledgeSoundWith, KVAC.Core.KnowledgeSound, KVAC.Core.TraceKnowledgeSound, KVAC.Core.KnowledgeSound.of_trace") (parent := "core_zkproof") (tags := "milestone")
+An extractor from the crs, the statement, the proof and the random-oracle
+table, without the adversary's code and coins that the white-box extractor of
+{uses "extraction_game"}[] receives. The simulator of O24 Theorem 5.8 invokes
+the extractor inside the anonymity game, where no adversary is in scope, since
+Definition 4.4 fixes the simulator before the adversary, so this is the
+extractor it can call. The map `toKSND` embeds a trace extractor into the
+white-box type, so the printed knowledge-soundness advantage applies to it. The
+lemma `KnowledgeSound.of_trace` states that knowledge soundness with a trace
+extractor implies the §3.3 notion, "there exists an extractor Ext" with
+negligible advantage. Extractors carry no running-time bound, so the converse
+holds as well. The §9 extractor of the algebraic group model is straight-line
+in this sense, but it also reads algebraic representations that the table does
+not hold.
 :::
 
 :::definition "ksnd_simulation_oracle" (lean := "KVAC.Core.SimulationOracle, KVAC.Core.KSNDSimSpec, KVAC.Core.KSNDSimAdversary, KVAC.Core.ksndSimGame, KVAC.Core.KSNDSimAdv, KVAC.Core.Region, KVAC.Core.Region.restrict, KVAC.Core.Region.merge, KVAC.Core.Region.AgreeOutside, KVAC.Core.Region.Disjoint, KVAC.Core.Region.Confined, KVAC.Core.Region.liftImpl, KVAC.Core.TraceExtractor.ConfinedTo, KVAC.Core.ConfinedSystem, KVAC.Core.ZKSimulatorConfinedTo, KVAC.Core.DomainSeparated, KVAC.Core.regionROImpl, KVAC.Core.simulationOracleImpl, KVAC.Core.KSNDSimAdversary.toKSND") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9")
