@@ -1016,7 +1016,8 @@ simulator, with their conversions to the §3.3 views of
 :::
 
 :::definition "mucmz_remark_59_oracle" (lean := "KVAC.Schemes.MicroCMZ.riuSimulationOracle") (parent := "cmz_anonymity") (tags := "milestone")
-The simulator of `ZKP_cmz.iu` ({uses "mucmz_simulators_extractor"}[]) as the
+The zero-knowledge simulator of `ZKP_cmz.iu` as a §3.3 proof system at the crs
+`H` ({uses "mucmz_simulators_extractor"}[]) as the
 simulation oracle of {uses "ksnd_simulation_oracle"}[] with respect to
 `ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3
 of Theorem 5.8, where {bpref "remark_59"}[] applies.

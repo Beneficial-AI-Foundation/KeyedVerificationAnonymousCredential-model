@@ -134,11 +134,14 @@ simulation oracle with respect to `ZKP_cmz.is`. The lemma
 `ksndSimAdv_le_ksndAdv_of_domainSeparated` discharges H3 with it. -/
 
 /-- The simulator of `ZKP_cmz.iu` as the simulation oracle with respect to
-`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3. -/
-noncomputable def riuSimulationOracle (n : ℕ) (H : G) (simIu : ∀ n, RiuSimulator HS (πiu n)) :
+`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3.
+The simulator is the §3.3 object of `riuNIZKP` at the crs `H`, the one
+`ZKSimulatorConfinedTo` confines in the theorem. -/
+def riuSimulationOracle (n : ℕ) (H : G)
+    (simIu : ZKSimulator HS (riuNIZKP HS gen H (πiu n))) :
     SimulationOracle HS (risNIZKP HS gen H πis) where
   Query := fun _ => RiuStmt G F n
   spec := fun _ _ => (πiu n).Proof
-  impl := fun H' x => simIu n H' x
+  impl := fun {secParam} H' x => simIu (secParam := secParam) H' x
 
 end KVAC.Schemes.MicroCMZ
