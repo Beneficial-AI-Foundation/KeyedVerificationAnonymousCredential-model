@@ -126,12 +126,14 @@ oracle of {uses "random_oracle_hashes"}[] with a reprogrammable cache,
 and the distinguishing advantage `ZKAdv`.
 :::
 
-:::theorem "runro_lift" (lean := "KVAC.Core.zkROImpl_eq_unifFwd_add, KVAC.Core.runRO_liftM, KVAC.Core.mem_support_runRO_liftM_iff") (parent := "core_zkproof") (tags := "milestone")
+:::theorem "runro_lift" (lean := "KVAC.Core.zkROImpl_eq_unifFwd_add, KVAC.Core.runRO_liftM, KVAC.Core.mem_support_runRO_liftM_iff, KVAC.Core.mem_support_runRO_bind, KVAC.Core.mem_support_runRO_pure") (parent := "core_zkproof") (tags := "milestone")
 Oracle-free computations under `runRO`. A `ProbComp` computation lifted into
 the `OracleComp (ZKRO H)` carrier of {uses "zk_game"}[] never queries the
 random oracle, so `runRO` returns the cache it was given paired with each
 output of the original computation (`runRO_liftM`), with the support form
-`mem_support_runRO_liftM_iff`. A scheme uses this lift to reuse oracle-free
+`mem_support_runRO_liftM_iff`. The lemmas `mem_support_runRO_bind` and
+`mem_support_runRO_pure` give the support of `runRO` on a bind and on `pure`.
+A scheme uses this lift to reuse oracle-free
 algorithms at the oracle carrier, for instance the μCMZ base MAC's `setup`
 and `keygen` (issue #118), and the oracle-carrier correctness `CorrectRO`
 relies on it.
@@ -150,41 +152,57 @@ statement (O24 Section 3.3, p. 25). The `verify` no-sampling constraint is
 deferred (issue #101).
 :::
 
-:::definition "trace_extractor" (lean := "KVAC.Core.TraceExtractor, KVAC.Core.TraceExtractor.toKSND, KVAC.Core.KnowledgeSoundWith, KVAC.Core.KnowledgeSound, KVAC.Core.TraceKnowledgeSound, KVAC.Core.KnowledgeSound.of_trace") (parent := "core_zkproof") (tags := "paper, O24 §3.3")
-An extractor from the trace of a run, the crs, the statement, the proof and
-the random-oracle table, without the adversary's code and coins that the
-white-box extractor of {uses "extraction_game"}[] receives. The simulator of
-O24 Theorem 5.8 invokes the extractor inside the anonymity game, where no
-adversary is in scope, since Definition 4.4 fixes the simulator before the
-adversary, so this is the extractor it can call. `toKSND` embeds a trace
-extractor into the white-box type, so the printed knowledge-soundness
-advantage applies to it. The lemma `KnowledgeSound.of_trace` states that
-knowledge soundness with a trace extractor implies the §3.3 notion, "there
-exists an extractor Ext" with negligible advantage. The converse fails, so the
-theorem assumes more than §3.3 states, which the paper's own extractors
-satisfy (§5.5, p. 42, §9).
+:::definition "trace_extractor" (lean := "KVAC.Core.TraceExtractor, KVAC.Core.TraceExtractor.toKSND, KVAC.Core.KnowledgeSoundWith, KVAC.Core.KnowledgeSound, KVAC.Core.TraceKnowledgeSound, KVAC.Core.KnowledgeSound.of_trace") (parent := "core_zkproof") (tags := "milestone")
+An extractor from the crs, the statement, the proof and the random-oracle
+table, without the adversary's code and coins that the white-box extractor of
+{uses "extraction_game"}[] receives. The simulator of O24 Theorem 5.8 invokes
+the extractor inside the anonymity game, where no adversary is in scope, since
+Definition 4.4 fixes the simulator before the adversary, so this is the
+extractor it can call. The map `toKSND` embeds a trace extractor into the
+white-box type, so the printed knowledge-soundness advantage applies to it. The
+lemma `KnowledgeSound.of_trace` states that knowledge soundness with a trace
+extractor implies the §3.3 notion, "there exists an extractor Ext" with
+negligible advantage. Extractors carry no running-time bound, so the converse
+holds as well. The §9 extractor of the algebraic group model is straight-line
+in this sense, but it also reads algebraic representations that the table does
+not hold.
 :::
 
-:::definition "ksnd_simulation_oracle" (lean := "KVAC.Core.SimulationOracle, KVAC.Core.KSNDSimSpec, KVAC.Core.KSNDSimAdversary, KVAC.Core.ksndSimGame, KVAC.Core.KSNDSimAdv, KVAC.Core.Region, KVAC.Core.Region.restrict, KVAC.Core.Region.merge, KVAC.Core.Region.AgreeOutside, KVAC.Core.Region.Disjoint, KVAC.Core.Region.Confined, KVAC.Core.Region.liftImpl, KVAC.Core.TraceExtractor.ConfinedTo, KVAC.Core.ConfinedSystem, KVAC.Core.ZKSimulatorConfinedTo, KVAC.Core.DomainSeparated, KVAC.Core.regionROImpl, KVAC.Core.simulationOracleImpl, KVAC.Core.KSNDSimAdversary.toKSND") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9")
+:::definition "ksnd_simulation_oracle" (lean := "KVAC.Core.SimulationOracle, KVAC.Core.KSNDSimSpec, KVAC.Core.KSNDSimAdversary, KVAC.Core.ksndSimGame, KVAC.Core.KSNDSimAdv, KVAC.Core.Region, KVAC.Core.Region.restrict, KVAC.Core.Region.merge, KVAC.Core.Region.Disjoint, KVAC.Core.Region.Confined, KVAC.Core.TraceExtractor.ConfinedTo, KVAC.Core.ConfinedSystem, KVAC.Core.ZKSimulatorConfinedTo, KVAC.Core.DomainSeparated, KVAC.Core.regionROImpl, KVAC.Core.simulationOracleImpl, KVAC.Core.KSNDSimAdversary.toKSND") (parent := "core_zkproof") (tags := "milestone")
 Knowledge soundness of a proof system of {uses "extraction_game"}[] while the
 adversary holds a simulation oracle for other proof systems over the same
 random oracle. This is the property hybrid H3 of O24 Theorem 5.8 uses. The
 other proof systems enter as a simulation oracle over the shared cache.
-The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain separation is the condition of O24 Remark 5.9 in abstract
-form. A proof system, a simulator or an extractor is confined to a region of
+The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain separation is the "different random oracles" of O24 Remark 5.9
+within one oracle, the mechanism the Remark names and not its requirement. A proof system, a simulator or an extractor is confined to a region of
 the random-oracle domain when it reads and writes inside it only. Domain
 separation confines the simulators of the other systems and the system under extraction to
 disjoint regions. The reduction serves the simulation region from a local table.
 :::
 
-:::theorem "remark_59" (lean := "KVAC.Core.ksndSimAdv_le_ksndAdv_of_domainSeparated") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9") (effort := "medium") (priority := "medium")
+:::theorem "remark_59" (lean := "KVAC.Core.ksndSimAdv_le_ksndAdv_of_domainSeparated") (parent := "core_zkproof") (tags := "milestone")
 *O24 Remark 5.9.* Under domain separation, the advantage in the
 game with a simulation oracle of {uses "ksnd_simulation_oracle"}[] is bounded by the
 knowledge-soundness advantage of {uses "extraction_game"}[] for a reduction.
 The reduction runs the simulators of the other systems on a local table of the region and
 forwards every other query. This is the Remark's assertion that "knowledge
 soundness suffices" when "the vector sizes mismatch", stated for any proof
-system with a region in place of the mismatch. Stated with `sorry`.
+system with a region in place of the mismatch. The Remark gives that assertion
+for Schnorr proofs alone and without a proof, while Theorems 5.8 and 5.10 are
+printed for any proof system for a relation containing `R_cmz`. The Remark's own
+requirement, that simulated proofs "cannot be turned into proofs" of the other
+relation, and the Schnorr instance have no formal counterpart.
+:::
+
+:::proof "remark_59"
+Couple the two runs. Throughout, the shared cache of the game with a
+simulation oracle equals the reduction's local table on the simulation region
+and the cache of {uses "extraction_game"}[] outside it. Each step preserves
+this, since the simulators of the other systems read and write the simulation
+region only and both tables sample fresh points uniformly. The verifier and
+the extractor read the region of the system under extraction only, which
+disjointness places outside the simulation region, so they receive the same
+input in both games and the two win events agree.
 :::
 
 # Keyed setup

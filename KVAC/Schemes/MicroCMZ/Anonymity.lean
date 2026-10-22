@@ -149,7 +149,7 @@ generation leave by `runRO_liftM`.
 
 namespace KVAC.Schemes.MicroCMZ
 
-open OracleComp KVAC.Core KVAC.Framework ENNReal
+open KVAC.Core KVAC.Framework
 
 set_option autoImplicit false
 
@@ -167,17 +167,17 @@ credential are §3.3 proof systems for `R_cmz.iu`, `R_cmz.is` and `R_cmz.p`.
 (`docs/DESIGN_ALTERNATIVES.md`). -/
 
 /-- `ZKP_cmz.iu` as a §3.3 proof system at the crs `H` for `R_cmz.iu` (O24 Eq. 9). -/
-noncomputable def riuNIZKP {n : ℕ} (H : G) (π : RiuProofSystem HS G F n) :
+def riuNIZKP {n : ℕ} (H : G) (π : RiuProofSystem HS G F n) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun _ x w => riuRel gen x w = true)
 
 /-- `ZKP_cmz.is` as a §3.3 proof system at the crs `H` for `R_cmz.is` (O24 Eq. 10). -/
-noncomputable def risNIZKP (H : G) (π : RisProofSystem HS G F) :
+def risNIZKP (H : G) (π : RisProofSystem HS G F) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun H' x w => risRel gen H' x w = true)
 
 /-- `ZKP_cmz.p` as a §3.3 proof system at the crs `H` for `R_cmz.p` (O24 Eq. 11). -/
-noncomputable def rpNIZKP {n : ℕ} (H : G) (π : RpProofSystem HS G F n) :
+def rpNIZKP {n : ℕ} (H : G) (π : RpProofSystem HS G F n) :
     NIZKPSyntax (OracleComp (ZKRO HS)) :=
   π.toNIZKPSyntax (fun _ => pure H) (fun H' x w => rpRel gen H' x w = true)
 
@@ -206,18 +206,19 @@ produces `π_iu` from the statement `(C', X, φ)` alone. The extractor of
 zero-knowledge simulator of `ZKP_cmz.p` produces `π_p` from the statement
 `(U', X, C, Z, φ')` alone.
 
-The extractor is a `TraceExtractor`, a function of the statement, the proof and
-the oracle table, departure 1 of the module docstring. -/
+The extractor is a `TraceExtractor`, a function of the crs, the statement, the
+proof and the oracle table, departure 1 of the module docstring. -/
 
-/-- The zero-knowledge simulator of `ZKP_cmz.iu` at the crs `H : G`. -/
+/-- The zero-knowledge simulator of `ZKP_cmz.iu`, a function of the crs `H : G`.
+It does not fix `H`, since Definition 4.4 fixes the simulator before the crs. -/
 abbrev RiuSimulator {n : ℕ} (π : RiuProofSystem HS G F n) : Type :=
   G → RiuStmt G F n → StateT HS.Cache ProbComp π.Proof
 
-/-- The zero-knowledge simulator of `ZKP_cmz.p` at the crs `H : G`. -/
+/-- The zero-knowledge simulator of `ZKP_cmz.p`, a function of the crs `H : G`. -/
 abbrev RpSimulator {n : ℕ} (π : RpProofSystem HS G F n) : Type :=
   G → RpStmt G F n → StateT HS.Cache ProbComp π.Proof
 
-/-- The trace extractor of `ZKP_cmz.is` at the crs `H : G`. -/
+/-- The trace extractor of `ZKP_cmz.is`, a function of the crs `H : G`. -/
 abbrev RisExtractor (π : RisProofSystem HS G F) : Type :=
   G → RisStmt G → π.Proof → HS.Cache → ProbComp (Option (RisWitness F))
 
@@ -250,22 +251,31 @@ of `Core/NIZKP/Composition` with advantage `KSNDSimAdv`, not the printed
 **Hybrid H2** runs, in its reduction, the same simulator of `ZKP_cmz.iu`
 inside the zero-knowledge game of `ZKP_cmz.p`.
 
-**The hypotheses.** The theorem takes the condition of Remark 5.9 as
-hypotheses. Each proof system, its simulator or its extractor, is confined to
-its own region of the random-oracle domain, and the regions are pairwise
-disjoint.
+**The hypotheses.** Theorem 5.8 (p. 40) is printed for any "proof system for
+the relation R ⊇ R_cmz", and its proof holds under the condition of Remark
+5.9, which the paper verifies for Schnorr proofs alone. The theorem states
+what the printed proof proves and takes the condition as hypotheses, since no
+proof of the printed form exists. Each proof system, its simulator or its
+extractor, is confined to its own region of the random-oracle domain, and the
+regions are pairwise disjoint. That is the Remark's "different random
+oracles" within one oracle, wider than the Schnorr instance. No call site can
+discharge the hypotheses before the compiled Σ-protocols of issue #3 exist, so
+Theorem 5.3 and Theorem 1 carry them as well.
 
 **The oracle.** `riuSimulationOracle` is the simulator of `ZKP_cmz.iu` as the
 simulation oracle with respect to `ZKP_cmz.is`. The lemma
 `ksndSimAdv_le_ksndAdv_of_domainSeparated` discharges H3 with it. -/
 
 /-- The simulator of `ZKP_cmz.iu` as the simulation oracle with respect to
-`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3. -/
-noncomputable def riuSimulationOracle (n : ℕ) (H : G) (simIu : ∀ n, RiuSimulator HS (πiu n)) :
+`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3.
+The simulator is the §3.3 object of `riuNIZKP` at the crs `H`, the one
+`ZKSimulatorConfinedTo` confines in the theorem. -/
+def riuSimulationOracle (n : ℕ) (H : G)
+    (simIu : ZKSimulator HS (riuNIZKP HS gen H (πiu n))) :
     SimulationOracle HS (risNIZKP HS gen H πis) where
   Query := fun _ => RiuStmt G F n
   spec := fun _ _ => (πiu n).Proof
-  impl := fun H' x => simIu n H' x
+  impl := fun {secParam} H' x => simIu (secParam := secParam) H' x
 
 /-! ## The simulator of Theorem 5.8
 

@@ -9,7 +9,7 @@ import VCVio.CryptoFoundations.Asymptotics.Negligible
 /-!
 # Knowledge soundness in the presence of other simulated proofs (O24 Remark 5.9)
 
-Hybrid H3 of O24 Theorem 5.8 (§5.4, p. 41) extracts from a proof `π_is` that
+Hybrid H3 of Theorem 5.8 (§5.4, p. 41) extracts from a proof `π_is` that
 the issuer produced after receiving a simulated `π_iu`. The §3.3 game
 `ksndGame` offers the adversary no simulated proofs, so the property H3 uses is
 `KSNDSimAdv`, knowledge soundness with a simulation oracle for another
@@ -17,10 +17,21 @@ proof system over the same random oracle. Remark 5.9 (§5.4, p. 42) names the
 mirror case, `π_iu` after simulated `π_is`, the case of Theorem 5.10, and
 asserts that knowledge soundness suffices for Schnorr proofs because "the
 vector sizes mismatch". The lemma `ksndSimAdv_le_ksndAdv_of_domainSeparated`
-states that assertion for any proof system, with the mismatch as disjoint
-regions of the random-oracle domain, `ConfinedSystem` and `DomainSeparated`.
+states that assertion for any proof system, with the mismatch as the disjoint
+regions of the random-oracle domain of `DomainSeparated`.
 Hybrid H2 needs the same condition, since its reduction runs the simulator of
 `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`.
+
+**The discrepancy.** Theorem 5.8 (p. 40) is printed for any "proof system for
+the relation R ⊇ R_cmz", and its proof holds under the Remark's condition,
+which the paper verifies for Schnorr proofs alone. The formal theorem
+`μCMZ_anonymity` states what the printed proof proves and takes the condition
+as hypotheses, since no proof of the printed form exists. `DomainSeparated` is
+the Remark's "different random oracles" within one oracle, the mechanism the
+Remark names, and is wider than the Schnorr instance. The Remark's own
+requirement, that the simulated proofs "cannot be turned into proofs" of the
+other relation, and the Schnorr instance have no formal counterpart. The
+instance waits for the compiled Σ-protocols of issue #3.
 
 ## Trace extractors
 
@@ -31,22 +42,25 @@ Theorem 5.8 (§5.4, p. 40) has the simulator `Sim.I` invoke the extractor on the
 issuer's proof `π_is`. `Sim.I` runs inside the anonymity game, where it holds
 the issuer's message and the random-oracle table and nothing else, and
 Definition 4.4 fixes `Sim` before the adversary, so there is no adversary for
-`Sim.I` to hand to a `KSNDExtractor`. The paper leaves this gap open.
+`Sim.I` to hand to a `KSNDExtractor`. Sections 2.6 (p. 21) and 9 (p. 77) name
+straight-line extraction as the notion credentials need, while Theorem 5.8
+prints the §3.3 advantage `Adv^ksnd`.
 
-A `TraceExtractor` is what `Sim.I` can call. It is a function of the trace of
-the run, the crs, the statement, the proof and the random-oracle table, which
-records every query and answer, the programmed points included. It never reruns
-the adversary. `toKSND` makes a trace extractor a `KSNDExtractor` that ignores
-the adversary, so the printed `Adv^ksnd` is defined for it and the bound of
-Theorem 5.8 keeps its printed form. The lemma `KnowledgeSound.of_trace` states
-that knowledge soundness with a trace extractor implies the §3.3 notion. The
-converse fails, a white-box extractor need not be a trace extractor, so the
-theorem assumes more than §3.3 states.
-The paper's own extractors have this form. For Schnorr proofs the statement is
-recovered "by looking at the trace of random oracle queries" (§5.5, p. 42), and
-the §9 extractor never rewinds. The §9 extractor also reads the algebraic
-representations of Equation 41 (p. 78), which the trace does not hold, so the
-instantiation of issue #3 must carry them in the proof or in the table.
+A `TraceExtractor` is what `Sim.I` can call. It is a function of the crs, the
+statement, the proof and the random-oracle table, the partial map from queried
+points to their answers. It never reruns the adversary. The map `toKSND` makes a
+trace extractor a `KSNDExtractor` that ignores the adversary, so the printed
+`Adv^ksnd` is defined for it and the bound of Theorem 5.8 keeps its printed
+form. The lemma `KnowledgeSound.of_trace` states that knowledge soundness with a
+trace extractor implies the §3.3 notion. Extractors carry no running-time bound,
+so the converse holds as well. An extractor that chooses a witness whenever one
+exists is a trace extractor, and its advantage is at most that of any white-box
+extractor. The trace form is therefore a modelling discipline, not a stronger
+hypothesis, as long as `OracleComp` carries no cost model, which issue #148
+lists as out of scope.
+The §9 extractor never rewinds. It also reads the algebraic representations of
+Equation 41 (p. 78), which the table does not hold, so the instantiation of
+issue #3 must carry them in the proof or in the table.
 -/
 
 namespace KVAC.Core
@@ -55,8 +69,8 @@ open OracleComp OracleSpec ENNReal
 
 /-! ## Trace extractors -/
 
-/-- An extractor from the trace of a run, the crs, the statement, the proof and
-the random-oracle table as of the end of the adversary's run. Unlike
+/-- An extractor from the crs, the statement, the proof and the random-oracle
+table as of the end of the adversary's run. Unlike
 `KSNDExtractor` it does not receive the adversary, so the simulator of Theorem
 5.8 can call it. See the module docstring. -/
 abbrev TraceExtractor (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) : Type :=
@@ -82,14 +96,14 @@ def KnowledgeSound (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (dec : zkp.DecidableRelation) (isPPT : KSNDAdversary H zkp → Prop) : Prop :=
   ∃ ext : KSNDExtractor H zkp, KnowledgeSoundWith H zkp dec isPPT ext
 
-/-- Knowledge soundness with a trace extractor, the hypothesis the simulator of
-O24 Theorem 5.8 needs. -/
+/-- Knowledge soundness with a trace extractor, the hypothesis that the
+anonymity simulator of §5.4 needs. -/
 def TraceKnowledgeSound (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
     (dec : zkp.DecidableRelation) (isPPT : KSNDAdversary H zkp → Prop) : Prop :=
   ∃ e : TraceExtractor H zkp, KnowledgeSoundWith H zkp dec isPPT e.toKSND
 
 /-- A trace extractor is a §3.3 extractor, so knowledge soundness with a trace
-extractor implies the §3.3 notion. The converse does not follow. -/
+extractor implies the §3.3 notion. -/
 theorem KnowledgeSound.of_trace {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H))}
     {dec : zkp.DecidableRelation} {isPPT : KSNDAdversary H zkp → Prop}
     (h : TraceKnowledgeSound H zkp dec isPPT) : KnowledgeSound H zkp dec isPPT :=
@@ -102,7 +116,7 @@ theorem KnowledgeSound.of_trace {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (Z
 random-oracle cache, so that it may reprogram the table as a `ZKSimulator`
 does. The queries are statements of the other relations and the answers their
 simulated proofs. It is indexed by the crs of `zkp`, which the proof systems of
-O24 Figure 9 share. -/
+Figure 9 share. -/
 structure SimulationOracle (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H))) where
   /-- The query type. -/
   Query : {secParam : Nat} → zkp.Crs secParam → Type
@@ -126,7 +140,7 @@ structure KSNDSimAdversary (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H
     OracleComp (KSNDSimSpec H zkp simOracle crs) (zkp.Stmt crs × zkp.Proof crs)
 
 /-- `ksndGame` with the simulation oracle added to the adversary's
-interface, the property hybrid H3 of O24 Theorem 5.8 uses. The extractor and
+interface, the property hybrid H3 of Theorem 5.8 uses. The extractor and
 `verify` receive the cache as of the end of the adversary's run, including the
 points the simulators of the other systems programmed. -/
 def ksndSimGame (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
@@ -163,10 +177,6 @@ def restrict (P : Region H) (c : H.Cache) : H.Cache :=
 def merge (P : Region H) (c₁ c₂ : H.Cache) : H.Cache :=
   fun t => if P t then c₁ t else c₂ t
 
-/-- Two caches agree outside the region. -/
-def AgreeOutside (P : Region H) (c d : H.Cache) : Prop :=
-  ∀ t, P t = false → c t = d t
-
 /-- Two regions share no point. -/
 def Disjoint (P Q : Region H) : Prop :=
   ∀ t, P t = true → Q t = false
@@ -175,14 +185,6 @@ def Disjoint (P Q : Region H) : Prop :=
 region only and writes nothing outside it. -/
 def Confined (P : Region H) {α : Type} (m : StateT H.Cache ProbComp α) : Prop :=
   ∀ c, m.run c = (m.run (P.restrict c) >>= fun ac => pure (ac.1, P.merge ac.2 c))
-
-/-- Run an implementation on the region's part of the cache only. -/
-def liftImpl (P : Region H) {ι : Type} {spec : OracleSpec ι}
-    (impl : QueryImpl spec (StateT H.Cache ProbComp)) :
-    QueryImpl spec (StateT H.Cache ProbComp) :=
-  fun q => StateT.mk fun c => do
-    let (a, c') ← (impl q).run (P.restrict c)
-    pure (a, P.merge c' c)
 
 end Region
 
@@ -212,7 +214,8 @@ def ZKSimulatorConfinedTo {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H)
     (sim : ZKSimulator H zkp) (P : Region H) : Prop :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam) (x : zkp.Stmt crs), P.Confined (sim crs x)
 
-/-- The condition of O24 Remark 5.9. The simulators of the other systems are confined to one
+/-- The "different random oracles" of O24 Remark 5.9 within one oracle, the mechanism the
+Remark names and not its requirement. The simulators of the other systems are confined to one
 region, and setup, the verifier and the extractor of `zkp` to a disjoint one.
 The Remark's "vector sizes mismatch" is the disjointness. -/
 structure DomainSeparated (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
@@ -241,16 +244,9 @@ structure DomainSeparated (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)
 lazy random oracle on the local table, every other query to the game's oracle. -/
 def regionROImpl (H : HashSpec) (P : Region H) :
     QueryImpl (ZKRO H) (StateT H.Cache (OracleComp (ZKRO H)))
-  | .inl i => StateT.mk fun loc => do
-      let a ← query (spec := ZKRO H) (.inl i)
-      pure (a, loc)
-  | .inr t => StateT.mk fun loc =>
-      if P t then do
-        let (a, loc') ← liftM ((H.roImpl t).run loc)
-        pure (a, loc')
-      else do
-        let a ← query (spec := ZKRO H) (.inr t)
-        pure (a, loc)
+  | .inl i => StateT.lift (query (spec := ZKRO H) (.inl i))
+  | .inr t => if P t then StateT.mk fun loc => liftM ((H.roImpl t).run loc)
+      else StateT.lift (query (spec := ZKRO H) (.inr t))
 
 /-- The simulation-oracle arm of the reduction. The simulators of the other
 systems run on the local table. -/
@@ -259,8 +255,10 @@ def simulationOracleImpl {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H))
     QueryImpl (simOracle.spec crs) (StateT H.Cache (OracleComp (ZKRO H))) :=
   fun q => StateT.mk fun loc => liftM ((simOracle.impl crs q).run loc)
 
-/-- The reduction `A″` of O24 Remark 5.9. It runs the adversary with the simulation oracle
-with the simulation region served from a local table that starts empty. -/
+/-- The reduction from `ksndSimGame` to `ksndGame`. It runs the adversary with
+the simulation oracle, serving the simulation region from a local table that
+starts empty. Applied to the adversary of hybrid H3 of Theorem 5.8, it is the
+`A″` of p. 41. -/
 def KSNDSimAdversary.toKSND {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H))}
     {simOracle : SimulationOracle H zkp} {e : TraceExtractor H zkp}
     (A : KSNDSimAdversary H zkp simOracle) (ds : DomainSeparated H zkp simOracle e) :
@@ -271,7 +269,15 @@ def KSNDSimAdversary.toKSND {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO 
 
 /-- **O24 Remark 5.9.** Under domain separation, knowledge soundness suffices.
 The advantage in `ksndSimGame` is bounded by the printed `Adv^ksnd` of the
-reduction `A.toKSND ds`. -/
+reduction `A.toKSND ds`.
+
+**Proof outline.** Couple the two runs. Throughout, the shared cache of
+`ksndSimGame` equals the reduction's local table on the simulation region and
+the cache of `ksndGame` outside it. Each step preserves this, since the
+simulators read and write the simulation region only and both tables sample
+fresh points uniformly. The verifier and the extractor read the region of `zkp`
+only, which the regions' disjointness places outside the simulation region, so
+they receive the same input in both games and the two win events agree. -/
 theorem ksndSimAdv_le_ksndAdv_of_domainSeparated (H : HashSpec)
     (zkp : NIZKPSyntax (OracleComp (ZKRO H))) (simOracle : SimulationOracle H zkp)
     (e : TraceExtractor H zkp) (ds : DomainSeparated H zkp simOracle e)
