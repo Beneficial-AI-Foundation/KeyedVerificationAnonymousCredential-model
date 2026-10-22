@@ -12,7 +12,7 @@ import KVAC.Core.NIZKP.Composition
 
 The statement of O24 Theorem 5.8 for `μCMZCredentialSyntax` of Figure 9, with
 the simulator `Sim = (Sim.I, Sim.P)` of its proof (§5.4, pp. 40 to 41). The
-proof is deferred. The sections below hold, in order, the three proof systems
+sections below hold, in order, the three proof systems
 as §3.3 objects, the simulators and the extractor they provide, the simulation
 oracle of Remark 5.9, the simulator of Theorem 5.8, and the theorem.
 
@@ -23,7 +23,7 @@ Each is a correction of the paper or a hypothesis the paper uses without
 stating. `docs/DESIGN_ALTERNATIVES.md` records the decisions and
 `docs/presentations/rolf-status/errata.md` the errors.
 
-### 1. The extractor takes the trace of the run, not the adversary
+### 1. The extractor reads the oracle table, not the adversary
 
 **Printed.** The §3.3 extractor "takes as input the random coins and the code
 of the p.p.t. adversary A" (p. 26), and `KSNDExtractor` takes the adversary
@@ -32,14 +32,14 @@ value. `Sim.I` "invokes the extractor" on `π_is` (p. 40).
 **Gap.** `Sim.I` runs inside the anonymity game, where it holds the issuer's
 message and the oracle table and nothing else, and Definition 4.4 (p. 30)
 fixes `Sim` before the adversary. So `Sim.I` has no adversary to hand to the
-extractor, and the paper does not say how it is invoked.
+extractor.
 
 **Formalized.** The simulator takes a `TraceExtractor` of
 `Core/NIZKP/Composition`, a function of the crs, the statement, the proof and
 the oracle table. `toKSND` makes it a `KSNDExtractor`, so the printed
-`Adv^ksnd` applies to it. The hypothesis is stronger than the printed one. The
-lemma `KnowledgeSound.of_trace` states that it implies the printed one, and
-the paper's own extractors satisfy it (§5.5, p. 42, §9, p. 77).
+`Adv^ksnd` applies to it. Extractors carry no running-time bound, so the trace
+form is a modelling discipline rather than a stronger hypothesis (module
+docstring of `Core/NIZKP/Composition`).
 
 ### 2. `Z` carries the term `xᵣ•U'`
 
@@ -73,15 +73,25 @@ on the nonzero elements as well. Errata item 14, recorded on issue #149.
 **Printed.** Hybrid H3 (p. 41) extracts from a `π_is` that the issuer produced
 after receiving the simulated `π_iu` of H1, and the reduction of H2 runs the
 simulator of `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`.
-Remark 5.9 (p. 42) says the gap closes with "different random oracles" per
-proof system, or for Schnorr proofs because "the vector sizes mismatch", and
-gives no proof. The theorem has no hypothesis about it.
+Remark 5.9 (p. 42) raises the extraction case only, in the mirror direction,
+`π_iu` after simulated `π_is`. It names simulation extractability with
+"different setup strings (or random oracles)" as the general route, asserts
+that knowledge soundness suffices for Schnorr proofs because "the vector sizes
+mismatch", and gives no proof. The theorem has no hypothesis about it.
 
 **Gap.** The §3.3 games offer the random oracle only, so neither step follows
-from the printed advantages alone.
+from the printed advantages alone. Theorem 5.8 (p. 40) is printed for any
+"proof system for the relation R ⊇ R_cmz", and its proof holds under the
+Remark's condition, which the paper verifies for Schnorr proofs alone.
 
-**Formalized.** `μCMZ_anonymity` adds the condition as explicit arguments,
-which a user of the theorem must supply.
+**Formalized.** `μCMZ_anonymity` states what the printed proof proves. It adds
+the condition as explicit arguments, which a user of the theorem must supply,
+since no proof of the printed form exists. The arguments are the Remark's
+"different setup strings (or random oracles)" within one oracle, the mechanism
+the Remark names and not its requirement that simulated proofs "cannot be
+turned into proofs" of the other relation, which has no formal counterpart.
+No call site can discharge them before the compiled Σ-protocols of issue #3
+exist, so Theorem 5.3 and Theorem 1 carry them as well.
 
 - `Piu`, `Pis` and `Pp`, three regions of the hash domain, one per proof
   system.
@@ -90,13 +100,13 @@ which a user of the theorem must supply.
   (`ConfinedSystem`).
 - `hiuSim` and `hpSim`, the same for the simulators of `ZKP_cmz.iu` and
   `ZKP_cmz.p`.
-- `hext`, the same for the extractor of `ZKP_cmz.is`.
+- `hext`, the extractor of `ZKP_cmz.is` reads the table inside `Pis` only.
 - `hiu_is`, `hiu_p` and `his_p`, the three regions are pairwise disjoint.
 
 **Why regions.** They keep the statement faithful to the paper. The paper has
 one random oracle `H_p` for every proof system (§3, p. 24), the anonymity
 game threads one table through every party, and the Remark's remedy is
-"different random oracles" per proof system. Confining each system to its own
+"different setup strings (or random oracles)". Confining each system to its own
 region of the one oracle is the same thing. The restriction of a lazy random
 oracle to a region is a random oracle on that region, and the restrictions to
 disjoint regions are independent. So three systems confined to disjoint
@@ -312,7 +322,7 @@ The state is one type for `Sim.I₁`, `Sim.I₂` and `Sim.P`, as
 the extracted `x₀`, `0` before extraction. -/
 abbrev μCMZSimState (n : ℕ) : Type := Params G n × G × F
 
-/-- The simulator `Sim = (Sim.I, Sim.P)` of O24 Theorem 5.8 (§5.4, p. 40), over
+/-- The simulator `Sim = (Sim.I, Sim.P)` of Theorem 5.8 (§5.4, p. 40), over
 the simulators of `ZKP_cmz.iu` and `ZKP_cmz.p` and an extractor of
 `ZKP_cmz.is`. `Sim.I` is the two moves `simI₁` and `simI₂`, before and after
 the issuer's response, and `Sim.P` is `simP`. -/
@@ -368,8 +378,12 @@ Errata item 17 records the `Adv^simex` of Theorem 1 (§1, p. 4) against the
 `φ(m) = 1`, the anonymity advantage of μCMZ from the empty random-oracle table
 with respect to `μCMZAnonSimulator` is at most the zero-knowledge advantages of
 `ZKP_cmz.iu` and `ZKP_cmz.p` plus the knowledge-soundness advantage of
-`ZKP_cmz.is`, for reductions `A'`, `D'` and `A''`. The hypotheses `hiu` to
-`hpSim` are the condition of Remark 5.9. The proof is deferred. -/
+`ZKP_cmz.is`, for reductions `A'`, `D'` and `A''`. The arguments `Piu` to
+`his_p` are the condition of Remark 5.9. The printed theorem has no such
+hypothesis and holds for any proof system for `R ⊇ R_cmz`, while its proof
+relies on the Remark, which the paper verifies for Schnorr proofs alone. The
+statement takes the condition as hypotheses because no proof of the printed
+form exists, departure 4 of the module docstring. -/
 theorem μCMZ_anonymity (simIu : ∀ n, RiuSimulator HS (πiu n))
     (simP : ∀ n, RpSimulator HS (πp n)) (extIs : RisExtractor HS πis)
     (hgen : gen ≠ 0) {secParam n : ℕ} (H : G) (hH : H ≠ 0) (sk : Key F n)
