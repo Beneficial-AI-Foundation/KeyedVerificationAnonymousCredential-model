@@ -854,20 +854,24 @@ running-time bound, so the restriction is a modelling discipline as long as
 
 ## Theorem 5.8 with the printed knowledge-soundness term
 
-**Decision.** The bound of `μCMZ_anonymity` carries `KSNDAdv` of `ZKP_cmz.is`
-as Theorem 5.8 prints it. The theorem takes as hypotheses the condition of
-Remark 5.9 in the form of `ConfinedSystem` (`Core/NIZKP/Composition.lean`).
-Each of the three proof systems, with its simulator or its extractor, is
-confined to its own region of the random-oracle domain, and the regions are
-pairwise disjoint. The property hybrid H3 uses is `KSNDSimAdv`, knowledge
-soundness in the presence of simulated proofs of `ZKP_cmz.iu`. The lemma
+**Decision.** The bound of `μCMZ_anonymity` (`Schemes/MicroCMZ/Anonymity.lean`)
+carries `KSNDAdv` of `ZKP_cmz.is` as Theorem 5.8 prints it. The theorem takes
+as hypotheses the condition of Remark 5.9 in four forms of
+`Core/NIZKP/Composition.lean`. `ConfinedSystem` confines the setup, prover and
+verifier of each of the three proof systems to a region of the random-oracle
+domain, `ZKSimulatorConfinedTo` confines the simulators of `ZKP_cmz.iu` and
+`ZKP_cmz.p` to the region of their system, `TraceExtractor.ConfinedTo`
+confines the extractor of `ZKP_cmz.is` to the region of its system, and
+`Region.Disjoint` makes the three regions pairwise disjoint. The property
+hybrid H3 uses is `KSNDSimAdv`, knowledge soundness in the presence of
+simulated proofs of `ZKP_cmz.iu`. The lemma
 `ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term. The
 zero-knowledge step H2 needs the condition as much as H3. Its reduction runs
 the simulator of `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`,
-which offers the random oracle only. Remark 5.9 raises the point for
-extraction alone. Remark 5.9 states its case for `π_iu` after simulated `π_is`, the
-direction of Theorem 5.10, and H3 of Theorem 5.8 is the mirror case, which
-the lemma covers as well.
+which offers the random oracle only, while Remark 5.9 raises the point for
+extraction alone. The Remark states its case for `π_iu` after simulated
+`π_is`, the direction of Theorem 5.10, and H3 of Theorem 5.8 is the mirror
+case, which the lemma covers as well.
 
 **Rejected alternative.** Replacing the knowledge-soundness term by a
 simulation-extractability term `SEAdv`, as Theorem 1 (§1, p. 4) prints
