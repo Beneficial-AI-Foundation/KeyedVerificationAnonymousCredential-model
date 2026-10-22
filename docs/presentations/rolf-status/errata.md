@@ -236,7 +236,7 @@ no simulator in the code yet (#163).
 
 ## 17. Theorem 1 prints Adv<sup>simex</sup> where Theorem 5.8 prints Adv<sup>ksnd</sup> (pp. 4, 40, 42)
 
-Items 13 to 15 are added by #149. The anonymity advantage of Theorem 1 (p. 4) is
+Item 16 is added by #228. The anonymity advantage of Theorem 1 (p. 4) is
 2Adv<sup>zk</sup><sub>ZKP</sub> + Adv<sup>simex</sup><sub>ZKP</sub>, while
 Theorem 5.8 (p. 40) bounds it by
 Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub> +

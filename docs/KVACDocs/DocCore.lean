@@ -168,7 +168,7 @@ in this sense, but it also reads algebraic representations that the table does
 not hold.
 :::
 
-:::definition "ksnd_simulation_oracle" (lean := "KVAC.Core.SimulationOracle, KVAC.Core.KSNDSimSpec, KVAC.Core.KSNDSimAdversary, KVAC.Core.ksndSimGame, KVAC.Core.KSNDSimAdv, KVAC.Core.Region, KVAC.Core.Region.restrict, KVAC.Core.Region.merge, KVAC.Core.Region.AgreeOutside, KVAC.Core.Region.Disjoint, KVAC.Core.Region.Confined, KVAC.Core.Region.liftImpl, KVAC.Core.TraceExtractor.ConfinedTo, KVAC.Core.ConfinedSystem, KVAC.Core.ZKSimulatorConfinedTo, KVAC.Core.DomainSeparated, KVAC.Core.regionROImpl, KVAC.Core.simulationOracleImpl, KVAC.Core.KSNDSimAdversary.toKSND") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9")
+:::definition "ksnd_simulation_oracle" (lean := "KVAC.Core.SimulationOracle, KVAC.Core.KSNDSimSpec, KVAC.Core.KSNDSimAdversary, KVAC.Core.ksndSimGame, KVAC.Core.KSNDSimAdv, KVAC.Core.Region, KVAC.Core.Region.restrict, KVAC.Core.Region.merge, KVAC.Core.Region.Disjoint, KVAC.Core.Region.Confined, KVAC.Core.TraceExtractor.ConfinedTo, KVAC.Core.ConfinedSystem, KVAC.Core.ZKSimulatorConfinedTo, KVAC.Core.DomainSeparated, KVAC.Core.regionROImpl, KVAC.Core.simulationOracleImpl, KVAC.Core.KSNDSimAdversary.toKSND") (parent := "core_zkproof") (tags := "milestone")
 Knowledge soundness of a proof system of {uses "extraction_game"}[] while the
 adversary holds a simulation oracle for other proof systems over the same
 random oracle. This is the property hybrid H3 of O24 Theorem 5.8 uses. The
@@ -180,14 +180,25 @@ separation confines the simulators of the other systems and the system under ext
 disjoint regions. The reduction serves the simulation region from a local table.
 :::
 
-:::theorem "remark_59" (lean := "KVAC.Core.ksndSimAdv_le_ksndAdv_of_domainSeparated") (parent := "core_zkproof") (tags := "paper, O24 Rem 5.9") (effort := "medium") (priority := "medium")
+:::theorem "remark_59" (lean := "KVAC.Core.ksndSimAdv_le_ksndAdv_of_domainSeparated") (parent := "core_zkproof") (tags := "milestone")
 *O24 Remark 5.9.* Under domain separation, the advantage in the
 game with a simulation oracle of {uses "ksnd_simulation_oracle"}[] is bounded by the
 knowledge-soundness advantage of {uses "extraction_game"}[] for a reduction.
 The reduction runs the simulators of the other systems on a local table of the region and
 forwards every other query. This is the Remark's assertion that "knowledge
 soundness suffices" when "the vector sizes mismatch", stated for any proof
-system with a region in place of the mismatch. Stated with `sorry`.
+system with a region in place of the mismatch.
+:::
+
+:::proof "remark_59"
+Couple the two runs. Throughout, the shared cache of the game with a
+simulation oracle equals the reduction's local table on the simulation region
+and the cache of {uses "extraction_game"}[] outside it. Each step preserves
+this, since the simulators of the other systems read and write the simulation
+region only and both tables sample fresh points uniformly. The verifier and
+the extractor read the region of the system under extraction only, which
+disjointness places outside the simulation region, so they receive the same
+input in both games and the two win events agree.
 :::
 
 # Keyed setup

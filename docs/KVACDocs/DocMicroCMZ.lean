@@ -1015,11 +1015,11 @@ simulator, with their conversions to the §3.3 views of
 {uses "mucmz_proof_systems_fixed_crs"}[].
 :::
 
-:::definition "mucmz_remark_59_oracle" (lean := "KVAC.Schemes.MicroCMZ.riuSimulationOracle") (parent := "cmz_anonymity") (tags := "paper, O24 Rem 5.9")
+:::definition "mucmz_remark_59_oracle" (lean := "KVAC.Schemes.MicroCMZ.riuSimulationOracle") (parent := "cmz_anonymity") (tags := "milestone")
 The simulator of `ZKP_cmz.iu` ({uses "mucmz_simulators_extractor"}[]) as the
 simulation oracle of {uses "ksnd_simulation_oracle"}[] with respect to
 `ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3
-of Theorem 5.8. The lemma {uses "remark_59"}[] discharges H3 with it.
+of Theorem 5.8, where {bpref "remark_59"}[] applies.
 :::
 
 :::theorem "mucmz_anonymity" (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
