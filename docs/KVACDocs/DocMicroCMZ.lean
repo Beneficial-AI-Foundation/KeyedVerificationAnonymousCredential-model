@@ -18,6 +18,8 @@ import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.UFCMVA
+import KVAC.Schemes.MicroCMZ.UFCMVAHelp
+
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 
@@ -59,6 +61,9 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   statement — Track CMZ-M.
 - `UFCMVA.lean` — Section 5.3, Theorem 5.1 in the plain UF-CMVA game —
   Track CMZ-M.
+- `UFCMVAHelp.lean` — Section 5.3, the UF-CMVA game with the oracle Help —
+  Track CMZ-E.
+
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
   `Polynomial.lean`, `Transcript.lean`, `CaseEvents.lean` and
@@ -1037,6 +1042,31 @@ keyed-verification credential in the sense of {uses "kvac_extractability"}[].
 :::proof "mucmz_extractable_kvac"
 Combines anonymity {uses "mucmz_anonymity"}[] and extractability
 {uses "mucmz_extractability"}[].
+:::
+
+:::definition "mucmz_ufcmva_help_game" (lean := "KVAC.Schemes.MicroCMZ.UFHelpQuery, KVAC.Schemes.MicroCMZ.UFHelpOracleSpec, KVAC.Schemes.MicroCMZ.helpEq, KVAC.Schemes.MicroCMZ.ufHelpOracleImpl, KVAC.Schemes.MicroCMZ.UFHelpAdversary, KVAC.Schemes.MicroCMZ.UF_CMVAHelpGame, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv, KVAC.Schemes.MicroCMZ.ufQueryToHelp, KVAC.Schemes.MicroCMZ.ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")
+The UF-CMVA game of {uses "ufcmva_game"}[] for the base MAC of {uses "mucmz_construction"}[], with the oracle `Help(A₀, A⃗, Z)` of §5.3 (p. 35),
+which answers whether `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ`. The challenger holds the
+key and answers `Help` by evaluating the equation, and no query carries a
+representation. Theorem 5.1 is proved for this game, "we actually will prove a
+stronger claim: the scheme is unforgeable even if the adversary is given one
+additional oracle Help". The reduction of Theorem 5.10 (p. 43) checks its
+candidate `Z` through `Help`. The paper ties `Help` to no model. The
+instrumented game of {uses "agm_model"}[] is the device of the proof of Lemma
+5.4, where the reduction answers `Help` from the representations of an algebraic
+adversary. The bound of {uses "mucmz_mac_security"}[] is for the plain game, whose
+well-behaved algebraic adversaries never query `Help`. A bound for this game is
+open, issue #235. `Help` reads the key
+`(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ. An adversary of the generic
+game is an adversary of this game that never queries `Help`,
+`ufAdversaryToHelp`, with the same advantage.
+:::
+
+:::theorem "mucmz_ufcmva_help_of_plain" (lean := "KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv_ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone") (effort := "small") (priority := "low")
+The embedding `ufAdversaryToHelp` of {uses "mucmz_ufcmva_help_game"}[]
+preserves the advantage. An adversary of {uses "ufcmva_game"}[] at μCMZ has
+the same advantage in the game with `Help`, so a bound on the game with
+`Help` covers the plain game of Figure 5. Stated with `sorry`.
 :::
 
 :::theorem "mucmz_extractability" (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
