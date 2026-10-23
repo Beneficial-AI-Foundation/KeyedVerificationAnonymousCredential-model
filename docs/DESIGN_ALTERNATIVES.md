@@ -974,7 +974,7 @@ Fiat–Shamir proof, such as the printed μCMZ_AT with `π_is`, runs at
 one `runRO` from the empty cache, so the scheme's proofs and the adversary's
 hash queries share it (`AnonymousTokens/OracleCarrier.lean`). Both games run
 one experiment, `omufExp`, generic in the carrier `OracleComp spec`, over a
-query menu, oracle, log and winning condition generic in the monad.
+query type, oracle, log and winning condition generic in the monad.
 
 **Why.** The `π_is` lifting lemma of #205 bounds the scheme with `π_is` by the
 core, so its left side lives at the oracle carrier and its right side at
@@ -990,7 +990,7 @@ core, so its left side lives at the oracle carrier and its right side at
   the experiment `omufExp` generic instead, each carrier's game supplies its
   own runner in one line (`runRO H ∅` at the oracle carrier, none at
   `ProbComp`).
-- *A copy of the building blocks for the oracle carrier.* The same declarations
+- *A copy of the declarations for the oracle carrier.* The same declarations
   twice, with nothing to keep them in step. Only the adversary structure is
   restated per carrier: `OMUFAdversaryRO` is `OMUFAdversary` with `ZKRO H` in
   place of `unifSpec`.

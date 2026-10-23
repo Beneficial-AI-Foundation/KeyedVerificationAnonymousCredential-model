@@ -130,7 +130,7 @@ accordingly not formalized here.
 *O24 Figure 6.* The one-more unforgeability game for an anonymous token
 scheme {uses "anonymous_tokens"}[] with non-interactive issuance: after `q`
 blind-issuance sessions the adversary must present `q + 1` valid
-pairwise-distinct message/token pairs. Mirrors the UF-CMVA game
+message/token pairs with pairwise-distinct messages. Mirrors the UF-CMVA game
 {bpref "ufcmva_game"}[]: a Sign/Verify query menu, a logged
 honest oracle implementation (the log's length is Figure 6's dynamic
 counter `q`), the experiment `omufExp` with the three-clause win condition

@@ -61,9 +61,8 @@ end ATSyntax
 
 /-! ## The game -/
 
-/-- An OMUF adversary at the oracle carrier: the shape of `OMUFAdversary`, with
-the random oracle `ZKRO H`, which includes uniform sampling, in place of
-`unifSpec`. -/
+/-- An OMUF adversary at the oracle carrier: `OMUFAdversary` with the random
+oracle `ZKRO H`, which includes uniform sampling, in place of `unifSpec`. -/
 structure OMUFAdversaryRO (H : HashSpec) (tok : ATSyntax (OracleComp (ZKRO H))) where
   /-- The adversary's program: from `(crs, pp)`, query the random oracle and
   Sign / Verify, and output the candidate message/token pairs. -/
