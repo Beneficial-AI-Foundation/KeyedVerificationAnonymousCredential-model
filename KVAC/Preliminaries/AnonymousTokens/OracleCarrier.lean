@@ -105,8 +105,8 @@ def ATSyntax.lift (H : HashSpec) (tok : ATSyntax ProbComp) :
   issueUsr₂ crs st resp := liftM (tok.issueUsr₂ crs st resp)
 
 /-- The query translation behind `OMUFAdversary.lift`: a sampling query goes
-to the sampling arm of `ZKRO H`, and a Sign or Verify query to the same query of
-the lifted scheme. -/
+to the `unifSpec` oracle of `ZKRO H`, and a Sign or Verify query to the same
+query of the lifted scheme. -/
 def omufLiftImpl (H : HashSpec) (tok : ATSyntax ProbComp)
     {secParam n : Nat} (crs : tok.Crs secParam n) :
     QueryImpl (unifSpec + OMUFOracleSpec tok crs)
