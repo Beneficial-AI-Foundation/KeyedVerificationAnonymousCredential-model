@@ -130,8 +130,9 @@ discharge the hypotheses before the compiled Σ-protocols of issue #3 exist, so
 Theorem 5.3 and Theorem 1 carry them as well.
 
 **The oracle.** `riuSimulationOracle` is the simulator of `ZKP_cmz.iu` as the
-simulation oracle with respect to `ZKP_cmz.is`. The lemma
-`ksndSimAdv_le_ksndAdv_of_domainSeparated` discharges H3 with it. -/
+simulation oracle with respect to `ZKP_cmz.is`, the oracle the issuer holds
+when it produces `π_is` in hybrid H3, where the lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` applies. -/
 
 /-- The simulator of `ZKP_cmz.iu` as the simulation oracle with respect to
 `ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3.

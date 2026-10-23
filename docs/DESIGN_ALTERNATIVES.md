@@ -891,9 +891,8 @@ random oracles" within one oracle, the mechanism the Remark names, and is
 wider than the Schnorr instance. The Remark's own requirement, that the
 simulated proofs "cannot be turned into proofs" of the other relation, has no
 formal counterpart. The instance fact for the compiled Σ-protocols waits
-for issue #3, and until then no call site discharges the hypotheses, so
-Theorem 5.3 and Theorem 1 carry them. Errata item 17 records the difference
-between Theorem 1 and Theorem 5.8.
+for issue #3, and until then no call site discharges the hypotheses. Errata
+item 17 records the difference between Theorem 1 and Theorem 5.8.
 
 ## Open alternatives
 

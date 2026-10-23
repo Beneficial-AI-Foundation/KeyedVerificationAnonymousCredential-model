@@ -173,11 +173,14 @@ Knowledge soundness of a proof system of {uses "extraction_game"}[] while the
 adversary holds a simulation oracle for other proof systems over the same
 random oracle. This is the property hybrid H3 of O24 Theorem 5.8 uses. The
 other proof systems enter as a simulation oracle over the shared cache.
-The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain separation is the "different random oracles" of O24 Remark 5.9
-within one oracle, the mechanism the Remark names and not its requirement. A proof system, a simulator or an extractor is confined to a region of
-the random-oracle domain when it reads and writes inside it only. Domain
-separation confines the simulators of the other systems and the system under extraction to
-disjoint regions. The reduction serves the simulation region from a local table.
+The extractor is a trace extractor, {uses "trace_extractor"}[]. Domain
+separation is the "different random oracles" of O24 Remark 5.9 within one
+oracle, the mechanism the Remark names and not its requirement. A proof
+system, a simulator or an extractor is confined to a region of the
+random-oracle domain when it reads and writes inside it only. Domain
+separation confines the simulators of the other systems and the system under
+extraction to disjoint regions. The reduction serves the simulation region
+from a local table.
 :::
 
 :::theorem "remark_59" (lean := "KVAC.Core.ksndSimAdv_le_ksndAdv_of_domainSeparated") (parent := "core_zkproof") (tags := "milestone")

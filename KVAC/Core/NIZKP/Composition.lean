@@ -7,7 +7,7 @@ import KVAC.Core.NIZKP.Extraction
 import VCVio.CryptoFoundations.Asymptotics.Negligible
 
 /-!
-# Knowledge soundness in the presence of other simulated proofs (O24 Remark 5.9)
+# Knowledge soundness in the presence of other simulated proofs (Remark 5.9)
 
 Hybrid H3 of Theorem 5.8 (§5.4, p. 41) extracts from a proof `π_is` that
 the issuer produced after receiving a simulated `π_iu`. The §3.3 game
@@ -195,7 +195,7 @@ def TraceExtractor.ConfinedTo {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKR
     (c : H.Cache), e crs x π c = e crs x π (P.restrict c)
 
 /-- A proof system whose setup, prover and verifier are confined to a region,
-the "different random oracles" of O24 Remark 5.9 within one oracle. For a
+the "different random oracles" of Remark 5.9 within one oracle. For a
 Fiat–Shamir Σ-protocol the region is the transcript hashes of its statement
 shape. -/
 structure ConfinedSystem (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)))
@@ -214,7 +214,7 @@ def ZKSimulatorConfinedTo {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H)
     (sim : ZKSimulator H zkp) (P : Region H) : Prop :=
   ∀ {secParam : Nat} (crs : zkp.Crs secParam) (x : zkp.Stmt crs), P.Confined (sim crs x)
 
-/-- The "different random oracles" of O24 Remark 5.9 within one oracle, the mechanism the
+/-- The "different random oracles" of Remark 5.9 within one oracle, the mechanism the
 Remark names and not its requirement. The simulators of the other systems are confined to one
 region, and setup, the verifier and the extractor of `zkp` to a disjoint one.
 The Remark's "vector sizes mismatch" is the disjointness. -/
@@ -267,7 +267,7 @@ def KSNDSimAdversary.toKSND {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO 
     (simulateQ (simulationOracleImpl simOracle crs + regionROImpl H ds.simRegion)
       (A.run crs)).run' ∅
 
-/-- **O24 Remark 5.9.** Under domain separation, knowledge soundness suffices.
+/-- **Remark 5.9.** Under domain separation, knowledge soundness suffices.
 The advantage in `ksndSimGame` is bounded by the printed `Adv^ksnd` of the
 reduction `A.toKSND ds`.
 
