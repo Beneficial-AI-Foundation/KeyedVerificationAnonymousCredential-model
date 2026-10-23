@@ -126,8 +126,7 @@ proof of the printed form exists. Each proof system, its simulator or its
 extractor, is confined to its own region of the random-oracle domain, and the
 regions are pairwise disjoint. That is the Remark's "different random
 oracles" within one oracle, wider than the Schnorr instance. No call site can
-discharge the hypotheses before the compiled Σ-protocols of issue #3 exist, so
-Theorem 5.3 and Theorem 1 carry them as well.
+discharge the hypotheses before the compiled Σ-protocols of issue #3 exist.
 
 **The oracle.** `riuSimulationOracle` is the simulator of `ZKP_cmz.iu` as the
 simulation oracle with respect to `ZKP_cmz.is`, the oracle the issuer holds
