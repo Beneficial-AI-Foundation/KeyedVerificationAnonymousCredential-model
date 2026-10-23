@@ -478,6 +478,39 @@ Drawing `H` from `𝔾^×` removes `H = 0_𝔾` from the support of `setup`. The
 other properties are unaffected; the OMUF bound of Theorem 5.11 loosens by
 `(q + 3)/(p(p − 1))` (same analysis).
 
+## No obligation theorem for `ExtractablePoly`
+
+**Decision.** `Framework/Extractability.lean` states the predicates `Extractable`,
+`PolyBounded` and `ExtractablePoly` of O24 Definition 4.5 and no theorem about
+them. The theorem `extractablePoly_obligation`, added by PR 126 as an
+"obligation generator" asserting `ExtractablePoly H kvac isPPT` for every scheme
+and every efficiency predicate with a `sorry`, is removed (issue #177, item 12 of
+`docs/MICROCMZ_REMAINING.md`).
+
+**Rejected alternatives.** Keeping the theorem with the premises its docstring
+elided, scheme correctness and knowledge-sound proof systems, which an abstract
+`kvac` cannot name. Specializing it to the μCMZ instance, which at a fixed group
+is the asymptotic clause of Theorem 5.10 with no route to a proof (*The crs and
+the group* below). A bridging lemma from a negligible bound to `ExtractablePoly`,
+which is VCVio's `negligible_of_le` and belongs inside the proof of the asymptotic
+clause, not to the framework.
+
+**Fidelity argument.** The statement without premises is false. A scheme with
+inhabited message types whose server presentation check accepts every
+presentation, with the constantly true efficiency predicate, lets an adversary
+that makes no oracle query and outputs any pair win `EXTGame` with probability
+one for every extractor, since the honest-presentation and issued lists are
+empty and only the accept bit counts. The paper has no such theorem. Theorem
+5.10 (§5.5, p. 42) states "μCMZ is extractable for n = poly(λ) attributes with
+advantage" followed by its inequality, and its proof (pp. 42 to 43) builds the
+reductions without naming negligibility. The inequality is item 13, stated at
+fixed parameters as Theorem 5.8 is. The clause "extractable" is `ExtractablePoly`
+at the μCMZ instance under the negligibility of the four terms for the reduction
+adversaries, which issue #148 carries. At the fixed group of the instance p
+does not grow with λ, so 3/p is a positive constant and this bound cannot
+establish negligibility. The paper's asymptotic argument requires a λ-indexed
+group family.
+
 ## Anonymity game at fixed setup, negligibility over instance families
 
 **Decision.** The anonymity games `anonGameReal` and `anonGameSim`

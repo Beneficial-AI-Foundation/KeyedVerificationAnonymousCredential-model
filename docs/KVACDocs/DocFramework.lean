@@ -222,8 +222,12 @@ oracle query by query, a query cached in `c₁` answering identically, one
 cached only in `c` being a fresh sample that returns the cached value.
 :::
 
-:::definition "kvac_extractability" (lean := "KVAC.Framework.Extractable, KVAC.Framework.PolyBounded, KVAC.Framework.ExtractablePoly, KVAC.Framework.extractablePoly_obligation") (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
+:::definition "kvac_extractability" (lean := "KVAC.Framework.Extractable, KVAC.Framework.PolyBounded, KVAC.Framework.ExtractablePoly") (parent := "framework_extract") (tags := "paper, O24 Def 4.5") (effort := "medium") (priority := "high")
 *O24 Definition 4.5.* Extractability for a KVAC scheme {uses "kvac_syntax"}[]:
 an extractor recovers the certified attributes from any accepting
-presentation, in the game of {uses "extractability_game"}[].
+presentation, in the game of {uses "extractability_game"}[]. The node
+carries the predicates only. The clause "μCMZ is extractable" of O24
+Theorem 5.10 is the predicate at the μCMZ instance, stated once a
+λ-indexed group family gives negligibility its content (issue #148), and
+the inequality of Theorem 5.10 is the node `mucmz_extractability`.
 :::
