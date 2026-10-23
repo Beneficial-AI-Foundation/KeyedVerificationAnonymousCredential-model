@@ -895,6 +895,61 @@ advantage by sampled advantages does not hold in general, and
 the views keeps both sides at the same `H`, and the asymptotic form over a
 λ-indexed group family is issue #148.
 
+## The candidate `Z` of Theorem 5.10 is a function of the proof and the trace
+
+**Decision.** `ZCandidate` is a function of the crs, the statement of `R_cmz.p`
+without `Z`, the proof `π_p` and the random-oracle table, returning an optional
+group element. The hypothesis `ZCandidateSound` says that it returns the
+verifier's `Z` whenever `π_p` verifies on it from that table. The Theorem 5.10 statement of #179 takes both as arguments.
+
+**Rejected alternatives.** A `ProbComp`-valued recovery, since the recovery
+the paper describes uses no coins. A reuse of `TraceExtractor`, which needs
+the full statement, `Z` included, and returns a witness. A bound term for a
+failed recovery, which the printed bound does not carry.
+
+**Fidelity argument.** The paper assumes "that the proof itself can provide a
+candidate instance Z, and that the instance can be check for correctness via
+the oracle Help" (p. 42), and says that for Schnorr proofs the statement is
+recovered "by looking at the trace of random oracle queries". The hypothesis
+is that assumption. The instance fact for the Fiat–Shamir Σ-protocols belongs
+to issue #3, with the `ConfinedSystem` facts.
+
+## Theorem 5.10 at the sampled crs
+
+**Decision.** The views `riuNIZKPSampled`, `risNIZKPSampled` and
+`rpNIZKPSampled` sample the crs as the credential's setup does, so the four
+advantages of the bound use the same distribution of `H` as the extraction game.
+
+**Rejected alternative.** The views at a fixed crs of `Anonymity.lean`.
+
+**Fidelity argument.** Definition 4.5 (p. 31) samples the crs inside the game
+and the §3.3 games sample it inside, so the reductions of §5.5 forward the
+crs of the game they play. Definition 4.4 quantifies over the crs pointwise,
+which is why Theorem 5.8 fixes it.
+
+## Theorem 5.10 in the single-user setting
+
+**Decision.** The Theorem 5.10 statement of #179, `μCMZ_extractability`,
+quantifies over `SUEXTAdversary`, an
+adversary that queries `Issue`, `Present` and the random oracle and never
+`NewUsr` or `PresentUsr`, embedded in the full game of Figure 8 by
+`SUEXTAdversary.toEXTAdversary`. The game itself, `EXTGame` of
+`Framework/Extractability.lean`, keeps the four oracles.
+
+**Rejected alternative.** The full game with an adversary that queries
+`NewUsr` and `PresentUsr`.
+
+**Fidelity argument.** §4.4 (p. 32) says "when proving our keyed-verification
+credential systems, we do not consider the multi-user setting", and the
+reduction of Theorem 5.10 (p. 43) handles `Issue` and `Present` queries only. In
+the full game the printed bound fails for a proof system whose proofs are
+malleable. A presentation of an honest user with a modified proof verifies, lies
+outside `PQrs`, and its attributes lie outside `Qrs`, which Figure 8 fills from
+`Issue` only. The adversary wins whether or not the extractor opens it, while
+every hypothesis of the theorem holds. §4.4 says that strong simulation
+extractability is what the condition `(φ*, ρ*) ∉ PQrs` needs. The multi-user
+extension is step 8 of item 13 of `docs/MICROCMZ_REMAINING.md`.
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`

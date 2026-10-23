@@ -12,6 +12,8 @@ import KVAC.Schemes.MicroCMZ.Credential
 import KVAC.Schemes.MicroCMZ.CredentialCorrectness
 import KVAC.Schemes.MicroCMZ.CredentialGames
 import KVAC.Schemes.MicroCMZ.Anonymity
+import KVAC.Schemes.MicroCMZ.Extractability
+
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
@@ -66,10 +68,13 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   core, the Equations 17 to 22 polynomial layer, the game trace with its
   case events, and the Theorem 5.11 statements — Track CMZ-OMUF.
 
-Two more are planned:
+- `Extractability.lean` — Section 5.5, the proof systems at the sampled crs, the
+  candidate `Z` and the single-user extraction adversary — Track CMZ-E.
+
+One more is planned:
 
 - `Anonymity.lean` — Section 5.4 — Track CMZ-A.
-- `Extractability.lean` — Section 5.5 — Track CMZ-E.
+
 
 :::theorem "mucmz_is_kvac" (tags := "paper, O24 Thm 1") (effort := "small") (priority := "medium")
 *O24 Theorem 1.* μCMZ is a keyed-verification anonymous credential
@@ -1037,6 +1042,43 @@ keyed-verification credential in the sense of {uses "kvac_extractability"}[].
 :::proof "mucmz_extractable_kvac"
 Combines anonymity {uses "mucmz_anonymity"}[] and extractability
 {uses "mucmz_extractability"}[].
+:::
+
+:::definition "mucmz_proof_systems_sampled_crs" (lean := "KVAC.Schemes.MicroCMZ.riuNIZKPSampled, KVAC.Schemes.MicroCMZ.risNIZKPSampled, KVAC.Schemes.MicroCMZ.rpNIZKPSampled, KVAC.Schemes.MicroCMZ.riuDecRelSampled, KVAC.Schemes.MicroCMZ.risDecRelSampled, KVAC.Schemes.MicroCMZ.rpDecRelSampled") (parent := "cmz_extract") (tags := "milestone")
+The proof system parameters `ZKP_cmz.iu`, `ZKP_cmz.is` and `ZKP_cmz.p` of {uses "mucmz_construction"}[] read as proof systems of {uses "zk_arguments"}[] for the
+relations {uses "riu_relation"}[], {uses "ris_relation"}[] and {uses "rp_relation"}[], with the crs sampled as the credential's setup samples it,
+through {uses "mucmz_proof_system_parameters"}[], and their relations decidable.
+Definition 4.5 samples the crs inside the game, so every advantage of the
+Theorem 5.10 bound uses the same distribution of the crs. The views of {uses "mucmz_proof_systems_fixed_crs"}[] fix it for the pointwise Definition 4.4.
+:::
+
+:::definition "mucmz_extractors_simulator" (lean := "KVAC.Schemes.MicroCMZ.RiuExtractor, KVAC.Schemes.MicroCMZ.RpExtractor, KVAC.Schemes.MicroCMZ.RisSimulator") (parent := "cmz_extract") (tags := "milestone")
+The trace extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`, functions of the crs, the
+statement, the proof and the random-oracle table, and the zero-knowledge
+simulator of `ZKP_cmz.is`, the three objects from which the proof of O24
+Theorem 5.10 (§5.5, pp. 42 to 43) builds its extractor and its reduction.
+:::
+
+:::definition "mucmz_candidate_z" (lean := "KVAC.Schemes.MicroCMZ.ZCandidate, KVAC.Schemes.MicroCMZ.ZCandidateSound") (parent := "cmz_extract") (tags := "milestone")
+The candidate `Z` of O24 §5.5 (p. 42). The server recomputes `Z = (x₀ + xᵣ)•U' +
+Σᵢ xᵢ•Cᵢ − C_V` from the secret key, which the reduction to unforgeability does
+not hold, so the paper assumes "that the proof itself can provide a candidate
+instance `Z`". A candidate is a function of the crs, the statement of {uses "rp_relation"}[] without `Z`, the proof `π_p` and the random-oracle table. The
+assumption is that it returns the verifier's `Z` whenever `π_p` verifies on it
+from that table. The instance fact for the Fiat–Shamir Σ-protocols belongs to
+issue #3.
+:::
+
+:::definition "mucmz_single_user_adversary" (lean := "KVAC.Schemes.MicroCMZ.SUEXTQuery, KVAC.Schemes.MicroCMZ.SUEXTOracleSpec, KVAC.Schemes.MicroCMZ.SUEXTAdvSpec, KVAC.Schemes.MicroCMZ.SUEXTAdversary, KVAC.Schemes.MicroCMZ.suQueryImpl, KVAC.Schemes.MicroCMZ.SUEXTAdversary.toEXTAdversary") (parent := "cmz_extract") (tags := "milestone")
+An adversary of {uses "extractability_game"}[] in the single-user setting.
+It queries `Issue`, `Present` and the random oracle only, and is embedded in
+the full game of Figure 8 by `SUEXTAdversary.toEXTAdversary`, since §4.4
+(p. 32) says "when proving our keyed-verification credential systems, we do
+not consider the multi-user setting" and the reduction of Theorem 5.10
+(p. 43) handles `Issue` and `Present` queries only. The full game admits a
+win by a malleable proof of an honest presentation, whose attributes lie
+outside `Qrs`. The multi-user extension is step 8 of item 13 of
+`docs/MICROCMZ_REMAINING.md`.
 :::
 
 :::theorem "mucmz_extractability" (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
