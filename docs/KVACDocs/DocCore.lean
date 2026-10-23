@@ -10,6 +10,7 @@ import KVAC.Core.Hash
 import KVAC.Core.ZKProof
 import KVAC.Core.NIZKP.Security
 import KVAC.Core.NIZKP.Extraction
+import KVAC.Core.NIZKP.Composition
 import KVAC.Core.AlgebraicMAC
 import KVAC.Core.AlgebraicMAC.Security
 import KVAC.Core.SimulateQGuarded
@@ -149,6 +150,22 @@ adversary's run, and for SE the simulation log), the two experiments
 advantages `KSNDAdv` and `SEAdv`. The SE extractor returns a candidate
 statement (O24 Section 3.3, p. 25). The `verify` no-sampling constraint is
 deferred (issue #101).
+:::
+
+:::definition "trace_extractor" (lean := "KVAC.Core.TraceExtractor, KVAC.Core.TraceExtractor.toKSND, KVAC.Core.KnowledgeSoundWith, KVAC.Core.KnowledgeSound, KVAC.Core.TraceKnowledgeSound, KVAC.Core.KnowledgeSound.of_trace") (parent := "core_zkproof") (tags := "milestone")
+An extractor from the crs, the statement, the proof and the random-oracle
+table, without the adversary's code and coins that the white-box extractor of
+{uses "extraction_game"}[] receives. The simulator of O24 Theorem 5.8 invokes
+the extractor inside the anonymity game, where no adversary is in scope, since
+Definition 4.4 fixes the simulator before the adversary, so this is the
+extractor it can call. The map `toKSND` embeds a trace extractor into the
+white-box type, so the printed knowledge-soundness advantage applies to it. The
+lemma `KnowledgeSound.of_trace` states that knowledge soundness with a trace
+extractor implies the §3.3 notion, "there exists an extractor Ext" with
+negligible advantage. Extractors carry no running-time bound, so the converse
+holds as well. The §9 extractor of the algebraic group model is straight-line
+in this sense, but it also reads algebraic representations that the table does
+not hold.
 :::
 
 # Keyed setup

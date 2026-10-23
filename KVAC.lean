@@ -6,6 +6,7 @@ import KVAC.Core.AlgebraicMAC.Security
 import KVAC.Core.NIZKP
 import KVAC.Core.NIZKP.Security
 import KVAC.Core.NIZKP.Extraction
+import KVAC.Core.NIZKP.Composition
 import KVAC.Core.SimulateQGuarded
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.Relations

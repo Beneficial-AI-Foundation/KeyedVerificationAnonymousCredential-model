@@ -31,8 +31,8 @@ against. The design of this carrier and its `verify` underspecification are
 recorded in `docs/DESIGN_ALTERNATIVES.md` (issue #101).
 
 Game and advantage follow `AlgebraicMAC/Security.lean`; the random-oracle
-setup follows `Security.lean`. Negligibility statements are deferred, as
-everywhere in this layer.
+setup follows `Security.lean`. This file states no negligibility. The
+knowledge-soundness predicates of `Composition.lean` state it over `KSNDAdv`.
 -/
 
 namespace KVAC.Core
