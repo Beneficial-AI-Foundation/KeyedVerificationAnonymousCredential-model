@@ -10,9 +10,8 @@ import KVAC.Core.NIZKP.Composition
 # Anonymity of μCMZ (O24 §5.4, Theorem 5.8)
 
 Toward the statement of O24 Theorem 5.8 for `μCMZCredentialSyntax` of
-Figure 9. This part adds the zero-knowledge simulators and the extractor of
-the three proof systems. The simulation oracle of Remark 5.9, the simulator of
-the proof and the theorem follow in later parts.
+Figure 9. This part adds the simulation oracle of Remark 5.9. The simulator of
+the proof and the theorem follow in the last part.
 -/
 
 namespace KVAC.Schemes.MicroCMZ
@@ -104,5 +103,45 @@ def rpSimToZK {n : ℕ} (H : G) (π : RpProofSystem HS G F n) (s : RpSimulator H
 def risExtToTrace (H : G) (π : RisProofSystem HS G F) (e : RisExtractor HS π) :
     TraceExtractor HS (risNIZKP HS gen H π) :=
   fun {_} crs x pr c => e crs x pr c
+
+variable (πiu : ∀ n, RiuProofSystem HS G F n) (πis : RisProofSystem HS G F)
+  (πp : ∀ n, RpProofSystem HS G F n)
+
+/-! ## The simulation oracle of Remark 5.9
+
+**Hybrid H3** (p. 41) extracts from a `π_is` that the issuer produced after
+receiving the simulated `π_iu` of H1. That is knowledge soundness of
+`ZKP_cmz.is` with a simulation oracle for `ZKP_cmz.iu`, the game `ksndSimGame`
+of `Core/NIZKP/Composition` with advantage `KSNDSimAdv`, not the printed
+`Adv^ksnd`.
+
+**Hybrid H2** runs, in its reduction, the same simulator of `ZKP_cmz.iu`
+inside the zero-knowledge game of `ZKP_cmz.p`.
+
+**The hypotheses.** Theorem 5.8 (p. 40) is printed for any "proof system for
+the relation R ⊇ R_cmz", and its proof holds under the condition of Remark
+5.9, which the paper verifies for Schnorr proofs alone. The theorem states
+what the printed proof proves and takes the condition as hypotheses, since no
+proof of the printed form exists. Each proof system, its simulator or its
+extractor, is confined to its own region of the random-oracle domain, and the
+regions are pairwise disjoint. That is the Remark's "different random
+oracles" within one oracle, wider than the Schnorr instance. No call site can
+discharge the hypotheses before the compiled Σ-protocols of issue #3 exist.
+
+**The oracle.** `riuSimulationOracle` is the simulator of `ZKP_cmz.iu` as the
+simulation oracle with respect to `ZKP_cmz.is`, the oracle the issuer holds
+when it produces `π_is` in hybrid H3, where the lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` applies. -/
+
+/-- The simulator of `ZKP_cmz.iu` as the simulation oracle with respect to
+`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3.
+The simulator is the §3.3 object of `riuNIZKP` at the crs `H`, the one
+`ZKSimulatorConfinedTo` confines in the theorem. -/
+def riuSimulationOracle (n : ℕ) (H : G)
+    (simIu : ZKSimulator HS (riuNIZKP HS gen H (πiu n))) :
+    SimulationOracle HS (risNIZKP HS gen H πis) where
+  Query := fun _ => RiuStmt G F n
+  spec := fun _ _ => (πiu n).Proof
+  impl := fun {secParam} H' x => simIu (secParam := secParam) H' x
 
 end KVAC.Schemes.MicroCMZ

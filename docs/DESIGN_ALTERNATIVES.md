@@ -923,6 +923,48 @@ The restriction keeps the printed `Adv^ksnd` applicable. Extractors carry no
 running-time bound, so the restriction is a modelling discipline as long as
 `OracleComp` carries no cost model, which issue #148 lists as out of scope.
 
+## Theorem 5.8 with the printed knowledge-soundness term
+
+**Decision.** The bound of `μCMZ_anonymity` (`Schemes/MicroCMZ/Anonymity.lean`)
+carries `KSNDAdv` of `ZKP_cmz.is` as Theorem 5.8 prints it. The theorem takes
+as hypotheses the condition of Remark 5.9 in four forms of
+`Core/NIZKP/Composition.lean`. `ConfinedSystem` confines the setup, prover and
+verifier of each of the three proof systems to a region of the random-oracle
+domain, `ZKSimulatorConfinedTo` confines the simulators of `ZKP_cmz.iu` and
+`ZKP_cmz.p` to the region of their system, `TraceExtractor.ConfinedTo`
+confines the extractor of `ZKP_cmz.is` to the region of its system, and
+`Region.Disjoint` makes the three regions pairwise disjoint. The property
+hybrid H3 uses is `KSNDSimAdv`, knowledge soundness in the presence of
+simulated proofs of `ZKP_cmz.iu`. The lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term. The
+zero-knowledge step H2 needs the condition as much as H3. Its reduction runs
+the simulator of `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`,
+which offers the random oracle only, while Remark 5.9 raises the point for
+extraction alone. The Remark states its case for `π_iu` after simulated
+`π_is`, the direction of Theorem 5.10, and H3 of Theorem 5.8 is the mirror
+case, which the lemma covers as well.
+
+**Rejected alternative.** Replacing the knowledge-soundness term by a
+simulation-extractability term `SEAdv`, as Theorem 1 (§1, p. 4) prints
+`Adv^simex` where Theorem 5.8 prints `Adv^ksnd`, or stating the bound with
+`KSNDSimAdv` directly.
+
+**Fidelity argument.** The bound of Theorem 5.8 is the one to formalize, and
+Remark 5.9 is the paper's own argument that knowledge soundness suffices for
+the Figure 9 proof systems. Theorem 5.8 (p. 40) is printed for any "proof
+system for the relation R ⊇ R_cmz", while the Remark gives its argument for
+Schnorr proofs alone, without a proof. The formal theorem states what the
+printed proof proves and takes the condition as hypotheses, since no proof of
+the printed form exists. The formalization states the Remark as a lemma over any
+proof system, with an explicit region of the random-oracle domain in place of
+"the vector sizes mismatch". `DomainSeparated` is the Remark's "different
+random oracles" within one oracle, the mechanism the Remark names, and is
+wider than the Schnorr instance. The Remark's own requirement, that the
+simulated proofs "cannot be turned into proofs" of the other relation, has no
+formal counterpart. The instance fact for the compiled Σ-protocols waits
+for issue #3, and until then no call site discharges the hypotheses. Errata
+item 17 records the difference between Theorem 1 and Theorem 5.8.
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
