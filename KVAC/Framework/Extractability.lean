@@ -335,9 +335,11 @@ it for every `kvac` and every `isPPT` with no premises (the former
 server check accepts every presentation lets an adversary with no oracle query win
 with probability one for every extractor. The clause "μCMZ is extractable" of O24
 Theorem 5.10 is `ExtractablePoly` at the μCMZ instance under the negligibility of the
-terms of its bound. At the fixed group of the instance `p` does not grow with `λ`, so
-`3/p` is a positive constant, this bound cannot establish negligibility, and the
-paper's asymptotic argument needs the λ-indexed group family of issue #148.
+terms of its bound. Its unforgeability term is bounded by Theorem 5.1, whose bound
+carries the constant `3/p` (p. 35). At the fixed group of the instance `p` does not
+grow with `λ`, so that constant stays positive, the bound cannot establish
+negligibility, and the paper's asymptotic argument needs the λ-indexed group family
+of issue #148.
 Theorem 5.10's inequality is stated at fixed parameters (`docs/DESIGN_ALTERNATIVES.md`,
 *No obligation theorem for `ExtractablePoly`*). -/
 def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
