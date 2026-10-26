@@ -17,10 +17,10 @@ Aggregator for the one-more unforgeability analysis of the μCMZ_AT core scheme
 the pattern of `AGMReduction/`. Track CMZ-OMUF of the Theorem 5.3 plan. Each part
 documents its own contents in its module docstring:
 
-- `Game` — the AGM-instrumented one-more unforgeability game: the representation
-  gate, the query type and log, the gated Sign and Verify oracles, the algebraic
-  adversary and its forgeries, the winning condition, the experiment
-  `AGM_OMUFGame` and its advantage;
+- `Game` — the AGM-instrumented one-more unforgeability game: the query type and
+  log, the Sign and Verify oracles that evaluate the submitted representations,
+  their normalization, the algebraic adversary and its forgeries, the winning
+  condition, the experiment `AGM_OMUFGame` and its advantage;
 - `Polynomial` — the pure-algebra layer of Equations 17 to 22 over the ring of
   `AGMPolynomial.lean`: the exponent of a representation given the commitment
   polynomials, the commitment polynomials `c_1, …, c_r` (Equations 17 and 18),

@@ -283,7 +283,7 @@ embedding is question C2 of the Theorem 5.3 plan. One constraint on the
 construction: it must preserve the Sign budget, forwarding each Sign query of
 the `n`-attribute forger exactly once and making none of its own, since
 `agm_omuf_le` runs the `n = 1` reductions at the same `q`, while translating
-the representation gates and the transcript and carrying a distinct-combination
+the representations and the transcript and carrying a distinct-combination
 win into a single-attribute win. Its coins, if it needs any, come from the
 adversary's private coin oracle (module docstring).
 -/
