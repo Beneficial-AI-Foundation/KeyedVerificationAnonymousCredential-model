@@ -147,8 +147,8 @@ no win predicate — those enter in the case split the caller performs; the lemm
 `mStar`.
 
 `MicroCMZ.verify` is `U* ≠ 0 ∧ V* = macScalar sk m* • U*`, and only its second conjunct is used
-here, read through the representations — the caller supplies it from the verify oracle's
-consistency checks and that equation. The `U* ≠ 0` conjunct is consumed in the *identity* branch
+here, read through the representations — the caller supplies it from the evaluated forgery
+and that equation. The `U* ≠ 0` conjunct is consumed in the *identity* branch
 alone: there `agm_n1_identity_Ustar_eq_zero` derives `U* = 0`, which `verify` then rejects. It is
 never a hypothesis of this branch. -/
 theorem verifPoly_eval_eq_zero_of_keySmul (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F)
@@ -225,9 +225,9 @@ structure EmbeddedParams (G : Type) where
   x1 : G
 
 /-- A representation evaluated against the embedded public parameters — the form every
-consistency check takes, on both the reduction and the honest side. Saves spelling out
-`ρ.eval gen ep.h ep.x0 ep.xr (fun _ => ep.x1) tags`, in particular the `fun _ => ep.x1`
-that only exists because the `n = 1` key vector is a `Fin 1 → G`. -/
+evaluation of a submitted representation takes, on both the reduction and the honest side.
+Saves spelling out `ρ.eval gen ep.h ep.x0 ep.xr (fun _ => ep.x1) tags`, in particular the
+`fun _ => ep.x1` that only exists because the `n = 1` key vector is a `Fin 1 → G`. -/
 def AGMRepr.evalAt (ρ : AGMRepr F 1) (gen : G) (ep : EmbeddedParams G)
     (tags : List (G × G)) : G :=
   ρ.eval gen ep.h ep.x0 ep.xr (fun _ => ep.x1) tags
@@ -459,33 +459,26 @@ noncomputable def reductionSignStep (X X' : G) (aM bM : FixedMasks F) (m : Fin 1
 
 /-- **Reduction `verify` step** (factored out; see `reductionSignStep`). -/
 noncomputable def reductionVerifyStep (X X' X'' : G) (aM bM : FixedMasks F)
-    (ep : EmbeddedParams G) (m : Fin 1 → F) (σ : G × G) (ρU ρV : AGMRepr F 1) :
+    (ep : EmbeddedParams G) (m : Fin 1 → F) (ρU ρV : AGMRepr F 1) :
     StateT (RedLog F G) ProbComp Bool :=
   StateT.mk fun L =>
       let pU := L.maskedRepr aM bM ρU
       let keyUniv : Polynomial F := maskLift (aM.keyCoeff (m 0)) (bM.keyCoeff (m 0))
-      let consistent :=
-        ρU.evalAt gen ep L.tags = σ.1 ∧
-        ρV.evalAt gen ep L.tags = σ.2
-      pure (decide consistent && decide (σ.1 ≠ 0) &&
+      let σ := (ρU.evalAt gen ep L.tags, ρV.evalAt gen ep L.tags)
+      pure (decide (σ.1 ≠ 0) &&
         decide (σ.2 = exponentEval gen X X' X'' (keyUniv * pU)), L)
 
 /-- **Reduction `help` step** (factored out; see `reductionSignStep`). -/
 noncomputable def reductionHelpStep (X X' X'' : G) (aM bM : FixedMasks F)
-    (ep : EmbeddedParams G) (A₀ : G) (Av : Fin 1 → G) (Z : G)
-    (ρ₀ : AGMRepr F 1) (ρA : Fin 1 → AGMRepr F 1) (ρZ : AGMRepr F 1) :
+    (ep : EmbeddedParams G) (ρ₀ : AGMRepr F 1) (ρA : Fin 1 → AGMRepr F 1) (ρZ : AGMRepr F 1) :
     StateT (RedLog F G) ProbComp Bool :=
   StateT.mk fun L =>
       let p0 := L.maskedRepr aM bM ρ₀
       let p1 := L.maskedRepr aM bM (ρA 0)
       let keyUniv : Polynomial F := maskLift (aM.x0 + aM.xr) (bM.x0 + bM.xr)
       let x1Univ : Polynomial F := maskLift aM.x1 bM.x1
-      let consistent :=
-        ρ₀.evalAt gen ep L.tags = A₀ ∧
-        (∀ i, (ρA i).evalAt gen ep L.tags = Av i) ∧
-        ρZ.evalAt gen ep L.tags = Z
-      pure (decide consistent &&
-        decide (Z = exponentEval gen X X' X'' (keyUniv * p0 + x1Univ * p1)), L)
+      pure (decide (ρZ.evalAt gen ep L.tags
+        = exponentEval gen X X' X'' (keyUniv * p0 + x1Univ * p1)), L)
 
 /--
 The reduction's **simulated oracle** — answers `A`'s queries with no secret key
@@ -498,10 +491,8 @@ noncomputable def reductionOracleImpl (X X' X'' : G)
     (aM bM : FixedMasks F) (ep : EmbeddedParams G) :
     QueryImpl (AGMOracleSpec F G 1) (StateT (RedLog F G) ProbComp)
   | .sign m => reductionSignStep (gen := gen) X X' aM bM m
-  | .verify m σ ρU ρV =>
-      reductionVerifyStep (gen := gen) X X' X'' aM bM ep m σ ρU ρV
-  | .help A₀ Av Z ρ₀ ρA ρZ =>
-      reductionHelpStep (gen := gen) X X' X'' aM bM ep A₀ Av Z ρ₀ ρA ρZ
+  | .verify m ρU ρV => reductionVerifyStep (gen := gen) X X' X'' aM bM ep m ρU ρV
+  | .help ρ₀ ρA ρZ => reductionHelpStep (gen := gen) X X' X'' aM bM ep ρ₀ ρA ρZ
 
 /-! ## Root recovery (the reduction's discrete-log extraction step) -/
 
@@ -574,8 +565,6 @@ structure RedTrace (F G : Type) where
   ep : EmbeddedParams G
   /-- The forged message. -/
   mStar : Fin 1 → F
-  /-- The forged MAC code `(U*, V*)`. -/
-  σStar : G × G
   /-- The AGM representation of `U*`. -/
   ρU : AGMRepr F 1
   /-- The AGM representation of `V*`. -/
@@ -612,10 +601,10 @@ noncomputable def redTrace (X X' X'' : G) (A : AGMUFAdversary F G 1) :
   let Xr := aM.xr • gen + bM.xr • X
   let X1 := aM.x1 • gen + bM.x1 • X
   let ep : EmbeddedParams G := ⟨H, X0, Xr, X1⟩
-  let ((mStar, σStar, ρU, ρV), L) ←
+  let ((mStar, ρU, ρV), L) ←
     (simulateQ (reductionOracleImpl (gen := gen) X X' X'' aM bM ep)
       (A.run H (X0, Xr, fun _ => X1))).run []
-  pure ⟨aM, bM, ep, mStar, σStar, ρU, ρV, L⟩
+  pure ⟨aM, bM, ep, mStar, ρU, ρV, L⟩
 
 /-- The forgery's verification polynomial `φ` (O24 Eq. 12) read off the trace. `abbrev`, so
 `rw`/`simp only` see through it. -/

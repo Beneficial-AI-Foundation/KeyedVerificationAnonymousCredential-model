@@ -607,9 +607,8 @@ pair issued so far, in addition to evaluating to the submitted element
 (`reprMatches`). The Sign oracle applies this gate to its *input*, the
 commitment `C'` of O24 Equation 17, refusing with `none` on failure and still
 logging the query together with its representation. The Verify oracle applies
-the same predicate to the submitted token, like the MAC game's Verify oracle but
-with the exact-length rule added, so that one decidable predicate serves the
-oracles and the winning condition.
+the same predicate to the submitted token, so that one decidable predicate
+serves the oracles and the winning condition.
 
 **Rejected alternatives.** (i) The MAC game's convention, `AGMRepr.eval`'s
 `zipWith` against the issued pairs, which ignores excess entries and reads
@@ -640,7 +639,7 @@ not, its length conjunct failing once more pairs exist. Lemmas about an
 earlier commitment must evaluate its representation and never re-check the
 gate at a grown transcript. The MAC game does not need the rule because its
 Verify and Help representations are consumed once, at the arity of the moment
-they are checked. (ii) gives the same guarantee at the cost of a normalization
+they are evaluated. (ii) gives the same guarantee at the cost of a normalization
 lemma and is the fallback if a uniform game interface across the two tracks is
 preferred.
 
@@ -661,11 +660,47 @@ blind-issuance answer is `V' = (x₀ + xᵣ)·U' + u·C'`, a polynomial in the
 commitment's representation. The Equation 18 bridge is new work. Decided
 September 2026 (Track CMZ-OMUF, step A4 of #12).
 
+## Algebraic adversaries submit coefficients only
+
+**Decision.** In the AGM game of the μCMZ base MAC (`AlgebraicMAC.lean`) the
+algebraic group model restricts the adversary's type. `Verify` and `Help`
+queries and the forgery carry only representations (`AGMRepr`), coefficients
+over the generator `G₀`, the crs `H`, the public parameters `X₀, Xᵣ, X⃗` and the
+MAC codes issued so far. The challenger evaluates them (`AGMRepr.eval`) and
+answers honestly on the evaluated elements, and neither an oracle nor the win
+condition tests a representation against a submitted element.
+
+**Rejected alternative.** Gating the answers: queries and the forgery carry
+group elements next to their representations, and an oracle answers `false`,
+as does the win condition, when a representation does not evaluate to its
+element.
+
+**Fidelity argument.** O24 defines the model after [FKL18]: an algebraic
+adversary that returns a group element `X` "must also return coefficients
+ζ₁, …, ζₙ so that X = Σᵢ ζᵢ Zᵢ" (§3.1, p. 24). Its group elements are
+determined by its coefficients, so a type that carries the coefficients alone
+describes the same adversaries, and since the basis contains `G₀` the type
+excludes no element of 𝔾 from any query. The gate changes the game instead: it
+agrees with the honest game only for adversaries whose representations are
+correct on every branch, so carrying a bound from the gated game to the honest
+game needs a hypothesis on the adversary. Under the restriction the AGM game is
+the honest game with `Help` (`UFCMVAHelp.lean`) run on the evaluated elements,
+and the transfer between the two needs no side condition. The reductions keep
+what they used: `reductionOracleImpl` answers `Verify` and `Help` by evaluating
+the represented polynomial at the embedded 3-DL instance, the gap-DL simulator
+evaluates the representations on known group elements, and the `n → 1`
+collapse forwards a `Help` query's weighted sum `Σᵢ rᵢ • Aᵢ` as one
+representation, which the 1-attribute oracle evaluates exactly, with no check
+of the individual representations first. Representations compose linearly, so
+a reduction that submits linear combinations of represented elements stays
+algebraic, as the reduction `B` of Theorem 5.10 does with `(U′, C_V − r′H)`
+(p. 43). Decided October 2026 (Track CMZ-M, #235).
+
 ## Claim 5.7: the `n → 1` collapse translates representations, not only messages
 
-**Decision.** The Lemma 5.5 reduction `B` is built against the AGM-instrumented
+**Decision.** The Lemma 5.5 reduction `B` is built against the AGM
 UF-CMVA(+Help) game (`AlgebraicMAC.lean`), whose `Verify`/`Help` queries and
-forgery carry algebraic representations over the `n`-attribute basis. `B`
+forgery are algebraic representations over the `n`-attribute basis. `B`
 therefore translates every coefficient list to the 1-attribute basis:
 `AGMRepr.collapseRepr` for a single represented element and
 `AGMRepr.linCombCollapse` for the `Help` oracle's weighted sum `Σᵢ rᵢ • Aᵢ`
@@ -687,7 +722,7 @@ only messages (and `A⃗`) collapse, exactly as in the paper.
 **Fidelity argument.** The `n = 1` target `agm_ufcmva_le_n1_explicit` is stated
 on the AGM game, so a reduction to the plain game has no `n = 1` bound to
 invoke, and a reduction to the AGM game must hand the 1-attribute oracles
-representations they accept, hence the extra translation step and its bridges.
+representations, hence the extra translation step and its bridges.
 The step adds no adversarial power: the translated representation is computed
 from the adversary's own representation and the public `r⃗`. Decided September
 2026 (Track CMZ-AGM, Lemma 5.5).
@@ -815,7 +850,7 @@ the budget predicate `AGMOMUFQuery.isSign` counts Sign queries only.
 **Rejected alternative.** *Fixed coins in the construction*, the adversary
 types without a private coin oracle. A transformation that needs randomness
 then takes its coins as an argument, and its proof needs a fixed-coins
-argument. This is the route of Lemma 5.5, whose `nTo1Adversary gen A r` takes
+argument. This is the route of Lemma 5.5, whose `nTo1Adversary A r` takes
 the direction `r⃗` as an argument while `microCMZN3DLReduction` samples it, and
 it serves there because no forger the MAC track builds appears in its bounds.
 The `π_is` lifting lemma of #205 names the forger it builds in its bound, so
@@ -920,8 +955,7 @@ ties `Help` to no model. The algebraic group model is a hypothesis of Theorem 5.
 and of Lemma 5.4 (pp. 35, 36), where the reduction answers `Help` from the
 representations of an algebraic adversary (p. 38), and of nothing in §5.5. The
 printed Theorems 5.2 and 5.10 (pp. 35, 42) put no algebraic restriction on their
-adversary. The instrumented game is the device of that reduction, and its module
-docstring calls it "the instrumented game, not the honest game". Theorem 5.1
+adversary. The AGM game is the device of that reduction. Theorem 5.1
 bounds the game with `Help` for algebraic adversaries, and that is where the
 model enters when the two theorems are chained. `Help` reads the key
 `(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ and not an extension of the

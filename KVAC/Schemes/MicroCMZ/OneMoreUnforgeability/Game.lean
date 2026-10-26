@@ -21,7 +21,7 @@ the experiment `AGM_OMUFGame`, and its advantage `AGM_OMUFAdv`, together with
 the decidable Sign predicate the static query-budget hypotheses of Theorem 5.11
 count.
 
-A word of caution on naming, as in the MAC module: this is the instrumented game, not the
+A word of caution on naming: this is the instrumented game, not the
 honest Figure 6 game. The oracles are *gated*. They answer honestly only when
 the submitted representation is consistent, and refuse otherwise, so the game
 matches the plain `OMUFGame` of `KVAC.Preliminaries.AnonymousTokens.Security`
@@ -42,10 +42,9 @@ Equation 19 for the forgeries). The representation type is the MAC game's
 MAC, so the fixed basis is the same, and the Sign answers are pairs of group
 elements like the MAC codes, so they extend the basis the same way.
 
-The MAC oracle gates the group-element *arguments* of its Verify and Help oracles,
-while its Sign oracle takes a message and no group element. Here Sign takes a group
-element, the commitment, so it is the first oracle in the repository to gate an
-issuance request on the way in. That is what the Theorem 5.11 proof needs, since
+The MAC game's Sign oracle takes a message and no group element. Here Sign takes
+a group element, the commitment, so it is the first oracle in the repository to
+gate an issuance request on the way in. That is what the Theorem 5.11 proof needs, since
 Equation 18 substitutes each commitment's representation into the server's
 answer.
 
@@ -54,8 +53,7 @@ answer.
 **Gate on the way in.** The Sign oracle evaluates the submitted representation
 over the current public elements and issued pairs and compares it with the
 submitted commitment. On a match it answers through the core's server
-algorithm, on a mismatch it refuses with `none`. Gating the answers rather than
-restricting the adversary type is the merged MAC game's choice. The gate is
+algorithm, on a mismatch it refuses with `none`. The gate is
 computable from the adversary's own view, so a refusal reveals nothing about
 the secret key, an adversary loses nothing by pre-checking its own queries, and
 the stricter conventions below cannot strengthen it.
@@ -147,8 +145,8 @@ inductive AGMOMUFQuery (F G : Type) (n : ℕ) : Type where
   transcript so far (O24 Equation 17). Gated on the way in. -/
   | sign : G → AGMRepr F n → AGMOMUFQuery F G n
   /-- `verify m⃗ (U, V) ρ_U ρ_V` — a verification query for the token `(U, V)` on
-  the attributes `m⃗`, each component with a representation, gated like the MAC
-  game's Verify oracle and with the same exact-length rule as `sign`. -/
+  the attributes `m⃗`, each component with a representation, gated with the same
+  exact-length rule as `sign`. -/
   | verify : (Fin n → F) → Code G → AGMRepr F n → AGMRepr F n → AGMOMUFQuery F G n
 
 /--
@@ -266,8 +264,7 @@ The gate of the AGM OMUF game: a representation `ρ` *matches* a group element
 list of issued-pair coefficients has exactly one entry per issued pair and it evaluates to
 `y` (see *Exact-length issued-pair coefficients* in the module docstring). An `abbrev`,
 so decidability is derived and the oracles and the winning condition `decide`
-it. The length conjunct is the only difference from the MAC game's consistency
-check. It is not stable under extension of `tags`; `AGMRepr.eval` of an
+it. It is not stable under extension of `tags`; `AGMRepr.eval` of an
 accepted representation is.
 -/
 abbrev reprMatches (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
