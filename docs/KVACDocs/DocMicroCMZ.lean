@@ -1349,6 +1349,31 @@ pigeonhole step and the coefficient identities of Equations 20 and 21, the
 proof phase's.
 :::
 
+:::theorem "omuf_forgery_coefficients" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.uFree, KVAC.Schemes.MicroCMZ.AGMPoly.ev0, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_u, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_eta, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_x₀, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_x₁, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_eta, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_x₀, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_x₁, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_u, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_pderiv_u_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_forgeryPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_pderiv_u_forgeryPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_omufCommitPolys_getElem, KVAC.Schemes.MicroCMZ.AGMPoly.spec_keyPoly', KVAC.Schemes.MicroCMZ.AGMPoly.spec_C, KVAC.Schemes.MicroCMZ.AGMPoly.spec_x₀, KVAC.Schemes.MicroCMZ.AGMPoly.spec_xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.spec_toPolyAt_uZero, KVAC.Schemes.MicroCMZ.AGMPoly.spec_uFree, KVAC.Schemes.MicroCMZ.AGMPoly.forgeryPoly_eq_zero_coeffs") (parent := "cmz_omuf") (tags := "milestone")
+The coefficient reading of O24 Equations 20 and 21 for the Theorem 5.11 proof
+at `n = 1`: if the forgery polynomial of {uses "omuf_forgery_polynomial"}[]
+vanishes in the ring, and the `u`-free parts of the commitment polynomials of
+{uses "omuf_commitment_polynomials"}[] are those of the issued representations,
+then the representation `α` of `U*` has no coefficient outside the tag slots,
+no `V` coefficient, and each nonzero `U` coefficient `α.cu j` sits at a slot
+whose representation has `x₁` coefficient `m*`. With it, the `u`-free part of
+the `j`-th commitment polynomial is that of the `j`-th representation,
+whatever the earlier polynomials, and the supporting lemmas on the `u`-free
+and `u_j`-linear parts and the univariate specializations. The pigeonhole step
+that selects the forgery, and the degree bounds, are the proof phase's.
+:::
+
+:::proof "omuf_forgery_coefficients"
+Setting every `u_k` to `0` leaves a polynomial identity in `η, x₀, xᵣ, x₁`
+alone, since the commitment polynomials enter only multiplied by some `u_k`,
+and each tag coefficient is read off at a monomial the other side lacks.
+Differentiating in `u_j` first and then setting the `u`s to `0` isolates the
+`u_j`-linear part, where the `u`-free part of `c_j` is the representation's
+by the commitment-polynomial fold; again one coefficient per monomial gives
+the `V` coefficient and the `U` slot condition. The coefficients are read
+through univariate specializations, which work over any field.
+:::
+
 :::definition "omuf_transcript" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace, KVAC.Schemes.MicroCMZ.agmOMUFTrace, KVAC.Schemes.MicroCMZ.AGM_OMUFGame_eq_trace") (parent := "cmz_omuf") (tags := "milestone")
 The run of {uses "agm_omuf_game"}[] as a record, for the Theorem 5.11 proof
 at `n = 1`: the trace holding the key, the crs, the public parameters, the
