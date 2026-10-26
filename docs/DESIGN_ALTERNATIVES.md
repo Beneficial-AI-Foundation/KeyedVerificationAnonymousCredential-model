@@ -685,7 +685,8 @@ agrees with the honest game only for adversaries whose representations are
 correct on every branch, so carrying a bound from the gated game to the honest
 game needs a hypothesis on the adversary. Under the restriction the AGM game is
 the honest game with `Help` (`UFCMVAHelp.lean`) run on the evaluated elements,
-and the transfer between the two needs no side condition. The reductions keep
+and the transfer between the two, `UF_CMVAHelpAdv_forget`, needs no side
+condition. The reductions keep
 what they used: `reductionOracleImpl` answers `Verify` and `Help` by evaluating
 the represented polynomial at the embedded 3-DL instance, the gap-DL simulator
 evaluates the representations on known group elements, and the `n → 1`
