@@ -66,7 +66,7 @@ structure OMUFTrace (F G : Type) where
   /-- The final transcript of the Sign oracle. -/
   log : AGMOMUFLog F G 1
   /-- The forgeries with their representations (O24 Equation 19). -/
-  out : List (AGMOMUFForgery F G 1)
+  out : List (AGMOMUFForgery F 1)
 
 /--
 The run of `AGM_OMUFGame` at `n = 1` with the decision left out, in the shape of

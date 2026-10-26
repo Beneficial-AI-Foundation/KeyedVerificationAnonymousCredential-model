@@ -1207,45 +1207,42 @@ check `U' ≠ 0`, and the unblinding algebra `V' − s·U' = (x₀ + xᵣ + Σ�
 gives the MAC equation of {uses "mucmz_base_mac"}[].
 :::
 
-:::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.reprMatches, KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_length_le, KVAC.Schemes.MicroCMZ.AGMRepr.eval_append_of_length_eq, KVAC.Schemes.MicroCMZ.reprMatches_eval_append, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_length_le, KVAC.Schemes.MicroCMZ.AGMRepr.normalize, KVAC.Schemes.MicroCMZ.AGMRepr.normalize_uv_length, KVAC.Schemes.MicroCMZ.AGMRepr.eval_normalize, KVAC.Schemes.MicroCMZ.AGMRepr.eval_append_of_length_eq, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
 The instrumented Sign and Verify oracles of the algebraic-group-model
 one-more unforgeability game for the core scheme {uses "mucmz_at_core"}[]
 (O24 §5.6), the oracle side of the game of Figure 6
 ({uses "omuf_game"}[]) specialised to algebraic adversaries. Every
-submitted group element carries a representation of the MAC game's type
+submitted group element is given by a representation of the MAC game's type
 ({uses "agm_model"}[]) over the fixed basis and the blinded pairs issued so
-far. The Sign oracle is gated *on the way in*, the first issuance request in
-the repository to be so gated: a commitment whose representation does not
-evaluate to it, or whose list of issued-pair coefficients has not exactly one entry per
-issued pair, is refused with `none` and still logged, so every Sign query
-counts toward Figure 6's counter while only issued pairs extend the
-representation basis. The Verify oracle is gated with the same exact-length
-rule, so one decidable predicate serves the oracles and the winning
-condition. The log keeps each commitment's representation for
-the Theorem 5.11 reduction. Exact-length lists depart from the MAC game's
-permissive `zipWith` evaluation so that an accepted representation
-evaluates to the same element against every later transcript, the final
-one included, letting the proof read the finished log against one list of
-pairs (Equations 17 and 18); the gate is computable from the adversary's
-own view, so refusals reveal nothing. The MAC track's evaluation bridge does not carry over, since a
-blind-issuance answer is not a MAC code on a known message; see
-`DESIGN_ALTERNATIVES.md`. The carrier is `ProbComp`, the core never calling
-a hash.
+far, and the oracles evaluate it: Sign answers the evaluated commitment
+through the core's server, and Verify runs the core's verification on the
+evaluated token. Every Sign query is logged with its commitment, its
+representation and the server's answer, so the log length is Figure 6's
+counter while the issued pairs extend the representation basis. The log
+keeps each representation for the Theorem 5.11 reduction, normalized to
+exactly one pair coefficient per pair issued so far. Normalization does not
+change the commitment a representation names, and a normalized
+representation names the same element against every later transcript, the
+final one included, so the proof reads the finished log against one list of
+pairs (Equations 17 and 18). The MAC track's evaluation bridge does not
+carry over, since a blind-issuance answer is not a MAC code on a known
+message; see `DESIGN_ALTERNATIVES.md`. The carrier is `ProbComp`, the core
+never calling a hash.
 :::
 
 :::definition "agm_omuf_game" (lean := "KVAC.Schemes.MicroCMZ.AGMOMUFQuery.isSign, KVAC.Schemes.MicroCMZ.AGMOMUFQuery.instDecidablePredIsSign, KVAC.Schemes.MicroCMZ.AGMOMUFForgery, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.plain, KVAC.Schemes.MicroCMZ.AGMOMUFAdversary, KVAC.Schemes.MicroCMZ.AGMOMUFWins, KVAC.Schemes.MicroCMZ.AGM_OMUFGame, KVAC.Schemes.MicroCMZ.AGM_OMUFAdv") (parent := "cmz_omuf") (tags := "milestone")
 The AGM-instrumented one-more unforgeability game over the oracle
 {uses "agm_omuf_oracle"}[]: the algebraic adversary, with a private coin
 oracle beside the instrumented oracles, returning a list of
-forgeries, each with one representation per token component (O24
-Equation 19); the winning condition, namely the plain Figure 6 condition
-of {uses "omuf_game"}[] at `q` = the number of Sign queries made, refused
-ones included, together with representation consistency of every forgery
-over the final transcript under the exact-length rule; the experiment as
-a `ProbComp Bool` with setup and key generation delegated to
-{uses "mucmz_at_core"}[]; its advantage; and the decidable Sign predicate
-the static query-budget hypotheses of Theorem 5.11 count. All forgeries
-are gated alike, the proof singles out the unsupported one by pigeonhole.
+forgeries, each an attribute vector with one representation per token
+component (O24 Equation 19); the winning condition, namely the plain
+Figure 6 condition of {uses "omuf_game"}[] at `q` = the number of Sign
+queries made, on the tokens the representations name over the final
+transcript; the experiment as a `ProbComp Bool` with setup and key
+generation delegated to {uses "mucmz_at_core"}[]; its advantage; and the
+decidable Sign predicate the static query-budget hypotheses of
+Theorem 5.11 count. The proof singles out the unsupported forgery by
+pigeonhole.
 The correspondence with the plain game is a deferred bridge.
 :::
 
@@ -1378,9 +1375,10 @@ p. 45, the win conjoined with a forgery polynomial having a nonzero
 monomial in the group, the events Claims 5.12 to 5.14 bound. The
 game-level evaluation bridge, that at an honest run's discrete-log point
 each `c_j` evaluates to the logarithm of the `j`-th issued commitment and,
-for a forgery whose representations match its token, its `φ` evaluates to
-the residual `(x₀ + xᵣ + m*·x₁)·log U* − log V*`, needs the run's honesty
-invariants, and the proof of Theorem 5.11 establishes it.
+for a forgery, its `φ` evaluates to the residual
+`(x₀ + xᵣ + m*·x₁)·log U* − log V*` at the token its representations name,
+needs the run's honesty invariants, and the proof of Theorem 5.11
+establishes it.
 :::
 
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
@@ -1399,8 +1397,7 @@ constant, provisional until the Track CMZ-OMUF constant audit.
 :::proof "omuf_case_i"
 The reduction samples a position `ι ∈ [q]` uniformly, the guess that costs
 the factor `q`, answers the `ι`-th issued Sign query with the challenge
-embedded in `U_ι = a·G + b·X`, refusing gated queries as the game does, and
-at the end solves for the logarithm the equation that a forgery
+embedded in `U_ι = a·G + b·X`, and at the end solves for the logarithm the equation that a forgery
 polynomial with that monomial, of {uses "omuf_forgery_polynomial"}[], gives at
 `u_ι`.
 The paper's `1/p` is the degenerate mask, `b` being uniform and hidden by

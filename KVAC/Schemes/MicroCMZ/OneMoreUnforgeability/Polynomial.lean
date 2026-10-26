@@ -58,15 +58,16 @@ module docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log
 point of an honest run, `c_k` evaluates to the logarithm of the `k`-th issued
 commitment and `toPolyAt γ cs` to the
 logarithm of the element `γ` represents, by induction over the transcript
-through the gate and the server's honest answers, so that `φ` vanishes at that
-point exactly when the verification equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds
+through the logged representations and the server's honest answers, so that
+`φ` vanishes at that point exactly when the verification equation
+`V* = (x₀ + xᵣ + m*·x₁)·U*` holds
 (acceptance also needs `U* ≠ 0`, so a verifying forgery has vanishing `φ`, not
 conversely). `eval_toPolyAt` is its algebraic half;
 the induction over the run belongs to the proof of Theorem 5.11. So do the
 coefficient
-identities of Equations 20 and 21 (in particular that, under the exact-length
-gate, `u_k` occurs in `c_j` only for `k < j`), the degree bounds, and the
-constant audit.
+identities of Equations 20 and 21 (in particular that, for the normalized
+representations of the log, `u_k` occurs in `c_j` only for `k < j`), the degree
+bounds, and the constant audit.
 
 ## Conventions
 
@@ -74,10 +75,11 @@ constant audit.
 occurring in some monomial of `φ` with nonzero coefficient. The fold of
 Equation 18 reads earlier polynomials through `List.getD … 0`, so a slot not yet
 issued contributes `γ_{u,k}·u_k + γ_{v,k}·u_k·(x₀ + xᵣ)` rather than nothing;
-for a representation accepted by the game's exact-length gate, the conversion
+for a representation the game's Sign oracle normalized, the conversion
 `toReprCoeffs` pads both coefficients of every not-yet-issued pair with `0`, so
 the contribution is `0`. The layer itself accepts any coefficient lists, so
-this triangularity is a property of gated inputs, stated in the proof phase.
+this triangularity is a property of normalized inputs, stated in the proof
+phase.
 -/
 
 set_option autoImplicit false
