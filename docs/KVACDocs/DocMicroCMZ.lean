@@ -1131,8 +1131,9 @@ analysis on top of it is open.
 The AGM OMUF game over the core has two parts.
 The oracle is {bpref "agm_omuf_oracle"}[]; the algebraic
 adversary, the winning condition, the experiment and its advantage are
-{bpref "agm_omuf_game"}[]. Theorem 5.11 and the one-more unforgeability
-clause of Theorem 5.3 will be stated over that game.
+{bpref "agm_omuf_game"}[]. An algebraic adversary enters the plain game of
+Figure 6 by forgetting its representations, with the same advantage
+({bpref "agm_omuf_forget_transfer"}[]).
 
 Theorem 5.11 is stated, `sorry`d, at `n = 1` as
 {bpref "mucmz_at_agm_omuf_n1"}[] and for every `n` as
@@ -1243,7 +1244,24 @@ generation delegated to {uses "mucmz_at_core"}[]; its advantage; and the
 decidable Sign predicate the static query-budget hypotheses of
 Theorem 5.11 count. The proof singles out the unsupported forgery by
 pigeonhole.
-The correspondence with the plain game is a deferred bridge.
+:::
+
+:::theorem "agm_omuf_forget_transfer" (lean := "KVAC.Schemes.MicroCMZ.agmOMUFQueryToPlain, KVAC.Schemes.MicroCMZ.AGMOMUFAdversary.forget, KVAC.Schemes.MicroCMZ.OMUFAdv_forget") (parent := "cmz_omuf") (tags := "milestone")
+An algebraic adversary of {uses "agm_omuf_game"}[] is an adversary of the
+plain one-more unforgeability game of {uses "omuf_game"}[] over the core
+scheme {uses "mucmz_at_core"}[] that keeps the pairs the server issues and
+submits the elements its representations evaluate to, and outputs no forgery
+at any other number of attributes. At its own number of attributes its
+advantage in the plain game equals its advantage in the AGM game, with no
+condition on the adversary.
+:::
+
+:::proof "agm_omuf_forget_transfer"
+Induction on the adversary's program. The pairs the forgetful adversary keeps
+are those the AGM game's log records as issued, so both games answer each
+query on the same elements, and the plain game counts one request per Sign
+query as the AGM log does, so the two winning conditions read the same count
+and the same tokens.
 :::
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
@@ -1258,13 +1276,13 @@ advantage in the game of {uses "omuf_game_ro"}[].
 Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::
 
-:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
+:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le, KVAC.Schemes.MicroCMZ.microCMZAT_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
-attributes. Stated as `agm_omuf_le` over the merged core scheme
-{uses "mucmz_at_core"}[] in the AGM game
-{uses "agm_omuf_game"}[] for every `n > 0`, the plain game following by a
-deferred bridge, with the printed bound
+attributes. Stated for every `n > 0` over the merged core scheme
+{uses "mucmz_at_core"}[] as `agm_omuf_le` in the AGM game
+{uses "agm_omuf_game"}[] and as `microCMZAT_omuf_le` in the plain game for
+the forgetful image of the algebraic adversary, with the printed bound
 `(q + 6)/p + (q + 1)·Adv^dl + 3·Adv^2-dl + Adv^gapdl` behind the named
 definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
 and 2-DL advantages are those of the `n = 1` reductions run on the
@@ -1288,6 +1306,8 @@ splits the winning event by whether the forgeries' attribute combinations
 `Σᵢ mᵢ·Xᵢ` are pairwise distinct, reducing the distinct case to the `n = 1`
 bound and the colliding case to discrete log by an argument in the style
 of Lemma 5.5 ({uses "attribute_lifting"}[]), which adds `2/p + Adv^gapdl` to Equation 23.
+The bound in the plain game follows, since forgetting the representations
+preserves the advantage ({uses "agm_omuf_forget_transfer"}[]).
 :::
 
 :::theorem "mucmz_at_agm_omuf_n1" (lean := "KVAC.Schemes.MicroCMZ.omufBoundN1, KVAC.Schemes.MicroCMZ.omufDLReduction, KVAC.Schemes.MicroCMZ.omufTwoDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le_n1") (parent := "cmz_omuf") (tags := "milestone")

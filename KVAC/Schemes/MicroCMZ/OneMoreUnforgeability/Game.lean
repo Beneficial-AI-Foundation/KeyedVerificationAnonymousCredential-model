@@ -25,7 +25,9 @@ Every group element the adversary submits, a commitment or a token, is
 given by its representation alone, and the oracles and the winning condition
 evaluate it and proceed as the plain `OMUFGame` of
 `KVAC.Preliminaries.AnonymousTokens.Security` does on the evaluated elements.
-A theorem about this game is not by itself a theorem about the plain game.
+An algebraic adversary `A` enters the plain game as `A.forget gen`, which
+evaluates the representations `A` submits, and `OMUFAdv_forget` equates the two
+advantages with no condition on `A`.
 
 ## Where the representations sit
 
@@ -355,6 +357,8 @@ adversary runs from the empty log with its private coin oracle answered by
 `ProbComp` and its Sign and Verify queries by `agmOMUFOracleImpl`; returns `true`
 iff `AGMOMUFWins` holds for the final log and the output. Stated for every `n`
 and every `secParam` (unused by the core, kept threaded as in the plain game).
+`OMUFAdv_forget` equates its advantage with that of `A.forget gen` in the plain
+`OMUFGame`.
 -/
 noncomputable def AGM_OMUFGame (secParam : ℕ) (A : AGMOMUFAdversary F G n) :
     ProbComp Bool := do
@@ -374,5 +378,58 @@ like `AGM_UF_CMVAAdv`. The Theorem 5.11 statements will bound it under a static
 `IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q` hypothesis. -/
 noncomputable abbrev AGM_OMUFAdv (A : AGMOMUFAdversary F G n) (secParam : ℕ) : ℝ≥0∞ :=
   Pr[= true | AGM_OMUFGame gen secParam A]
+
+/-! ## Forgetting the representations
+
+An algebraic adversary is an adversary of the plain Figure 6 game over the core
+scheme: it keeps the pairs the server issues and submits the elements its
+representations evaluate to. -/
+
+/-- The queries of the AGM OMUF game as queries of the plain Figure 6 game over the
+core scheme, for the crs `H` and the public parameters `pp`, with the pairs issued so
+far as state. A coin query is forwarded. `sign ρ` forwards the commitment `ρ`
+evaluates to and appends the pair the server issues, if any. `verify m⃗ ρ_U ρ_V`
+forwards the token the two representations evaluate to. -/
+def agmOMUFQueryToPlain {secParam : ℕ} (H : G) (pp : Params G n) :
+    QueryImpl (unifSpec + AGMOMUFOracleSpec F G n)
+      (StateT (List (G × G)) (OracleComp
+        (unifSpec + OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)))
+  | .inl t => StateT.mk fun tags => do
+      let u ← query (spec := unifSpec +
+        OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H) (.inl t)
+      pure (u, tags)
+  | .inr (.sign ρ) => StateT.mk fun tags => do
+      let C' : G := ρ.eval gen H pp.1 pp.2.1 pp.2.2 tags
+      let resp? : Option (G × G) ← query (spec := unifSpec +
+        OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)
+        (.inr (.sign C'))
+      pure (resp?, tags ++ resp?.toList)
+  | .inr (.verify m ρU ρV) => StateT.mk fun tags => do
+      let b ← query (spec := unifSpec +
+        OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)
+        (.inr (.verify m
+          (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags)))
+      pure (b, tags)
+
+/-- An algebraic adversary as an adversary of the plain Figure 6 game over the core
+scheme. At its own number of attributes `n` it runs `A` through `agmOMUFQueryToPlain`
+from no issued pair and evaluates the forgeries over the final pairs
+(`AGMOMUFForgery.plain`). At any other number of attributes it outputs no forgery,
+which loses. -/
+def AGMOMUFAdversary.forget (A : AGMOMUFAdversary F G n) :
+    OMUFAdversary (μCMZATCoreSyntax F gen) where
+  run {secParam n'} H pp :=
+    if h : n = n' then by
+      subst h
+      exact (fun z => z.1.map (AGMOMUFForgery.plain (F := F) gen H pp z.2)) <$>
+        (simulateQ (agmOMUFQueryToPlain gen H pp) (A.run H pp)).run []
+    else pure []
+
+/-- Forgetting the representations preserves the advantage: the advantage of
+`A.forget gen` in the plain Figure 6 game over the core scheme, at `A`'s number of
+attributes, is the advantage of `A` in the AGM OMUF game. -/
+theorem OMUFAdv_forget (secParam : ℕ) (A : AGMOMUFAdversary F G n) :
+    OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n = AGM_OMUFAdv gen A secParam := by
+  sorry
 
 end KVAC.Schemes.MicroCMZ
