@@ -15,8 +15,8 @@ Branch `microcmz-remaining-statements`, worktree `KVAC-prj/kvac-statements`, fro
 
    The game bridge `AGM_UF_CMVAGame_evalDist_eq` matches `setup`'s `H ←$ 𝔾^×` through the η masks of `redTrace`, conditioned on `H ≠ 0` (`docs/DESIGN_ALTERNATIVES.md`, *Conditioned η masks*); its proof needs `sign_U_dist_eq` for the law of `H` and `sign_U_bu_dist_eq` for the independence of `bη`.
 6. Lemma 5.5, the n to 1 reduction (node `attribute_lifting`), with Claims 5.6 (collision branch, gap DL, node `forgery_case_gap_dl`) and 5.7 (forgery branch, node `forgery_case_mac`), and the general‑n bound `agm_ufcmva_le` with its gap DL summand (#80).
-7. Bridge from the AGM game with Help to plain `UF_CMVAGame`, or the decision to keep the AGM game as the target (#81).
-8. Theorem 5.1 statement (node `mucmz_mac_security`), with the target bound Adv^3‑dl + Adv^gap‑dl + 5/p of item 6 of `docs/presentations/rolf-status/errata.md`, replacing the printed Adv^3‑dl + Adv^dl + 3/p that the node text still shows.
+7. Proof of `UF_CMVAHelpAdv_forget`, the transfer from the AGM game to the game with Help of `UFCMVAHelp.lean` (node `agm_forget_transfer`, #235).
+8. Theorem 5.1, `microCMZ_ufcmvaHelp_le` (node `mucmz_mac_security`), with the target bound Adv^3‑dl + Adv^gap‑dl + 5/p of item 6 of `docs/presentations/rolf-status/errata.md`, follows from items 6 and 7.
 
 **Theorem 5.8, anonymity (Track CMZ‑A)**
 

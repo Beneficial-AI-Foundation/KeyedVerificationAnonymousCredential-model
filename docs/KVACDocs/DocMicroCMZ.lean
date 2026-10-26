@@ -16,6 +16,7 @@ import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.ATVariantPiIs
@@ -55,6 +56,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   coupling and analysis experiment, the Lemma 5.4 statement, the Claim 5.7
   attribute collapse, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
   statement — Track CMZ-M.
+- `UFCMVA.lean` — Section 5.3, Theorem 5.1 in the UF-CMVA game with the
+  oracle Help — Track CMZ-M.
 - `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help —
   Track CMZ-E.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
@@ -722,7 +725,22 @@ Read on the AGM game through the run-level coupling
 `winBit` the same law; there the union bound of the body splits the win as stated.
 :::
 
-:::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "small") (priority := "high")
+:::theorem "agm_forget_transfer" (lean := "KVAC.Schemes.MicroCMZ.agmQueryToHelp, KVAC.Schemes.MicroCMZ.AGMUFAdversary.forget, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv_forget") (parent := "cmz_amac") (tags := "milestone")
+An algebraic adversary of {uses "agm_model"}[] is an adversary of the game with
+`Help` of {uses "mucmz_ufcmva_help_game"}[] that keeps the MAC codes it
+receives and submits the elements its representations evaluate to. Its
+advantage in the game with `Help` equals its advantage in the AGM game, with no
+condition on the adversary.
+:::
+
+:::proof "agm_forget_transfer"
+Induction on the adversary's program. The MAC codes the forgetful adversary
+keeps are those of the AGM game's log, so both games answer each query on the
+same elements, and the messages the game with `Help` records are those of the
+log, so the forged message is fresh in one game exactly when it is in the other.
+:::
+
+:::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmvaHelp_le") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
 *O24 Theorem 5.1.* μCMZ is an `n`-attribute algebraic MAC
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: the advantage of an
@@ -735,8 +753,8 @@ this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
 
 :::proof "mucmz_mac_security"
 The advantage of an algebraic adversary in the game with `Help` equals its
-advantage in the AGM game of {uses "agm_model"}[], which
-{uses "attribute_lifting"}[] bounds.
+advantage in the AGM game of {uses "agm_model"}[] ({uses "agm_forget_transfer"}[]),
+which {uses "attribute_lifting"}[] bounds.
 :::
 
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
