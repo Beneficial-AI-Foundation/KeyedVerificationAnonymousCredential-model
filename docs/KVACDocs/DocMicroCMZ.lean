@@ -1270,7 +1270,7 @@ advantage in the game of {uses "omuf_game_ro"}[].
 Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::
 
-:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
+:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDlOracleImpl, KVAC.Schemes.MicroCMZ.collidingForgeries, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
 attributes. Stated as `agm_omuf_le` over the merged core scheme
@@ -1281,8 +1281,10 @@ deferred bridge, with the printed bound
 definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
 and 2-DL advantages are those of the `n = 1` reductions run on the
 transformed adversary `omufToN1`, the gap-DL advantage that of the
-collision-case reduction `omufGapDLReduction`, both declared with `sorry`
-bodies until the proofs build them. *Note.* The constants are the paper's
+collision-case reduction `omufGapDLReduction` (built: it embeds the challenge
+as `Xᵢ = aaᵢ•g + bbᵢ•X`, answers Verify with one DDH query and extracts `x` from
+two forgeries with equal attribute combination), while `omufToN1` is declared
+with a `sorry` body until the proofs build it. *Note.* The constants are the paper's
 and provisional: the core's nonzero issuance nonces condition the paper's
 `ℤ_p` samplers away from their zero cases, so they transfer only up to
 per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles
