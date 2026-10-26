@@ -178,7 +178,7 @@ lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : Embe
       refine ⟨hσ0, trivial, ?_⟩
       rw [macScalar_maskedKey_eq]
       exact embedTag_eq gen aM bM x (m 0) aubu.val.1 aubu.val.2
-  | verify m σ ρU ρV | help A₀ Av Z ρ₀ ρA ρZ =>
+  | verify m ρU ρV | help ρ₀ ρA ρZ =>
       simp only [reductionOracleImpl, reductionVerifyStep, reductionHelpStep] at hz
       subst hz; exact hσ0
 

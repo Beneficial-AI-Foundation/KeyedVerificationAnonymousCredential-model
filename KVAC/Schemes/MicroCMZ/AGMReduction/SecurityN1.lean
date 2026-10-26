@@ -115,7 +115,7 @@ lemma redTrace_support_facts {x : F} (A : AGMUFAdversary F G 1) (t : RedTrace F 
     redLog_honest gen x _ _ _ _ _ hout, redLog_U_form gen x _ _ _ _ _ hout⟩
 
 /-- **Win without extraction forces the bad event (deterministic core).** On
-`redFull`'s support, `winBit = true` (the real `verify`/consistency/freshness on
+`redFull`'s support, `winBit = true` (the real freshness and `verify` on
 `sk = maskedKey x t.aM t.bM`) together with `recBit ≠ true` (`recoverDlog gen X ψ ≠ x`)
 forces the Schwartz–Zippel bad event `badBit = true`, i.e. `φ ≠ 0 ∧ ψ = 0` for
 `φ := t.verifPoly` and `ψ := t.psi = t.log.maskedSubst t.aM t.bM φ`. The proof reads the
@@ -132,14 +132,14 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
   obtain ⟨hemb, hhon, hUform⟩ := redTrace_support_facts gen A tr htr
   obtain ⟨htag, htagU⟩ := redLog_transcript_facts gen hhon hUform
   simp only [Bool.and_eq_true, decide_eq_true_eq, verify] at hw
-  obtain ⟨⟨⟨hconsU, hconsV⟩, hfresh⟩, hσ1, hmaceq⟩ := hw
+  obtain ⟨hfresh, hσ1, hmaceq⟩ := hw
   simp only [ne_eq, decide_eq_true_eq] at hr
   simp only [decide_eq_true_eq]
   -- the MAC relation between the two represented values, in the form the embedding lemmas take
   have hkey : tr.ρV.evalAt gen tr.ep tr.log.tags
       = macScalar (maskedKey x tr.aM tr.bM) (fun _ => tr.mStar 0)
           • tr.ρU.evalAt gen tr.ep tr.log.tags := by
-    rw [hconsV, hconsU, hmaceq]
+    rw [hmaceq]
     simp only [macScalar_maskedKey_eq]
   have heval0 : MvPolynomial.eval
       (fun v => tr.aM.embed tr.log.aMask v + x * tr.bM.embed tr.log.bMask v) tr.verifPoly = 0 :=
@@ -154,7 +154,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
     rw [Fin.eq_zero i]
     exact hj.symm
   refine ⟨fun hφ0 => hσ1 (Ustar_eq_zero_of_verifPoly_zero gen tr.ρU tr.ρV hemb tr.log.msg
-    (tr.mStar 0) tr.σStar.1 tr.log.tags tr.log.length_tags htag hfresh' hconsU hφ0),
+    (tr.mStar 0) _ tr.log.tags tr.log.length_tags htag hfresh' rfl hφ0),
     of_not_not (mt (recoverDlog_verifPoly_eq gen heval0) hr)⟩
 
 /-! ### The bad-event bound
