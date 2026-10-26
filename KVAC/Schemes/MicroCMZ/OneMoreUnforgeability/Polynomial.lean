@@ -5,6 +5,7 @@ Authors: Jin Xing Lim
 -/
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import Mathlib.Algebra.MvPolynomial.Variables
+import Mathlib.Algebra.MvPolynomial.PDeriv
 
 /-!
 # μCMZ_AT one-more unforgeability — the polynomial layer of Equations 17 to 22 (O24 §5.6)
@@ -191,5 +192,228 @@ theorem cases_of_mem_vars {φ : P F r} {v : Var r} (hv : v ∈ φ.vars) :
   | xr => exact Or.inr (Or.inr (Or.inr (Or.inl hv)))
   | x1 => exact Or.inr (Or.inr (Or.inr (Or.inr hv)))
   | u j => exact Or.inl ⟨j, hv⟩
+
+/-! ## The `u`-free part: `ev0`
+
+The coefficient reading of Equations 20 and 21 needs only the `u`-degree 0 and 1 parts of a
+forgery polynomial. Setting every `u_k` to `0` (`ev0`), optionally after differentiating in one
+`u_j`, isolates them without reading the commitment polynomials `c_k` recursively: `cs` enters
+`toPolyAt` only multiplied by some `u k`. -/
+
+/-- Sets every `u_k` to `0` and fixes `η, x₀, xᵣ, x₁`. -/
+noncomputable def ev0 : P F r →ₐ[F] P F r :=
+  aeval fun v => match v with
+    | .u _ => 0
+    | .eta => X .eta
+    | .x0 => X .x0
+    | .xr => X .xr
+    | .x1 => X .x1
+
+@[simp] theorem ev0_u (k : Fin r) : ev0 (u k : P F r) = 0 := by
+  simp [ev0, u]
+
+@[simp] theorem ev0_eta : ev0 (η : P F r) = η := by simp [ev0, η]
+@[simp] theorem ev0_x₀ : ev0 (x₀ : P F r) = x₀ := by simp [ev0, x₀]
+@[simp] theorem ev0_xᵣ : ev0 (xᵣ : P F r) = xᵣ := by simp [ev0, xᵣ]
+@[simp] theorem ev0_x₁ : ev0 (x₁ : P F r) = x₁ := by simp [ev0, x₁]
+
+/-- The `u`-free part of `toPolyAt`, whatever the commitment polynomials. -/
+theorem ev0_toPolyAt (γ : ReprCoeffs F r) (cs : Fin r → P F r) :
+    ev0 (γ.toPolyAt cs)
+      = C γ.cg + C γ.ch * η + C γ.c0 * (x₀ * η) + C γ.cr * xᵣ + C γ.c1 * x₁ := by
+  simp [ReprCoeffs.toPolyAt]
+
+@[simp] theorem pderiv_u_eta (j : Fin r) : pderiv (Var.u j) (η : P F r) = 0 := by
+  simp [η, pderiv_X]
+@[simp] theorem pderiv_u_x₀ (j : Fin r) : pderiv (Var.u j) (x₀ : P F r) = 0 := by
+  simp [x₀, pderiv_X]
+@[simp] theorem pderiv_u_xᵣ (j : Fin r) : pderiv (Var.u j) (xᵣ : P F r) = 0 := by
+  simp [xᵣ, pderiv_X]
+@[simp] theorem pderiv_u_x₁ (j : Fin r) : pderiv (Var.u j) (x₁ : P F r) = 0 := by
+  simp [x₁, pderiv_X]
+theorem pderiv_u_u (j k : Fin r) :
+    pderiv (Var.u j) (u k : P F r) = if k = j then 1 else 0 := by
+  simp [u, pderiv_X, Pi.single_apply, eq_comm]
+
+/-- The `u_j`-linear part of `toPolyAt`: differentiate in `u_j`, then set every `u` to `0`. Only
+the `j`-th slot of `cs` survives, through its own `u`-free part. -/
+theorem ev0_pderiv_u_toPolyAt (γ : ReprCoeffs F r) (cs : Fin r → P F r) (j : Fin r) :
+    ev0 (pderiv (Var.u j) (γ.toPolyAt cs))
+      = C (γ.cu j) + C (γ.cv j) * (x₀ + xᵣ + ev0 (cs j)) := by
+  simp only [ReprCoeffs.toPolyAt, map_add, map_sum, Derivation.leibniz, pderiv_C,
+    pderiv_u_eta, pderiv_u_x₀, pderiv_u_xᵣ, pderiv_u_x₁, pderiv_u_u]
+  simp [Finset.sum_add_distrib, apply_ite ev0]
+
+@[simp] theorem ev0_keyPoly (m : F) : ev0 (keyPoly m : P F r) = keyPoly m := by
+  simp [keyPoly]
+
+theorem pderiv_u_keyPoly (j : Fin r) (m : F) : pderiv (Var.u j) (keyPoly m : P F r) = 0 := by
+  simp [keyPoly]
+
+/-- The `u`-free part of the forgery polynomial of Equation 22. -/
+theorem ev0_forgeryPoly (cs : Fin r → P F r) (m : F) (α β : ReprCoeffs F r) :
+    ev0 (omufForgeryPoly cs m α β)
+      = ev0 (α.toPolyAt cs) * keyPoly m - ev0 (β.toPolyAt cs) := by
+  simp [omufForgeryPoly]
+
+/-- The `u_j`-linear part of the forgery polynomial of Equation 22: `keyPoly` has no `u`, so
+only the representations are differentiated. -/
+theorem ev0_pderiv_u_forgeryPoly (cs : Fin r → P F r) (m : F) (α β : ReprCoeffs F r)
+    (j : Fin r) :
+    ev0 (pderiv (Var.u j) (omufForgeryPoly cs m α β))
+      = ev0 (pderiv (Var.u j) (α.toPolyAt cs)) * keyPoly m
+        - ev0 (pderiv (Var.u j) (β.toPolyAt cs)) := by
+  simp [omufForgeryPoly, Derivation.leibniz, pderiv_u_keyPoly, mul_comm]
+
+/-- The `u`-free part of a representation's exponent: `toPolyAt` with the tag coefficients
+dropped (`ev0_toPolyAt`). -/
+noncomputable def ReprCoeffs.uFree (γ : ReprCoeffs F r) : P F r :=
+  C γ.cg + C γ.ch * η + C γ.c0 * (x₀ * η) + C γ.cr * xᵣ + C γ.c1 * x₁
+
+/-- Item 4: the `u`-free part of the `j`-th commitment polynomial (Equation 18) is that of the
+`j`-th representation, whatever the earlier polynomials. -/
+theorem ev0_omufCommitPolys_getElem (γs : List (ReprCoeffs F r)) (j : ℕ)
+    (hj : j < (omufCommitPolys γs).length) :
+    ev0 ((omufCommitPolys γs)[j]) =
+      (γs[j]'(by rwa [omufCommitPolys_length] at hj)).uFree := by
+  induction γs using List.reverseRecOn generalizing j with
+  | nil => simp at hj
+  | append_singleton γs γ ih =>
+    have hlen := omufCommitPolys_length γs
+    have hj' : j < γs.length + 1 := by
+      simpa [omufCommitPolys_append_singleton, hlen] using hj
+    rcases Nat.lt_succ_iff_lt_or_eq.1 hj' with hlt | rfl
+    · -- `j` is among the earlier representations
+      simp only [omufCommitPolys_append_singleton]
+      rw [List.getElem_append_left, List.getElem_append_left]
+      exact ih j (by omega)
+    · -- `j` is the new last representation
+      simp only [omufCommitPolys_append_singleton]
+      rw [List.getElem_append_right, List.getElem_append_right]
+      · simpa using ev0_toPolyAt γ _
+      · omega
+      · omega
+
+/-! ## Univariate specializations of `toPolyAt` -/
+
+theorem spec_keyPoly' (E P0 Pr P1 : Polynomial F) (Uf : Fin r → Polynomial F) (m : F) :
+    spec E P0 Pr P1 Uf (keyPoly m) = P0 + Pr + Polynomial.C m * P1 := by
+  simp only [keyPoly, x₀, xᵣ, x₁, spec, map_add, map_mul, aeval_X, aeval_C,
+    Polynomial.algebraMap_eq]
+
+theorem spec_C (E P0 Pr P1 : Polynomial F) (Uf : Fin r → Polynomial F) (a : F) :
+    spec E P0 Pr P1 Uf (C a) = Polynomial.C a := by
+  simp [spec]
+
+theorem spec_x₀ (E P0 Pr P1 : Polynomial F) (Uf : Fin r → Polynomial F) :
+    spec E P0 Pr P1 Uf x₀ = P0 := by
+  simp [spec, x₀]
+
+theorem spec_xᵣ (E P0 Pr P1 : Polynomial F) (Uf : Fin r → Polynomial F) :
+    spec E P0 Pr P1 Uf xᵣ = Pr := by
+  simp [spec, xᵣ]
+
+/-- `spec` with every `u ↦ 0`: the commitment polynomials `cs` drop out, since `toPolyAt` uses
+them only multiplied by some `u k`. -/
+theorem spec_toPolyAt_uZero (E P0 Pr P1 : Polynomial F) (γ : ReprCoeffs F r)
+    (cs : Fin r → P F r) :
+    spec E P0 Pr P1 (fun _ => 0) (γ.toPolyAt cs) =
+      Polynomial.C γ.cg + Polynomial.C γ.ch * E + Polynomial.C γ.c0 * (P0 * E) +
+        Polynomial.C γ.cr * Pr + Polynomial.C γ.c1 * P1 := by
+  simp [ReprCoeffs.toPolyAt, spec, η, x₀, xᵣ, x₁, u]
+
+theorem spec_uFree (E P0 Pr P1 : Polynomial F) (Uf : Fin r → Polynomial F)
+    (γ : ReprCoeffs F r) :
+    spec E P0 Pr P1 Uf γ.uFree =
+      Polynomial.C γ.cg + Polynomial.C γ.ch * E + Polynomial.C γ.c0 * (P0 * E) +
+        Polynomial.C γ.cr * Pr + Polynomial.C γ.c1 * P1 := by
+  simp [ReprCoeffs.uFree, spec, η, x₀, xᵣ, x₁]
+
+/-- Item 6: the coefficient reading of Equations 20 and 21. If the forgery polynomial vanishes
+in the ring, and the `u`-free parts of the commitment polynomials are those of the issued
+representations `γ`, then the forgery's `U` representation `α` has no coefficient outside the tag
+slots, no `V` coefficient, and every nonzero `U` coefficient `α.cu j` sits at a slot whose
+representation has `x₁` coefficient `m`. -/
+theorem forgeryPoly_eq_zero_coeffs (cs : Fin r → P F r) (γ : Fin r → ReprCoeffs F r)
+    (hcs : ∀ k, ev0 (cs k) = (γ k).uFree) (m : F) (α β : ReprCoeffs F r)
+    (h : omufForgeryPoly cs m α β = 0) :
+    α.cg = 0 ∧ α.ch = 0 ∧ α.c0 = 0 ∧ α.cr = 0 ∧ α.c1 = 0 ∧ (∀ j, α.cv j = 0) ∧
+      ∀ j, α.cu j * (m - (γ j).c1) = 0 := by
+  -- The `u`-free part: specialize every `u` to `0`, and read one coefficient per tag slot.
+  have hfree : ∀ E P0 Pr P1 : Polynomial F,
+      (Polynomial.C α.cg + Polynomial.C α.ch * E + Polynomial.C α.c0 * (P0 * E) +
+        Polynomial.C α.cr * Pr + Polynomial.C α.c1 * P1) * (P0 + Pr + Polynomial.C m * P1) =
+      Polynomial.C β.cg + Polynomial.C β.ch * E + Polynomial.C β.c0 * (P0 * E) +
+        Polynomial.C β.cr * Pr + Polynomial.C β.c1 * P1 := by
+    intro E P0 Pr P1
+    have h' := DFunLike.congr_arg (spec E P0 Pr P1 (fun _ => 0)) h
+    rw [omufForgeryPoly, map_sub, map_mul, spec_toPolyAt_uZero, spec_toPolyAt_uZero,
+      spec_keyPoly', map_zero] at h'
+    linear_combination h'
+  have hcg : α.cg = 0 := by
+    have h2 := hfree 0 (Polynomial.X ^ 1) 0 0
+    have h3 := congrArg (fun p => Polynomial.coeff p 1) h2
+    simpa [Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C] using h3
+  have hcr : α.cr = 0 := by
+    have h2 := hfree 0 0 (Polynomial.X ^ 1) 0
+    have h3 := congrArg (fun p => Polynomial.coeff p 2) h2
+    simpa [Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C] using h3
+  have hch : α.ch = 0 := by
+    have h2 : Polynomial.C α.cg * Polynomial.X ^ 2 + Polynomial.C α.ch * Polynomial.X ^ 3 +
+          Polynomial.C α.cr * Polynomial.X ^ 4 =
+        Polynomial.C β.cg + Polynomial.C β.ch * Polynomial.X ^ 1 +
+          Polynomial.C β.cr * Polynomial.X ^ 2 := by
+      linear_combination hfree (Polynomial.X ^ 1) 0 (Polynomial.X ^ 2) 0
+    have h3 := congrArg (fun p => Polynomial.coeff p 3) h2
+    simpa [Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C] using h3
+  have hc0 : α.c0 = 0 := by
+    have h2 := hfree (Polynomial.X ^ 2) (Polynomial.X ^ 1) 0 0
+    have h3 := congrArg (fun p => Polynomial.coeff p 4) h2
+    simpa [Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C] using h3
+  have hc1 : α.c1 = 0 := by
+    have h2 : Polynomial.C α.cg * Polynomial.X ^ 2 +
+          Polynomial.C α.cg * (Polynomial.C m * Polynomial.X ^ 1) +
+          Polynomial.C α.c1 * Polynomial.X ^ 3 +
+          Polynomial.C α.c1 * (Polynomial.C m * Polynomial.X ^ 2) =
+        Polynomial.C β.cg + Polynomial.C β.c1 * Polynomial.X ^ 1 := by
+      linear_combination hfree 0 (Polynomial.X ^ 2) 0 (Polynomial.X ^ 1)
+    have h3 := congrArg (fun p => Polynomial.coeff p 3) h2
+    simpa [Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C_mul, Polynomial.coeff_C] using h3
+  -- The `u_j`-linear part: differentiate in `u_j`, set the `u`s to `0`, and use `hcs`.
+  have hlin : ∀ j (E P0 Pr P1 : Polynomial F),
+      (Polynomial.C (α.cu j) + Polynomial.C (α.cv j) *
+          (P0 + Pr + (Polynomial.C (γ j).cg + Polynomial.C (γ j).ch * E +
+            Polynomial.C (γ j).c0 * (P0 * E) + Polynomial.C (γ j).cr * Pr +
+            Polynomial.C (γ j).c1 * P1))) * (P0 + Pr + Polynomial.C m * P1) =
+      Polynomial.C (β.cu j) + Polynomial.C (β.cv j) *
+          (P0 + Pr + (Polynomial.C (γ j).cg + Polynomial.C (γ j).ch * E +
+            Polynomial.C (γ j).c0 * (P0 * E) + Polynomial.C (γ j).cr * Pr +
+            Polynomial.C (γ j).c1 * P1)) := by
+    intro j E P0 Pr P1
+    have h' := congrArg (fun p => spec E P0 Pr P1 (fun _ => 0)
+      (ev0 (pderiv (Var.u j) p))) h
+    simp only [map_zero] at h'
+    rw [ev0_pderiv_u_forgeryPoly, ev0_pderiv_u_toPolyAt, ev0_pderiv_u_toPolyAt, hcs j] at h'
+    simp only [map_sub, map_mul, map_add, spec_keyPoly', spec_uFree, spec_C, spec_x₀,
+      spec_xᵣ] at h'
+    linear_combination h'
+  have hcv : ∀ j, α.cv j = 0 := by
+    intro j
+    have h2 := hlin j 0 (Polynomial.X ^ 1) 0 0
+    have h3 := congrArg (fun p => Polynomial.coeff p 2) h2
+    simpa [Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C, pow_two, Polynomial.coeff_mul_X,
+      mul_add, add_mul] using h3
+  refine ⟨hcg, hch, hc0, hcr, hc1, hcv, fun j => ?_⟩
+  have hcu_eq : α.cu j = β.cv j := by
+    have h2 := hlin j 0 (Polynomial.X ^ 1) 0 0
+    have h3 := congrArg (fun p => Polynomial.coeff p 1) h2
+    simpa [hcv j, Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C, Polynomial.coeff_C_mul]
+      using h3
+  have hcu_m : α.cu j * m = β.cv j * (γ j).c1 := by
+    have h2 := hlin j 0 0 0 (Polynomial.X ^ 1)
+    have h3 := congrArg (fun p => Polynomial.coeff p 1) h2
+    simpa [hcv j, Polynomial.coeff_C_mul_X_pow, Polynomial.coeff_C, Polynomial.coeff_C_mul]
+      using h3
+  linear_combination hcu_m - (γ j).c1 * hcu_eq
 
 end KVAC.Schemes.MicroCMZ.AGMPoly
