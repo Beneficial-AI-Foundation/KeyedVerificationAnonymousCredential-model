@@ -13,7 +13,6 @@ import KVAC.Core.NIZKP.Extraction
 import KVAC.Core.NIZKP.Composition
 import KVAC.Core.AlgebraicMAC
 import KVAC.Core.AlgebraicMAC.Security
-import KVAC.Core.SimulateQGuarded
 
 open Verso.Genre Manual
 open Informal
@@ -260,32 +259,4 @@ for `n` attributes over a prime-order group: the algorithms `Setup`,
 (UF-CMVA) security game for an algebraic MAC {uses "algebraic_mac"}[]: the
 adversary holds signing and verification oracles and must forge a valid
 MAC code on an unqueried message vector.
-:::
-
-# Guarded oracle simulation
-
-:::group "core_guarded_oracle"
-Guarded oracle simulation
-:::
-
-:::theorem "guarded_oracle_projection" (lean := "KVAC.Core.guardImpl, KVAC.Core.guardImpl_run_pos, KVAC.Core.probFailure_guardImpl_run_neg, KVAC.Core.map_run_simulateQ_eq_of_guard_neverFails") (parent := "core_guarded_oracle") (tags := "milestone")
-Guarded oracle simulation. `guardImpl` wraps a stateful oracle implementation
-with a per-query predicate `good`: a good query runs the wrapped step lifted
-into `OptionT ProbComp`, a bad one fails, so the guarded run aborts at the
-first bad query and a zero failure probability certifies that no bad query is
-reachable in any execution. Under that certificate the state-projection
-theorem transports a simulated run along a state map `proj`: if every good
-step of the first implementation projects onto the corresponding step of the
-second, the two full runs agree under `proj`, as an equality of `ProbComp`
-computations.
-:::
-
-:::proof "guarded_oracle_projection"
-Induction on the oracle computation. At each query the never-fails
-hypothesis splits into goodness of the query and never-fails for every
-continuation reachable from the unguarded step; the induction hypothesis then
-rewrites each continuation under the support of that step, `bind_map_left`
-moves the projection onto the step, and the per-query hypothesis closes the
-goal. The per-query predicate is what VCV-io's state-invariant transport
-`map_run_simulateQ_eq_of_query_map_eq_inv'` cannot express.
 :::

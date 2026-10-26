@@ -23,10 +23,7 @@ A word of caution on naming: this is the instrumented game, not the honest game.
 oracles here are *gated* — they answer honestly only when the submitted
 representation is consistent, and return `false` otherwise. So the game matches
 the honest UF-CMVA game only for *well-behaved* adversaries, the ones that never
-submit an inconsistent representation. Closing that gap is the job of a
-bridging lemma under the `WellBehaved` hypothesis; `WellBehaved` and the
-translation `AGMUFAdversary.toUFAdversary` to the plain game are defined in
-`KVAC.Schemes.MicroCMZ.AGMBridge`.
+submit an inconsistent representation.
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 `AGMRepr` / `AGMRepr.eval`; and the instrumented game (`AGMOracleSpec`,
@@ -298,10 +295,8 @@ forthcoming. The reduction is split into its own file because it imports
 needs `glog`, but `glog`'s *proof* must elaborate without those instances in
 scope).
 
-`KVAC.Schemes.MicroCMZ.AGMBridge` defines the hypothesis `WellBehaved` and the
-translation `AGMUFAdversary.toUFAdversary` for comparing this game with the plain
-`UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security`. Both games go through the interface
-`AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen` (setup/keygen/MAC/verify are
-delegated to the interface value, not inlined). -/
+The game goes through the interface `AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen`
+(setup/keygen/MAC/verify are delegated to the interface value, not inlined), as the
+plain `UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security` does. -/
 
 end KVAC.Schemes.MicroCMZ

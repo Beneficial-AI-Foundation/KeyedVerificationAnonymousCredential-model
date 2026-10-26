@@ -15,9 +15,7 @@ import KVAC.Schemes.MicroCMZ.Anonymity
 import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
-import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
-import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.ATVariantPiIs
@@ -50,8 +48,6 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
-- `AGMBridge.lean` — Section 5.3, well-behaved algebraic adversaries and their
-  translation to the plain UF-CMVA game — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`,
   `SignCoupling.lean`, `RedFull.lean`, `SecurityN1.lean`,
   `AttributeCollapse.lean`, `GapDLReduction.lean`, and `Security.lean`) —
@@ -59,8 +55,6 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   coupling and analysis experiment, the Lemma 5.4 statement, the Claim 5.7
   attribute collapse, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
   statement — Track CMZ-M.
-- `UFCMVA.lean` — Section 5.3, Theorem 5.1 in the plain UF-CMVA game —
-  Track CMZ-M.
 - `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help —
   Track CMZ-E.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
@@ -242,7 +236,7 @@ adversary's own polynomial, which depends on its view.
 
 *TODO (Track CMZ-M).* Finish the reduction's success-probability bound
 from these pieces, then assemble Lemma 5.4, and prove Lemma 5.5 and the
-AGM↔plain bridge behind Theorem 5.1.
+transfer from the AGM game to the game with `Help` behind Theorem 5.1.
 
 :::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.helpConsistent, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] specialised to algebraic
@@ -251,31 +245,6 @@ adversaries against the single-attribute base MAC
 every output group element, oracles gate on representation consistency,
 and the discrete-log bookkeeping runs through `glog` with its linearity
 laws, over a {uses "sampleable_group"}[] carrier.
-:::
-
-:::definition "well_behaved_algebraic_adversary" (lean := "KVAC.Schemes.MicroCMZ.agmGood, KVAC.Schemes.MicroCMZ.instDecidableAgmGood, KVAC.Schemes.MicroCMZ.guardedAgmOracleImpl, KVAC.Schemes.MicroCMZ.ForgeryConsistent, KVAC.Schemes.MicroCMZ.WellBehaved, KVAC.Schemes.MicroCMZ.zeroRepr, KVAC.Schemes.MicroCMZ.trivialAdversary, KVAC.Schemes.MicroCMZ.wellBehaved_trivialAdversary") (parent := "cmz_amac") (tags := "milestone")
-Well-behaved algebraic adversaries. A query is good against the current
-transcript when it is a `sign` query, or a `verify` query whose
-representations of the submitted MAC code evaluate to its two components; a `help` query is never
-good, since the plain Figure 5 game has no Help oracle. The honest oracle of
-{uses "agm_model"}[], guarded by this predicate as in
-{uses "guarded_oracle_projection"}[], aborts at the first bad query. An
-adversary is well behaved when, for every key, crs `H` and public
-parameters, its guarded run never fails and every reachable forgery is
-consistent over its final transcript. The query-free adversary returning the
-zero forgery with all-zero representations is well behaved, so the predicate
-is satisfiable.
-:::
-
-:::definition "plain_game_adversary" (lean := "KVAC.Schemes.MicroCMZ.forgetReprImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary.toUFAdversaryBody, KVAC.Schemes.MicroCMZ.AGMUFAdversary.toUFAdversary, KVAC.Schemes.MicroCMZ.AGMUFAdversary.toUFAdversary_run") (parent := "cmz_amac") (tags := "milestone")
-The forgetful translation. An algebraic adversary of {uses "agm_model"}[]
-becomes an adversary of the plain game {uses "ufcmva_game"}[] against the
-base MAC {uses "mucmz_base_mac"}[]: `sign` and `verify` queries are forwarded
-with their representations dropped, `help` queries are answered `false`
-locally, and the forgery is output without its representations. At attribute
-counts other than the adversary's own the translation outputs the zero forgery;
-at the matching count its run unfolds to running the algebraic adversary on
-the translated queries and dropping the forgery representations.
 :::
 
 :::theorem "identity_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.spec, KVAC.Schemes.MicroCMZ.AGMPoly.identity_case, KVAC.Schemes.MicroCMZ.AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero") (parent := "cmz_amac") (tags := "milestone")
@@ -752,43 +721,21 @@ Read on the AGM game through the run-level coupling
 `winBit` the same law; there the union bound of the body splits the win as stated.
 :::
 
-:::theorem "agm_plain_game_bridge" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "high")
-The AGM↔plain bridge. For a well-behaved algebraic adversary
-({uses "well_behaved_algebraic_adversary"}[]), the advantage of its translation
-({uses "plain_game_adversary"}[]) in the plain game of {uses "ufcmva_game"}[]
-equals its advantage in the AGM game of {uses "agm_model"}[].
-:::
-
-:::proof "agm_plain_game_bridge"
-Per query: on a good query the honest AGM oracle step projects onto the plain
-oracle step of the translation, with the transcript projected to its messages
-in reverse order. `sign` runs the same MAC and the logs correspond; a good
-`verify` passes the representation gate, so both oracles answer the honest
-verification bit; a `help` query is never good. A well-behaved run never fails
-under the guard, so {uses "guarded_oracle_projection"}[] lifts the per-query
-step to the whole run. Setup and key generation are shared, freshness carries
-over along the transcript projection, and on every reachable forgery the
-consistency clause of well-behavedness supplies the AGM game's extra win
-conjunct, so the two games are the same computation.
-:::
-
-:::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmva_le_of_wellBehaved") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
+:::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "small") (priority := "high")
 *O24 Theorem 5.1.* μCMZ is an `n`-attribute algebraic MAC
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
-plain game of {uses "ufcmva_game"}[]: for a well-behaved algebraic adversary
-({uses "well_behaved_algebraic_adversary"}[]), the advantage of its translation
-({uses "plain_game_adversary"}[]) is at most the 3-DL advantage
+game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: the advantage of an
+algebraic adversary is at most the 3-DL advantage
 ({uses "hardness_assumptions"}[]) of the collapse reduction
 ({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
 of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
 this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
-Issue #236 tracks the algebraic condition and the proof that well-behavedness is
-that condition together with the absence of Help queries.
 :::
 
 :::proof "mucmz_mac_security"
-{uses "agm_plain_game_bridge"}[] replaces the plain advantage by the AGM
-advantage, which {uses "attribute_lifting"}[] bounds.
+The advantage of an algebraic adversary in the game with `Help` equals its
+advantage in the AGM game of {uses "agm_model"}[], which
+{uses "attribute_lifting"}[] bounds.
 :::
 
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
@@ -1103,17 +1050,16 @@ The UF-CMVA game of {uses "ufcmva_game"}[] for the base MAC of
 {uses "mucmz_construction"}[], with the oracle `Help(A₀, A⃗, Z)` of §5.2
 (p. 35), which answers whether `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ`. The challenger
 holds the key and answers `Help` by evaluating the equation, and no query
-carries a representation. The paper proves Theorem 5.1, in the algebraic group
-model, for this game: "the scheme is unforgeable even if the adversary is given
-one additional oracle Help". The proof of Theorem 5.10 (p. 43) uses the answer
-of `Help` for its candidate `Z`. The paper ties `Help` to no model. The
-instrumented game of {bpref "agm_model"}[] is the device of the proof of Lemma
-5.4, where the reduction answers `Help` from the representations of an algebraic
-adversary. The bound of {bpref "mucmz_mac_security"}[] is for the plain game,
-whose well-behaved algebraic adversaries never query `Help`. A bound for this
-game is open, issue #235. `Help` reads the key `(x₀, xᵣ, x⃗)`, so the game is
-specific to μCMZ. An adversary of the generic game is an adversary of this game
-that never queries `Help`, `ufAdversaryToHelp`, with the same advantage.
+carries a representation. The paper proves Theorem 5.1
+({bpref "mucmz_mac_security"}[]), in the algebraic group model, for this game:
+"the scheme is unforgeable even if the adversary is given one additional oracle
+Help". The proof of Theorem 5.10 (p. 43) uses the answer of `Help` for its
+candidate `Z`. The paper ties `Help` to no model. The instrumented game of
+{bpref "agm_model"}[] is the device of the proof of Lemma 5.4, where the
+reduction answers `Help` from the representations of an algebraic adversary.
+`Help` reads the key `(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ. An
+adversary of the generic game is an adversary of this game that never queries
+`Help`, `ufAdversaryToHelp`, with the same advantage.
 :::
 
 :::theorem "mucmz_ufcmva_help_of_plain" (lean := "KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv_ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")

@@ -27,8 +27,8 @@ the submitted representation is consistent, and refuse otherwise, so the game
 matches the plain `OMUFGame` of `KVAC.Preliminaries.AnonymousTokens.Security`
 only for adversaries that always submit consistent, exact-length
 representations. A theorem about this game is not by itself a theorem about
-the plain game; that correspondence is the OMUF analogue of the MAC track's
-`WellBehaved` bridge (#81) and is deferred to Phase B of the Theorem 5.3 plan.
+the plain game; that correspondence is deferred to Phase B of the Theorem 5.3
+plan.
 
 ## Where the representations sit
 

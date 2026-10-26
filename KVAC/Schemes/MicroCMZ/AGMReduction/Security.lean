@@ -17,8 +17,8 @@ prove:
 
 The bound speaks of the instrumented AGM(+Help) game `AGM_UF_CMVAGame` of
 `AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 proper, this
-bound for the plain Figure 5 game and `WellBehaved` algebraic adversaries, is
-reached from this one through the AGM↔plain bridge tracked in #81.
+bound for the game with Help of `UFCMVAHelp.lean`, is reached from this one by
+carrying the AGM advantage over to that game.
 
 The statement is added first, so that the two reductions it bounds by
 (`microCMZN3DLReduction` of `AttributeCollapse`, `gapDlReduction` of
