@@ -21,7 +21,8 @@ evaluating the equation, and no query carries an algebraic representation. The
 AGM game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean` is the device of the
 proof of Lemma 5.4, where the reduction answers `Help` from the representations
 of an algebraic adversary (p. 38). Among the MAC results, the paper assumes the
-algebraic group model in Theorem 5.1 and Lemma 5.4 only.
+algebraic group model in Theorem 5.1 and Lemma 5.4 only. `microCMZ_ufcmvaHelp_le`
+of `UFCMVA.lean` is Theorem 5.1 for this game.
 
 `Help` is specific to μCMZ, since its equation reads the key `(x₀, xᵣ, x⃗)`,
 so the game is stated for `μCMZBaseMACSyntax` and not for the generic

@@ -20,8 +20,8 @@ The bound speaks of the AGM(+Help) game `AGM_UF_CMVAGame` of
 the stronger form its proof establishes, "the scheme is unforgeable even if the
 adversary is given one additional oracle Help" (p. 35), as a bound for the game with
 Help of `UFCMVAHelp.lean`, and not in the weaker printed form, a bound for the Figure 5
-game, which has no Help. It is reached from this one by carrying the AGM advantage over
-to that game.
+game, which has no Help. It is `microCMZ_ufcmvaHelp_le` of `UFCMVA.lean`, reached from
+this one through `UF_CMVAHelpAdv_forget`.
 
 The statement is added first, so that the two reductions it bounds by
 (`microCMZN3DLReduction` of `AttributeCollapse`, `gapDlReduction` of
