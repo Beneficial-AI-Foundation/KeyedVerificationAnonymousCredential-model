@@ -904,6 +904,15 @@ the views keeps both sides at the same `H`, and the asymptotic form over a
 5 with the oracle `Help` of §5.2, answered by the challenger with the key. No
 query carries a representation, and the theorem puts no algebraic restriction on
 its single-user adversary, as the printed statement puts none on its adversary.
+The adversary `UFHelpAdversary` has a private coin oracle `unifSpec` beside the
+game's oracles, for the reason of *One-more forgers have a private coin oracle*.
+The reduction `B` of Theorem 5.10 runs the extraction adversary, whose carrier
+`ZKRO H = unifSpec + H.spec` draws coins, and simulates the random oracle by
+lazy sampling, so a coinless `B` could answer those queries only with fixed
+values and the bound would name a family of reductions. The scope paragraph of
+that entry keeps the generic `UFAdversary` coinless, and this game is specific
+to μCMZ. The embedding `ufAdversaryToHelp` of a plain adversary never draws a
+coin.
 
 **Rejected alternatives.** First, the plain advantage `UF_CMVAAdv` of the Figure
 5 game, which the statement of Theorem 5.1 for well-behaved algebraic

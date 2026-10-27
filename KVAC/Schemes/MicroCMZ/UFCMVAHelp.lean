@@ -85,22 +85,31 @@ noncomputable def ufHelpOracleImpl (secParam : ℕ) (H : G) (sk : Key F n) :
 
 /-- An adversary of the UF-CMVA game with `Help` for μCMZ with `n` attributes.
 Given the crs `H` and the public parameters `(X₀, Xᵣ, X⃗)`, it queries the three
-oracles and outputs a forgery `(m⃗*, (U*, V*))`. -/
+oracles and outputs a forgery `(m⃗*, (U*, V*))`. It has a private coin oracle
+`unifSpec` beside the game's oracles, as the one-more forgers do, so that a
+reduction built from a sampling adversary, such as the `B` of Theorem 5.10, is
+one inhabitant of this type. -/
 structure UFHelpAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program, from the crs and the public parameters. -/
-  run : G → Params G n → OracleComp (UFHelpOracleSpec F G n) ((Fin n → F) × Code G)
+  run : G → Params G n →
+    OracleComp (unifSpec + UFHelpOracleSpec F G n) ((Fin n → F) × Code G)
 
 /-- The UF-CMVA game with `Help` for μCMZ, O24 Figure 5 with the oracle of §5.2.
-Setup and key generation are those of `μCMZBaseMACSyntax`. The adversary wins
-when its forged message is fresh and its forgery verifies, as in `UF_CMVAGame`. -/
+Setup and key generation are those of `μCMZBaseMACSyntax`. The private coin
+oracle is answered in `ProbComp`. The adversary wins when its forged message is
+fresh and its forgery verifies, as in `UF_CMVAGame`. -/
 noncomputable def UF_CMVAHelpGame (secParam : ℕ) (A : UFHelpAdversary F G n) :
     ProbComp Bool := do
   let mac := μCMZBaseMACSyntax F gen
   let H : G ← mac.setup secParam n
   let (sk, pp) ← (mac.keygen (secParam := secParam) (n := n) H :
       ProbComp (Key F n × Params G n))
-  let ((mStar, σStar), signed) ←
-    (simulateQ (ufHelpOracleImpl gen secParam H sk) (A.run H pp)).run []
+  -- `HAdd.hAdd` rather than `+`, since the instance search for `+` times out in
+  -- the instance context of this file.
+  let impl := HAdd.hAdd
+    ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp))
+    (ufHelpOracleImpl gen secParam H sk)
+  let ((mStar, σStar), signed) ← (simulateQ impl (A.run H pp)).run []
   pure (decide (mStar ∉ signed) && mac.verify (secParam := secParam) H sk mStar σStar)
 
 /-- The advantage in the UF-CMVA game with `Help`, the probability that
@@ -117,15 +126,16 @@ An adversary of the generic `UF_CMVAGame` at μCMZ never queries `Help`. It is
 an adversary of this game with the same advantage, so a bound on this game over
 all adversaries covers the plain game of Figure 5. -/
 
-/-- The queries of the plain game as queries of the game with `Help`. -/
+/-- The queries of the plain game as queries of the game with `Help`, on the
+game's side of the coin oracle. -/
 def ufQueryToHelp {secParam : ℕ} (H : G) :
     QueryImpl (UFOracleSpec (μCMZBaseMACSyntax F gen) (secParam := secParam) (n := n) H)
-      (OracleComp (UFHelpOracleSpec F G n))
-  | .sign m => query (spec := UFHelpOracleSpec F G n) (.sign m)
-  | .verify m σ => query (spec := UFHelpOracleSpec F G n) (.verify m σ)
+      (OracleComp (unifSpec + UFHelpOracleSpec F G n))
+  | .sign m => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
+  | .verify m σ => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.verify m σ))
 
 /-- An adversary of the plain game at μCMZ as an adversary of the game with
-`Help`, which never queries `Help`. -/
+`Help`, which never queries `Help` and never draws a coin. -/
 noncomputable def ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
     (secParam : ℕ) : UFHelpAdversary F G n where
   run H pp :=
