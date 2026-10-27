@@ -1283,8 +1283,10 @@ and 2-DL advantages are those of the `n = 1` reductions run on the
 transformed adversary `omufToN1`, the gap-DL advantage that of the
 collision-case reduction `omufGapDLReduction` (built: it embeds the challenge
 as `Xᵢ = aaᵢ•g + bbᵢ•X`, answers Verify with one DDH query and extracts `x` from
-two forgeries with equal attribute combination), while `omufToN1` is declared
-with a `sorry` body until the proofs build it. *Note.* The constants are the paper's
+two forgeries with equal attribute combination), while `omufToN1` is built (it samples the
+collapse scalars, translates the adversary's queries and collapses its forgeries,
+{bpref "omuf_attribute_collapse"}[]) and the proof that the bound for the
+transformed adversary gives the bound for the original remains. *Note.* The constants are the paper's
 and provisional: the core's nonzero issuance nonces condition the paper's
 `ℤ_p` samplers away from their zero cases, so they transfer only up to
 per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles
@@ -1504,6 +1506,35 @@ vanishes at the discrete-log point, so it is not constant and has a variable.
 A nonzero polynomial with a root is not a constant, and a polynomial with no
 variable is a constant; a variable falls in one of the three groups of
 {uses "omuf_forgery_polynomial"}[].
+:::
+
+:::theorem "omuf_attribute_collapse" (lean := "KVAC.Schemes.MicroCMZ.instFintypeAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instInhabitedAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instIsUniformSpecAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.omufCollapseImpl, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.collapse, KVAC.Schemes.MicroCMZ.omufToN1_isQueryBoundP, KVAC.Schemes.MicroCMZ.omufWins_collapse, KVAC.Schemes.MicroCMZ.CollapseCollision, KVAC.Schemes.MicroCMZ.collapse_nodup_or_collision, KVAC.Schemes.MicroCMZ.collapseLog, KVAC.Schemes.MicroCMZ.tags_collapseLog, KVAC.Schemes.MicroCMZ.collapseLog_append, KVAC.Schemes.MicroCMZ.map_if, KVAC.Schemes.MicroCMZ.reprMatches_collapseRepr, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_sign, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_verify, KVAC.Schemes.MicroCMZ.collapse_step_sign, KVAC.Schemes.MicroCMZ.collapse_step_verify, KVAC.Schemes.MicroCMZ.collapse_step_coin, KVAC.Schemes.MicroCMZ.collapse_run") (parent := "cmz_omuf") (tags := "milestone")
+The attribute collapse of the general-`n` Theorem 5.11 proof in the
+AGM-instrumented game of {uses "agm_omuf_game"}[], the facts about the
+transformed adversary `omufToN1` of {bpref "mucmz_at_agm_omuf"}[]. The query
+translation sends coin queries through and forwards Sign and Verify with the
+collapsed representations and message of {uses "attribute_collapse_dictionary"}[],
+and a forgery collapses along the same scalars, with the uniform-sampling
+instances of the oracle specification that pushing `simulateQ` through it
+needs. The transformed adversary preserves the Sign budget, each Sign query
+being forwarded exactly once. A win whose collapsed messages are pairwise
+distinct and whose forgeries verify at the scaled key `xᵢ = rᵢ·x₁` collapses
+to a win at `n = 1` (using {uses "attribute_collapse_evaluation_bridges"}[]), and
+either the collapsed messages are pairwise distinct or two forgeries
+collide, the collision case being that of the gap-DL reduction. The run-level
+coupling: running the collapsed adversary against the instrumented oracle of
+{uses "agm_omuf_oracle"}[] at a one-attribute key is running the original at the
+scaled key, with the log mapped through the collapse, query by query for
+coin, Sign and Verify.
+:::
+
+:::proof "omuf_attribute_collapse"
+The Sign and Verify steps are the oracle's two arms unfolded on both sides:
+the gate sees the collapsed representation exactly when it sees the original
+(`reprMatches_collapseRepr`), the issued pairs are those of the original log
+(`tags_collapseLog`), and the core's answer does not depend on the
+representation. The run-level statement is induction on the adversary's
+computation through these steps.
 :::
 
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
