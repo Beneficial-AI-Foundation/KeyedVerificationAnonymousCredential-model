@@ -142,11 +142,18 @@ def ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
     simulateQ (ufQueryToHelp gen (secParam := secParam) H)
       (A.run (secParam := secParam) (n := n) H pp)
 
-/-- The embedding preserves the advantage. The proof is deferred. -/
+/-- The embedding preserves the advantage. Setup and key generation are shared, and
+the oracles of the game with `Help`, composed with `ufQueryToHelp`, are those of the
+plain game query by query. -/
 theorem UF_CMVAHelpAdv_ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
     (secParam : ℕ) :
     UF_CMVAHelpAdv gen (ufAdversaryToHelp gen A secParam (n := n)) secParam =
       UF_CMVAAdv (μCMZBaseMACSyntax F gen) A secParam n := by
-  sorry
+  refine congrArg (Pr[= true | ·]) ?_
+  simp only [UF_CMVAHelpGame, UF_CMVAGame, ufAdversaryToHelp, ← QueryImpl.simulateQ_compose]
+  refine bind_congr fun H => bind_congr fun keys => ?_
+  congr 3
+  funext q
+  cases q <;> exact simulateQ_spec_query ..
 
 end KVAC.Schemes.MicroCMZ

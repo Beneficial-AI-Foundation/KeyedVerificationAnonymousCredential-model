@@ -1119,8 +1119,7 @@ that never queries `Help`, `ufAdversaryToHelp`, with the same advantage.
 The embedding `ufAdversaryToHelp` of {uses "mucmz_ufcmva_help_game"}[]
 preserves the advantage. An adversary of {uses "ufcmva_game"}[] at μCMZ has
 the same advantage in the game with `Help`, so a bound on the game with
-`Help` over all adversaries covers the plain game of Figure 5. Stated with
-`sorry`.
+`Help` over all adversaries covers the plain game of Figure 5.
 :::
 
 :::proof "mucmz_ufcmva_help_of_plain"
