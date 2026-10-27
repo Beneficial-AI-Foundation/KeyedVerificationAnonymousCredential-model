@@ -7,6 +7,7 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Polynomial
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Transcript
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements
 
 /-!
@@ -31,6 +32,8 @@ documents its own contents in its module docstring:
 - `CaseEvents` — the polynomials of Equations 18 and 22 read off a trace, and
   the win and the three case events of the proof's case split, items (i) to
   (iii), that Claims 5.12 to 5.14 bound;
+- `Bridge` — the pigeonhole step, the evaluation bridge of a run and the case cover, the facts
+  about a winning run that the case analysis rests on;
 - `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds
   `omufBoundN1` and `omufBound`, the named reduction stubs (the theorem's, and
   one each for Claims 5.12 and 5.13), `agm_omuf_le_n1` at `n = 1` (Equation
