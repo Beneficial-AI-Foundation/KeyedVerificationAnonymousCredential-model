@@ -9,6 +9,7 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.GapDLReduction
 import VCVio.OracleComp.QueryTracking.QueryBound
+import KVAC.Schemes.MicroCMZ.AGMReduction.AttributeCollapse
 
 /-!
 # μCMZ_AT one-more unforgeability — the Theorem 5.11 target statements (O24 §5.6)
@@ -71,14 +72,15 @@ argument in the style of Lemma 5.5 (which the paper's text cites as Theorem
 5.5). The six named constructions, the theorem's two reductions, the two
 per-Claim discrete-log reductions, the attribute-lifting transformation
 `omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and the gap-DL
-reduction `omufGapDLReduction`: the last is built in `GapDLReduction.lean`, the
-others are declared with `sorry` bodies, the first sorried definitions in the repository,
-and are built with the proofs of the Claims over the polynomial layer of
-Equations 17 to 22 (`Polynomial.lean`, `CaseEvents.lean`). Whether the
-transformation reuses the Lemma 5.5 embedding of the MAC track is open with
-Semar (question C2 of the Theorem 5.3 plan). The adversary has a private coin
-oracle (`Game.lean`, *The adversary has a private coin oracle*), so a
-transformation that needs randomness samples through it. Extra Sign queries are
+reduction `omufGapDLReduction`: the gap-DL reduction is built in `GapDLReduction.lean` and
+the transformation `omufToN1` is built below, sampling the scaling scalars through the
+private coin oracle and collapsing queries and forgeries along them. The other four are
+declared with `sorry` bodies, the first sorried definitions in the repository, and are built
+with the proofs of the Claims over the polynomial layer of Equations 17 to 22
+(`Polynomial.lean`, `CaseEvents.lean`). Whether the transformation reuses the Lemma 5.5
+embedding of the MAC track is open with Semar (question C2 of the Theorem 5.3 plan). The
+adversary has a private coin oracle (`Game.lean`, *The adversary has a private coin oracle*),
+so a transformation that needs randomness samples through it. Extra Sign queries are
 not a source of randomness, they break the budget and the one-more count.
 
 ## Why named reductions
@@ -276,24 +278,291 @@ noncomputable def omufTwoDLReduction :
       AGMOMUFAdversary F G 1 → QDLogAdversary 2 F G :=
   sorry
 
+/-! Uniform-sampling instances for the algebraic one-more oracle spec, needed to push
+`simulateQ` through it. They belong beside `AGMOMUFOracleSpec` in `Game.lean`; kept here
+for now. -/
+
+noncomputable instance {n : ℕ} : (AGMOMUFOracleSpec F G n).Fintype where
+  fintype_B := fun t => by
+    cases t
+    · exact (inferInstance : Fintype (Option (G × G)))
+    · exact (inferInstance : Fintype Bool)
+
+noncomputable instance {n : ℕ} : (AGMOMUFOracleSpec F G n).Inhabited where
+  inhabited_B := fun t => by
+    cases t
+    · exact (inferInstance : Inhabited (Option (G × G)))
+    · exact (inferInstance : Inhabited Bool)
+
+noncomputable instance {n : ℕ} : IsUniformSpec (AGMOMUFOracleSpec F G n) :=
+  IsUniformSpec.ofFintypeInhabited _
+
+/-- Query translation of the OMUF `n → 1` collapse: coin queries pass through,
+`sign` and `verify` are collapsed along `r`. Stateless. -/
+noncomputable def omufCollapseImpl {n : ℕ} (r : Fin n → F) :
+    QueryImpl (unifSpec + AGMOMUFOracleSpec F G n)
+      (OracleComp (unifSpec + AGMOMUFOracleSpec F G 1))
+  | .inl t => query (spec := unifSpec + AGMOMUFOracleSpec F G 1) (.inl t)
+  | .inr (.sign C ρ) =>
+      query (spec := unifSpec + AGMOMUFOracleSpec F G 1)
+        (.inr (.sign C (KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr r ρ)))
+  | .inr (.verify m σ ρU ρV) =>
+      query (spec := unifSpec + AGMOMUFOracleSpec F G 1)
+        (.inr (.verify (collapseMsg r m) σ
+          (AGMRepr.collapseRepr r ρU) (AGMRepr.collapseRepr r ρV)))
+
+/-- The `n → 1` collapse of a forgery along `r`. -/
+def AGMOMUFForgery.collapse {n : ℕ} (r : Fin n → F) (e : AGMOMUFForgery F G n) :
+    AGMOMUFForgery F G 1 :=
+  { msg := collapseMsg r e.msg, token := e.token
+    reprU := AGMRepr.collapseRepr r e.reprU, reprV := AGMRepr.collapseRepr r e.reprV }
+
 /--
 The attribute-lifting transformation of the general `n` proof of O24 Theorem
 5.11 (p. 46, "techniques similar to the ones of the previous section", the
 Lemma 5.5 embedding): from an `n`-attribute algebraic one-more forger it builds
-a single-attribute one against which the `n = 1` reductions run. Declared with
-a `sorry` body until built; whether it reuses the MAC track's Lemma 5.5
-embedding is question C2 of the Theorem 5.3 plan. One constraint on the
-construction: it must preserve the Sign budget, forwarding each Sign query of
-the `n`-attribute forger exactly once and making none of its own, since
-`agm_omuf_le` runs the `n = 1` reductions at the same `q`, while translating
-the representation gates and the transcript and carrying a distinct-combination
-win into a single-attribute win. Its coins, if it needs any, come from the
-adversary's private coin oracle (module docstring).
+a single-attribute one against which the `n = 1` reductions run. It samples
+scalars `r ∈ Fⁿ` through the private coin oracle, hands the `n`-attribute forger the
+public parameters `Xᵢ = rᵢ • X₁`, answers its queries through `omufCollapseImpl` and
+collapses its forgeries along `r`. Whether this is the MAC track's Lemma 5.5 embedding
+is question C2 of the Theorem 5.3 plan. The construction preserves the Sign budget,
+forwarding each Sign query of the `n`-attribute forger exactly once and making none of its
+own (`omufToN1_isQueryBoundP`), since `agm_omuf_le` runs the `n = 1` reductions at the same
+`q`. Carrying a distinct-combination win into a single-attribute win is
+`omufWins_collapse`, and the coupling of the two runs is `collapse_run`.
 -/
 noncomputable def omufToN1 :
     ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
       AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1 :=
-  sorry
+  fun {n} _gen _ A =>
+    { run := fun H pp => do
+        let r ← liftM ($ᵗ (Fin n → F))
+        let pp_n : Params G n := (pp.1, pp.2.1, fun i => r i • pp.2.2 0)
+        let fs ← simulateQ (omufCollapseImpl r) (A.run H pp_n)
+        pure (fs.map (AGMOMUFForgery.collapse r)) }
+
+
+
+/-- `omufToN1` preserves the Sign-query bound: coin queries and the sampling of `r` are
+Sign-free, and each Sign query is translated to exactly one Sign query. -/
+lemma omufToN1_isQueryBoundP {n : ℕ} (gen : G)
+    [Fact (Function.Bijective (fun x : F => x • gen))]
+    (A : AGMOMUFAdversary F G n) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G n),
+      IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    ∀ (H : G) (pp : Params G 1),
+      IsQueryBoundP ((omufToN1 gen A).run H pp) AGMOMUFQuery.isSign q := by
+  intro H pp
+  rw [omufToN1]
+  simp only [Fin.isValue, bind_pure_comp]
+  rw [← zero_add q]
+  apply OracleComp.isQueryBoundP_bind
+  · rw [← OracleComp.liftComp_eq_liftM]
+    rw [OracleComp.liftComp_def]
+    apply OracleComp.IsQueryBoundP.simulateQ_of_step (p := fun _ => False)
+    · apply OracleComp.isQueryBoundP_false
+    · simp only [IsEmpty.forall_iff, implies_true]
+    simp only [not_false_eq_true, forall_const]
+    intro t
+    exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun h => h.elim)
+  · intro x h
+    rw [OracleComp.isQueryBoundP_map_iff]
+    refine OracleComp.IsQueryBoundP.simulateQ_of_step (hq H _) ?_ ?_
+    · rintro (t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)) h
+      · exact h.elim
+      · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun _ => Nat.one_pos)
+      · exact h.elim
+    · rintro (t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)) h
+      · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun h => h.elim)
+      · exact absurd trivial h
+      · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun h => h.elim)
+
+
+lemma omufWins_collapse {n : ℕ} (r : Fin n → F) (x₀ xᵣ x₁ : F) (q : ℕ)
+    (out : List (AGMOMUFForgery F G n))
+    (hlen : out.length = q + 1)
+    (hdistinct : (out.map fun e => collapseMsg r e.msg).Nodup)
+    (hver : ∀ e ∈ out, verify (x₀, xᵣ, fun i => r i * x₁) e.msg e.token = true) :
+    (out.map (AGMOMUFForgery.collapse r)).length = q + 1 ∧
+      ((out.map (AGMOMUFForgery.collapse r)).map fun e => e.msg).Nodup ∧
+      ∀ e ∈ out.map (AGMOMUFForgery.collapse r),
+        verify (x₀, xᵣ, fun _ : Fin 1 => x₁) e.msg e.token = true := by
+  constructor
+  · rw [List.length_map]
+    exact hlen
+  constructor
+  · rw [List.map_map]
+    exact hdistinct
+  intro e h
+  obtain ⟨e', he', rfl⟩ := List.mem_map.1 h
+  obtain hver := hver e' he'
+  simp only [AGMOMUFForgery.collapse]
+  rw [<- verify_collapse]
+  exact hver
+
+
+/-- Two distinct forgeries whose messages collapse to the same scalar along `r`. -/
+def CollapseCollision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F G n)) : Prop :=
+  ∃ e ∈ out, ∃ e' ∈ out, e.msg ≠ e'.msg ∧ collapseMsg r e.msg = collapseMsg r e'.msg
+
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+lemma collapse_nodup_or_collision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F G n))
+    (hnodup : (out.map fun e => e.msg).Nodup) :
+    (out.map fun e => collapseMsg r e.msg).Nodup ∨ CollapseCollision r out := by
+    by_contra h
+    push Not at h
+    obtain ⟨hnot, hno⟩ := h
+    apply hnot
+    rw [CollapseCollision] at hno
+    push Not at hno
+    apply List.Nodup.map_on
+    · intro x x_in y y_in msg_eq
+      specialize hno x x_in y y_in
+      rw [not_imp_not] at hno
+      obtain xmsg_eq := hno msg_eq
+      have msg_inj := List.inj_on_of_nodup_map hnodup
+      exact msg_inj x_in y_in xmsg_eq
+    exact hnodup.of_map
+
+/-- The log of the collapsed game: representations collapsed, the rest unchanged. -/
+def collapseLog {n : ℕ} (r : Fin n → F) (log : AGMOMUFLog F G n) : AGMOMUFLog F G 1 :=
+  log.map fun e => (e.1, AGMRepr.collapseRepr r e.2.1, e.2.2)
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+lemma tags_collapseLog {n : ℕ} (r : Fin n → F) (log : AGMOMUFLog F G n) :
+    AGMOMUFLog.tags (collapseLog r log) = AGMOMUFLog.tags log := by
+    simp only [collapseLog,  AGMOMUFLog.tags]
+    rw [List.filterMap_map]
+    congr 1
+
+lemma map_if {a b : Type} {m : Type -> Type} (f : a -> b) (p : Prop) (c c' : m a )
+     [Decidable p] [Functor m]:
+    (f <$> (if p then c else c')) = (if p then f <$> c else f <$> c') := by
+    exact apply_ite (Functor.map f) p c c'
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+lemma collapseLog_append {n : ℕ} (r : Fin n → F) (l₁ l₂ : AGMOMUFLog F G n) :
+    collapseLog r (l₁ ++ l₂) = collapseLog r l₁ ++ collapseLog r l₂ := by
+  simp only [collapseLog, List.map_append]
+
+
+lemma reprMatches_collapseRepr {n : ℕ} (r : Fin n → F) (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ X₁ : G)
+    (tags : List (G × G)) (y : G) :
+    reprMatches (AGMRepr.collapseRepr r ρ) g₀ H X₀ Xᵣ (fun _ => X₁) tags y
+      ↔ reprMatches ρ g₀ H X₀ Xᵣ (fun i => r i • X₁) tags y := by
+  simp only [reprMatches, AGMRepr.eval_collapseRepr]
+  rfl
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+lemma simulateQ_omufCollapseImpl_sign {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
+    (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
+    (C : G) (ρ : AGMRepr F n) :
+    simulateQ impl (omufCollapseImpl r (.inr (.sign C ρ)))
+      = impl (.inr (.sign C (AGMRepr.collapseRepr r ρ))) := by
+  simp only [omufCollapseImpl]
+  exact simulateQ_spec_query _ _
+
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+lemma simulateQ_omufCollapseImpl_verify {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
+    (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
+    (msg : Fin n → F) (σ : Code G) (ρU ρV : AGMRepr F n) :
+    simulateQ impl (omufCollapseImpl r (.inr (.verify msg σ ρU ρV)))
+      = impl (.inr (.verify (collapseMsg r msg) σ (AGMRepr.collapseRepr r ρU)
+          (AGMRepr.collapseRepr r ρV))) := by
+  simp only [omufCollapseImpl]
+  exact simulateQ_spec_query _ _
+
+
+lemma collapse_step_sign {n : ℕ} (gen : G) (secParam : ℕ)
+    (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
+    (log : AGMOMUFLog F G n) (C : G) (ρ : AGMRepr F n) :
+    (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁))
+        (omufCollapseImpl r (.inr (.sign C ρ)))).run (collapseLog r log)
+      = Prod.map id (collapseLog r) <$>
+        (agmOMUFOracleImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
+          (X₀, Xᵣ, fun i => r i • X₁) (.sign C ρ)).run log := by
+  rw [simulateQ_omufCollapseImpl_sign]
+  simp only [agmOMUFImpl]
+  rw [QueryImpl.add_apply_inr]
+  simp only [agmOMUFOracleImpl]
+  simp only [StateT.run, StateT.mk]
+  rw [map_if]
+  simp only [map_bind, map_pure]
+  simp only [tags_collapseLog]
+  simp only [reprMatches_collapseRepr]
+  split_ifs
+  · simp only [Prod.map_apply, id, μCMZATCoreSyntax, atIssueSrv]
+    simp only [add_apply_inr, smul_add, bind_pure_comp, Functor.map_map]
+    simp only [collapseLog_append]
+    rfl
+  · simp only [Prod.map_apply, id, collapseLog_append]
+    rfl
+
+lemma collapse_step_verify {n : ℕ} (gen : G) (secParam : ℕ)
+    (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
+    (log : AGMOMUFLog F G n) (m : Fin n → F) (σ : Code G) (ρU ρV : AGMRepr F n) :
+    (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁))
+        (omufCollapseImpl r (.inr (.verify m σ ρU ρV)))).run (collapseLog r log)
+      = Prod.map id (collapseLog r) <$>
+        (agmOMUFOracleImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
+          (X₀, Xᵣ, fun i => r i • X₁) (.verify m σ ρU ρV)).run log := by
+  simp only [omufCollapseImpl]
+  erw [simulateQ_spec_query]
+  simp only [agmOMUFImpl]
+  rw [QueryImpl.add_apply_inr]
+  simp only [agmOMUFOracleImpl]
+  simp only [StateT.run, StateT.mk]
+  simp only [map_pure]
+  simp only [reprMatches_collapseRepr]
+  simp only [Prod.map_apply, id, tags_collapseLog, μCMZATCoreSyntax, atIssueSrv, verify_collapse]
+  rfl
+
+
+lemma collapse_step_coin {n : ℕ} (gen : G) (secParam : ℕ)
+    (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
+    (log : AGMOMUFLog F G n) (t : ℕ) :
+    (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁))
+        (omufCollapseImpl r (.inl t))).run (collapseLog r log)
+      = Prod.map id (collapseLog r) <$>
+        (agmOMUFImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
+          (X₀, Xᵣ, fun i => r i • X₁) (.inl t)).run log := by
+  simp only [omufCollapseImpl]
+  erw [simulateQ_spec_query]
+  simp only [agmOMUFImpl, QueryImpl.add_apply_inl, QueryImpl.liftTarget_apply]
+  simp [liftM, monadLift, MonadLift.monadLift, Functor.map_map]
+
+lemma collapse_run {n : ℕ} {α : Type} (gen : G) (secParam : ℕ)
+    (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
+    (oa : OracleComp (unifSpec + AGMOMUFOracleSpec F G n) α) (log : AGMOMUFLog F G n) :
+    (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁))
+        (simulateQ (omufCollapseImpl r) oa)).run (collapseLog r log)
+      = Prod.map id (collapseLog r) <$>
+        (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
+          (X₀, Xᵣ, fun i => r i • X₁)) oa).run log := by
+  induction oa using OracleComp.inductionOn generalizing log with
+  | pure x => simp only [simulateQ_pure, StateT.run_pure, map_pure, Prod.map_apply, id]
+  | query_bind t oa ih => simp only [simulateQ_bind, simulateQ_query]
+                          simp only [OracleQuery.input_query, OracleQuery.cont_query, id_map,
+                            StateT.run_bind, map_bind]
+                          rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
+                          · rw [collapse_step_coin]
+                            rw [bind_map_left]
+                            exact bind_congr fun a => ih _ _
+                          · rw [collapse_step_sign]
+                            simp only [OracleSpec.Range, OracleSpec.add_apply_inr]
+                            rw [bind_map_left]
+                            rw [agmOMUFImpl_inr]
+                            exact bind_congr fun a => ih _ _
+                          · rw [collapse_step_verify]
+                            simp only [OracleSpec.Range, OracleSpec.add_apply_inr]
+                            rw [bind_map_left]
+                            exact bind_congr fun a => ih _ _
+
+
+
+
 
 /-! ## The statements -/
 
