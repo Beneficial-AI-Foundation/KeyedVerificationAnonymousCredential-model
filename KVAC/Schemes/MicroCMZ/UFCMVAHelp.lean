@@ -69,17 +69,15 @@ def UFHelpOracleSpec (F G : Type) (n : ℕ) : OracleSpec (UFHelpQuery F G n)
 def helpEq (sk : Key F n) (A₀ : G) (A : Fin n → G) (Z : G) : Bool :=
   decide (Z = (sk.1 + sk.2.1) • A₀ + ∑ i, sk.2.2 i • A i)
 
-/-- The honest oracles of the game for the key `sk`. `sign` runs the MAC code
-generation and records the message, `verify` runs the verification, and `help`
-evaluates `helpEq` with the key. The state is the list of messages whose MAC
-codes the adversary received, as `ufOracleImpl` keeps it. -/
+/-- The honest oracles of the game for the key `sk`. `sign` and `verify` are the
+oracles `ufOracleImpl` of the plain game at μCMZ, and `help` evaluates `helpEq`
+with the key. The state is the list of messages whose MAC codes the adversary
+received. -/
 noncomputable def ufHelpOracleImpl (secParam : ℕ) (H : G) (sk : Key F n) :
     QueryImpl (UFHelpOracleSpec F G n) (StateT (List (Fin n → F)) ProbComp)
-  | .sign m => StateT.mk fun signed => do
-      let σ : Code G ← (μCMZBaseMACSyntax F gen).MAC (secParam := secParam) H sk m
-      pure (σ, m :: signed)
-  | .verify m σ => StateT.mk fun signed =>
-      pure ((μCMZBaseMACSyntax F gen).verify (secParam := secParam) H sk m σ, signed)
+  | .sign m => ufOracleImpl (μCMZBaseMACSyntax F gen) (secParam := secParam) H sk (.sign m)
+  | .verify m σ =>
+      ufOracleImpl (μCMZBaseMACSyntax F gen) (secParam := secParam) H sk (.verify m σ)
   | .help A₀ A Z => StateT.mk fun signed =>
       pure (helpEq sk A₀ A Z, signed)
 
