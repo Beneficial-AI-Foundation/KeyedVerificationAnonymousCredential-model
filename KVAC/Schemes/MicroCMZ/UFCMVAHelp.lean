@@ -65,10 +65,6 @@ def UFHelpOracleSpec (F G : Type) (n : ℕ) : OracleSpec (UFHelpQuery F G n)
   | .verify _ _ => Bool
   | .help _ _ _ => Bool
 
-/-- The equation of `Help`, `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ` (O24 §5.2, p. 35). -/
-def helpEq (sk : Key F n) (A₀ : G) (A : Fin n → G) (Z : G) : Bool :=
-  decide (Z = (sk.1 + sk.2.1) • A₀ + ∑ i, sk.2.2 i • A i)
-
 /-- The honest oracles of the game for the key `sk`. `sign` and `verify` are the
 oracles `ufOracleImpl` of the plain game at μCMZ, and `help` evaluates `helpEq`
 with the key. The state is the list of messages whose MAC codes the adversary

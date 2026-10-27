@@ -104,11 +104,12 @@ and presentation over the three proof systems of Figure 9, are both
 delivered. The theorem {bpref "mucmz_correctness"}[] proves the correctness of
 the credential at the oracle carrier.
 
-:::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_setup, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
+:::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.helpEq, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_setup, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
 The μCMZ base MAC over an abstract prime-order group
 ({uses "sampleable_group"}[]): key sampling, the scalar-side MAC
 `V = (x₀ + xᵣ + m·x₁)·U` with a nonvanishing tag base, deterministic
-verification, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
+verification, the equation of the oracle `Help` of §5.2 that the games with
+`Help` share, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
 with its correctness proof, and the sampler of nonzero group elements
 `uniformNonzero` for `G×`.
 :::
@@ -1097,7 +1098,7 @@ Combines anonymity {uses "mucmz_anonymity"}[] and extractability
 {uses "mucmz_extractability"}[].
 :::
 
-:::definition "mucmz_ufcmva_help_game" (lean := "KVAC.Schemes.MicroCMZ.UFHelpQuery, KVAC.Schemes.MicroCMZ.UFHelpOracleSpec, KVAC.Schemes.MicroCMZ.helpEq, KVAC.Schemes.MicroCMZ.ufHelpOracleImpl, KVAC.Schemes.MicroCMZ.UFHelpAdversary, KVAC.Schemes.MicroCMZ.UF_CMVAHelpGame, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv, KVAC.Schemes.MicroCMZ.ufQueryToHelp, KVAC.Schemes.MicroCMZ.ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")
+:::definition "mucmz_ufcmva_help_game" (lean := "KVAC.Schemes.MicroCMZ.UFHelpQuery, KVAC.Schemes.MicroCMZ.UFHelpOracleSpec, KVAC.Schemes.MicroCMZ.ufHelpOracleImpl, KVAC.Schemes.MicroCMZ.UFHelpAdversary, KVAC.Schemes.MicroCMZ.UF_CMVAHelpGame, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv, KVAC.Schemes.MicroCMZ.ufQueryToHelp, KVAC.Schemes.MicroCMZ.ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] for the base MAC of
 {uses "mucmz_construction"}[], with the oracle `Help(A₀, A⃗, Z)` of §5.2
 (p. 35), which answers whether `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ`. The challenger
