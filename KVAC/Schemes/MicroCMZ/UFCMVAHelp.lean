@@ -136,7 +136,7 @@ def ufQueryToHelp {secParam : ℕ} (H : G) :
 
 /-- An adversary of the plain game at μCMZ as an adversary of the game with
 `Help`, which never queries `Help` and never draws a coin. -/
-noncomputable def ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
+def ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
     (secParam : ℕ) : UFHelpAdversary F G n where
   run H pp :=
     simulateQ (ufQueryToHelp gen (secParam := secParam) H)
