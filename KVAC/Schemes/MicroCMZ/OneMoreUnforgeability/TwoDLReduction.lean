@@ -169,19 +169,30 @@ end Extraction
 
 section Reduction
 
+/-- The reduction's randomness for the slope pattern `w` at the slope `b`: the crs logarithm `η`,
+nonzero as `setup` draws `H` from the nonzero elements, and the offsets. The key variable with
+weight `1` gets the slope `b`, the others slope `0`. -/
+noncomputable def twoDLEmbedAt (w : F × F × F) (b : F) : ProbComp (TwoDLEmbed F) := do
+  let η ← uniformUnits F
+  let a₀ ← $ᵗ F
+  let aᵣ ← $ᵗ F
+  let a₁ ← $ᵗ F
+  pure ⟨η, a₀, w.1 * b, aᵣ, w.2.1 * b, a₁, w.2.2 * b⟩
+
+/-- The reduction's randomness for the slope pattern `w`: a uniform slope `b`, then
+`twoDLEmbedAt`. -/
+noncomputable def twoDLSampleEmbed (w : F × F × F) : ProbComp (TwoDLEmbed F) := do
+  let b ← $ᵗ F
+  twoDLEmbedAt w b
+
 /-- The 2-DL reduction of O24 Claim 5.14 built from an algebraic one-more forger `A`, for the
-slope pattern `w`: the key variable with weight `1` gets the slope `b`, the others slope `0`
-(module docstring). `(1, 0, 0)` is the `x₀` case of the paper. -/
+slope pattern `w` (`twoDLSampleEmbed`, module docstring). `(1, 0, 0)` is the `x₀` case of the
+paper. -/
 noncomputable def omufTwoDLReductionAt (gen : G)
     [Fact (Function.Bijective (fun x : F => x • gen))]
     (A : AGMOMUFAdversary F G 1) (w : F × F × F) : QDLogAdversary 2 F G :=
   fun _ Xs => do
-    let η ← uniformUnits F
-    let a₀ ← $ᵗ F
-    let aᵣ ← $ᵗ F
-    let a₁ ← $ᵗ F
-    let b ← $ᵗ F
-    let e : TwoDLEmbed F := ⟨η, a₀, w.1 * b, aᵣ, w.2.1 * b, a₁, w.2.2 * b⟩
+    let e ← twoDLSampleEmbed w
     let X := Xs 0
     let X' := Xs 1
     let pp := twoDLParams gen X e
@@ -387,6 +398,187 @@ theorem twoDL_run {α : Type} (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
       exact bind_congr fun p => ih _ _
 
 end Coupling
+
+section KeyDistribution
+
+variable (gen : G) [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
+
+/-- A bijection fixing `0` pushes the uniform sample of the nonzero elements to that of the
+other group. -/
+lemma evalDist_map_uniformNonzero {A B : Type} [AddCommGroup A] [Fintype A] [DecidableEq A]
+    [Nontrivial A] [AddCommGroup B] [Fintype B] [DecidableEq B] [Nontrivial B]
+    (f : A → B) (hf : Function.Bijective f) (h0 : f 0 = 0) :
+    𝒟[f <$> uniformNonzero A] = 𝒟[uniformNonzero B] := by
+  have hne : ∀ a : A, a ≠ 0 → f a ≠ 0 := fun a ha h => ha (hf.1 (h.trans h0.symm))
+  let φ : {a : A // a ≠ 0} → {b : B // b ≠ 0} := fun a => ⟨f a.1, hne _ a.2⟩
+  have hφ : Function.Bijective φ := by
+    refine ⟨fun a a' h => Subtype.ext (hf.1 (congrArg Subtype.val h)), fun b => ?_⟩
+    obtain ⟨a, ha⟩ := hf.2 b.1
+    refine ⟨⟨a, fun h0' => b.2 (ha ▸ h0' ▸ h0)⟩, Subtype.ext ha⟩
+  haveI : Finite A := Finite.of_fintype A
+  haveI : Finite {a : A // a ≠ 0} := Subtype.finite
+  have h := evalDist_map_bijective_uniform_cross (α := {a : A // a ≠ 0})
+    (β := {b : B // b ≠ 0}) φ hφ
+  have e1 : uniformNonzero A = Subtype.val <$> ($ᵗ {a : A // a ≠ 0} : ProbComp _) := rfl
+  have e2 : uniformNonzero B = Subtype.val <$> ($ᵗ {b : B // b ≠ 0} : ProbComp _) := rfl
+  calc 𝒟[f <$> uniformNonzero A]
+      = 𝒟[Subtype.val <$> (φ <$> ($ᵗ {a : A // a ≠ 0} : ProbComp _))] := by
+        rw [e1, Functor.map_map, Functor.map_map]
+    _ = Subtype.val <$> 𝒟[φ <$> ($ᵗ {a : A // a ≠ 0} : ProbComp _)] := evalDist_map _ _
+    _ = Subtype.val <$> 𝒟[($ᵗ {b : B // b ≠ 0} : ProbComp _)] := by rw [h]
+    _ = 𝒟[uniformNonzero B] := by rw [e2, evalDist_map]
+
+/-- The crs of the reduction, `H = η·G` for `η` uniform among the nonzero scalars, is uniform
+among the nonzero group elements, as `setup` draws it. -/
+lemma evalDist_uniformUnits_smul_gen :
+    𝒟[(fun η : F => η • gen) <$> uniformUnits F] = 𝒟[uniformNonzero G] := by
+  unfold uniformUnits
+  letI : AddCommGroup F := @Ring.toAddCommGroup F (@CommRing.toRing F Field.toCommRing)
+  letI : Nontrivial F := DivisionRing.toNontrivial
+  exact evalDist_map_uniformNonzero (fun η : F => η • gen) hgen.out (zero_smul F gen)
+
+omit [Field F] [Fintype F] [DecidableEq F] in
+/-- A uniform sample that is not used changes nothing. -/
+lemma evalDist_bind_uniform_const {γ : Type} (my : ProbComp γ) :
+    𝒟[do let _ ← ($ᵗ F : ProbComp F); my] = 𝒟[my] := by
+  apply evalDist_ext
+  intro y
+  rw [probOutput_bind_const, probFailure_uniformSample, tsub_zero, one_mul]
+
+/-- Bind congruence for evaluation distributions. -/
+lemma evalDist_bind_congr' {α γ : Type} (mx : ProbComp α) {f g : α → ProbComp γ}
+    (h : ∀ a, 𝒟[f a] = 𝒟[g a]) : 𝒟[mx >>= f] = 𝒟[mx >>= g] := by
+  rw [evalDist_bind, evalDist_bind]
+  exact congrArg _ (funext h)
+
+omit [DecidableEq F] in
+/-- Shifting a uniform scalar by a constant does not change what a continuation sees. -/
+lemma evalDist_bind_uniform_add_right {γ : Type} (c : F) (cont : F → ProbComp γ) :
+    𝒟[do let a ← ($ᵗ F : ProbComp F); cont (a + c)] =
+      𝒟[do let a ← ($ᵗ F : ProbComp F); cont a] := by
+  have h := evalDist_bind_bijective_add_right_uniform (α := F) (β := F) id
+    Function.bijective_id c cont
+  simpa using h
+
+omit [Fintype F] [DecidableEq F] in
+/-- A uniform scalar shifted by a constant and read as a vector of length one is a uniform vector:
+the last key component of the real key generation, `x ←$ F^1`. -/
+lemma evalDist_bind_uniform_fin_one {γ : Type} (c : F) (cont : (Fin 1 → F) → ProbComp γ) :
+    𝒟[do let a ← ($ᵗ F : ProbComp F); cont (fun _ => a + c)] =
+      𝒟[do let v ← ($ᵗ (Fin 1 → F) : ProbComp (Fin 1 → F)); cont v] := by
+  have hbij : Function.Bijective (fun (a : F) (_ : Fin 1) => a) :=
+    ⟨fun a b h => congrFun h 0, fun v => ⟨v 0, funext fun i => by rw [Subsingleton.elim i 0]⟩⟩
+  exact evalDist_bind_bijective_add_right_uniform (α := F) (β := Fin 1 → F) (fun a _ => a) hbij
+    (fun _ => c) cont
+
+/-- The crs and the key of the real game, `(H, sk)`: `H` from `setup`, then `keygen`. -/
+noncomputable def omufCrsKey (gen : G) (secParam : ℕ) : ProbComp (G × Key F 1) := do
+  let H ← (μCMZATCoreSyntax F gen).setup secParam 1
+  let (sk, _) ← (μCMZATCoreSyntax F gen).keygen (secParam := secParam) (n := 1) H
+  pure (H, sk)
+
+/-- **The slope is perfectly hidden by the offsets** (the step of O24 Claims 5.12 to 5.14, p. 46,
+"`b` is uniformly distributed and perfectly hidden by `a`"). At every slope `b`, whatever it is,
+including `0`, the crs and the key the reduction presents, `(η·G, e.key x)`, have the
+distribution of the real game: the slope times `x` only shifts the offsets, which are uniform, and
+`η·G` for `η` uniform among the nonzero scalars is the nonzero crs of `setup`. So the view does not
+depend on `b`. -/
+theorem twoDLEmbedAt_key (secParam : ℕ) (w : F × F × F) (x b : F) :
+    𝒟[(fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLEmbedAt w b] =
+      𝒟[omufCrsKey (F := F) gen secParam] := by
+  -- The real side is the nonzero crs and three uniform key components.
+  have hreal : omufCrsKey (F := F) gen secParam =
+      (do
+        let H ← uniformNonzero G
+        let x₀ ← ($ᵗ F : ProbComp F)
+        let xᵣ ← ($ᵗ F : ProbComp F)
+        let v ← ($ᵗ (Fin 1 → F) : ProbComp (Fin 1 → F))
+        pure (H, (x₀, xᵣ, v))) := by
+    simp only [omufCrsKey, μCMZATCoreSyntax, μCMZBaseMACSyntax, setup, keygen, bind_assoc,
+      pure_bind]
+  rw [hreal]
+  simp only [twoDLEmbedAt, map_bind, map_pure, TwoDLEmbed.key]
+  -- The offsets absorb the slopes' contributions.
+  have hrest : ∀ (η c₀ c₁ c₂ : F),
+      𝒟[do
+        let a₂ ← ($ᵗ F : ProbComp F)
+        let a₃ ← ($ᵗ F : ProbComp F)
+        let a₄ ← ($ᵗ F : ProbComp F)
+        pure (η • gen, a₂ + c₀, a₃ + c₁, fun _ => a₄ + c₂)] =
+      𝒟[do
+        let x₀ ← ($ᵗ F : ProbComp F)
+        let xᵣ ← ($ᵗ F : ProbComp F)
+        let v ← ($ᵗ (Fin 1 → F) : ProbComp (Fin 1 → F))
+        pure (η • gen, x₀, xᵣ, v)] := by
+    intro η c₀ c₁ c₂
+    refine (evalDist_bind_congr' _ fun a₂ => evalDist_bind_congr' _ fun a₃ =>
+      evalDist_bind_uniform_fin_one c₂ (fun v => pure (η • gen, a₂ + c₀, a₃ + c₁, v))).trans ?_
+    refine (evalDist_bind_congr' _ fun a₂ =>
+      evalDist_bind_uniform_add_right c₁ (fun r => (do
+        let v ← ($ᵗ (Fin 1 → F) : ProbComp (Fin 1 → F))
+        pure (η • gen, a₂ + c₀, r, v) : ProbComp _))).trans ?_
+    exact evalDist_bind_uniform_add_right c₀ (fun r => (do
+      let xᵣ ← ($ᵗ F : ProbComp F)
+      let v ← ($ᵗ (Fin 1 → F) : ProbComp (Fin 1 → F))
+      pure (η • gen, r, xᵣ, v) : ProbComp _))
+  -- The nonzero crs.
+  have hcrs : ∀ K : G → ProbComp (G × Key F 1),
+      𝒟[do let η ← uniformUnits F; K (η • gen)] = 𝒟[do let H ← uniformNonzero G; K H] := by
+    intro K
+    have h : (do let η ← uniformUnits F; K (η • gen)) =
+        ((fun η : F => η • gen) <$> uniformUnits F) >>= K := by simp [monad_norm]
+    rw [h, evalDist_bind, evalDist_uniformUnits_smul_gen gen, ← evalDist_bind]
+  refine (evalDist_bind_congr' _ fun η =>
+    hrest η (w.1 * b * x) (w.2.1 * b * x) (w.2.2 * b * x)).trans ?_
+  exact hcrs fun H => (do
+    let x₀ ← ($ᵗ F : ProbComp F)
+    let xᵣ ← ($ᵗ F : ProbComp F)
+    let v ← ($ᵗ (Fin 1 → F) : ProbComp (Fin 1 → F))
+    pure (H, x₀, xᵣ, v) : ProbComp _)
+
+/-- The slope is independent of the view: the joint distribution of the slope and of the crs and
+key the reduction presents is the product of the uniform slope and the real view. The degenerate
+mask of the paper, `b = 0`, has probability `1/p` (`probOutput_uniformSample`) and does not
+change the view. -/
+theorem twoDLEmbedAt_indep (secParam : ℕ) (w : F × F × F) (x : F) :
+    𝒟[do
+      let b ← ($ᵗ F : ProbComp F)
+      let e ← twoDLEmbedAt w b
+      pure (b, e.η • gen, e.key x)] =
+    𝒟[do
+      let b ← ($ᵗ F : ProbComp F)
+      let r ← omufCrsKey (F := F) gen secParam
+      pure (b, r)] := by
+  refine evalDist_bind_congr' _ fun b => ?_
+  have hl : (do let e ← twoDLEmbedAt w b; pure (b, e.η • gen, e.key x) : ProbComp _) =
+      Prod.mk b <$> ((fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLEmbedAt w b) := by
+    simp [monad_norm]
+  have hr : (do let r ← omufCrsKey (F := F) gen secParam; pure (b, r) : ProbComp _) =
+      Prod.mk b <$> omufCrsKey (F := F) gen secParam := by
+    simp [monad_norm]
+  rw [hl, hr]
+  calc 𝒟[Prod.mk b <$> ((fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLEmbedAt w b)]
+      = Prod.mk b <$> 𝒟[(fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLEmbedAt w b] :=
+        evalDist_map _ _
+    _ = Prod.mk b <$> 𝒟[omufCrsKey (F := F) gen secParam] := by
+        rw [twoDLEmbedAt_key gen secParam w x b]
+    _ = 𝒟[Prod.mk b <$> omufCrsKey (F := F) gen secParam] := (evalDist_map _ _).symm
+
+/-- The crs and the key the reduction presents, over its whole randomness, have the distribution
+of the real game, for every slope pattern and every challenge: the slope averages out of
+`twoDLEmbedAt_key`. -/
+theorem twoDLSampleEmbed_key (secParam : ℕ) (w : F × F × F) (x : F) :
+    𝒟[(fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLSampleEmbed w] =
+      𝒟[omufCrsKey (F := F) gen secParam] := by
+  have h : (fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLSampleEmbed w =
+      (do let b ← ($ᵗ F : ProbComp F);
+          (fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLEmbedAt w b) := by
+    simp [twoDLSampleEmbed, monad_norm]
+  rw [h]
+  refine (evalDist_bind_congr' _ fun b => twoDLEmbedAt_key gen secParam w x b).trans ?_
+  exact evalDist_bind_uniform_const _
+
+end KeyDistribution
 
 section Mixture
 
