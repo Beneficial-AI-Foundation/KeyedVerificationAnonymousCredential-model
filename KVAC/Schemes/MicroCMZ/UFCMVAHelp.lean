@@ -7,21 +7,21 @@ import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Core.AlgebraicMAC.Security
 
 /-!
-# The UF-CMVA game of μCMZ with the oracle `Help` (O24 §5.3)
+# The UF-CMVA game of μCMZ with the oracle `Help` (O24 §5.2)
 
 The unforgeability game of O24 Figure 5 for the base MAC of μCMZ, with the
-oracle `Help` of §5.3. Theorem 5.1 (p. 35) is proved for this game, "we actually
-will prove a stronger claim: the scheme is unforgeable even if the adversary is
-given one additional oracle `Help(A₀, A⃗, Z)` that returns 1 if `Z = (x₀ +
-xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ` and 0 otherwise". The reduction of Theorem 5.10 (§5.5, p. 43)
-checks its candidate `Z` through `Help`.
+oracle `Help(A₀, A⃗, Z)` of §5.2 (p. 35), which returns 1 if
+`Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ` and 0 otherwise. The paper proves Theorem 5.1, in
+the algebraic group model, for this game: "the scheme is unforgeable even if the
+adversary is given one additional oracle Help". The proof of Theorem 5.10
+(§5.5, p. 43) uses the answer of `Help` for its candidate `Z`.
 
 The game is the honest one. The challenger holds the key and answers `Help` by
 evaluating the equation, and no query carries an algebraic representation. The
 instrumented game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean` is the device of the
 proof of Lemma 5.4, where the reduction answers `Help` from the representations
-of an algebraic adversary (p. 38). The paper states the algebraic group model as
-a hypothesis of Theorem 5.1 and of Lemma 5.4 only. The statement of Theorem
+of an algebraic adversary (p. 38). Among the MAC results, the paper assumes the
+algebraic group model in Theorem 5.1 and Lemma 5.4 only. The statement of Theorem
 5.1 in `UFCMVA.lean`, `microCMZ_ufcmva_le_of_wellBehaved`, bounds the plain game
 of Figure 5 for well-behaved algebraic adversaries. Their translation to the
 plain game (`AGMBridge.lean`) answers `help` by `false`, and `WellBehaved`
@@ -49,7 +49,7 @@ variable (gen : G)
 /-! ## The oracles -/
 
 /-- The oracle calls of the UF-CMVA game with `Help`, for `n` attributes. `sign`
-and `verify` are those of O24 Figure 5, `help A₀ A⃗ Z` is the oracle of §5.3. -/
+and `verify` are those of O24 Figure 5, `help A₀ A⃗ Z` is the oracle of §5.2. -/
 inductive UFHelpQuery (F G : Type) (n : ℕ) : Type where
   /-- `Sign(m⃗)`, a MAC code on `m⃗`. -/
   | sign : (Fin n → F) → UFHelpQuery F G n
@@ -65,7 +65,7 @@ def UFHelpOracleSpec (F G : Type) (n : ℕ) : OracleSpec (UFHelpQuery F G n)
   | .verify _ _ => Bool
   | .help _ _ _ => Bool
 
-/-- The equation of `Help`, `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ` (O24 §5.3, p. 35). -/
+/-- The equation of `Help`, `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ` (O24 §5.2, p. 35). -/
 def helpEq (sk : Key F n) (A₀ : G) (A : Fin n → G) (Z : G) : Bool :=
   decide (Z = (sk.1 + sk.2.1) • A₀ + ∑ i, sk.2.2 i • A i)
 
@@ -92,7 +92,7 @@ structure UFHelpAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program, from the crs and the public parameters. -/
   run : G → Params G n → OracleComp (UFHelpOracleSpec F G n) ((Fin n → F) × Code G)
 
-/-- The UF-CMVA game with `Help` for μCMZ, O24 Figure 5 with the oracle of §5.3.
+/-- The UF-CMVA game with `Help` for μCMZ, O24 Figure 5 with the oracle of §5.2.
 Setup and key generation are those of `μCMZBaseMACSyntax`. The adversary wins
 when its forged message is fresh and its forgery verifies, as in `UF_CMVAGame`. -/
 noncomputable def UF_CMVAHelpGame (secParam : ℕ) (A : UFHelpAdversary F G n) :
@@ -106,16 +106,18 @@ noncomputable def UF_CMVAHelpGame (secParam : ℕ) (A : UFHelpAdversary F G n) :
   pure (decide (mStar ∉ signed) && mac.verify (secParam := secParam) H sk mStar σStar)
 
 /-- The advantage in the UF-CMVA game with `Help`, the probability that
-`UF_CMVAHelpGame` returns `true`. This is the `Adv^ufcmva_μCMZ` of O24
-Theorem 5.1 (p. 35) and of the bound of Theorem 5.10 (p. 42). -/
+`UF_CMVAHelpGame` returns `true`. The paper's `Adv^ufcmva_μCMZ` is the advantage
+in Figure 5, without `Help`. Theorem 5.1 (p. 35) bounds the advantage with `Help`
+as well, in the algebraic group model, and the proof of Theorem 5.10 (p. 43)
+uses the game with `Help`. -/
 noncomputable abbrev UF_CMVAHelpAdv (A : UFHelpAdversary F G n) (secParam : ℕ) : ℝ≥0∞ :=
   Pr[= true | UF_CMVAHelpGame gen secParam A]
 
 /-! ## The game without `Help`
 
 An adversary of the generic `UF_CMVAGame` at μCMZ never queries `Help`. It is
-an adversary of this game with the same advantage, so the bound of
-Theorem 5.1 for this game covers the plain game of Figure 5. -/
+an adversary of this game with the same advantage, so a bound on this game over
+all adversaries covers the plain game of Figure 5. -/
 
 /-- The queries of the plain game as queries of the game with `Help`. -/
 def ufQueryToHelp {secParam : ℕ} (H : G) :
