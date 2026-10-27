@@ -20,8 +20,10 @@ reduction itself (that is delivered by `AGMReduction`), and not the
 Sign-oracle distribution lemmas (those live in the sibling module `SignMask`).
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
-`AGMRepr` / `AGMRepr.eval`; and the AGM game (`AGMQuery`, `AGMOracleSpec`,
-`agmOracleImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`).
+`AGMRepr` / `AGMRepr.eval`; the AGM game (`AGMQuery`, `AGMOracleSpec`,
+`agmOracleImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`); and the
+forgetful map to the game with `Help` (`agmQueryToHelp`, `AGMUFAdversary.forget`,
+`UF_CMVAHelpAdv_forget`).
 
 The AGM is a restriction on the adversary class: an algebraic adversary that
 returns a group element "must also return coefficients ζ₁, …, ζₙ so that
