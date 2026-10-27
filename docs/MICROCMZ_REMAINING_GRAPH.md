@@ -13,7 +13,7 @@ graph BT
   L55["6 · Lemma 5.5, Claims 5.6 and 5.7, general n"]
   D44["9 · Definition 4.4, anonymity game"]
   T58["10 · Theorem 5.8, simulators and bound"]
-  E12["12 · extractablePoly_obligation, statement correction (sorry), proved by 13"]
+  E12["12 · extractablePoly_obligation removed (#177), asymptotic clause on #148"]
   N14["14 · newUsr_mac_isSome, EXTGame cache growth invariant"]
   T510["13 · Theorem 5.10, eight steps"]
   V18["18 · μCMZ_AT keeping π_is"]
@@ -31,7 +31,6 @@ graph BT
   H3 --> T58
   P2 --> T58
   K1 --> T58
-  E12 --> T510
   N14 --> T510
   T51 --> T510
   H3 --> T510
@@ -53,7 +52,7 @@ graph BT
   classDef leaf fill:#e3efe3,color:#1f1f1f,stroke:#3c7a3c
   class T1 root
   class T52,T53,T51,T58,T510,T511,L55,V18,N14 thm
-  class L54,E12 sorry
+  class L54 sorry
   class SUB,K1,P2,H3,D44 leaf
 ```
 
@@ -74,7 +73,7 @@ A node's level is one more than the maximum level of its prerequisites. Leaves s
 | 1 | 5, 10, 14, 18 | the issues for 5. Items 1, 2, 3, 9 for 10. Item 1 for 14 and 18 |
 | 2 | 6, 17 | 5 for 6. 3 and 18 for 17 |
 | 3 | 8, 19 | 5, 6 for 8. 10, 17, 18 for 19 |
-| 4 | 13 | 1, 3, 8, 12, 14 |
+| 4 | 13 | 1, 3, 8, 14 |
 | 5 | 16 | 1, 10, 13 |
 | 6 | 20 | 16, 19 |
 
