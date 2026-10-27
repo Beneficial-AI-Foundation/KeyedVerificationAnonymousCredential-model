@@ -576,6 +576,85 @@ theorem twoDLSampleEmbed_key (secParam : ℕ) (w : F × F × F) (x : F) :
 
 end KeyDistribution
 
+section TraceLevel
+
+variable (gen : G) [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
+
+/-- The public parameters of the key `sk` at the crs `H`, as `keygen` computes them. -/
+def omufParams (H : G) (sk : Key F 1) : Params G 1 :=
+  (sk.1 • H, sk.2.1 • gen, fun i => sk.2.2 i • gen)
+
+/-- The run of the game from a fixed crs and key, as `agmOMUFTrace` makes it after key
+generation. -/
+noncomputable def omufTraceFrom (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (H : G)
+    (sk : Key F 1) : ProbComp (OMUFTrace F G) := do
+  let (out, log) ← (simulateQ (agmOMUFImpl gen secParam sk H (omufParams gen H sk))
+    (A.run H (omufParams gen H sk))).run []
+  pure ⟨sk, H, omufParams gen H sk, log, out⟩
+
+omit hgen in
+/-- The trace is the run from the crs and the key of the real game. -/
+theorem agmOMUFTrace_eq (secParam : ℕ) (A : AGMOMUFAdversary F G 1) :
+    agmOMUFTrace gen secParam A =
+      (omufCrsKey (F := F) gen secParam >>= fun r => omufTraceFrom gen secParam A r.1 r.2) := by
+  simp only [agmOMUFTrace, omufCrsKey, omufTraceFrom, omufParams, agmOMUFImpl, μCMZATCoreSyntax,
+    μCMZBaseMACSyntax, setup, keygen, bind_assoc, pure_bind]
+
+/-- The reduction's run at the challenge `x`, before extraction: its randomness, the forger's
+output and the final state, simulating the forger from the empty log. -/
+noncomputable def twoDLRunAt (A : AGMOMUFAdversary F G 1) (w : F × F × F) (x : F) :
+    ProbComp (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G) := do
+  let e ← twoDLSampleEmbed w
+  let (out, s) ← (simulateQ (twoDLImpl gen (x • gen) (x • (x • gen)) e)
+    (A.run (e.η • gen) (twoDLParams gen (x • gen) e))).run ([], [])
+  pure (e, out, s)
+
+/-- The trace of a run of the reduction: the key at the challenge, the crs and the public parameters
+the reduction presented, the log, and the forger's output. -/
+def twoDLTraceOf (x : F) (r : TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G) :
+    OMUFTrace F G :=
+  ⟨r.1.key x, r.1.η • gen, twoDLParams gen (x • gen) r.1, r.2.2.1, r.2.1⟩
+
+/-- **The trace of the reduction's run is the trace of the game.** At every challenge `x`, the
+simulated run of the forger, read as a trace, has the distribution of `agmOMUFTrace`: the crs and
+the key are the real ones (`twoDLSampleEmbed_key`) and the simulated oracles answer as the real
+ones (`twoDL_run`). -/
+theorem twoDLRunAt_trace (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F) (x : F) :
+    𝒟[twoDLTraceOf gen x <$> twoDLRunAt gen A w x] = 𝒟[agmOMUFTrace gen secParam A] := by
+  have h0 : twoDLAuxOf gen x (AGMOMUFLog.tags ([] : AGMOMUFLog F G 1)) = [] := rfl
+  -- For each randomness, the simulated run is the real run from that crs and key.
+  have hrun : ∀ e : TwoDLEmbed F,
+      𝒟[twoDLTraceOf gen x <$> (do
+        let (out, s) ← (simulateQ (twoDLImpl gen (x • gen) (x • (x • gen)) e)
+          (A.run (e.η • gen) (twoDLParams gen (x • gen) e))).run ([], [])
+        pure (e, out, s))] = 𝒟[omufTraceFrom gen secParam A (e.η • gen) (e.key x)] := by
+    intro e
+    have h := twoDL_run gen secParam x e (A.run (e.η • gen) (twoDLParams gen (x • gen) e)) []
+    rw [h0] at h
+    rw [twoDLParams_eq gen x e] at h ⊢
+    rw [h]
+    congr 1
+    simp only [omufTraceFrom, omufParams, twoDLTraceOf, TwoDLEmbed.key, bind_pure_comp,
+      Functor.map_map, twoDLParams_eq gen x e]
+  -- Average over the reduction's randomness.
+  have hmap : twoDLTraceOf gen x <$> twoDLRunAt gen A w x =
+      (twoDLSampleEmbed w >>= fun e => twoDLTraceOf gen x <$> (do
+        let (out, s) ← (simulateQ (twoDLImpl gen (x • gen) (x • (x • gen)) e)
+          (A.run (e.η • gen) (twoDLParams gen (x • gen) e))).run ([], [])
+        pure (e, out, s))) := by
+    simp only [twoDLRunAt, map_bind]
+  rw [hmap]
+  refine (evalDist_bind_congr' _ hrun).trans ?_
+  have hview : (twoDLSampleEmbed w >>= fun e =>
+        omufTraceFrom gen secParam A (e.η • gen) (e.key x)) =
+      ((fun e : TwoDLEmbed F => (e.η • gen, e.key x)) <$> twoDLSampleEmbed w) >>=
+        fun r => omufTraceFrom gen secParam A r.1 r.2 := by
+    simp [monad_norm]
+  rw [hview, evalDist_bind, twoDLSampleEmbed_key gen secParam w x, ← evalDist_bind,
+    agmOMUFTrace_eq]
+
+end TraceLevel
+
 section Mixture
 
 /-- The advantage of the three-way mixture is the mean of the three advantages:
