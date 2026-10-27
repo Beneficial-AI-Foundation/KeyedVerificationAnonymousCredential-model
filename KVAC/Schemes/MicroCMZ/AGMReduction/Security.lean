@@ -15,7 +15,7 @@ prove:
   `AGM_UF_CMVAAdv gen A secParam ≤
      microCMZN3DLReductionAdv gen A + gapDlogAdv gen (gapDlReduction gen A) + 5/p`.
 
-The bound speaks of the instrumented AGM(+Help) game `AGM_UF_CMVAGame` of
+The bound speaks of the AGM(+Help) game `AGM_UF_CMVAGame` of
 `AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 is formalized in
 the stronger form its proof establishes, "the scheme is unforgeable even if the
 adversary is given one additional oracle Help" (p. 35), as a bound for the game with
@@ -59,7 +59,7 @@ variable {n : ℕ}
 
 /-! ## Lemma 5.5 -/
 
-/-- **O24 Lemma 5.5** (μCMZ is UF-CMVA for any `n` in the AGM, instrumented game):
+/-- **O24 Lemma 5.5** (μCMZ is UF-CMVA for any `n` in the AGM game):
 the AGM advantage of an `n`-attribute algebraic adversary is at most the 3-DL
 advantage of `microCMZN3DLReduction gen A` plus the gap-DL advantage of
 `gapDlReduction gen A` plus `5/p`.

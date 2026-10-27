@@ -12,7 +12,7 @@ import KVAC.Preliminaries.AnonymousTokens.Security
 
 The algebraic group model (AGM) one-more unforgeability game for the μCMZ_AT
 core scheme (`μCMZATCoreSyntax`), following Orrù, *Revisiting Keyed-Verification
-Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the instrumented
+Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the
 AGM UF-CMVA(+Help) game of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
 step A4 of #12 (Track CMZ-OMUF, issue #181), delivered in two parts: first the
 representation gate, the query type, the oracle spec, the transcript log, and
@@ -21,7 +21,7 @@ the experiment `AGM_OMUFGame`, and its advantage `AGM_OMUFAdv`, together with
 the decidable Sign predicate the static query-budget hypotheses of Theorem 5.11
 count.
 
-A word of caution on naming: this is the instrumented game, not the
+A word of caution on naming: this is an instrumented game, not the
 honest Figure 6 game. The oracles are *gated*. They answer honestly only when
 the submitted representation is consistent, and refuse otherwise, so the game
 matches the plain `OMUFGame` of `KVAC.Preliminaries.AnonymousTokens.Security`

@@ -1055,7 +1055,7 @@ carries a representation. The paper proves Theorem 5.1
 ({bpref "mucmz_mac_security"}[]), in the algebraic group model, for this game:
 "the scheme is unforgeable even if the adversary is given one additional oracle
 Help". The proof of Theorem 5.10 (p. 43) uses the answer of `Help` for its
-candidate `Z`. The paper ties `Help` to no model. The instrumented game of
+candidate `Z`. The paper ties `Help` to no model. The AGM game of
 {bpref "agm_model"}[] is the device of the proof of Lemma 5.4, where the
 reduction answers `Help` from the representations of an algebraic adversary.
 `Help` reads the key `(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ. An

@@ -255,8 +255,8 @@ instantiate `q := L.length` and restate the verification polynomial vanishing at
 embedded point `v ↦ a v + x·b v` with no dependent-cast bookkeeping.
 
 The verification relation enters as the single equation `hkey` between the two represented
-values. `redFull_badBit_of_winBit_of_not_recBit` (`SecurityN1.lean`) rebuilds it from the win
-predicate's three equations `ρU.evalAt … = U*`, `ρV.evalAt … = V*`, `V* = key • U*`. -/
+values. `redFull_badBit_of_winBit_of_not_recBit` (`SecurityN1.lean`) supplies it from the win
+predicate's MAC equation on the evaluated MAC code. -/
 lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
     {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
