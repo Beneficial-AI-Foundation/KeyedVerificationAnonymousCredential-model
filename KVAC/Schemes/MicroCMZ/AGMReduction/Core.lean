@@ -114,23 +114,21 @@ theorem agmRepr_eval_eq_eval_toPoly (ρ : AGMRepr F 1) (H : G) (x0 xr : F)
 /-! ## The identity and consistency branches -/
 
 /--
-**Identity branch of Lemma 5.4** (O24 §5.3). If a consistent forgery for a *fresh*
+**Identity branch of Lemma 5.4** (O24 §5.3). If the forgery for a *fresh*
 message has an identically-vanishing verification polynomial, then `U* = 0`. With
 the `U* ≠ 0` check in `MicroCMZ.verify`, the identity case contributes nothing to
 the win probability — O24's coefficient-matching contradiction, here via
 `toPoly_eq_zero_of_verifPoly_eq_zero` through the evaluation bridge. -/
 theorem agm_n1_identity_Ustar_eq_zero (ρU ρV : AGMRepr F 1) (H : G) (x0 xr : F)
-    (x : Fin 1 → F) (UStar : G) (mStar : F) (tags : List (G × G))
+    (x : Fin 1 → F) (mStar : F) (tags : List (G × G))
     (msgs : Fin tags.length → F)
     (htag : ∀ j : Fin tags.length,
       (tags.get j).2 = (x0 + xr + msgs j * x 0) • (tags.get j).1)
     (hfresh : ∀ j, mStar ≠ msgs j)
-    (hconsistent : ρU.eval gen H (x0 • H) (xr • gen)
-      (fun i => x i • gen) tags = UStar)
     (hverif : AGMPoly.verifPoly msgs mStar (ρU.toReprCoeffs tags.length)
       (ρV.toReprCoeffs tags.length) = 0) :
-    UStar = 0 := by
-  rw [← hconsistent, agmRepr_eval_eq_eval_toPoly gen ρU H x0 xr x tags msgs htag,
+    ρU.eval gen H (x0 • H) (xr • gen) (fun i => x i • gen) tags = 0 := by
+  rw [agmRepr_eval_eq_eval_toPoly gen ρU H x0 xr x tags msgs htag,
     AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero msgs mStar hfresh
       (ρU.toReprCoeffs tags.length) (ρV.toReprCoeffs tags.length) hverif]
   simp only [map_zero, zero_smul]

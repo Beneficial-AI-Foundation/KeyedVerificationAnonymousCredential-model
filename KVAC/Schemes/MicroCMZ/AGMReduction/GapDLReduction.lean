@@ -120,7 +120,7 @@ noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
   | .verify m ρU ρV => StateT.mk fun log => do
       let tags := log.map Prod.snd
       let pp := gapDlEmbedParams gen aa bb z xr X H
-      let σ := (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags)
+      let σ := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
       let (c, d) := gapDlKeyParts aa bb z xr m
       let bit ← query (spec := unifSpec + GapDLogOracleSpec G)
         (Sum.inr (d • σ.1, σ.2 - c • σ.1))
@@ -128,9 +128,9 @@ noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
   | .help ρ₀ ρA ρZ => StateT.mk fun log => do
       let tags := log.map Prod.snd
       let pp := gapDlEmbedParams gen aa bb z xr X H
-      let A₀ := ρ₀.eval gen H pp.1 pp.2.1 pp.2.2 tags
-      let A := fun i => (ρA i).eval gen H pp.1 pp.2.1 pp.2.2 tags
-      let Z := ρZ.eval gen H pp.1 pp.2.1 pp.2.2 tags
+      let A₀ := ρ₀.evalParams gen H pp tags
+      let A := fun i => (ρA i).evalParams gen H pp tags
+      let Z := ρZ.evalParams gen H pp tags
       let bit ← query (spec := unifSpec + GapDLogOracleSpec G)
         (Sum.inr (∑ i, bb i • A i, Z - (z + xr) • A₀ - ∑ i, aa i • A i))
       pure (bit, log)
