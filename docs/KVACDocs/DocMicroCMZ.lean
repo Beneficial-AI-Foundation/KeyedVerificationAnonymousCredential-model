@@ -1578,7 +1578,8 @@ substitutes the key variables by their affine functions of `χ` into the forgery
 theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
 advantage is the sum of the three. The coupling of its run with the real game is
 {bpref "omuf_two_dl_run_coupling"}[], the law of the key and of `H` it presents is
-{bpref "omuf_two_dl_key_law"}[], and that the substituted polynomial is nonzero is the
+{bpref "omuf_two_dl_key_law"}[], its run read as a trace is {bpref "omuf_two_dl_trace_coupling"}[],
+and that the substituted polynomial is nonzero is the
 extraction obligation of {bpref "omuf_case_iii"}[].
 :::
 
@@ -1614,6 +1615,23 @@ does not depend on `b` and the slope is independent of it (`twoDLEmbedAt_indep`)
 the challenge only shifts the offsets, which are uniform, and `η·G` for `η` uniform among the
 nonzero scalars is the nonzero crs of `setup`. Over the whole randomness of the reduction this
 gives the real view for every slope pattern and challenge (`twoDLSampleEmbed_key`).
+:::
+
+:::theorem "omuf_two_dl_trace_coupling" (lean := "KVAC.Schemes.MicroCMZ.omufParams, KVAC.Schemes.MicroCMZ.omufTraceFrom, KVAC.Schemes.MicroCMZ.agmOMUFTrace_eq, KVAC.Schemes.MicroCMZ.twoDLRunAt, KVAC.Schemes.MicroCMZ.twoDLTraceOf, KVAC.Schemes.MicroCMZ.twoDLRunAt_trace") (parent := "cmz_omuf") (tags := "milestone")
+The simulated run of the forger by the 2-DL reduction of {uses "omuf_two_dl_reduction"}[] at a
+challenge, read as a trace of {uses "omuf_transcript"}[] (the key at the challenge, the crs and
+public parameters it presented, the log and the forger's output), has the distribution of the
+trace of the game of {uses "agm_omuf_game"}[]: the crs and key are the real ones
+({uses "omuf_two_dl_key_law"}[]) and the simulated oracles answer as the real ones
+({uses "omuf_two_dl_run_coupling"}[]).
+:::
+
+:::proof "omuf_two_dl_trace_coupling"
+The game's trace is the run from the crs and key of the real game (`agmOMUFTrace_eq`). The
+simulated run at the key of the challenge is the real run followed by the records of the final log
+(`omuf_two_dl_run_coupling`), and the crs and key it starts from are the real ones
+(`omuf_two_dl_key_law`), so reading the run as a trace (`twoDLRunAt`, `twoDLTraceOf`) gives the
+trace of the game (`twoDLRunAt_trace`).
 :::
 
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
