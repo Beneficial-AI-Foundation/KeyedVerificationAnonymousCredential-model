@@ -8,6 +8,7 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.GapDLReduction
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.TwoDLReduction
 import VCVio.OracleComp.QueryTracking.QueryBound
 import KVAC.Schemes.MicroCMZ.AGMReduction.AttributeCollapse
 
@@ -178,6 +179,17 @@ noncomputable def omufBoundN1 (F : Type) [Fintype F] (q : ℕ) (εdl ε2dl : ℝ
   ((q : ℝ≥0∞) + 4) * (Fintype.card F : ℝ≥0∞)⁻¹ + ((q : ℝ≥0∞) + 1) * εdl +
     3 * ε2dl
 
+/-- The three Claims' bounds add up to Equation 23, given that the discrete-log advantage of the
+theorem's reduction is the mixture of the two Claim advantages: `(q + 1)·εdl = q·εU + εη`. -/
+theorem omufBoundN1_eq_of_mix (F : Type) [Fintype F] (q : ℕ) (εU εη εdl ε2dl : ℝ≥0∞)
+    (h : ((q : ℝ≥0∞) + 1) * εdl = (q : ℝ≥0∞) * εU + εη) :
+    (q : ℝ≥0∞) * ((Fintype.card F : ℝ≥0∞)⁻¹ + εU) +
+        (((Fintype.card F : ℝ≥0∞)⁻¹ + εη) + 3 * ((Fintype.card F : ℝ≥0∞)⁻¹ + ε2dl)) =
+      omufBoundN1 F q εdl ε2dl := by
+  unfold omufBoundN1
+  rw [add_assoc _ (((q : ℝ≥0∞) + 1) * εdl), h]
+  ring
+
 /--
 The printed bound of O24 Theorem 5.11 for every `n`,
 `(q + 6)/p + (q + 1)·εdl + 3·ε2dl + εgap`, with `εgap` the gap-DL advantage of
@@ -199,27 +211,6 @@ The generator and its bijectivity fact are explicit binders here rather than
 section variables, since a `sorry` body mentions neither and a section variable
 joins a definition only when mentioned. The `sorry` inhabits the whole function
 type (module docstring, *Why named reductions*). -/
-
-/--
-The discrete-log reduction of O24 Theorem 5.11 at `n = 1`, for the Sign budget
-`q`, built from an algebraic one-more forger `A`: it embeds the challenge into
-the game it simulates for `A` and extracts the logarithm from a forgery
-polynomial `φ_i` (Equation 22) at a `u_ι` monomial for a chosen issuance index
-`ι ∈ [q]` (Claim 5.12) or at an `η` monomial (Claim 5.13). The
-paper's factor `(q + 1)` is the union of these cases. Each Claim has its own
-reduction below, `omufDLReductionU` and `omufDLReductionEta` (decision A11 of
-the Theorem 5.3 plan), and this one is defined in the proof phase as their
-mixture, running the first with probability `q/(q + 1)` and the second with
-`1/(q + 1)`, so that `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)` and the
-Claims add up to the theorem's `(q + 1)·εdl` term. The budget argument is the
-selector's. Declared with a `sorry` body until the proof PRs build it; the
-generator fact is what the construction's logarithm bookkeeping (`glog`) will
-need.
--/
-noncomputable def omufDLReduction :
-    ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
-      ℕ → AGMOMUFAdversary F G 1 → DiffieHellman.DLogAdversary F G :=
-  sorry
 
 /--
 The discrete-log reduction of O24 Claim 5.12 (item (i), a `u_ι` monomial), for the
@@ -266,17 +257,65 @@ noncomputable def omufDLReductionEta :
       AGMOMUFAdversary F G 1 → DiffieHellman.DLogAdversary F G :=
   sorry
 
+/-- The mixture of two discrete-log adversaries: `B₂` with probability `1/(q + 1)` and `B₁`
+otherwise, the choice made independently of the challenge. -/
+def dlogMix (q : ℕ) (B₁ B₂ : DiffieHellman.DLogAdversary F G) : DiffieHellman.DLogAdversary F G :=
+  fun g X => do
+    let i ← $ᵗ (Fin (q + 1))
+    if i = 0 then B₂ g X else B₁ g X
+
+/-- The advantage of a mixture is the corresponding mixture of the advantages:
+`(q + 1)·Adv(mix) = q·Adv(B₁) + Adv(B₂)`. -/
+theorem dlogAdv_dlogMix (gen : G) (q : ℕ) (B₁ B₂ : DiffieHellman.DLogAdversary F G) :
+    ((q : ℝ≥0∞) + 1) * dlogAdv gen (dlogMix q B₁ B₂) =
+      (q : ℝ≥0∞) * dlogAdv gen B₁ + dlogAdv gen B₂ := by
+  have h : dlogAdv gen (dlogMix q B₁ B₂) =
+      ∑ i : Fin (q + 1), ((q : ℝ≥0∞) + 1)⁻¹ *
+        (if i = 0 then dlogAdv gen B₂ else dlogAdv gen B₁) := by
+    unfold dlogAdv
+    simp only [DiffieHellman.dlogExp, dlogMix, bind_assoc]
+    rw [probOutput_bind_bind_swap, probOutput_bind_eq_sum_fintype]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [probOutput_uniformSample, Fintype.card_fin]
+    push_cast
+    congr 1
+    by_cases hi : i = 0 <;> simp [hi]
+  rw [h, Fin.sum_univ_succ]
+  simp only [Fin.succ_ne_zero, if_true, if_false, Finset.sum_const, Finset.card_univ,
+    Fintype.card_fin, nsmul_eq_mul]
+  have hq : ((q : ℝ≥0∞) + 1) * ((q : ℝ≥0∞) + 1)⁻¹ = 1 :=
+    ENNReal.mul_inv_cancel (by positivity)
+      (ENNReal.add_ne_top.2 ⟨ENNReal.natCast_ne_top q, ENNReal.one_ne_top⟩)
+  calc _ = (((q : ℝ≥0∞) + 1) * ((q : ℝ≥0∞) + 1)⁻¹) * dlogAdv gen B₂ +
+        (q : ℝ≥0∞) * (((q : ℝ≥0∞) + 1) * ((q : ℝ≥0∞) + 1)⁻¹) * dlogAdv gen B₁ := by ring
+    _ = _ := by rw [hq]; ring
+
 /--
-The 2-DL reduction of O24 Theorem 5.11 at `n = 1`, built from an algebraic
-one-more forger `A`: it extracts from an `x₀`, `xᵣ` or `x₁` monomial of a
-forgery polynomial `φ_i` with that monomial (Claim 5.14, three near-identical
-cases,
-the factor `3`). Declared with a `sorry` body until the proof PRs build it.
+The discrete-log reduction of O24 Theorem 5.11 at `n = 1`, for the Sign budget
+`q`, built from an algebraic one-more forger `A`: the mixture, `dlogMix`, of the
+reductions of the two Claims that extract a discrete logarithm, `omufDLReductionU`
+(Claim 5.12, a `u_ι` monomial, for a chosen issuance index `ι ∈ [q]`) running with
+probability `q/(q + 1)` and `omufDLReductionEta` (Claim 5.13, an `η` monomial) with
+`1/(q + 1)`, so that `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)`
+(`dlogAdv_dlogMix`) and the Claims add up to the theorem's `(q + 1)·εdl` term (decision
+A11 of the Theorem 5.3 plan). It is built from the two Claim reductions, which are still
+declared with `sorry` bodies.
 -/
-noncomputable def omufTwoDLReduction :
-    ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
-      AGMOMUFAdversary F G 1 → QDLogAdversary 2 F G :=
-  sorry
+noncomputable def omufDLReduction (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))]
+    (q : ℕ) (A : AGMOMUFAdversary F G 1) : DiffieHellman.DLogAdversary F G :=
+  dlogMix q (omufDLReductionU gen q A) (omufDLReductionEta gen A)
+
+/--
+The 2-DL reduction of O24 Theorem 5.11 at `n = 1`, built from an algebraic one-more
+forger `A`: the mixture, `twoDLMix`, of the three embeddings of Claim 5.14, the challenge in
+`x₀`, in `xᵣ` and in `x₁` (`omufTwoDLReductionAt` at the slope patterns `(1, 0, 0)`, `(0, 1, 0)`
+and `(0, 0, 1)`), each with probability `1/3`, so that `3·Adv(mixture)` is the sum of the three
+advantages (`qdlogAdv_twoDLMix`), the factor `3`.
+-/
+noncomputable def omufTwoDLReduction (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))]
+    (A : AGMOMUFAdversary F G 1) : QDLogAdversary 2 F G :=
+  twoDLMix (omufTwoDLReductionAt gen A (1, 0, 0)) (omufTwoDLReductionAt gen A (0, 1, 0))
+    (omufTwoDLReductionAt gen A (0, 0, 1))
 
 /-! Uniform-sampling instances for the algebraic one-more oracle spec, needed to push
 `simulateQ` through it. They belong beside `AGMOMUFOracleSpec` in `Game.lean`; kept here
@@ -436,6 +475,7 @@ lemma tags_collapseLog {n : ℕ} (r : Fin n → F) (log : AGMOMUFLog F G n) :
     rw [List.filterMap_map]
     congr 1
 
+
 lemma map_if {a b : Type} {m : Type -> Type} (f : a -> b) (p : Prop) (c c' : m a )
      [Decidable p] [Functor m]:
     (f <$> (if p then c else c')) = (if p then f <$> c else f <$> c') := by
@@ -533,6 +573,7 @@ lemma collapse_step_coin {n : ℕ} (gen : G) (secParam : ℕ)
   simp only [agmOMUFImpl, QueryImpl.add_apply_inl, QueryImpl.liftTarget_apply]
   simp [liftM, monadLift, MonadLift.monadLift, Functor.map_map]
 
+
 lemma collapse_run {n : ℕ} {α : Type} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
     (oa : OracleComp (unifSpec + AGMOMUFOracleSpec F G n) α) (log : AGMOMUFLog F G n) :
@@ -569,39 +610,6 @@ lemma collapse_run {n : ℕ} {α : Type} (gen : G) (secParam : ℕ)
 variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable (secParam : ℕ)
-
-/--
-**O24 Theorem 5.11 at `n = 1`, Equation 23**, in the shape drawn in the module
-docstring, stated first and `sorry`d. The proof runs at the actual number `r` of
-Sign queries, `r ≤ q` by the hypothesis: a win presents `r + 1` forgeries
-against at most `r` issued pairs, so by pigeonhole one forgery is not the
-unblinding of any pair, its polynomial `φ_i` has a nonzero monomial in one of
-the three variable groups, and Claims 5.12 to 5.14 bound each case over the
-polynomial layer of Equations 17 to 22, `r ≤ q` giving the stated constants.
--/
-theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
-    (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
-    AGM_OMUFAdv gen A secParam ≤
-      omufBoundN1 F q (dlogAdv gen (omufDLReduction gen q A))
-        (twoDlogAdv gen (omufTwoDLReduction gen A)) := by
-  sorry
-
-/--
-**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
-stated first and `sorry`d, with the paper's printed bound. The proof splits the
-winning event by whether the forgeries' attribute combinations are pairwise
-distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
-transformed adversary `omufToN1 gen A`, the colliding case is the gap-DL
-reduction, and the two add `2/p + Adv^gapdl` to Equation 23. The domain `0 < n`
-is §3.4's, as for the plain game.
--/
-theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ)
-    (hq : ∀ (H : G) (pp : Params G n), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
-    AGM_OMUFAdv gen A secParam ≤
-      omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
-        (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
-        (gapDlogAdv gen (omufGapDLReduction gen A)) := by
-  sorry
 
 /-! ## The Claims
 
@@ -653,6 +661,31 @@ theorem omuf_claim_5_13 (A : AGMOMUFAdversary F G 1) :
   sorry
 
 /--
+**O24 Claim 5.14, `x₀` case** (p. 47, written out): the adversary wins and some forgery
+polynomial has a nonzero monomial in `x₀`, with probability at most `1/p + Adv^2-dl` for the
+reduction `omufTwoDLReductionAt gen A (1, 0, 0)`, which embeds `x₀ = a + b·x`. The extraction
+obligation of the module docstring applies.
+-/
+theorem omuf_claim_5_14_x0 (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseX0 gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReductionAt gen A (1, 0, 0)) := by
+  sorry
+
+/-- **O24 Claim 5.14, `xᵣ` case** ("almost identical", p. 47): as `omuf_claim_5_14_x0` for
+`xᵣ`, with the reduction at the slope pattern `(0, 1, 0)`. -/
+theorem omuf_claim_5_14_xr (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseXr gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 1, 0)) := by
+  sorry
+
+/-- **O24 Claim 5.14, `x₁` case**: as `omuf_claim_5_14_x0` for `x₁`, with the reduction at the
+slope pattern `(0, 0, 1)`. -/
+theorem omuf_claim_5_14_x1 (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseX1 gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 0, 1)) := by
+  sorry
+
+/--
 **O24 Claim 5.14**, item (iii), the adversary wins and some forgery polynomial
 has a nonzero monomial in `x₀`, `xᵣ` or `x₁`, with probability at most
 `3·(1/p + Adv^2-dl)` for the reduction `omufTwoDLReduction gen A`, the same
@@ -668,6 +701,93 @@ obligation of the module docstring applies. Printed constant, provisional
 theorem omuf_claim_5_14 (A : AGMOMUFAdversary F G 1) :
     Pr[ OMUFTrace.CaseX gen secParam | agmOMUFTrace gen secParam A ] ≤
       3 * ((Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReduction gen A)) := by
+  refine (probEvent_mono fun t ht hx => OMUFTrace.caseX_imp gen secParam t hx).trans ?_
+  have h1 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseX0 gen secParam)
+    (fun t => t.CaseXr gen secParam ∨ t.CaseX1 gen secParam)
+  have h2 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseXr gen secParam)
+    (OMUFTrace.CaseX1 gen secParam)
+  have hmix := qdlogAdv_twoDLMix gen (omufTwoDLReductionAt gen A (1, 0, 0))
+    (omufTwoDLReductionAt gen A (0, 1, 0)) (omufTwoDLReductionAt gen A (0, 0, 1))
+  have hsum := add_le_add (omuf_claim_5_14_x0 gen secParam A)
+    (add_le_add (omuf_claim_5_14_xr gen secParam A) (omuf_claim_5_14_x1 gen secParam A))
+  refine (h1.trans (add_le_add_right h2 _)).trans (hsum.trans (le_of_eq ?_))
+  have hmix' : 3 * twoDlogAdv gen (omufTwoDLReduction gen A) =
+      twoDlogAdv gen (omufTwoDLReductionAt gen A (1, 0, 0)) +
+        twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 1, 0)) +
+          twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 0, 1)) := hmix
+  rw [mul_add, hmix']
+  ring
+
+omit hgen in
+/-- The AGM advantage is the trace probability of the win. -/
+theorem AGM_OMUFAdv_eq_probEvent_wins (A : AGMOMUFAdversary F G 1) :
+    AGM_OMUFAdv gen A secParam =
+      Pr[ fun t => t.Wins gen secParam | agmOMUFTrace gen secParam A ] := by
+  unfold AGM_OMUFAdv
+  rw [AGM_OMUFGame_eq_trace, bind_pure_comp, ← probEvent_eq_eq_probOutput, probEvent_map]
+  congr 1
+  funext t
+  exact propext decide_eq_true_iff
+
+/-- The advantage is at most the sum of the probabilities of the three case events: the events
+cover a win (`omuf_cover`), and a union bound. -/
+theorem AGM_OMUFAdv_le_cases (A : AGMOMUFAdversary F G 1) :
+    AGM_OMUFAdv gen A secParam ≤
+      Pr[ OMUFTrace.CaseU gen secParam | agmOMUFTrace gen secParam A ] +
+        (Pr[ OMUFTrace.CaseEta gen secParam | agmOMUFTrace gen secParam A ] +
+          Pr[ OMUFTrace.CaseX gen secParam | agmOMUFTrace gen secParam A ]) := by
+  rw [AGM_OMUFAdv_eq_probEvent_wins]
+  refine (probEvent_mono fun t ht hw => omuf_cover gen secParam A t ht hw).trans ?_
+  have h1 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseU gen secParam)
+    (fun t => t.CaseEta gen secParam ∨ t.CaseX gen secParam)
+  have h2 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseEta gen secParam)
+    (OMUFTrace.CaseX gen secParam)
+  exact h1.trans (add_le_add_right h2 _)
+
+/--
+**O24 Theorem 5.11 at `n = 1`, Equation 23**, in the shape drawn in the module
+docstring. Proved from Claims 5.12 to 5.14, which are stated below and `sorry`d: the
+advantage is the trace probability of the win (`AGM_OMUFAdv_eq_probEvent_wins`), a win
+presents `q + 1` forgeries against at most `q` issued pairs, so by pigeonhole one forgery
+is not the unblinding of any pair and its polynomial `φ_i` has a nonzero monomial in one
+of the three variable groups (`omuf_cover`), the union bound adds the three Claims'
+probabilities (`AGM_OMUFAdv_le_cases`), and their constants add up to Equation 23 since
+the theorem's discrete-log reduction is the mixture of the two Claim reductions
+(`dlogAdv_dlogMix`, `omufBoundN1_eq_of_mix`).
+-/
+theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    AGM_OMUFAdv gen A secParam ≤
+      omufBoundN1 F q (dlogAdv gen (omufDLReduction gen q A))
+        (twoDlogAdv gen (omufTwoDLReduction gen A)) := by
+  refine (AGM_OMUFAdv_le_cases gen secParam A).trans ?_
+  have hdef : omufDLReduction gen q A =
+      dlogMix q (omufDLReductionU gen q A) (omufDLReductionEta gen A) := rfl
+  have hmix := dlogAdv_dlogMix gen q (omufDLReductionU gen q A) (omufDLReductionEta gen A)
+  rw [← hdef] at hmix
+  have h12 := omuf_claim_5_12 gen secParam A q hq
+  have h13 := omuf_claim_5_13 gen secParam A
+  have h14 := omuf_claim_5_14 gen secParam A
+  have hsum := add_le_add h12 (add_le_add h13 h14)
+  have heq := omufBoundN1_eq_of_mix F q _ _ _ (twoDlogAdv gen (omufTwoDLReduction gen A)) hmix
+  rw [heq] at hsum
+  exact hsum
+
+/--
+**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
+stated first and `sorry`d, with the paper's printed bound. The proof splits the
+winning event by whether the forgeries' attribute combinations are pairwise
+distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
+transformed adversary `omufToN1 gen A`, the colliding case is the gap-DL
+reduction, and the two add `2/p + Adv^gapdl` to Equation 23. The domain `0 < n`
+is §3.4's, as for the plain game.
+-/
+theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G n), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    AGM_OMUFAdv gen A secParam ≤
+      omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
+        (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
+        (gapDlogAdv gen (omufGapDLReduction gen A)) := by
   sorry
 
 end KVAC.Schemes.MicroCMZ
