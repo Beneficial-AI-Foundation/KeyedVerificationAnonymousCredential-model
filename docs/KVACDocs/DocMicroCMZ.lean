@@ -1562,7 +1562,7 @@ representation. The run-level statement is the state-projection transport of
 these steps.
 :::
 
-:::definition "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.uniformMix, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.probOutput_uniformMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.twoDLEmbedAt, KVAC.Schemes.MicroCMZ.twoDLSampleEmbed, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.uniformMix, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.probOutput_uniformMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix") (parent := "cmz_omuf") (tags := "milestone")
 The 2-DL reduction of {bpref "omuf_case_iii"}[] (O24 p. 47), built from an
 algebraic one-more forger and run against the game of {uses "agm_omuf_game"}[]. The paper writes the `x₀`
 case and calls `xᵣ` and `x₁` "almost identical"; all three are one construction with a key that is
@@ -1600,11 +1600,20 @@ along the log, through these steps, with the records a function of the log
 (`twoDLAuxOf`).
 :::
 
-:::theorem "omuf_two_dl_key_law" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "medium")
+:::theorem "omuf_two_dl_key_law" (lean := "KVAC.Schemes.MicroCMZ.evalDist_map_uniformNonzero, KVAC.Schemes.MicroCMZ.evalDist_uniformUnits_smul_gen, KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_const, KVAC.Schemes.MicroCMZ.evalDist_bind_congr', KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_add_right, KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_fin_one, KVAC.Schemes.MicroCMZ.omufCrsKey, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_key, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_indep, KVAC.Schemes.MicroCMZ.twoDLSampleEmbed_key") (parent := "cmz_omuf") (tags := "milestone")
 At every slope pattern, challenge and slope, the crs `η·G` and the key that the 2-DL reduction of
 {uses "omuf_two_dl_reduction"}[] presents have the law of the crs and key of
 {uses "agm_omuf_game"}[], and the slope is independent of them, since the uniform offset absorbs
 the slope times the challenge (O24 p. 47, "b is uniformly distributed and perfectly hidden by a").
+:::
+
+:::proof "omuf_two_dl_key_law"
+At every slope `b`, including the degenerate `b = 0` of probability `1/p`, the crs and the key
+the reduction presents have the distribution of the real game (`twoDLEmbedAt_key`), so the view
+does not depend on `b` and the slope is independent of it (`twoDLEmbedAt_indep`): the slope times
+the challenge only shifts the offsets, which are uniform, and `η·G` for `η` uniform among the
+nonzero scalars is the nonzero crs of `setup`. Over the whole randomness of the reduction this
+gives the real view for every slope pattern and challenge (`twoDLSampleEmbed_key`).
 :::
 
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
