@@ -16,9 +16,12 @@ prove:
      microCMZN3DLReductionAdv gen A + gapDlogAdv gen (gapDlReduction gen A) + 5/p`.
 
 The bound speaks of the instrumented AGM(+Help) game `AGM_UF_CMVAGame` of
-`AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 proper, this
-bound for the game with Help of `UFCMVAHelp.lean`, is reached from this one by
-carrying the AGM advantage over to that game.
+`AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 is formalized in
+the stronger form its proof establishes, "the scheme is unforgeable even if the
+adversary is given one additional oracle Help" (p. 35), as a bound for the game with
+Help of `UFCMVAHelp.lean`, and not in the weaker printed form, a bound for the Figure 5
+game, which has no Help. It is reached from this one by carrying the AGM advantage over
+to that game.
 
 The statement is added first, so that the two reductions it bounds by
 (`microCMZN3DLReduction` of `AttributeCollapse`, `gapDlReduction` of

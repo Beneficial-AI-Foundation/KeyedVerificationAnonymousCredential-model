@@ -28,9 +28,8 @@ tag := "core"
 Shared abstract algebra (Track 0). These typeclasses define the API contract
 that every higher chapter imports: a prime-order group, hash and
 random-oracle interfaces, a generic NIZK proof system, the CRS and
-key-generation skeleton shared by every keyed scheme, the algebraic
-MAC syntax of O24, Section 3.2, and a guarded-oracle transport for VCV-io's
-`simulateQ`. The interfaces are designed once and
+key-generation skeleton shared by every keyed scheme, and the algebraic
+MAC syntax of O24, Section 3.2. The interfaces are designed once and
 remain stable across the life of the project; concrete instantiations
 live in the *Concrete run* chapter.
 

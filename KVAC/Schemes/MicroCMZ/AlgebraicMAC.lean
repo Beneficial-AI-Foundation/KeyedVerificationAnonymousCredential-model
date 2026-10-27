@@ -288,12 +288,13 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 
 The `n = 1` reduction's core (the `AGMRepr ↔ ReprCoeffs` eval bridge, the
 mechanized identity-branch contradiction, the reduction adversary, and root
-recovery) lives in `KVAC.Schemes.MicroCMZ.AGMReduction.Core`; the probability
-bound and the security theorems `agm_ufcmva_le_n1` / `agm_ufcmva_le` are still
-forthcoming. The reduction is split into its own file because it imports
-`AGMPolynomial` — see the order-instance hazard note at `glog` above (the bridge
-needs `glog`, but `glog`'s *proof* must elaborate without those instances in
-scope).
+recovery) lives in `KVAC.Schemes.MicroCMZ.AGMReduction.Core`, and the bounds of
+Lemmas 5.4 and 5.5, `agm_ufcmva_le_n1_explicit` and `agm_ufcmva_le_explicit`, in
+`KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1` and
+`KVAC.Schemes.MicroCMZ.AGMReduction.Security`. The reduction is split into its own
+file because it imports `AGMPolynomial` — see the order-instance hazard note at
+`glog` above (the bridge needs `glog`, but `glog`'s *proof* must elaborate without
+those instances in scope).
 
 The game goes through the interface `AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen`
 (setup/keygen/MAC/verify are delegated to the interface value, not inlined), as the
