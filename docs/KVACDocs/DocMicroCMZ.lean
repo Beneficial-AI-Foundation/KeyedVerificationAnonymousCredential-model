@@ -1318,7 +1318,7 @@ are bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
 {uses "omuf_case_iii"}[].
 :::
 
-:::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_getElem") (parent := "cmz_omuf") (tags := "milestone")
 The commitment polynomials of O24 Equations 17 and 18 for the Theorem 5.11
 proof at `n = 1`, over the ring of {uses "agm_verification_polynomial"}[]:
 the exponent of a representation given the commitment polynomials
@@ -1328,7 +1328,9 @@ with `c_k` in place of `m_k·x₁` because a blind-issuance answer is
 `u_k·(x₀ + xᵣ + c_k)`), with its evaluation at a point in closed form, and
 the commitment polynomials `c_1, …, c_r` by a fold in issuance order, each
 given the earlier polynomials as arguments (Equation 18), with its length and
-one-step unrolling.
+one-step unrolling, and the `k`-th polynomial itself: `toPolyAt` of the `k`-th
+representation with the earlier polynomials in the slots below `k` and `0` from
+slot `k` on.
 The arity `r` is the number of issued pairs, since a refused query gets no
 variable. The game-level evaluation bridge, that at an honest run's
 discrete-log point `c_k` evaluates to the logarithm of the `k`-th issued
@@ -1386,7 +1388,7 @@ that an item happens, made an object, on the pattern of the MAC track's
 reduction trace.
 :::
 
-:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedRepr, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedCoeffs, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX") (parent := "cmz_omuf") (tags := "milestone")
 The polynomials of a run and its case events, for the Theorem 5.11 proof
 at `n = 1`: the issued representations of a trace of
 {uses "omuf_transcript"}[], converted by {uses "agm_eval_bridge"}[] and
@@ -1396,8 +1398,10 @@ aligned with the issued pairs (proved), the commitment polynomials of
 issued pairs, with the index lemmas showing the defaults are never reached
 (proved), and the win and the three case events, items (i) to (iii) of
 p. 45, the win conjoined with a forgery polynomial having a nonzero
-monomial in the group, the events Claims 5.12 to 5.14 bound. The
-game-level evaluation bridge, that at an honest run's discrete-log point
+monomial in the group, the events Claims 5.12 to 5.14 bound. The `j`-th issued
+representation and its coefficients over the ring of the run are named
+(`issuedRepr`, `issuedCoeffs`), so statements about slot `j` need no index
+proofs. The game-level evaluation bridge, that at an honest run's discrete-log point
 each `c_j` evaluates to the logarithm of the `j`-th issued commitment and,
 for a forgery whose representations match its token, its `φ` evaluates to
 the residual `(x₀ + xᵣ + m*·x₁)·log U* − log V*`, needs the run's honesty

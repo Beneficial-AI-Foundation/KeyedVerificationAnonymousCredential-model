@@ -107,6 +107,16 @@ theorem OMUFTrace.cs_eq_getElem (t : OMUFTrace F G) (j : Fin t.arity) :
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem]
   rfl
 
+/-- The `j`-th issued representation, the `γ⃗^(j)` of O24 Equation 17. -/
+def OMUFTrace.issuedRepr (t : OMUFTrace F G) (j : Fin t.arity) : AGMRepr F 1 :=
+  t.issuedReprs[j.1]'(by rw [t.issuedReprs_length]; exact j.2)
+
+/-- The coefficients of the `j`-th issued representation, the `γ^(j)` of O24 Equation 17 over
+the ring of the run. -/
+noncomputable def OMUFTrace.issuedCoeffs (t : OMUFTrace F G) (j : Fin t.arity) :
+    AGMPoly.ReprCoeffs F t.arity :=
+  (t.issuedRepr j).toReprCoeffs t.arity
+
 /-- The forgery polynomials `φ_i` of the run (O24 Equation 22), one per forgery,
 at the run's commitment polynomials. -/
 noncomputable def OMUFTrace.forgeryPolys (t : OMUFTrace F G) : List (AGMPoly.P F t.arity) :=

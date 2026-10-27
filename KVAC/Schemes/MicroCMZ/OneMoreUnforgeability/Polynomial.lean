@@ -150,6 +150,47 @@ theorem omufCommitPolys_length (γs : List (ReprCoeffs F r)) :
     simp only [List.length_append, List.length_singleton]
     omega
 
+/-- The `j`-th commitment polynomial is `toPolyAt` of the `j`-th representation with the earlier
+polynomials in the earlier slots and `0` from slot `j` on (Equation 18 read at position `j`). -/
+theorem omufCommitPolys_getElem (γs : List (ReprCoeffs F r)) (j : ℕ)
+    (hj : j < (omufCommitPolys γs).length) :
+    (omufCommitPolys γs)[j] =
+      (γs[j]'(by rwa [omufCommitPolys_length] at hj)).toPolyAt
+        fun k => if (k : ℕ) < j then (omufCommitPolys γs).getD k 0 else 0 := by
+  induction γs using List.reverseRecOn generalizing j with
+  | nil => simp at hj
+  | append_singleton γs γ ih =>
+    have hlen := omufCommitPolys_length γs
+    have hj' : j < γs.length + 1 := by
+      simpa [omufCommitPolys_append_singleton, hlen] using hj
+    rcases Nat.lt_succ_iff_lt_or_eq.1 hj' with hlt | rfl
+    · -- `j` is among the earlier representations
+      have hj0 : j < (omufCommitPolys γs).length := by omega
+      simp only [omufCommitPolys_append_singleton]
+      rw [List.getElem_append_left hj0, List.getElem_append_left hlt, ih j hj0]
+      congr 1
+      funext k
+      by_cases hk : (k : ℕ) < j
+      · simp only [hk, if_true]
+        rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD,
+          List.getElem?_append_left (by omega)]
+      · simp only [hk, if_false]
+    · -- `j` is the new last representation
+      simp only [omufCommitPolys_append_singleton]
+      rw [List.getElem_append_right, List.getElem_append_right]
+      · simp only [hlen, Nat.sub_self, List.getElem_cons_zero]
+        congr 1
+        funext k
+        by_cases hk : (k : ℕ) < γs.length
+        · simp only [hk, if_true]
+          rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD,
+          List.getElem?_append_left (by omega)]
+        · simp only [hk, if_false]
+          rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
+          simp
+      · omega
+      · omega
+
 /-! ## Equation 22 -/
 
 /--
