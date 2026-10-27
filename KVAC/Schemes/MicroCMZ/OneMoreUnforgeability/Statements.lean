@@ -5,6 +5,7 @@ Authors: Jin Xing Lim
 -/
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Preliminaries.Assumptions
 import VCVio.OracleComp.QueryTracking.QueryBound
 
