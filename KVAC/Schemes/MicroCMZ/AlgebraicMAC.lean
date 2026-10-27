@@ -295,13 +295,13 @@ def agmQueryToHelp (H : G) (pp : Params G n) :
       pure (σ, tags ++ [σ])
   | .verify m ρU ρV => StateT.mk fun tags => do
       let b ← query (spec := UFHelpOracleSpec F G n)
-        (.verify m (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags))
+        (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
       pure (b, tags)
   | .help ρ₀ ρA ρZ => StateT.mk fun tags => do
       let b ← query (spec := UFHelpOracleSpec F G n)
-        (.help (ρ₀.eval gen H pp.1 pp.2.1 pp.2.2 tags)
-          (fun i => (ρA i).eval gen H pp.1 pp.2.1 pp.2.2 tags)
-          (ρZ.eval gen H pp.1 pp.2.1 pp.2.2 tags))
+        (.help (ρ₀.evalParams gen H pp tags)
+          (fun i => (ρA i).evalParams gen H pp tags)
+          (ρZ.evalParams gen H pp tags))
       pure (b, tags)
 
 /-- An algebraic adversary as an adversary of the game with `Help`: it runs `A` through
@@ -310,7 +310,7 @@ representations over the MAC codes issued. -/
 def AGMUFAdversary.forget (A : AGMUFAdversary F G n) : UFHelpAdversary F G n where
   run H pp := do
     let ((mStar, ρU, ρV), tags) ← (simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run []
-    pure (mStar, (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags))
+    pure (mStar, (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
 
 /-- Forgetting the representations preserves the advantage: the advantage of
 `A.forget gen` in the game with `Help` is the advantage of `A` in the AGM game. -/
