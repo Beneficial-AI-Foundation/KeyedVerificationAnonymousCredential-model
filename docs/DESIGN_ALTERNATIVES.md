@@ -670,10 +670,10 @@ MAC codes issued so far. The challenger evaluates them (`AGMRepr.eval`) and
 answers honestly on the evaluated elements, and neither an oracle nor the win
 condition tests a representation against a submitted element.
 
-**Rejected alternative.** Gating the answers: queries and the forgery carry
-group elements next to their representations, and an oracle answers `false`,
-as does the win condition, when a representation does not evaluate to its
-element.
+**Rejected alternative.** Gating the answers, the encoding PR #73 introduced:
+queries and the forgery carry group elements next to their representations, and
+an oracle answers `false`, as does the win condition, when a representation does
+not evaluate to its element.
 
 **Fidelity argument.** O24 defines the model after [FKL18]: an algebraic
 adversary that returns a group element `X` "must also return coefficients
@@ -936,7 +936,7 @@ coin.
 **Rejected alternatives.** First, the plain advantage `UF_CMVAAdv` of the Figure
 5 game, which has no `Help` oracle, while the proof of Theorem 5.10 (§5.5) uses
 the answer of `Help`.
-Second, the advantage `AGM_UF_CMVAAdv` in the instrumented game
+Second, the advantage `AGM_UF_CMVAAdv` in the AGM game
 `AGM_UF_CMVAGame` of `AlgebraicMAC.lean`, whose `verify` and `help` queries
 carry representations. That choice forces the reduction `B` to supply
 representations, which only the credential adversary holds. The theorem would

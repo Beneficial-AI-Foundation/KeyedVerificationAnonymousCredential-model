@@ -117,8 +117,7 @@ A `help` query's vector `ρ⃗` collapses to the single representation
 `linCombCollapse r ρ⃗`, which the 1-attribute oracle evaluates to the weighted sum
 `Σᵢ rᵢ • Aᵢ` of the elements `Aᵢ` that `ρ⃗` represents over the embedded basis
 `Xᵢ = rᵢ • X₁`. Its `help` answer `Z = (x₀+xᵣ)•A₀ + x₁•Σᵢ rᵢ•Aᵢ` is then the
-`n`-attribute answer at the embedded key `xᵢ = rᵢ·x₁`. That evaluation identity
-is what the coupling `collapse_oracle_coupling` needs. -/
+`n`-attribute answer at the embedded key `xᵢ = rᵢ·x₁`. -/
 noncomputable def collapseOracleImpl (r : Fin n → F) :
     QueryImpl (AGMOracleSpec F G n) (OracleComp (AGMOracleSpec F G 1))
   | .sign m => query (spec := AGMOracleSpec F G 1) (AGMQuery.sign (collapseMsg r m))

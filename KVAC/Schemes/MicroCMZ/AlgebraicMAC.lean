@@ -45,7 +45,7 @@ independent of the dynamic query count.
 The `Help(A₀, A⃗, Z)` oracle (O24 §5.2/§5.3) answers whether
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` through `helpEq`, the equation of the game with Help
 of `UFCMVAHelp.lean`. It is the stronger notion the credential-level
-extractability proof consumes (Thm 5.11 / Thm 5.2); it does not change the
+extractability proof consumes (Thm 5.10, for Thm 5.2); it does not change the
 bound.
 -/
 
@@ -173,21 +173,19 @@ def AGMRepr.eval (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
 /-! ## The oracles -/
 
 /--
-The three oracle of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
+The three oracles of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
 from O24 Figure 5, `help` added in §5.3). Every group element the adversary
-submits is given by its representation alone:
-
-- `sign m⃗` — request a MAC code on `m⃗` (no representation: the adversary
-  *receives* elements here).
-- `verify m⃗ ρ_U ρ_V` — verification query for the MAC code `(U, V)` that
-  `ρ_U`, `ρ_V` represent.
-- `help ρ₀ ρ⃗ ρ_Z` — the §5.3 helper oracle, answering whether
-  `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` for the elements `A₀`, `A⃗`, `Z` that `ρ₀`, `ρ⃗`,
-  `ρ_Z` represent.
+submits is given by its representation alone.
 -/
 inductive AGMQuery (F : Type) (n : ℕ) : Type where
+  /-- `sign m⃗`, a MAC code on `m⃗` (no representation: the adversary *receives*
+  elements here). -/
   | sign : (Fin n → F) → AGMQuery F n
+  /-- `verify m⃗ ρ_U ρ_V`, the verification bit for the MAC code `(U, V)` that `ρ_U`,
+  `ρ_V` represent. -/
   | verify : (Fin n → F) → AGMRepr F n → AGMRepr F n → AGMQuery F n
+  /-- `help ρ₀ ρ⃗ ρ_Z`, the §5.3 helper oracle: whether `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` for
+  the elements `A₀`, `A⃗`, `Z` that `ρ₀`, `ρ⃗`, `ρ_Z` represent. -/
   | help : AGMRepr F n → (Fin n → AGMRepr F n) → AGMRepr F n → AGMQuery F n
 
 /-- Response types for `AGMQuery`: a MAC code for `sign`, a Boolean for `verify`
