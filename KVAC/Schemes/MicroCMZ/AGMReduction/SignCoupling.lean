@@ -286,54 +286,48 @@ lemma verifPoly_eval_embed_eq_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
 `agm_n1_identity_Ustar_eq_zero` (same role as `verifPoly_eval_embed_eq_zero` for the
 consistency core): with the arity `q` a variable tied to the transcript by `hq : tags.length = q`,
 a fresh forgery whose verification polynomial vanishes identically forces `U* = 0`, given
-the log-honesty facts `htag` at the masked key and the consistency `hU` that `ρU` represents
-`U*`. -/
+the log-honesty facts `htag` at the masked key. -/
 lemma Ustar_eq_zero_of_verifPoly_zero {q : ℕ} (ρU ρV : AGMRepr F 1)
     {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
     (msgs : Fin q → F) (mStar0 : F)
-    (UStar : G) (tags : List (G × G)) (hq : tags.length = q)
+    (tags : List (G × G)) (hq : tags.length = q)
     (htag : ∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).2
       = macScalar (maskedKey x aM bM) (fun _ => msgs j)
         • (tags.get (Fin.cast hq.symm j)).1)
     (hfresh : ∀ j, mStar0 ≠ msgs j)
-    (hU : ρU.evalAt gen ep tags = UStar)
     (hverif : AGMPoly.verifPoly msgs mStar0 (ρU.toReprCoeffs q) (ρV.toReprCoeffs q) = 0) :
-    UStar = 0 := by
-  rw [AGMRepr.evalAt_of_redEmbedding gen hemb] at hU
+    ρU.evalAt gen ep tags = 0 := by
+  rw [AGMRepr.evalAt_of_redEmbedding gen hemb]
   subst hq
   simp only [macScalar_maskedKey_expand] at htag
   exact agm_n1_identity_Ustar_eq_zero gen ρU ρV (aM.eta • gen + bM.eta • (x • gen))
-    (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) UStar mStar0 tags msgs
-    htag hfresh hU hverif
+    (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr) (fun _ => aM.x1 + x * bM.x1) mStar0 tags msgs
+    htag hfresh hverif
 
 /-- **Represented value as a univariate evaluation (oracle-coupling lemma).** Under the 3-DL
 embedding (`H = aη·g + bη·X`, `X₀ = (a₀+x·b₀)·H`, `Xᵣ = (aᵣ+x·bᵣ)·g`, `X₁ = (a₁+x·b₁)·g`) and a
-log-honest transcript, a consistent representation `ρ` (i.e. `ρ.evalAt … tags = A₀`) satisfies
-`A₀ = (affineSubst a b ((ρ.toReprCoeffs q).toPoly msgs)).eval x • g`. This is the shape the
-deferred `verify`/`help` step couplings consume. `A₀` is quantified and the consistency
-equation `ρ.evalAt … tags = A₀` taken as a hypothesis, rather than concluding about `ρ.evalAt`
-directly, because those couplings hold the equation in this orientation and rewrite `A₀` with
-the result. -/
+log-honest transcript, every representation `ρ` satisfies
+`ρ.evalAt … tags = (affineSubst a b ((ρ.toReprCoeffs q).toPoly msgs)).eval x • g`. This is the
+shape the deferred `verify`/`help` step couplings consume. -/
 lemma represented_value_eq_affineSubst_eval {q : ℕ} (ρ : AGMRepr F 1)
     {x : F} {aM bM : FixedMasks F} {ep : EmbeddedParams G}
     (hemb : RedEmbedding gen x aM bM ep)
-    (ca cb msgs : Fin q → F) (A₀ : G)
+    (ca cb msgs : Fin q → F)
     (tags : List (G × G)) (hq : tags.length = q)
     (htf : (∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).2
         = macScalar (maskedKey x aM bM) (fun _ => msgs j)
           • (tags.get (Fin.cast hq.symm j)).1)
       ∧ ∀ j : Fin q, (tags.get (Fin.cast hq.symm j)).1
-        = ca j • gen + cb j • (x • gen))
-    (hcons : ρ.evalAt gen ep tags = A₀) :
-    A₀ = Polynomial.eval x
+        = ca j • gen + cb j • (x • gen)) :
+    ρ.evalAt gen ep tags = Polynomial.eval x
         (AGMPoly.affineSubst (FixedMasks.embed aM ca)
           (FixedMasks.embed bM cb)
           ((ρ.toReprCoeffs q).toPoly msgs)) • gen := by
   subst hq
   -- Convert the `macScalar` key to the explicit one the evaluation bridge takes.
   simp only [macScalar_maskedKey_expand] at htf
-  rw [← hcons, AGMRepr.evalAt_of_redEmbedding gen hemb,
+  rw [AGMRepr.evalAt_of_redEmbedding gen hemb,
     agmRepr_eval_eq_eval_toPoly gen ρ _ (aM.x0 + x * bM.x0) (aM.xr + x * bM.xr)
       (fun _ => aM.x1 + x * bM.x1) tags msgs htf.1,
     gamePoint_eq_embed_affine gen x aM bM _ tags ca cb rfl htf.2,

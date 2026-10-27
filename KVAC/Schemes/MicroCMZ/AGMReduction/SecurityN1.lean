@@ -138,8 +138,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
   have hkey : tr.ρV.evalAt gen tr.ep tr.log.tags
       = macScalar (maskedKey x tr.aM tr.bM) (fun _ => tr.mStar 0)
           • tr.ρU.evalAt gen tr.ep tr.log.tags := by
-    rw [hmaceq]
-    simp only [macScalar_maskedKey_eq]
+    simpa only [macScalar_maskedKey_eq] using hmaceq
   have heval0 : MvPolynomial.eval
       (fun v => tr.aM.embed tr.log.aMask v + x * tr.bM.embed tr.log.bMask v) tr.verifPoly = 0 :=
     verifPoly_eval_embed_eq_zero gen tr.ρU tr.ρV hemb tr.log.aMask tr.log.bMask tr.log.msg
@@ -153,7 +152,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
     rw [Fin.eq_zero i]
     exact hj.symm
   refine ⟨fun hφ0 => hσ1 (Ustar_eq_zero_of_verifPoly_zero gen tr.ρU tr.ρV hemb tr.log.msg
-    (tr.mStar 0) _ tr.log.tags tr.log.length_tags htag hfresh' rfl hφ0),
+    (tr.mStar 0) tr.log.tags tr.log.length_tags htag hfresh' hφ0),
     of_not_not (mt (recoverDlog_verifPoly_eq gen heval0) hr)⟩
 
 /-! ### The bad-event bound

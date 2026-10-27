@@ -170,6 +170,13 @@ def AGMRepr.eval (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
     (List.zipWith (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
       ρ.uv tags).sum
 
+/-- `AGMRepr.eval` over the public parameters `pp = (X₀, Xᵣ, X⃗)`, the form the AGM game and its
+simulators evaluate in. The `n = 1` reduction evaluates over `EmbeddedParams` with
+`AGMRepr.evalAt` instead. -/
+def AGMRepr.evalParams (ρ : AGMRepr F n) (g₀ H : G) (pp : Params G n)
+    (tags : List (G × G)) : G :=
+  ρ.eval g₀ H pp.1 pp.2.1 pp.2.2 tags
+
 /-! ## The oracles -/
 
 /--
@@ -222,13 +229,13 @@ noncomputable def agmOracleImpl (secParam : ℕ) (sk : F × F × (Fin n → F)) 
       pure (σ, log ++ [(m, σ)])
   | .verify m ρU ρV => StateT.mk fun log =>
       let tags := log.map Prod.snd
-      let σ := (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags)
+      let σ := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
       pure ((μCMZBaseMACSyntax F gen).verify (secParam := secParam) H sk m σ, log)
   | .help ρ₀ ρA ρZ => StateT.mk fun log =>
       let tags := log.map Prod.snd
-      pure (helpEq sk (ρ₀.eval gen H pp.1 pp.2.1 pp.2.2 tags)
-        (fun i => (ρA i).eval gen H pp.1 pp.2.1 pp.2.2 tags)
-        (ρZ.eval gen H pp.1 pp.2.1 pp.2.2 tags), log)
+      pure (helpEq sk (ρ₀.evalParams gen H pp tags)
+        (fun i => (ρA i).evalParams gen H pp tags)
+        (ρZ.evalParams gen H pp tags), log)
 
 /-! ## The game -/
 
@@ -259,7 +266,7 @@ noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
   let ((mStar, ρU, ρV), log) ←
     (simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
   let tags := log.map Prod.snd
-  let σStar := (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags)
+  let σStar := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
   let fresh := mStar ∉ log.map Prod.fst
   pure (decide fresh && mac.verify (secParam := secParam) H sk mStar σStar)
 
