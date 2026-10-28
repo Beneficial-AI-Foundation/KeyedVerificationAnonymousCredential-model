@@ -896,6 +896,55 @@ advantage by sampled advantages does not hold in general, and
 the views keeps both sides at the same `H`, and the asymptotic form over a
 λ-indexed group family is issue #148.
 
+## Theorem 5.10 at the honest UF-CMVA game with Help
+
+**Decision.** The unforgeability term of the Theorem 5.10 statement of #179,
+`μCMZ_extractability`, is `UF_CMVAHelpAdv`
+(`Schemes/MicroCMZ/UFCMVAHelp.lean`), the advantage in the honest game of Figure
+5 with the oracle `Help` of §5.2, answered by the challenger with the key. No
+query carries a representation, and the theorem puts no algebraic restriction on
+its single-user adversary, as the printed statement puts none on its adversary.
+The adversary `UFHelpAdversary` has a private coin oracle `unifSpec` beside the
+game's oracles, for the reason of *One-more forgers have a private coin oracle*.
+The reduction `B` of Theorem 5.10 runs the extraction adversary, whose carrier
+`ZKRO H = unifSpec + H.spec` draws coins, and simulates the random oracle by
+lazy sampling, so a coinless `B` could answer those queries only with fixed
+values and the bound would name a family of reductions. The scope paragraph of
+that entry keeps the generic `UFAdversary` coinless, and this game is specific
+to μCMZ. The embedding `ufAdversaryToHelp` of a plain adversary never draws a
+coin.
+
+**Rejected alternatives.** First, the plain advantage `UF_CMVAAdv` of the Figure
+5 game, which the statement of Theorem 5.1 for well-behaved algebraic
+adversaries (PR #220) bounds. Its `WellBehaved` hypothesis rejects every `Help`
+query, and the proof of Theorem 5.10 (§5.5) uses the answer of `Help`.
+Second, the advantage `AGM_UF_CMVAAdv` in the instrumented game
+`AGM_UF_CMVAGame` of `AlgebraicMAC.lean`, whose `verify` and `help` queries
+carry representations. That choice forces the reduction `B` to supply
+representations, which only the credential adversary holds. The theorem would
+then quantify over algebraic extraction adversaries in a duplicate of `EXTGame`
+with representation-carrying queries.
+
+**Fidelity argument.** Theorem 5.1 (p. 35) is proved "even if the adversary is
+given one additional oracle Help", which "will simplify the future analysis of
+the keyed-verification credential scheme", and the proofs of Lemmas 5.4 and 5.5
+say it "will simplify the proof of Theorem 5.11" (pp. 36, 38). The proof of
+Theorem 5.10 (p. 43) uses the answer of `Help` for the first equality of its
+display, and p. 42 assumes that the candidate `Z` can be checked through `Help`,
+although the printed reduction `B` lists only the oracles Sign and Verify. The
+term of the bound is therefore the advantage in the game with `Help`. The paper
+ties `Help` to no model. The algebraic group model is a hypothesis of Theorem 5.1
+and of Lemma 5.4 (pp. 35, 36), where the reduction answers `Help` from the
+representations of an algebraic adversary (p. 38), and of nothing in §5.5. The
+printed Theorems 5.2 and 5.10 (pp. 35, 42) put no algebraic restriction on their
+adversary. The instrumented game is the device of that reduction, and its module
+docstring calls it "the instrumented game, not the honest game".
+`microCMZ_ufcmva_le_of_wellBehaved` of `UFCMVA.lean` bounds the plain game for
+well-behaved algebraic adversaries, whose translation (`AGMBridge.lean`) answers
+`help` by `false`. A bound for the game with `Help` is open, issue #235. That is
+where the model enters when the two theorems are chained. `Help` reads the key
+`(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ and not an extension of the
+generic `UF_CMVAGame` of `Core/AlgebraicMAC/Security.lean`.
 ## The anonymity simulator takes a trace extractor
 
 **Decision.** The extractor of `ZKP_cmz.is` that the simulator of Theorem 5.8
