@@ -1030,14 +1030,18 @@ Theorem 5.11". Four points.
    by `OMUFQueryRO.isSign`. The term for `π_is` is the zero-knowledge
    advantage of the named reduction `omufPiIsZKAdversary`, declared with a
    `sorry` body, which the lifting lemma of #205 defines without changing the
-   statement. The words "in the algebraic group model" of the print are not a
+   statement. The three `omufBound` reductions take the simulator of `π_is`
+   as well, since the lifted forger they run on attaches its simulated
+   proofs. The words "in the algebraic group model" of the print are not a
    hypothesis of the Lean statement. Theorem 5.11 is proved in that model,
-   and its game `AGM_OMUFGame` runs the core without `π_is`, while no game in
-   that model exists for the scheme with `π_is`, and the plain game cannot
-   restrict its quantifier to algebraic adversaries. So the sorried clause
-   claims the bound for every adversary of Figure 6, more than the paper
-   proves. The restriction returns with the bridge from the game of Theorem
-   5.11 to the plain game, which the proof of the clause needs.
+   and its game `AGM_OMUFGame` runs the core without `π_is`, while the
+   repository has no notion of an algebraic adversary for the scheme with
+   `π_is`, whose issuer sends proofs that may carry group elements outside
+   the basis of that game. So the sorried clause claims the bound for every
+   adversary of Figure 6, more than the paper proves. The restriction returns
+   with the bridge from the game of Theorem 5.11 to the plain game on the
+   core, which the proof of the clause needs, together with an argument that
+   the simulated `π_is` keep the forger algebraic over that basis.
 4. *The group.* Fixed `F` and `G`, the clause "n = poly(λ)" left to #148, as
    for Theorems 5.2, 5.8 and 5.10.
 

@@ -31,11 +31,18 @@ third term `Adv^zk_cmz.iu`, the cost of hybrid H1 of the Theorem 5.8 proof
 sends no `π_iu`, so H1 changes nothing and the term is vacuous. Errata item 18.
 
 The condition of Remark 5.9, the hypotheses `Piu` to `his_p` of
-`μCMZ_anonymity`, is not needed. Hybrid H3 extracts from the `π_is` the issuer
-produced after the user's request, and that request is the commitment `C'`
-alone, so no simulated proof precedes the extraction and the printed
-`Adv^ksnd` applies as such. Hybrid H2 simulates `π_p` after issuance has
-ended and runs no other simulator.
+`μCMZ_anonymity`, is not needed, for the following order of hybrids, which
+the proof follows. First, replace the real `π_p` of every presentation by a
+simulated one, with issuance honest and the credential real, so the
+reduction `D'` holds the presentation witnesses and never runs the
+extractor. Second, bound the event that the issuer's response is accepted and
+the extraction from `π_is` fails or returns a wrong witness by the printed
+`Adv^ksnd`, with the reduction `A''` stopping at the issuer's response. The
+user's request is the commitment `C'` alone, `Sim.I₁` programs no oracle
+point, and `anonGameRun` completes issuance before the distinguisher runs,
+so the extractor reads the oracle table as it stands at the issuer's
+response and no simulated proof precedes it. Third, couple the remaining
+executions, the random `C'`, `U'`, `C_V` and `C⃗`, with the real ones.
 
 ## One-more unforgeability
 
@@ -43,28 +50,41 @@ The clause is on the game of Figure 6 at the oracle carrier, `OMUFGameRO`,
 the game of the definition of §3.4, for the scheme with `π_is`. The bound is
 that of Theorem 5.11, `omufBound`, plus one zero-knowledge term for `π_is`.
 
-- *The bound.* Theorem 5.3 prints `Adv^2dl + q·Adv^dl + (q+5)/p`, the bound of
-  the ePrint version of October 2024, which no version proves. Theorem 5.11
-  (p. 43), from which Theorem 5.3 derives, prints
-  `(q+6)/p + (q+1)·Adv^dl + 3·Adv^2dl + Adv^gapdl`. Errata item 19.
+- *The bound.* Theorem 5.3 prints `Adv^2dl + q·Adv^dl + (q+5)/p`, the summary
+  bound of the ePrint version of October 2024, which already disagreed with
+  the proved theorem of that version in the 2-DL coefficient, and which no
+  version proves. Theorem 5.11 (p. 43), from which Theorem 5.3 derives, prints
+  `(q+6)/p + (q+1)·Adv^dl + 3·Adv^2dl + Adv^gapdl`. Errata item 19. The
+  constants of `omufBound` are the printed ones and provisional until the
+  constant audit of Track CMZ-OMUF (`Statements.lean`, *Constants and the
+  extraction obligation*).
 - *The `π_is` term.* The proof of Theorem 5.11 (p. 44) answers Sign with the
   bare `(U', V')` and analyzes the scheme without `π_is`, while Theorem 5.3 is
   about the scheme with it. The lifting lemma of issue #205 replaces each real
-  `π_is` by a simulated one and pays `Adv^zk_cmz.is` once. Errata item 7.
+  `π_is` by a simulated one and pays `Adv^zk_cmz.is` once, since the §3.3
+  zero-knowledge game answers as many `Prove_b` queries as the adversary
+  makes. Errata item 7.
 - *The model.* Theorem 5.11 holds in the algebraic group model, and the game
-  of Theorem 5.11, `AGM_OMUFGame`, runs the core without `π_is`. No such game
-  exists for the scheme with `π_is`, and the plain game cannot restrict its
-  quantifier to algebraic adversaries, so the clause claims the bound for
-  every adversary of Figure 6, more than the paper proves. Recorded in
-  `docs/DESIGN_ALTERNATIVES.md`, *Theorem 5.3 takes its clauses from Theorems
-  5.8 and 5.11*.
+  of Theorem 5.11, `AGM_OMUFGame`, runs the core without `π_is`. The
+  repository has no notion of an algebraic adversary for the scheme with
+  `π_is`, whose issuer sends proofs that may carry group elements outside the
+  basis of that game, so the clause quantifies over every adversary of
+  Figure 6 and claims more than the paper proves. The proof of the clause
+  needs the bridge from the game of Theorem 5.11 to the plain game on the
+  core, which restricts the forger to algebraic behaviour, and an argument
+  that the simulated `π_is` of the lifting lemma keeps the forger algebraic
+  over the basis of that game. Recorded in `docs/DESIGN_ALTERNATIVES.md`,
+  *Theorem 5.3 takes its clauses from Theorems 5.8 and 5.11*.
 
 The reductions are declared with `sorry` bodies, as those of Theorem 5.11 are
 (`Statements.lean`, *The reductions, named now and built with the proofs*).
 The three of `omufBound` are the Theorem 5.11 reductions run on the forger
-carried to the core, and `omufPiIsZKAdversary` is the zero-knowledge adversary
-of the lifting lemma, whose definition issue #205 supplies without changing
-this statement.
+carried to the core by the lifting lemma, which attaches a simulated `π_is`
+to each answer of the core and so depends on the simulator `simIs`, and
+through the bridge. `omufPiIsZKAdversary` is the zero-knowledge adversary of
+the lifting lemma, independent of the simulator, since its `Prove_b` oracle
+supplies the proofs. Issue #205 defines the lifted forger and
+`omufPiIsZKAdversary` against these signatures.
 
 ## The views of `ZKP_cmz.is` with a sampled crs
 
@@ -230,32 +250,37 @@ Each takes a one-more forger of the scheme with `π_is` in the game of Figure 6
 at the oracle carrier. The first three are the reductions of Theorem 5.11,
 `omufDLReduction`, `omufTwoDLReduction` and `omufGapDLReduction` through
 `omufToN1`, run on the forger carried to the core by the lifting lemma of
-issue #205 and by the bridge from the game of Theorem 5.11 to the plain game.
-The fourth is the zero-knowledge adversary of the lifting lemma. As in
+issue #205, which answers the forger's Sign queries with the core's
+`(U', V')` and a `π_is` from the simulator `simIs`, and by the bridge from the
+game of Theorem 5.11 to the plain game. They take `simIs` for that reason.
+The fourth is the zero-knowledge adversary of the lifting lemma, which takes
+its proofs from the `Prove_b` oracle and so no simulator. As in
 `Statements.lean`, the generator and its bijectivity fact are explicit
 binders, and the `sorry` inhabits the whole function type. -/
 
 /-- The discrete-log reduction of the one-more unforgeability clause of Theorem
-5.3, for the Sign budget `q` and `n` attributes. -/
+5.3, for the simulator `simIs` of `π_is`, the Sign budget `q` and `n`
+attributes. -/
 noncomputable def omufATDLReduction :
     ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))]
-      (πis : RisProofSystem HS G F) (n q : ℕ),
+      (πis : RisProofSystem HS G F), RisSimulator HS πis → ∀ (n q : ℕ),
       OMUFAdversaryRO HS (μCMZATSyntax F HS gen πis) → DiffieHellman.DLogAdversary F G :=
   sorry
 
 /-- The 2-DL reduction of the one-more unforgeability clause of Theorem 5.3,
-for `n` attributes. -/
+for the simulator `simIs` of `π_is` and `n` attributes. -/
 noncomputable def omufATTwoDLReduction :
     ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))]
-      (πis : RisProofSystem HS G F) (n : ℕ),
+      (πis : RisProofSystem HS G F), RisSimulator HS πis → ∀ (n : ℕ),
       OMUFAdversaryRO HS (μCMZATSyntax F HS gen πis) → QDLogAdversary 2 F G :=
   sorry
 
 /-- The gap-DL reduction of the one-more unforgeability clause of Theorem 5.3,
-the collision case of the general `n` argument. -/
+the collision case of the general `n` argument, for the simulator `simIs` of
+`π_is` and `n` attributes. -/
 noncomputable def omufATGapDLReduction :
     ∀ (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))]
-      (πis : RisProofSystem HS G F) (n : ℕ),
+      (πis : RisProofSystem HS G F), RisSimulator HS πis → ∀ (n : ℕ),
       OMUFAdversaryRO HS (μCMZATSyntax F HS gen πis) → GapDLogAdversary F G :=
   sorry
 
@@ -291,9 +316,18 @@ errata item 18 (module docstring, *Anonymity*).
 6 at the oracle carrier with at most `q` Sign queries, the advantage of `A` is
 at most `omufBound` of Theorem 5.11, with the discrete-log, 2-DL and gap-DL
 advantages of the named reductions, plus the zero-knowledge advantage of
-`ZKP_cmz.is` for `omufPiIsZKAdversary`. The printed bound is the one of the
-October 2024 version, errata item 19, and the `π_is` term is errata item 7
-(module docstring, *One-more unforgeability*).
+`ZKP_cmz.is` for `omufPiIsZKAdversary`. The printed bound is the summary
+bound of the October 2024 version, errata item 19, the `π_is` term is errata
+item 7, and the clause quantifies over every adversary where the paper
+restricts to algebraic ones (module docstring, *One-more unforgeability*).
+
+The three clauses are inequalities and a correctness predicate at fixed `F`,
+`G`, `secParam` and `n`. The clause "for n = poly(λ) attributes", with
+negligible advantages and efficient reductions, is the asymptotic statement
+left to issue #148, as for Theorems 5.2, 5.8 and 5.10. The credential
+`μCMZATCredentialSyntax` and the token `μCMZATSyntax` share their setup, key
+generation and issuance moves by definition, so the anonymity clause speaks
+of the same issuance as the other two.
 -/
 theorem μCMZAT_anonymous_token [Fact (Function.Bijective (fun x : F => x • gen))]
     (hgen : gen ≠ 0) (simIs : RisSimulator HS πis) (simP : ∀ n, RpSimulator HS (πp n))
@@ -326,9 +360,9 @@ theorem μCMZAT_anonymous_token [Fact (Function.Bijective (fun x : F => x • ge
         IsQueryBoundP (A.run (secParam := secParam) (n := n) H pp)
           (OMUFQueryRO.isSign HS) q) →
       OMUFAdvRO HS (μCMZATSyntax F HS gen πis) A secParam n ≤
-        omufBound F q (dlogAdv gen (omufATDLReduction HS gen πis n q A))
-          (twoDlogAdv gen (omufATTwoDLReduction HS gen πis n A))
-          (gapDlogAdv gen (omufATGapDLReduction HS gen πis n A))
+        omufBound F q (dlogAdv gen (omufATDLReduction HS gen πis simIs n q A))
+          (twoDlogAdv gen (omufATTwoDLReduction HS gen πis simIs n A))
+          (gapDlogAdv gen (omufATGapDLReduction HS gen πis simIs n A))
         + ENNReal.ofReal (ZKAdv HS (risNIZKPSampled HS gen n πis)
             (risDecRelSampled HS gen n πis) (omufPiIsZKAdversary HS gen πis n A)
             (risSimToZK HS gen n πis simIs) secParam)) := by
