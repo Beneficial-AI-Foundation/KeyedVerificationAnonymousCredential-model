@@ -14,9 +14,7 @@ subdirectory exists to prove:
 
   `AGM_UF_CMVAAdv gen A secParam ≤ microCMZ3DLReductionAdv gen A + 3/p`.
 
-The bound speaks of the AGM game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean`;
-`UF_CMVAHelpAdv_forget` carries AGM advantages to the game with `Help` of
-`UFCMVAHelp.lean`.
+The bound speaks of the AGM game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean`.
 
 The statement is deliberately added first so that every part of the reduction
 (`Core`, `Coupling`, `SignCoupling`, `RedFull`, and the parts still to be added)

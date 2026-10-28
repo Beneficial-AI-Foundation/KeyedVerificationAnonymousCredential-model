@@ -46,7 +46,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `Credential.lean` — Section 5.1, the credential of Figure 9 — Track CMZ-C.
 - `ProofSystems.lean` — Section 5.1, Figure 9, the three proof-system
   parameters of the credential — Track CMZ-C.
-- `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
+- `AlgebraicMAC.lean` — Section 5.3, AGM game and its forgetful map to the
+  UF-CMVA game with the oracle Help — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`,
@@ -726,11 +727,12 @@ Read on the AGM game through the run-level coupling
 :::
 
 :::theorem "agm_forget_transfer" (lean := "KVAC.Schemes.MicroCMZ.agmQueryToHelp, KVAC.Schemes.MicroCMZ.AGMUFAdversary.forget, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv_forget") (parent := "cmz_amac") (tags := "milestone")
-An algebraic adversary of {uses "agm_model"}[] is an adversary of the game with
-`Help` of {uses "mucmz_ufcmva_help_game"}[] that keeps the MAC codes it
-receives and submits the elements its representations evaluate to. Its
-advantage in the game with `Help` equals its advantage in the AGM game, with no
-condition on the adversary.
+The forgetful map turns an algebraic adversary of {uses "agm_model"}[] into an
+adversary of the game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: it keeps
+the MAC codes it receives, and it submits the elements that the algebraic
+adversary's representations evaluate to. The advantage of the forgetful
+adversary in the game with `Help` equals the advantage of the algebraic
+adversary in the AGM game, with no condition on the adversary.
 :::
 
 :::proof "agm_forget_transfer"
