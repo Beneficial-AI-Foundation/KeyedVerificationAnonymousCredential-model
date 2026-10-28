@@ -896,6 +896,24 @@ advantage by sampled advantages does not hold in general, and
 the views keeps both sides at the same `H`, and the asymptotic form over a
 λ-indexed group family is issue #148.
 
+## The extractor of Definition 4.5 takes the random-oracle table
+
+**Decision.** `Extractor` of `Framework/Extractability.lean` receives the
+random-oracle table as of the call and runs in `ProbComp`. The `Issue` oracle
+and the win condition of `EXTGame` pass it the table as of the call, before
+the server's own computation, as `ksndGame` does. `μCMZExtractor` of the Theorem 5.10 statement (#179) wraps the trace extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`, with `Ext.P` recomputing
+`Z` from the secret key as the server does.
+
+**Rejected alternative.** The pure extractor without the table of the first
+version of the game, `Sk → Pred → IssueMsg → Option MsgVec`.
+
+**Fidelity argument.** Figure 8 (p. 31) writes `m := Ext.I(sk, φ, μ)` and
+`m* := Ext.P(sk, φ*, ρ*)`, and the proof of Theorem 5.10 (pp. 42 to 43)
+defines both from the extractors of the proof systems, which read the trace
+of random-oracle queries and are algorithms. A pure extractor without the
+table cannot be instantiated by them. The secret key stays an argument, since
+Figure 8 prints it and `Ext.P` uses it to compute `Z` (p. 43, "internally,
+the extractor checks that Z was correctly computed via the secret key").
 ## Theorem 5.10 at the honest UF-CMVA game with Help
 
 **Decision.** The unforgeability term of the Theorem 5.10 statement of #179,

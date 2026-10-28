@@ -198,9 +198,12 @@ single-user unforgeability is included as a sanity check.
 prove the reduction to CMZ14 unforgeability as a corollary.
 
 :::definition "extractability_game" (lean := "KVAC.Framework.Extractor, KVAC.Framework.EXTQuery, KVAC.Framework.EXTOracleSpec, KVAC.Framework.EXTState, KVAC.Framework.EXTState.empty, KVAC.Framework.EXTComp, KVAC.Framework.liftRO, KVAC.Framework.getEXTState, KVAC.Framework.modifyEXTState, KVAC.Framework.extOracleImpl, KVAC.Framework.EXTAdvSpec, KVAC.Framework.EXTAdversary, KVAC.Framework.extROImpl, KVAC.Framework.EXTGame, KVAC.Framework.extSecurityGame, KVAC.Framework.EXTAdv") (parent := "framework_extract") (tags := "paper, O24 Fig 8") (effort := "medium") (priority := "high")
-*O24 Figure 8.* The extractability game for a keyed-verification
-credential system, with attribute extractors `Ext.I` and `Ext.P` run
-against the adversary's issuance and presentation transcripts.
+*O24 Figure 8.* The extractability game for a keyed-verification credential
+system, with attribute extractors `Ext.I` and `Ext.P` run against the
+adversary's issuance and presentation transcripts. The extractors receive the
+random-oracle table as of the call besides the arguments Figure 8 prints, since
+the extractors of O24 §5.5 are those of the proof systems. Those read the trace
+of random-oracle queries.
 :::
 
 :::theorem "newusr_never_fails" (lean := "KVAC.Framework.support_zkROImpl_inl_run, KVAC.Framework.roImpl_run_some, KVAC.Framework.roImpl_run_none, KVAC.Framework.roImpl_step_of_le, KVAC.Framework.zkROImpl_step_of_le, KVAC.Framework.runRO_support_of_le, KVAC.Framework.newUsr_mac_isSome") (parent := "framework_extract") (tags := "milestone")
