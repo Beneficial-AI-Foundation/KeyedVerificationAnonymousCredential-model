@@ -406,12 +406,13 @@ of `docs/presentations/rolf-status/errata.md`.
 
 **Decision.** The formalized anonymous-token scheme is the *core* with both
 issuance proofs removed, and is named accordingly (`μCMZATCore`,
-`ATVariant.lean`). The `π_is`-carrying variant, together with a lifting lemma
-bounding its one-more unforgeability by the core's plus one zero-knowledge
-term for `ZKP_cmz.is`, is deferred until the upstream erratum settles; the
-printed Theorem 5.3 blueprint node stays an unanchored stub meanwhile.
+`ATVariant.lean`). The `π_is`-carrying variant is `μCMZATSyntax`
+(`ATVariantPiIs.lean`), at the oracle carrier with its own game `OMUFGameRO`.
+A lifting lemma bounding its one-more unforgeability by the core's plus one
+zero-knowledge term for `ZKP_cmz.is` is deferred until the upstream erratum
+settles; the printed Theorem 5.3 blueprint node stays unanchored meanwhile.
 
-**Rejected alternatives.** (i) Formalizing the printed variant, which keeps
+**Rejected alternatives.** (i) Formalizing the printed variant alone, which keeps
 `π_is` — Figure 9's caption boxes only the user proof `π_iu` as removable.
 (ii) Reading Theorem 5.3 as a statement about a `π_is`-less scheme outright,
 dropping `π_is` from the variant.
@@ -477,6 +478,39 @@ Example 1 on issue #149 for the full analysis.
 Drawing `H` from `𝔾^×` removes `H = 0_𝔾` from the support of `setup`. The
 other properties are unaffected; the OMUF bound of Theorem 5.11 loosens by
 `(q + 3)/(p(p − 1))` (same analysis).
+
+## No obligation theorem for `ExtractablePoly`
+
+**Decision.** `Framework/Extractability.lean` states the predicates `Extractable`,
+`PolyBounded` and `ExtractablePoly` of O24 Definition 4.5 and no theorem about
+them. The theorem `extractablePoly_obligation`, added by PR 126 as an
+"obligation generator" asserting `ExtractablePoly H kvac isPPT` for every scheme
+and every efficiency predicate with a `sorry`, is removed (issue #177, item 12 of
+`docs/MICROCMZ_REMAINING.md`).
+
+**Rejected alternatives.** Keeping the theorem with the premises its docstring
+elided, scheme correctness and knowledge-sound proof systems, which an abstract
+`kvac` cannot name. Specializing it to the μCMZ instance, which at a fixed group
+is the asymptotic clause of Theorem 5.10 with no route to a proof (*The crs and
+the group* below). A bridging lemma from a negligible bound to `ExtractablePoly`,
+which is VCVio's `negligible_of_le` and belongs inside the proof of the asymptotic
+clause, not to the framework.
+
+**Fidelity argument.** The statement without premises is false. A scheme with
+inhabited message types whose server presentation check accepts every
+presentation, with the constantly true efficiency predicate, lets an adversary
+that makes no oracle query and outputs any pair win `EXTGame` with probability
+one for every extractor, since the honest-presentation and issued lists are
+empty and only the accept bit counts. The paper has no such theorem. Theorem
+5.10 (§5.5, p. 42) states "μCMZ is extractable for n = poly(λ) attributes with
+advantage" followed by its inequality, and its proof (pp. 42 to 43) builds the
+reductions without naming negligibility. The inequality is item 13, stated at
+fixed parameters as Theorem 5.8 is. The clause "extractable" is `ExtractablePoly`
+at the μCMZ instance under the negligibility of the four terms for the reduction
+adversaries, which issue #148 carries. At the fixed group of the instance p
+does not grow with λ, so 3/p is a positive constant and this bound cannot
+establish negligibility. The paper's asymptotic argument requires a λ-indexed
+group family.
 
 ## Anonymity game at fixed setup, negligibility over instance families
 
@@ -880,6 +914,165 @@ of random-oracle queries and are algorithms. A pure extractor without the
 table cannot be instantiated by them. The secret key stays an argument, since
 Figure 8 prints it and `Ext.P` uses it to compute `Z` (p. 43, "internally,
 the extractor checks that Z was correctly computed via the secret key").
+## Theorem 5.10 at the honest UF-CMVA game with Help
+
+**Decision.** The unforgeability term of the Theorem 5.10 statement of #179,
+`μCMZ_extractability`, is `UF_CMVAHelpAdv`
+(`Schemes/MicroCMZ/UFCMVAHelp.lean`), the advantage in the honest game of Figure
+5 with the oracle `Help` of §5.2, answered by the challenger with the key. No
+query carries a representation, and the theorem puts no algebraic restriction on
+its single-user adversary, as the printed statement puts none on its adversary.
+The adversary `UFHelpAdversary` has a private coin oracle `unifSpec` beside the
+game's oracles, for the reason of *One-more forgers have a private coin oracle*.
+The reduction `B` of Theorem 5.10 runs the extraction adversary, whose carrier
+`ZKRO H = unifSpec + H.spec` draws coins, and simulates the random oracle by
+lazy sampling, so a coinless `B` could answer those queries only with fixed
+values and the bound would name a family of reductions. The scope paragraph of
+that entry keeps the generic `UFAdversary` coinless, and this game is specific
+to μCMZ. The embedding `ufAdversaryToHelp` of a plain adversary never draws a
+coin.
+
+**Rejected alternatives.** First, the plain advantage `UF_CMVAAdv` of the Figure
+5 game, which the statement of Theorem 5.1 for well-behaved algebraic
+adversaries (PR #220) bounds. Its `WellBehaved` hypothesis rejects every `Help`
+query, and the proof of Theorem 5.10 (§5.5) uses the answer of `Help`.
+Second, the advantage `AGM_UF_CMVAAdv` in the instrumented game
+`AGM_UF_CMVAGame` of `AlgebraicMAC.lean`, whose `verify` and `help` queries
+carry representations. That choice forces the reduction `B` to supply
+representations, which only the credential adversary holds. The theorem would
+then quantify over algebraic extraction adversaries in a duplicate of `EXTGame`
+with representation-carrying queries.
+
+**Fidelity argument.** Theorem 5.1 (p. 35) is proved "even if the adversary is
+given one additional oracle Help", which "will simplify the future analysis of
+the keyed-verification credential scheme", and the proofs of Lemmas 5.4 and 5.5
+say it "will simplify the proof of Theorem 5.11" (pp. 36, 38). The proof of
+Theorem 5.10 (p. 43) uses the answer of `Help` for the first equality of its
+display, and p. 42 assumes that the candidate `Z` can be checked through `Help`,
+although the printed reduction `B` lists only the oracles Sign and Verify. The
+term of the bound is therefore the advantage in the game with `Help`. The paper
+ties `Help` to no model. The algebraic group model is a hypothesis of Theorem 5.1
+and of Lemma 5.4 (pp. 35, 36), where the reduction answers `Help` from the
+representations of an algebraic adversary (p. 38), and of nothing in §5.5. The
+printed Theorems 5.2 and 5.10 (pp. 35, 42) put no algebraic restriction on their
+adversary. The instrumented game is the device of that reduction, and its module
+docstring calls it "the instrumented game, not the honest game".
+`microCMZ_ufcmva_le_of_wellBehaved` of `UFCMVA.lean` bounds the plain game for
+well-behaved algebraic adversaries, whose translation (`AGMBridge.lean`) answers
+`help` by `false`. A bound for the game with `Help` is open, issue #235. That is
+where the model enters when the two theorems are chained. `Help` reads the key
+`(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ and not an extension of the
+generic `UF_CMVAGame` of `Core/AlgebraicMAC/Security.lean`.
+## The anonymity simulator takes a trace extractor
+
+**Decision.** The extractor of `ZKP_cmz.is` that the simulator of Theorem 5.8
+invokes is a `TraceExtractor` (`Core/NIZKP/Composition.lean`), a function of
+the crs, the statement, the proof and the random-oracle cache. The map
+`TraceExtractor.toKSND` embeds it into the
+white-box `KSNDExtractor` of the knowledge-soundness game, and the lemma
+`KnowledgeSound.of_trace` states that knowledge soundness with a trace
+extractor implies the §3.3 notion.
+
+**Rejected alternative.** A simulator that invokes a `KSNDExtractor`, which
+takes the adversary value.
+
+**Fidelity argument.** Definition 4.4 places `∃ Sim` before `∀ A`, so the
+simulator cannot depend on the adversary. The §3.3 extractor "takes as input
+the random coins and the code of the p.p.t. adversary". The proof of
+Theorem 5.8 (§5.4, p. 40) has `Sim.I` invoke the extractor without resolving
+the order of quantifiers, while §2.6 (p. 21) and §9 (p. 77) name the
+straight-line extraction that credentials need. The §9 extractor of the
+algebraic group model has the shape of a trace extractor in that it never
+rewinds. It also reads the algebraic representations the
+adversary supplies with every group element (Equation 41, p. 78), which are
+not among the inputs of `TraceExtractor`. The instantiation of issue #3
+must therefore carry the representations in the proof or in the oracle table.
+The restriction keeps the printed `Adv^ksnd` applicable. Extractors carry no
+running-time bound, so the restriction is a modelling discipline as long as
+`OracleComp` carries no cost model, which issue #148 lists as out of scope.
+
+## Theorem 5.8 with the printed knowledge-soundness term
+
+**Decision.** The bound of `μCMZ_anonymity` (`Schemes/MicroCMZ/Anonymity.lean`)
+carries `KSNDAdv` of `ZKP_cmz.is` as Theorem 5.8 prints it. The theorem takes
+as hypotheses the condition of Remark 5.9 in four forms of
+`Core/NIZKP/Composition.lean`. `ConfinedSystem` confines the setup, prover and
+verifier of each of the three proof systems to a region of the random-oracle
+domain, `ZKSimulatorConfinedTo` confines the simulators of `ZKP_cmz.iu` and
+`ZKP_cmz.p` to the region of their system, `TraceExtractor.ConfinedTo`
+confines the extractor of `ZKP_cmz.is` to the region of its system, and
+`Region.Disjoint` makes the three regions pairwise disjoint. The property
+hybrid H3 uses is `KSNDSimAdv`, knowledge soundness in the presence of
+simulated proofs of `ZKP_cmz.iu`. The lemma
+`ksndSimAdv_le_ksndAdv_of_domainSeparated` bounds it by the printed term. The
+zero-knowledge step H2 needs the condition as much as H3. Its reduction runs
+the simulator of `ZKP_cmz.iu` inside the zero-knowledge game of `ZKP_cmz.p`,
+which offers the random oracle only, while Remark 5.9 raises the point for
+extraction alone. The Remark states its case for `π_iu` after simulated
+`π_is`, the direction of Theorem 5.10, and H3 of Theorem 5.8 is the mirror
+case, which the lemma covers as well.
+
+**Rejected alternative.** Replacing the knowledge-soundness term by a
+simulation-extractability term `SEAdv`, as Theorem 1 (§1, p. 4) prints
+`Adv^simex` where Theorem 5.8 prints `Adv^ksnd`, or stating the bound with
+`KSNDSimAdv` directly.
+
+**Fidelity argument.** The bound of Theorem 5.8 is the one to formalize, and
+Remark 5.9 is the paper's own argument that knowledge soundness suffices for
+the Figure 9 proof systems. Theorem 5.8 (p. 40) is printed for any "proof
+system for the relation R ⊇ R_cmz", while the Remark gives its argument for
+Schnorr proofs alone, without a proof. The formal theorem states what the
+printed proof proves and takes the condition as hypotheses, since no proof of
+the printed form exists. The formalization states the Remark as a lemma over any
+proof system, with an explicit region of the random-oracle domain in place of
+"the vector sizes mismatch". `DomainSeparated` is the Remark's "different
+random oracles" within one oracle, the mechanism the Remark names, and is
+wider than the Schnorr instance. The Remark's own requirement, that the
+simulated proofs "cannot be turned into proofs" of the other relation, has no
+formal counterpart. The instance fact for the compiled Σ-protocols waits
+for issue #3, and until then no call site discharges the hypotheses. Errata
+item 17 records the difference between Theorem 1 and Theorem 5.8.
+
+## Two carriers for one-more unforgeability
+
+**Decision.** Anonymous tokens keep two carriers. The core μCMZ_AT and the
+plain Figure 6 game stay at `ProbComp`. A scheme whose server attaches a
+Fiat–Shamir proof, such as the printed μCMZ_AT with `π_is`, runs at
+`OracleComp (ZKRO H)` and gets its own game, `OMUFGameRO`, which runs through
+one `runRO` from the empty cache, so the scheme's proofs and the adversary's
+hash queries share it (`AnonymousTokens/OracleCarrier.lean`). Both games run
+one experiment, `omufExp`, generic in the carrier `OracleComp spec`, over a
+query type, oracle, log and winning condition generic in the monad. One bridge
+relates them: `ATSyntax.toZKRO` lifts a `ProbComp` scheme through `liftM`,
+`OMUFAdversary.toZKRO` lifts an adversary, and `OMUFAdvRO_toZKRO` equates the
+lifted advantage with the `ProbComp` one.
+
+**Why.** The `π_is` lifting lemma of #205 bounds the scheme with `π_is` by the
+core, so its left side lives at the oracle carrier and its right side at
+`ProbComp`; the bridge is the step between them. With the experiment generic
+in the carrier, `OMUFGame` and `OMUFAdv` are `ProbComp` definitions, and every
+statement over them is a `ProbComp` statement.
+
+**Rejected alternatives.**
+
+- *One game over every carrier*, `OMUFGame` itself generic. A game ends in
+  `ProbComp`, so a generic one needs a way to run its carrier to `ProbComp`,
+  `runRO` with its cache for one carrier and the identity for the other; with
+  the experiment `omufExp` generic instead, each carrier's game supplies its
+  own runner in one line (`runRO H ∅` at the oracle carrier, none at
+  `ProbComp`).
+- *A copy of the declarations for the oracle carrier.* The same declarations
+  twice, with nothing to keep them in step. Only the adversary structure is
+  restated per carrier: `OMUFAdversaryRO` is `OMUFAdversary` with `ZKRO H` in
+  place of `unifSpec`.
+- *VCV-io's `evalDist_liftComp` for the bridge.* It needs `IsUniformSpec` on
+  both specifications, which `ZKRO H` lacks, and it reads a computation through
+  `evalDist`, where every query, a repeated `H` query included, is an
+  independent draw. The game answers `H` through the cache of `runRO`, so a
+  repeated query gets the same answer, and the bridge is an equation between
+  games run through `runRO`, the setting of `runRO_liftM`.
+
+Decided October 2026 (Track CMZ-OMUF, #183).
 
 ## Open alternatives
 

@@ -115,7 +115,11 @@ The crs. `setup` of the base MAC draws `H` from the nonzero elements of `G`
 (`uniformNonzero`, the first action of #149; it previously drew `H` uniformly
 from `G`). The statements type-check unchanged and bound the game with
 `H ←$ 𝔾×`. Oana's proof-level estimate of the change in advantage is
-`(q + 3)/(p(p − 1))`, and the black-box transfer bounds it by `1/p`.
+`(q + 3)/(p(p − 1))`, and the black-box transfer bounds it by `1/p`. The
+reductions that embed the challenge in the crs, `omufDLReductionEta` and
+`omufTwoDLReduction`, draw their `H` conditioned on `H ≠ 0`, as the 3-DL
+reduction of Lemma 5.4 does since #149, so that the reduction's crs has the
+game's law.
 
 The paper's `1/p` in each Claim is the degenerate mask, `b = 0` or the
 substituted polynomial in `χ` trivial, `b` uniform and hidden by `a`. A second
@@ -240,7 +244,12 @@ The discrete-log reduction of O24 Claim 5.13 (item (ii), an `η` monomial), buil
 from an algebraic one-more forger `A`: it embeds the challenge in the crs,
 `H = a·G + b·X` with `X₀ = x₀·H` (p. 47), answers every query as the protocol
 prescribes, and solves the equation that a forgery polynomial `φ_i` with that
-monomial gives at `η`. No selector, hence no budget argument (decision A11). The
+monomial gives at `η`. The masks `(a, b)` are drawn conditioned on `H ≠ 0`, as
+`redTrace` of the 3-DL reduction draws its η masks through `reductionMaskSample`
+(`docs/DESIGN_ALTERNATIVES.md`, *Conditioned η masks*), since `AGM_OMUFGame`
+draws `H` through `setup` from the nonzero elements (issue #149) and an
+unconditioned pair would make the reduction's crs differ from the game's with
+probability `1/p`. No selector, hence no budget argument (decision A11). The
 coefficient of the `η` monomial must remain nonzero after the evaluation of the
 other variables, which the example of the module docstring (*Constants and the
 extraction obligation*) shows is not automatic. Declared with a `sorry` body
@@ -391,10 +400,11 @@ has a nonzero monomial in `x₀`, `xᵣ` or `x₁`, with probability at most
 2-DL reduction the theorem cites, its factor `3` the three near-identical
 embeddings (p. 47, the `x₀` case written out, `X₀ = a·H + b·η·X`, the `xᵣ` and
 `x₁` cases "almost identical"). No budget hypothesis, the reduction embeds the
-challenge in the public parameters. The extraction obligation of the module
-docstring
-applies. Printed constant, provisional (module docstring, *Constants and the
-extraction obligation*).
+challenge in the public parameters. Its crs `H` is drawn from the nonzero
+elements as `AGM_OMUFGame` does, so that the two games agree on the crs
+(*Conditioned η masks*, `docs/DESIGN_ALTERNATIVES.md`). The extraction
+obligation of the module docstring applies. Printed constant, provisional
+(module docstring, *Constants and the extraction obligation*).
 -/
 theorem omuf_claim_5_14 (A : AGMOMUFAdversary F G 1) :
     Pr[ OMUFTrace.CaseX gen secParam | agmOMUFTrace gen secParam A ] ≤

@@ -218,7 +218,9 @@ r ←$ ℤ<sub>p</sub><sup>×</sup> (§5.1, *Credential presentation*, p. 33) an
 U ≠ 0<sub>𝔾</sub> (item 8) the real U′ = rU is uniform on 𝔾<sup>×</sup>, while
 the simulated U′ is 0<sub>𝔾</sub> with probability 1/p: statistical distance
 1/p. Sampling U′ ←$ 𝔾<sup>×</sup> in Sim.P makes the two agree exactly.
-Recorded on #149 (action 2); no simulator in the code yet (#163).
+Recorded on #149 (action 2). The simulator `μCMZAnonSimulator`
+(`Schemes/MicroCMZ/Anonymity.lean`) samples u′ ←$ ℤ<sub>p</sub><sup>×</sup>
+and sets U′ := u′G.
 
 ## 15. Sim.P's Z omits the x<sub>r</sub>U′ term (pp. 34, 40–41)
 
@@ -231,11 +233,47 @@ st<sub>Sim</sub> = (x₀, X₁, …, X<sub>n</sub>), p. 40), but with
 t ←$ ℤ<sub>p</sub><sup>×</sup> and U′ := tG it can add
 tX<sub>r</sub> = x<sub>r</sub>U′: then
 Z = x₀U′ + tX<sub>r</sub> + Σᵢ γᵢXᵢ − C<sub>V</sub> equals the server's, and U′
-is uniform on 𝔾<sup>×</sup> as item 14 requires. Recorded on #149 (action 3);
-no simulator in the code yet (#163).
+is uniform on 𝔾<sup>×</sup> as item 14 requires. Recorded on #149 (action 3).
+The simulator `μCMZAnonSimulator` adds u′X<sub>r</sub> to Z.
+
+## 16. Hybrid H2 of Theorem 5.8 charges ZKP<sub>cmz.iu</sub> for the simulation of π<sub>p</sub> (p. 41)
+
+Hybrid H2 (p. 41) replaces π<sub>p</sub>
+by the output of the zero-knowledge simulator of ZKP<sub>cmz.p</sub>, and its
+displayed bound reads
+Adv<sup>H2</sup> ≥ Adv<sup>H1</sup> − Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,D′</sub>,
+with the subscript of H1. The system whose zero knowledge the step uses is
+ZKP<sub>cmz.p</sub>, as the statement of Theorem 5.8 (p. 40) prints it. The
+statement `μCMZ_anonymity` in `Schemes/MicroCMZ/Anonymity.lean` charges the
+second term to ZKP<sub>cmz.p</sub>.
+
+## 17. Theorem 1 prints Adv<sup>simex</sup> where Theorem 5.8 prints Adv<sup>ksnd</sup> (pp. 4, 40, 42)
+
+The anonymity advantage of Theorem 1 (p. 4) is
+2Adv<sup>zk</sup><sub>ZKP</sub> + Adv<sup>simex</sup><sub>ZKP</sub>, while
+Theorem 5.8 (p. 40) bounds it by
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub> +
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub> +
+Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub></sub>. The two differ in the
+extraction term, simulation extractability in the overview and knowledge
+soundness in the theorem. Hybrid H3 (p. 41) extracts from a π<sub>is</sub>
+the issuer produced after the simulated π<sub>iu</sub> of H1, which the
+knowledge-soundness game of §3.3 does not cover. Remark 5.9 states the mirror
+case, π<sub>iu</sub> after simulated π<sub>is</sub>, the direction of
+Theorem 5.10. Remark 5.9
+(p. 42) says that knowledge soundness suffices for Schnorr proofs because
+"the vector sizes mismatch", without a proof. Theorem 5.8 is printed for any
+"proof system for the relation R ⊇ R<sub>cmz</sub>", while the Remark's
+justification covers Schnorr proofs alone. No prose connects Theorem 1 and
+Remark 5.9. The formalization keeps the printed Theorem 5.8 and states the
+Remark as the lemma `ksndSimAdv_le_ksndAdv_of_domainSeparated` in
+`Core/NIZKP/Composition.lean`, with the mismatch as an explicit region of the
+random-oracle domain.
 
 ## Status
 
+Items 16 and 17 concern §5.4 and are recorded in `docs/DESIGN_ALTERNATIVES.md`
+and in `Schemes/MicroCMZ/Anonymity.lean`.
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the

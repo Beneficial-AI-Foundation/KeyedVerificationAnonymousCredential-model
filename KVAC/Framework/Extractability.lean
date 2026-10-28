@@ -332,36 +332,30 @@ def PolyBounded (n : ℕ → ℕ) : Prop :=
 obligation. Here the attribute count `n(λ)` is a function of the security parameter;
 for every polynomially-bounded `n` there is an extractor making the extraction game,
 run at attribute count `n secParam` for each `secParam`, secure against the efficient
-adversaries. The `PolyBounded n →` hypothesis is the generated obligation: any proof
-of `ExtractablePoly`, or instantiation of it, must exhibit `n`'s polynomial bound
-rather than silently assume a constant attribute count. `Extractable` above is the
-fixed-`n` slice; this ties `n` to `λ` as the paper does.
+adversaries. A proof of `ExtractablePoly` takes an arbitrary `n` and assumes
+`PolyBounded n`. Applying it to a particular attribute-count family requires a proof
+of that family's polynomial bound. `Extractable` above is the fixed-`n` slice; this
+ties `n` to `λ` as the paper does.
 
-The full discharge (a concrete `PolyBounded` witness and the negligibility proof)
-belongs to the μCMZ extractability proof, Track CMZ-E (issue #11). -/
+No declaration asserts `ExtractablePoly` for an abstract scheme. A theorem stating
+it for every `kvac` and every `isPPT` with no premises (the former
+`extractablePoly_obligation`, removed under issue #177) is false, since a scheme whose
+server check accepts every presentation lets an adversary with no oracle query win
+with probability one for every extractor. The clause "μCMZ is extractable" of O24
+Theorem 5.10 is `ExtractablePoly` at the μCMZ instance under the negligibility of the
+terms of its bound. Its unforgeability term is bounded by Theorem 5.1, whose bound
+carries the constant `3/p` (p. 35). At the fixed group of the instance `p` does not
+grow with `λ`, so that constant stays positive, the bound cannot establish
+negligibility, and the paper's asymptotic argument needs the λ-indexed group family
+of issue #148.
+Theorem 5.10's inequality is stated at fixed parameters (`docs/DESIGN_ALTERNATIVES.md`,
+*No obligation theorem for `ExtractablePoly`*). -/
 def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (isPPT : EXTAdversary H kvac → Prop) : Prop :=
   ∀ n : ℕ → ℕ, PolyBounded n →
     ∃ ext : Extractor H kvac,
       (SecurityGame.mk (fun A secParam => EXTAdv H kvac ext A secParam (n secParam))
         : SecurityGame (EXTAdversary H kvac)).secureAgainst isPPT
-
-/-- Obligation generator for O24 Theorem 5.10 (extractability with the `n ≤ poly(λ)`
-side condition). Stated over an abstract scheme `kvac` and adversary-efficiency
-predicate `isPPT`; the premises the paper uses — scheme correctness and a
-knowledge-sound ZKP supplying straight-line extractors (O24 §5.5) — are not yet
-formalized, so they are elided here and this stands as a deferred obligation.
-
-The `sorry` is the point: it turns `ExtractablePoly` from a latent definition into a
-real open goal, so `PolyBounded n` and the negligibility of `EXTAdv` become subgoals
-that the μCMZ extractability proof must discharge. Full proof (and the missing
-premises) belong to Track CMZ-E (issue #11), where the concrete μCMZ `KVACSyntax`
-instantiates `kvac`. -/
-theorem extractablePoly_obligation (H : HashSpec)
-    (kvac : KVACSyntax (OracleComp (ZKRO H)))
-    (isPPT : EXTAdversary H kvac → Prop) :
-    ExtractablePoly H kvac isPPT := by
-  sorry
 
 /-! ## Cache transport for `runRO`
 

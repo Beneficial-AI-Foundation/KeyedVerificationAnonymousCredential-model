@@ -18,7 +18,9 @@ import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMBridge
 import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.UFCMVA
+import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import KVAC.Schemes.MicroCMZ.ATVariant
+import KVAC.Schemes.MicroCMZ.ATVariantPiIs
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 
 open Verso.Genre Manual
@@ -59,6 +61,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   statement — Track CMZ-M.
 - `UFCMVA.lean` — Section 5.3, Theorem 5.1 in the plain UF-CMVA game —
   Track CMZ-M.
+- `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help —
+  Track CMZ-E.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
   `Polynomial.lean`, `Transcript.lean`, `CaseEvents.lean` and
@@ -100,11 +104,12 @@ and presentation over the three proof systems of Figure 9, are both
 delivered. The theorem {bpref "mucmz_correctness"}[] proves the correctness of
 the credential at the oracle carrier.
 
-:::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_setup, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
+:::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.helpEq, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_setup, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
 The μCMZ base MAC over an abstract prime-order group
 ({uses "sampleable_group"}[]): key sampling, the scalar-side MAC
 `V = (x₀ + xᵣ + m·x₁)·U` with a nonvanishing tag base, deterministic
-verification, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
+verification, the equation of the oracle `Help` of §5.2 that the games with
+`Help` share, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
 with its correctness proof, and the sampler of nonzero group elements
 `uniformNonzero` for `G×`.
 :::
@@ -1007,10 +1012,64 @@ fixed crs is the bridge between the pointwise crs of Definition 4.4 and the
 sampled crs of the §3.3 games.
 :::
 
-:::theorem "mucmz_anonymity" (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8") (effort := "large") (priority := "medium")
-*O24 Theorem 5.8.* If ZKP proves the relation `R ⊇ R_cmz`
-({uses "zk_arguments"}[]), then μCMZ ({uses "mucmz_construction"}[]) is anonymous in the
-sense of {uses "kvac_anonymity"}[]: issuance and presentation are simulatable.
+:::definition "mucmz_simulators_extractor" (lean := "KVAC.Schemes.MicroCMZ.RiuSimulator, KVAC.Schemes.MicroCMZ.RpSimulator, KVAC.Schemes.MicroCMZ.RisExtractor, KVAC.Schemes.MicroCMZ.riuSimToZK, KVAC.Schemes.MicroCMZ.rpSimToZK, KVAC.Schemes.MicroCMZ.risExtToTrace") (parent := "cmz_anonymity") (tags := "milestone")
+The zero-knowledge simulators of `ZKP_cmz.iu` and `ZKP_cmz.p` and the trace
+extractor of `ZKP_cmz.is` ({uses "trace_extractor"}[]) at the crs `H`, the
+three objects from which the proof of O24 Theorem 5.8 (§5.4, p. 40) builds its
+simulator, with their conversions to the §3.3 views of
+{uses "mucmz_proof_systems_fixed_crs"}[].
+:::
+
+:::definition "mucmz_remark_59_oracle" (lean := "KVAC.Schemes.MicroCMZ.riuSimulationOracle") (parent := "cmz_anonymity") (tags := "milestone")
+The §3.3 simulator of `ZKP_cmz.iu` at the crs `H`
+({uses "mucmz_simulators_extractor"}[]) as the simulation oracle of
+{uses "ksnd_simulation_oracle"}[] with respect to
+`ZKP_cmz.is`, the oracle the issuer holds when it produces `π_is` in hybrid H3
+of Theorem 5.8, where {bpref "remark_59"}[] applies.
+:::
+
+:::definition "mucmz_anonymity_simulator" (lean := "KVAC.Schemes.MicroCMZ.μCMZSimState, KVAC.Schemes.MicroCMZ.μCMZAnonSimulator") (parent := "cmz_anonymity") (tags := "milestone")
+The simulator `Sim = (Sim.I, Sim.P)` of {uses "kvac_anonymity"}[] that the
+proof of O24 Theorem 5.8 (§5.4, p. 40) builds for the credential
+{uses "mucmz_construction"}[], over the simulators and the extractor of
+{uses "mucmz_simulators_extractor"}[]. `Sim.I` sends a
+random commitment with a simulated `π_iu` and extracts the issuer's `x₀` from
+`π_is` with a trace extractor. `Sim.P` sends random `U' = u'•G`,
+`C_V` and `Cᵢ = γᵢ•G`, computes `Z = x₀•U' + u'•Xᵣ + Σᵢ γᵢ•Xᵢ − C_V` and
+simulates `π_p`. The term `u'•Xᵣ` and the nonzero `U'` are errata items 15
+and 14 of issue #149.
+:::
+
+:::theorem "mucmz_anonymity" (lean := "KVAC.Schemes.MicroCMZ.μCMZ_anonymity") (parent := "cmz_anonymity") (tags := "paper, O24 Thm 5.8")
+*O24 Theorem 5.8.* Fix a generator `gen ≠ 0`, a crs `H ≠ 0`, keys in the
+support of key generation, an attribute vector and a predicate holding of it.
+The anonymity advantage {uses "kvac_anonymity"}[] of μCMZ
+({uses "mucmz_construction"}[]) from the empty random-oracle table with respect
+to the simulator {uses "mucmz_anonymity_simulator"}[] is at most
+`Adv^zk_{ZKP_cmz.iu,A'} + Adv^zk_{ZKP_cmz.p,D'} + Adv^ksnd_{ZKP_cmz.is,A''}`
+for reductions `A'`, `D'` and `A''`. The terms are the zero-knowledge
+advantages of {uses "zk_game"}[] and the knowledge-soundness advantage of
+{uses "extraction_game"}[], as printed. The hypotheses are the condition of
+Remark 5.9 as the region predicates of {uses "ksnd_simulation_oracle"}[].
+Each proof system, with its simulator or its extractor, is confined to its own
+region of the random-oracle domain, and the three regions are pairwise
+disjoint. The printed theorem has no such hypothesis and holds for any proof
+system for a relation containing `R_cmz`, while its proof relies on the
+Remark, which the paper verifies for Schnorr proofs alone. The statement
+takes the condition as hypotheses because no proof of the printed form exists.
+:::
+
+:::proof "mucmz_anonymity"
+The hybrid argument of §5.4, pp. 40 to 41. H1 and H2 replace `π_iu` and
+`π_p` by simulated proofs, charged to zero knowledge of `ZKP_cmz.iu` and
+`ZKP_cmz.p`. The reduction of H2 runs the simulator of `ZKP_cmz.iu` inside the
+zero-knowledge game of `ZKP_cmz.p`, which the confinement hypotheses permit.
+H3 extracts `(x₀, u)` from `π_is` in the game with a simulation oracle for
+`ZKP_cmz.iu`, {uses "mucmz_remark_59_oracle"}[], and {uses "remark_59"}[]
+reduces that advantage to the printed knowledge-soundness term. H4 and H5
+replace the commitment and the presentation elements by uniform ones, at no
+cost by the perfect hiding of Pedersen commitments and the rerandomization of
+the MAC code.
 :::
 
 # Extractability (Section 5.5)
@@ -1037,6 +1096,38 @@ keyed-verification credential in the sense of {uses "kvac_extractability"}[].
 :::proof "mucmz_extractable_kvac"
 Combines anonymity {uses "mucmz_anonymity"}[] and extractability
 {uses "mucmz_extractability"}[].
+:::
+
+:::definition "mucmz_ufcmva_help_game" (lean := "KVAC.Schemes.MicroCMZ.UFHelpQuery, KVAC.Schemes.MicroCMZ.UFHelpOracleSpec, KVAC.Schemes.MicroCMZ.ufHelpOracleImpl, KVAC.Schemes.MicroCMZ.UFHelpAdversary, KVAC.Schemes.MicroCMZ.UF_CMVAHelpGame, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv, KVAC.Schemes.MicroCMZ.ufQueryToHelp, KVAC.Schemes.MicroCMZ.ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")
+The UF-CMVA game of {uses "ufcmva_game"}[] for the base MAC of
+{uses "mucmz_construction"}[], with the oracle `Help(A₀, A⃗, Z)` of §5.2
+(p. 35), which answers whether `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ`. The challenger
+holds the key and answers `Help` by evaluating the equation, and no query
+carries a representation. The paper proves Theorem 5.1, in the algebraic group
+model, for this game: "the scheme is unforgeable even if the adversary is given
+one additional oracle Help". The proof of Theorem 5.10 (p. 43) uses the answer
+of `Help` for its candidate `Z`. The paper ties `Help` to no model. The
+instrumented game of {bpref "agm_model"}[] is the device of the proof of Lemma
+5.4, where the reduction answers `Help` from the representations of an algebraic
+adversary. The bound of {bpref "mucmz_mac_security"}[] is for the plain game,
+whose well-behaved algebraic adversaries never query `Help`. A bound for this
+game is open, issue #235. `Help` reads the key `(x₀, xᵣ, x⃗)`, so the game is
+specific to μCMZ. An adversary of the generic game is an adversary of this game
+that never queries `Help`, `ufAdversaryToHelp`, with the same advantage.
+:::
+
+:::theorem "mucmz_ufcmva_help_of_plain" (lean := "KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv_ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")
+The embedding `ufAdversaryToHelp` of {uses "mucmz_ufcmva_help_game"}[]
+preserves the advantage. An adversary of {uses "ufcmva_game"}[] at μCMZ has
+the same advantage in the game with `Help`, so a bound on the game with
+`Help` over all adversaries covers the plain game of Figure 5.
+:::
+
+:::proof "mucmz_ufcmva_help_of_plain"
+Setup and key generation are shared by the two games. The oracles of the game
+with `Help`, composed with the query translation `ufQueryToHelp`, are the
+oracles of the plain game query by query, so the two runs of the adversary
+are one computation and the win bits agree.
 :::
 
 :::theorem "mucmz_extractability" (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
@@ -1116,10 +1207,36 @@ both and says so in its name. The cost of dropping `π_is` is the
 anonymity clause of Theorem 5.3: the anonymity simulator extracts from
 `π_is` and the bound carries its knowledge-soundness term, so that clause
 is stated only for the `π_is`-carrying variant, while the core is the
-scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant
-follows with a zero-knowledge lifting lemma once the upstream erratum is
-settled, and the printed Theorem 5.3 node {bpref "mucmz_at_omuf"}[] stays
-a paper-element stub meanwhile.
+scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant is
+{bpref "mucmz_at_pi_is"}[]; a zero-knowledge lifting lemma relating the two
+follows once the upstream erratum is settled, and the printed Theorem 5.3
+node {bpref "mucmz_at_omuf"}[] stays unanchored meanwhile.
+:::
+
+:::definition "mucmz_at_pi_is" (lean := "KVAC.Schemes.MicroCMZ.atIssueSrvPiIs, KVAC.Schemes.MicroCMZ.atIssueUsr₁PiIs, KVAC.Schemes.MicroCMZ.μCMZATSyntax") (parent := "cmz_omuf") (tags := "milestone")
+The anonymous-token variant `μCMZ_AT` of O24 Figure 9, the user proof `π_iu`
+removed and the issuer's proof `π_is` kept, at the oracle carrier of
+{bpref "omuf_game_ro"}[] with the proof system for `R_cmz.is` a parameter
+({uses "mucmz_proof_system_parameters"}[]). Setup, key generation and the
+user's second move come from the credential {uses "mucmz_construction"}[], the
+user's first move is that of the core {uses "mucmz_at_core"}[] lifted to the
+oracle carrier, verification is that of the base MAC {uses "mucmz_base_mac"}[],
+and the server is the credential's server without the `π_iu` check.
+:::
+
+:::theorem "mucmz_at_pi_is_correctness" (lean := "KVAC.Schemes.MicroCMZ.μCMZAT_correctRO") (parent := "cmz_omuf") (tags := "milestone")
+The variant {uses "mucmz_at_pi_is"}[] satisfies the oracle-carrier
+correctness {uses "at_correctness_ro"}[]. The hypotheses are a nonzero
+generator and the perfect completeness of `π_is` for {uses "ris_relation"}[]
+with the crs setup `H ←$ G×`, stated by `ProofSystemFor.CompleteRO` of
+{uses "mucmz_correctness"}[].
+:::
+
+:::proof "mucmz_at_pi_is_correctness"
+As for the issuance half of {uses "mucmz_correctness"}[]: the completeness of
+`π_is` discharges its verification, the nonzero `u` and generator pass the
+check `U' ≠ 0`, and the unblinding algebra `V' − s·U' = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U'`
+gives the MAC equation of {uses "mucmz_base_mac"}[].
 :::
 
 :::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.reprMatches, KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_length_le, KVAC.Schemes.MicroCMZ.AGMRepr.eval_append_of_length_eq, KVAC.Schemes.MicroCMZ.reprMatches_eval_append, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
@@ -1166,10 +1283,10 @@ The correspondence with the plain game is a deferred bridge.
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
-({uses "zk_arguments"}[]), the variant `μCMZ_AT` of {uses "mucmz_construction"}[] is an
+({uses "zk_arguments"}[]), the variant `μCMZ_AT` {uses "mucmz_at_pi_is"}[] is an
 anonymous token ({uses "anonymous_tokens"}[]) with both an anonymity
 advantage and, in the algebraic group model, a one-more unforgeability
-advantage in the game of {uses "omuf_game"}[].
+advantage in the game of {uses "omuf_game_ro"}[].
 :::
 
 :::proof "mucmz_at_omuf"
