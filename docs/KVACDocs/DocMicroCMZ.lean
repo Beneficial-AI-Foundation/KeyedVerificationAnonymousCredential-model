@@ -20,6 +20,7 @@ import KVAC.Schemes.MicroCMZ.AGMReduction
 import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.ATVariantPiIs
+import KVAC.Schemes.MicroCMZ.AnonymousToken
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 
 open Verso.Genre Manual
