@@ -5,6 +5,7 @@ Authors: Semar Augusto
 -/
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.Construction
+import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import Mathlib.Tactic.Module
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.SimSemantics.Append
@@ -285,30 +286,33 @@ elements that `A`'s representations evaluate to. The two games then answer every
 alike, so the advantages are equal, with no condition on the adversary. -/
 
 /-- The queries of the AGM game as queries of the game with `Help`, for the crs `H` and
-the public parameters `pp`. The state is the list of MAC codes issued so far, in
-issuance order: `sign` forwards and appends the MAC code it receives, and `verify` and
-`help` forward the elements their representations evaluate to. -/
+the public parameters `pp`, on the game's side of the coin oracle. The state is the list
+of MAC codes issued so far, in issuance order: `sign` forwards and appends the MAC code
+it receives, and `verify` and `help` forward the elements their representations evaluate
+to. -/
 def agmQueryToHelp (H : G) (pp : Params G n) :
-    QueryImpl (AGMOracleSpec F G n) (StateT (List (G × G)) (OracleComp (UFHelpOracleSpec F G n)))
+    QueryImpl (AGMOracleSpec F G n)
+      (StateT (List (G × G)) (OracleComp (unifSpec + UFHelpOracleSpec F G n)))
   | .sign m => StateT.mk fun tags => do
-      -- `σ : G × G`: unascribed, `σ` has type `(UFHelpOracleSpec F G n).Range (.sign m)`,
-      -- so `tags ++ [σ]` finds no `HAppend` with `List (G × G)`.
-      let σ : G × G ← query (spec := UFHelpOracleSpec F G n) (.sign m)
+      -- `σ : G × G`: unascribed, `σ` has type
+      -- `(unifSpec + UFHelpOracleSpec F G n).Range (.inr (.sign m))`, so `tags ++ [σ]`
+      -- finds no `HAppend` with `List (G × G)`.
+      let σ : G × G ← query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
       pure (σ, tags ++ [σ])
   | .verify m ρU ρV => StateT.mk fun tags => do
-      let b ← query (spec := UFHelpOracleSpec F G n)
-        (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
+      let b ← query (spec := unifSpec + UFHelpOracleSpec F G n)
+        (.inr (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)))
       pure (b, tags)
   | .help ρ₀ ρA ρZ => StateT.mk fun tags => do
-      let b ← query (spec := UFHelpOracleSpec F G n)
-        (.help (ρ₀.evalParams gen H pp tags)
+      let b ← query (spec := unifSpec + UFHelpOracleSpec F G n)
+        (.inr (.help (ρ₀.evalParams gen H pp tags)
           (fun i => (ρA i).evalParams gen H pp tags)
-          (ρZ.evalParams gen H pp tags))
+          (ρZ.evalParams gen H pp tags)))
       pure (b, tags)
 
 /-- An algebraic adversary as an adversary of the game with `Help`: it runs `A` through
 `agmQueryToHelp` from no MAC codes, and its forgery is the evaluation of `A`'s forgery
-representations over the MAC codes issued. -/
+representations over the MAC codes issued. It never draws a coin. -/
 def AGMUFAdversary.forget (A : AGMUFAdversary F G n) : UFHelpAdversary F G n where
   run H pp := do
     let ((mStar, ρU, ρV), tags) ← (simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run []
