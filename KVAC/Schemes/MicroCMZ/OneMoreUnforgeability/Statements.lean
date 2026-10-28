@@ -155,12 +155,13 @@ arguments and not checked in Lean:
   `(Q + 1)(p − 1)/p²`.) This refutes the extraction step, not the displayed
   bound of Claim 5.13, which would need a bound on the vanishing event.
 - Claim 5.14. With no query at all, a forger guesses `g` and outputs
-  `(m, (H, g·(X₀ + Xᵣ + m·X₁)))` with `m ≠ 0`. Its polynomial
-  `(g − η)(x₀ + xᵣ + m·x₁)` has monomials in all three key variables, and it
+  `(m, (H, X₀ + g·(Xᵣ + m·X₁)))` with `m ≠ 0`. Since `X₀ = x₀·H` has logarithm
+  `η·x₀`, its polynomial is `(g − η)(xᵣ + m·x₁)`, with monomials in `xᵣ` and `x₁`. It
   wins when `g = η`, with probability about `1/(p − 1)`, where the polynomial
-  vanishes identically in each single key variable. So the vanishing
-  probability the paper takes to be `0` is positive for each of the three
-  cases.
+  vanishes identically in `xᵣ` and in `x₁`. For `x₀`, a forger guesses `h` and outputs
+  `(m, (gen, h·X₀ + Xᵣ + m·X₁))`, with polynomial `(h·η − 1)·x₀`, which wins and vanishes
+  identically in `x₀` when `h·η = 1`. So the vanishing probability the paper takes to be `0`
+  is positive for each of the three cases.
 
 Schwartz–Zippel bounds such a vanishing by `d/p` only for a polynomial
 independent of the run's values, and honest Verify answers break that
@@ -647,8 +648,8 @@ in the crs or the public parameters and hold for every forger. The theorem
 invokes the three under its hypothesis and they add up to Equation 23 (module
 docstring). The docstrings state the paper's arguments, which the extraction
 obligation of the module docstring qualifies. Claims 5.12 and 5.13 are stated first and
-`sorry`d. Claim 5.14 is proved from three extraction obligations, `sorry`d statements about the real
-game alone (`TwoDLExtraction.lean`). -/
+`sorry`d. Claim 5.14 is proved (`TwoDLExtraction.lean`), with the degenerate probability of its
+extraction as an explicit term. -/
 
 /--
 **O24 Claim 5.12**, item (i), the adversary wins and some forgery polynomial has
@@ -749,8 +750,8 @@ theorem AGM_OMUFAdv_le_cases (A : AGMOMUFAdversary F G 1) :
 
 /--
 **O24 Theorem 5.11 at `n = 1`, Equation 23**, in the shape drawn in the module
-docstring. Proved from Claims 5.12 to 5.14, which are stated below and `sorry`d: the
-advantage is the trace probability of the win (`AGM_OMUFAdv_eq_probEvent_wins`), a win
+docstring. Proved from Claims 5.12 to 5.14, of which 5.12 and 5.13 are stated below and
+`sorry`d: the advantage is the trace probability of the win (`AGM_OMUFAdv_eq_probEvent_wins`), a win
 presents `q + 1` forgeries against at most `q` issued pairs, so by pigeonhole one forgery
 is not the unblinding of any pair and its polynomial `φ_i` has a nonzero monomial in one
 of the three variable groups (`omuf_cover`), the union bound adds the three Claims'

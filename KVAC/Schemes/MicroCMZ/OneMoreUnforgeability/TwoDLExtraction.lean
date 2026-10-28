@@ -37,10 +37,12 @@ variable does not make that polynomial nonzero: the forger chooses its forgery a
 that test the key, and it may guess hidden values (issue #251, errata
 item 12). The statement that the degenerate case never happens, `Pr[Case ∧ Degenerate] = 0`, is
 false as stated. A forger with no queries guesses `g` and forges
-`(m, (H, g·(X₀ + Xᵣ + m·X₁)))`, with `m ≠ 0`. Its polynomial is `(g − η)(x₀ + xᵣ + m·x₁)`, nonzero
-formally, and it wins exactly when `g = η` (or the key combination is zero), where the polynomial
-vanishes identically in every single key variable. So the degenerate event has probability about
-`1/(p − 1)` for each variable.
+`(m, (H, X₀ + g·(Xᵣ + m·X₁)))`, with `m ≠ 0`. Since `X₀ = x₀·H` has logarithm `η·x₀`, its
+polynomial is `(g − η)(xᵣ + m·x₁)`, nonzero formally, and it wins exactly when `g = η` (or
+`xᵣ + m·x₁ = 0`), where the polynomial vanishes identically in `xᵣ` and in `x₁`. For `x₀`, a forger
+that guesses `h` and forges `(m, (gen, h·X₀ + Xᵣ + m·X₁))` has the polynomial `(h·η − 1)·x₀`, which
+wins and vanishes identically in `x₀` when `h·η = 1`. So the degenerate event has probability
+about `1/(p − 1)` for each variable.
 
 The Claims here therefore carry the degenerate probability as an explicit term, which is a true
 bound. It is not the paper's: removing the term is the repair of the paper's argument, by bounding

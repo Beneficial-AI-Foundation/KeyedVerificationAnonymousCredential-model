@@ -1616,8 +1616,10 @@ winning run with a nonzero monomial in the variable is degenerate in it to be `0
 stated. The nonzero monomial of {uses "omuf_forgery_polynomial"}[] is a formal one, and its coefficient
 can vanish at the run's key because the forger chooses its forgery after Verify answers that test the
 key, or guesses a hidden value (issue #251): a forger with no queries that
-guesses `g` and forges `(m, (H, g·(X₀ + Xᵣ + m·X₁)))` has the polynomial `(g − η)(x₀ + xᵣ + m·x₁)`
-and is degenerate in each variable exactly when it wins by `g = η`, with probability about `1/(p − 1)`.
+guesses `g` and forges `(m, (H, X₀ + g·(Xᵣ + m·X₁)))` has the polynomial `(g − η)(xᵣ + m·x₁)` and is
+degenerate in `xᵣ` and `x₁` exactly when it wins by `g = η`; for `x₀`, guessing `h` and forging
+`(m, (gen, h·X₀ + Xᵣ + m·X₁))` gives `(h·η − 1)·x₀`, degenerate when it wins by `h·η = 1`. Each wins
+with probability about `1/(p − 1)`.
 The Claims therefore carry the degenerate probability `omufDegenerateProb`, summed over the three
 variables, as an explicit term, which is a true bound. A repair of the paper's argument bounds it or
 changes the events, and the rest of {uses "omuf_two_dl_extraction"}[] is unaffected.
