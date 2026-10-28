@@ -1007,6 +1007,49 @@ statement over them is a `ProbComp` statement.
 
 Decided October 2026 (Track CMZ-OMUF, #183).
 
+## Theorem 5.3 takes its clauses from Theorems 5.8 and 5.11
+
+**Decision.** The Theorem 5.3 statement (#184) is the conjunction of
+correctness, anonymity and one-more unforgeability of μCMZ_AT, with each
+clause as the theorem it derives from states it, p. 35 "From the above, and
+Theorem 5.11". Four points.
+
+1. *The bounds.* Anonymity is bounded by Adv^zk_cmz.p + Adv^ksnd_cmz.is, the
+   printed Adv^zk_cmz.iu dropped (errata item 18). One-more unforgeability is
+   bounded by `omufBound` of Theorem 5.11 plus Adv^zk_cmz.is, the printed
+   Adv^2dl + q·Adv^dl + (q+5)/p replaced (errata item 19) and the `π_is` term
+   added (errata item 7).
+2. *The anonymity clause.* Definition 4.4 (`AnonAdv`) on μCMZ_AT as a
+   `KVACSyntax` at the oracle carrier, the issuance of Figure 9 without `π_iu`
+   and the presentation of μCMZ, with the Theorem 5.8 simulator
+   `μCMZAnonSimulator` without its `π_iu` simulator, under the Remark 5.9
+   hypotheses of `μCMZ_anonymity` for `π_is` and `π_p` alone.
+3. *The one-more unforgeability clause.* The game in the algebraic group
+   model, `AGM_OMUFAdv` on `AGMOMUFAdversary`, the game of Theorem 5.11
+   (`agm_omuf_le`), with the Sign budget `q` as a hypothesis.
+4. *The group.* Fixed `F` and `G`, the clause "n = poly(λ)" left to #148, as
+   for Theorems 5.2, 5.8 and 5.10.
+
+**Rejected alternatives.**
+
+- *The printed bounds.* No version of the paper proves the printed one-more
+  unforgeability bound, and the printed anonymity term charges a proof the
+  scheme does not produce. Keeping them would state a theorem the cited proofs
+  do not establish.
+- *A sorried unlinkability predicate on `ATSyntax`.* §3.4 (p. 26) omits the
+  definition of unlinkability and keeps "the stronger anonymity properties",
+  so the anonymity clause is Definition 4.4, not a new notion.
+- *The plain Figure 6 game, `OMUFAdvRO`, as the one-more unforgeability
+  target.* Theorem 5.11 is proved in the algebraic group model, and no lemma
+  carries its bound to the plain game. The clause would then rest on a bridge
+  that does not exist.
+
+**Fidelity argument.** Theorem 5.3 is a corollary, p. 35, so its faithful
+statement is what its two sources establish for the scheme defined on p. 35,
+μCMZ_AT with `π_is`. Every departure from the print is an errata item.
+
+Decided 28 October 2026 (Track CMZ-OMUF, #184).
+
 ## Open alternatives
 
 **The crs and the group.** In the paper `μCMZ.S(1^λ, n)` runs `GrGen(1^λ)`
