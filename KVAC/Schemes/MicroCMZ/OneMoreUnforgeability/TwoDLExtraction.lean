@@ -99,6 +99,51 @@ noncomputable def omufDegenerateProb (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :
       Pr[ fun t => t.CaseX1 gen secParam ∧ t.Degenerate gen AGMPoly.Var.x1 |
         agmOMUFTrace gen secParam A ])
 
+/-- **The degenerate probability of Claim 5.12**: the probability that the run is in item (i) and
+no `u_j` that occurs in a forgery polynomial leaves a nonzero polynomial once the other variables
+are evaluated at the run's values, so that whichever position the selector guesses, the reduction
+has nothing to extract. The paper does not mention it: it writes that the polynomial is "non-zero
+with high probability" (p. 46).
+
+Why this is the failure event. The reduction guesses `ι` uniformly in `[q]`, independently of the
+challenge, and embeds the challenge as `u_ι = a + b·χ` with `a`, `b` uniform. For `b ≠ 0` the view
+of the adversary is the real one, `a` hiding `b·χ` (p. 46), so `ι` is independent of the view. On a
+run of item (i) some `u_j` occurs in a forgery polynomial. For `b ≠ 0` the substitution is a
+degree-one polynomial in `χ`, so the forgery polynomial, with the other variables at the run's
+values, is nonzero in `χ` exactly when it is nonzero in `u_j`, that is, when the run is not
+degenerate in `u_j`. The reduction extracts from a nonzero one, and its guess `ι` falls on a
+suitable `j` with probability at least `1/q`, which is the factor `q` of the Claim. It has nothing
+to extract when every `u_j` that occurs is degenerate, whatever `ι` is, which is the event below.
+The case `b = 0`, of probability `1/p`, is the `1/p` of the Claim. The reduction is still a `sorry`
+body (`omufDLReductionU`), so this is the argument that the event is defined to match. -/
+noncomputable def omufDegenerateProbU (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
+  Pr[ fun t => t.CaseU gen secParam ∧ ∀ j : Fin t.arity,
+      (∃ φ ∈ t.forgeryPolys, AGMPoly.Var.u j ∈ φ.vars) →
+        t.Degenerate gen (AGMPoly.Var.u j) | agmOMUFTrace gen secParam A ]
+
+/-- **The degenerate probability of Claim 5.13**: the probability that the run is in item (ii)
+and is degenerate in `η`, so that substituting `a + b·χ` for `η` gives nothing to extract. The
+paper does not mention it: it writes that the polynomial is "non-zero with high probability"
+(p. 46). The Verify-testing forger of issue #251 realises it with probability `(Q + 1)/p`.
+
+Why this is the failure event. The reduction embeds the challenge in the crs as `η = a + b·χ`
+and guesses nothing. For `b ≠ 0` the substitution `η ↦ a + b·T` composes a polynomial in `η` with
+an invertible affine map, so the forgery polynomial, with the other variables at the run's values,
+is zero as a polynomial in `T` exactly when it is zero as a polynomial in `η`, that is, exactly
+when the run is degenerate in `η`. The case `b = 0`, of probability `1/p`, is the `1/p` of the
+Claim. The reduction is still a `sorry` body (`omufDLReductionEta`), so this is the argument that
+the event is defined to match. -/
+noncomputable def omufDegenerateProbEta (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
+  Pr[ fun t => t.CaseEta gen secParam ∧ t.Degenerate gen AGMPoly.Var.eta |
+    agmOMUFTrace gen secParam A ]
+
+/-- The sum of the degenerate probabilities of the three Claims, which `agm_omuf_le_n1` and
+`agm_omuf_le` carry as an explicit term. The sum comes from the union bound over the three Claims
+in `agm_omuf_le_n1`, each of which adds its own term. -/
+noncomputable def omufDegenerateProbAll (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
+  omufDegenerateProbU gen secParam A +
+    (omufDegenerateProbEta gen secParam A + omufDegenerateProb gen secParam A)
+
 end Degenerate
 
 section Support

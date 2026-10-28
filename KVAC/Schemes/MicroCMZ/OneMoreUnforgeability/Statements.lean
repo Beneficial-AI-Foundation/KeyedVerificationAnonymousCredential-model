@@ -60,12 +60,14 @@ merged.
       εη = dlogAdv gen (omufDLReductionEta gen A)         Claim 5.13, challenge in the crs
     and the theorem's εdl is the mixture  q/(q + 1)·εU + 1/(q + 1)·εη,  so that
       q·(1/p + εU) + (1/p + εη) + 3·(1/p + ε2dl)  =  omufBoundN1 F q εdl ε2dl
-    once the win is covered by the three events (`omuf_cover`). The extra term of
-    Claim 5.14, εdeg = omufDegenerateProb gen secParam A, is the probability that the extraction
-    of the 2-DL reduction has nothing to extract (`TwoDLExtraction.lean`). The paper does not
-    mention it, writing "non-zero with high probability" (p. 46) and "can be found with high
-    probability" (p. 47). It is not `0` for some adversaries, so `agm_omuf_le_n1`, stated below
-    with the printed bound, has to carry it when it is proved.
+    once the win is covered by the three events (`omuf_cover`). Each Claim carries an
+    extra term, the probability that the extraction of its reduction has nothing to extract
+    (`TwoDLExtraction.lean`): εdegU = omufDegenerateProbU, εdegη = omufDegenerateProbEta and
+    εdeg = omufDegenerateProb, for Claims 5.12, 5.13 and 5.14. The paper does not mention them,
+    writing "non-zero with high probability" (p. 46) and "can be found with high probability"
+    (p. 47). The terms of Claims 5.13 and 5.14 are not `0` for some adversaries, by the forgers
+    below, and no forger is given for Claim 5.12's. `agm_omuf_le_n1` carries their sum
+    `omufDegenerateProbAll`, and `agm_omuf_le` carries it at the transformed adversary.
 
 Sign is Figure 6's name for the MAC code generation oracle in the token setting,
 and the name of the Lean constructor and of the budget predicate
@@ -169,9 +171,10 @@ arguments and not checked in Lean:
 Schwartz–Zippel bounds such a vanishing by `d/p` only for a polynomial
 independent of the run's values, and honest Verify answers break that
 independence, each being a test of the key, with no Verify budget in the game.
-The Claim 5.14 bounds therefore carry the vanishing probability as an explicit
-term (`omufDegenerateProb`, `TwoDLExtraction.lean`), and `agm_omuf_le_n1` has to when it is
-proved. Claims 5.12 and 5.13 are `sorry`d and face the same step. Whether the
+The Claims therefore carry the vanishing probability as an explicit term
+(`omufDegenerateProbU`, `omufDegenerateProbEta`, `omufDegenerateProb`, `TwoDLExtraction.lean`),
+and `agm_omuf_le_n1` and `agm_omuf_le` with them. Claims 5.12 and 5.13 are `sorry`d, with the
+term in their statements as in the proved Claim 5.14. Whether the
 Claims keep the paper's events, with a covering argument that assigns every
 winning polynomial to a reduction that extracts from it, or move to evaluated
 events, and whether a Verify budget and a per-Verify-query term join the
@@ -672,39 +675,6 @@ variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 variable (secParam : ℕ)
 
-/--
-**O24 Theorem 5.11 at `n = 1`, Equation 23**, in the shape drawn in the module
-docstring, stated first and `sorry`d. The proof runs at the actual number `r` of
-Sign queries, `r ≤ q` by the hypothesis: a win presents `r + 1` forgeries
-against at most `r` issued pairs, so by pigeonhole one forgery is not the
-unblinding of any pair, its polynomial `φ_i` has a nonzero monomial in one of
-the three variable groups, and Claims 5.12 to 5.14 bound each case over the
-polynomial layer of Equations 17 to 22, `r ≤ q` giving the stated constants.
--/
-theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
-    (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
-    AGM_OMUFAdv gen A secParam ≤
-      omufBoundN1 F q (dlogAdv gen (omufDLReduction gen q A))
-        (twoDlogAdv gen (omufTwoDLReduction gen A)) := by
-  sorry
-
-/--
-**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
-stated first and `sorry`d, with the paper's printed bound. The proof splits the
-winning event by whether the forgeries' attribute combinations are pairwise
-distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
-transformed adversary `omufToN1 gen A`, the colliding case is the gap-DL
-reduction, and the two add `2/p + Adv^gapdl` to Equation 23. The domain `0 < n`
-is §3.4's, as for the plain game.
--/
-theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ)
-    (hq : ∀ (H : G) (pp : Params G n), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
-    AGM_OMUFAdv gen A secParam ≤
-      omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
-        (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
-        (gapDlogAdv gen (omufGapDLReduction gen A)) := by
-  sorry
-
 /-! ## The Claims
 
 The three Claims of the `n = 1` proof, over the case events of `CaseEvents.lean`
@@ -724,12 +694,14 @@ extraction as an explicit term. -/
 /--
 **O24 Claim 5.12**, item (i), the adversary wins and some forgery polynomial has
 a nonzero monomial in some `u_j`, with probability at most
-`q·(1/p + Adv^dl)` for the reduction `omufDLReductionU gen q A`. The paper's
+`q·(1/p + Adv^dl) + εdegU` for the reduction `omufDLReductionU gen q A`, with `εdegU` the
+degenerate probability `omufDegenerateProbU`. The paper's
 `1/p` is the degenerate mask under the substitution `u_ι ↦ a + b·χ`, `b`
 uniform and hidden by `a` (p. 46), the factor `q` the selector's guess. That the
 coefficient of the monomial remains nonzero after the evaluation of the other
 variables at the run's values is the extraction obligation of the module
-docstring. Printed
+docstring, which the term `εdegU` accounts for. The paper does not mention it (it writes
+"non-zero with high probability", p. 46). Printed
 constant, provisional (module docstring, *Constants and the extraction
 obligation*).
 -/
@@ -737,23 +709,26 @@ theorem omuf_claim_5_12 (A : AGMOMUFAdversary F G 1) (q : ℕ)
     (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
     Pr[ OMUFTrace.CaseU gen secParam | agmOMUFTrace gen secParam A ] ≤
       (q : ℝ≥0∞) *
-        ((Fintype.card F : ℝ≥0∞)⁻¹ + dlogAdv gen (omufDLReductionU gen q A)) := by
+        ((Fintype.card F : ℝ≥0∞)⁻¹ + dlogAdv gen (omufDLReductionU gen q A)) +
+      omufDegenerateProbU gen secParam A := by
   sorry
 
 /--
 **O24 Claim 5.13**, item (ii), the adversary wins and some forgery polynomial
-has a nonzero monomial in `η`, with probability at most `1/p + Adv^dl` for the
-reduction `omufDLReductionEta gen A`. No factor `q`, since the reduction embeds
+has a nonzero monomial in `η`, with probability at most `1/p + Adv^dl + εdegη` for the
+reduction `omufDLReductionEta gen A`, with `εdegη` the degenerate probability
+`omufDegenerateProbEta`. No factor `q`, since the reduction embeds
 the challenge in the crs and no position is chosen, so no budget hypothesis. The
 module
 docstring's example, a forger that learns `x₀ + xᵣ` through Verify queries,
-realises the event with nothing for this reduction to extract, so the statement
-rests on the extraction obligation recorded there. Printed constant,
+realises the event with nothing for this reduction to extract, which is why the statement
+carries `εdegη`. Printed constant,
 provisional (module docstring, *Constants and the extraction obligation*).
 -/
 theorem omuf_claim_5_13 (A : AGMOMUFAdversary F G 1) :
     Pr[ OMUFTrace.CaseEta gen secParam | agmOMUFTrace gen secParam A ] ≤
-      (Fintype.card F : ℝ≥0∞)⁻¹ + dlogAdv gen (omufDLReductionEta gen A) := by
+      (Fintype.card F : ℝ≥0∞)⁻¹ + dlogAdv gen (omufDLReductionEta gen A) +
+        omufDegenerateProbEta gen secParam A := by
   sorry
 
 /--
@@ -818,5 +793,58 @@ theorem AGM_OMUFAdv_le_cases (A : AGMOMUFAdversary F G 1) :
   have h2 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseEta gen secParam)
     (OMUFTrace.CaseX gen secParam)
   exact h1.trans (add_le_add_right h2 _)
+
+/--
+**O24 Theorem 5.11 at `n = 1`, Equation 23**, in the shape drawn in the module
+docstring. Proved from Claims 5.12 to 5.14, of which 5.12 and 5.13 are stated below and
+`sorry`d: the advantage is the trace probability of the win (`AGM_OMUFAdv_eq_probEvent_wins`), a win
+presents `q + 1` forgeries against at most `q` issued pairs, so by pigeonhole one forgery
+is not the unblinding of any pair and its polynomial `φ_i` has a nonzero monomial in one
+of the three variable groups (`omuf_cover`), the union bound adds the three Claims'
+probabilities (`AGM_OMUFAdv_le_cases`), and their constants add up to Equation 23 since
+the theorem's discrete-log reduction is the mixture of the two Claim reductions
+(`dlogAdv_dlogMix`, `omufBoundN1_eq_of_mix`). The bound is Equation 23 plus
+`omufDegenerateProbAll`, the probability that the extraction of one of the Claims has nothing to
+extract, which the paper does not mention and which is not `0` for some adversaries (module
+docstring); the bound is not Equation 23 alone, and Claims 5.12 and 5.13 are `sorry`d.
+-/
+theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    AGM_OMUFAdv gen A secParam ≤
+      omufBoundN1 F q (dlogAdv gen (omufDLReduction gen q A))
+        (twoDlogAdv gen (omufTwoDLReduction gen A)) + omufDegenerateProbAll gen secParam A := by
+  refine (AGM_OMUFAdv_le_cases gen secParam A).trans ?_
+  have hdef : omufDLReduction gen q A =
+      dlogMix q (omufDLReductionU gen q A) (omufDLReductionEta gen A) := rfl
+  have hmix := dlogAdv_dlogMix gen q (omufDLReductionU gen q A) (omufDLReductionEta gen A)
+  rw [← hdef] at hmix
+  have h12 := omuf_claim_5_12 gen secParam A q hq
+  have h13 := omuf_claim_5_13 gen secParam A
+  have h14 := omuf_claim_5_14 gen secParam A
+  have hsum := add_le_add h12 (add_le_add h13 h14)
+  have heq := omufBoundN1_eq_of_mix F q _ _ _ (twoDlogAdv gen (omufTwoDLReduction gen A)) hmix
+  refine hsum.trans (le_of_eq ?_)
+  unfold omufDegenerateProbAll
+  rw [← heq]
+  ring
+
+/--
+**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
+stated first and `sorry`d, with the paper's printed bound. The proof splits the
+winning event by whether the forgeries' attribute combinations are pairwise
+distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
+transformed adversary `omufToN1 gen A`, the colliding case is the gap-DL
+reduction, and the two add `2/p + Adv^gapdl` to Equation 23, with the degenerate
+probabilities of the transformed adversary as an extra term. The domain `0 < n`
+is §3.4's, as for the plain game.
+-/
+theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G n), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    AGM_OMUFAdv gen A secParam ≤
+      omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
+        (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
+        (gapDlogAdv gen (omufGapDLReduction gen A)) +
+      omufDegenerateProbAll gen secParam (omufToN1 gen A) := by
+  sorry
 
 end KVAC.Schemes.MicroCMZ
