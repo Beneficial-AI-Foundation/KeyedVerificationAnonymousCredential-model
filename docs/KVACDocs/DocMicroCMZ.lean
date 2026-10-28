@@ -1300,7 +1300,9 @@ the stated bound, with an errata item on any change. The crs `H` is drawn by
 action of #149; it was previously drawn uniformly from the group), and the
 statement bounds the game with `H ←$ 𝔾×`, a change estimated at
 `(q + 3)/(p(p − 1))` at proof level and bounded by `1/p` by the black-box
-transfer.
+transfer. The bound proved carries the degenerate probabilities of the `n = 1` Claims at the
+transformed adversary, `omufDegenerateProbAll`
+({uses "omuf_extraction_obligation"}[]), as an extra term.
 :::
 
 :::proof "mucmz_at_agm_omuf"
@@ -1331,9 +1333,10 @@ reduction adversaries is vacuous and a bound below one on every
 discrete-log adversary is false. The printed constants are provisional until the Track
 CMZ-OMUF constant audit, with an errata item on any change, and the bound
 sits behind the named definition `omufBoundN1` so the statement survives
-such a change. *The bound proved is not Equation 23 alone*: it carries the degenerate probability
-of Claim 5.14's extraction, `omufDegenerateProb` ({uses "omuf_extraction_obligation"}[]), as an
-extra term, which the paper takes to be `0` and which is not (issue #251).
+such a change. *The bound proved is not Equation 23 alone*: it carries the degenerate probabilities of the
+three Claims' extractions, summed as `omufDegenerateProbAll`
+({uses "omuf_extraction_obligation"}[]), as an extra term, which the paper takes to be `0` and
+which is not (issue #251).
 :::
 
 :::proof "mucmz_at_agm_omuf_n1"
@@ -1616,7 +1619,7 @@ support of the reduction's experiment and applies the union bound, with the expe
 read through the trace map.
 :::
 
-:::theorem "omuf_extraction_obligation" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.substPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.Degenerate, KVAC.Schemes.MicroCMZ.omufDegenerateProb") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_extraction_obligation" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.substPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.Degenerate, KVAC.Schemes.MicroCMZ.omufDegenerateProb, KVAC.Schemes.MicroCMZ.omufDegenerateProbU, KVAC.Schemes.MicroCMZ.omufDegenerateProbEta, KVAC.Schemes.MicroCMZ.omufDegenerateProbAll") (parent := "cmz_omuf") (tags := "milestone")
 The extraction obligation of the Theorem 5.11 proof at `n = 1`, in the form the 2-DL reduction
 needs. A run is *degenerate in a key variable* when every forgery polynomial vanishes identically in
 it once the other variables are evaluated at the run's values, so that substituting the challenge
@@ -1629,8 +1632,11 @@ guesses `g` and forges `(m, (H, X₀ + g·(Xᵣ + m·X₁)))` has the polynomial
 degenerate in `xᵣ` and `x₁` exactly when it wins by `g = η`; for `x₀`, guessing `h` and forging
 `(m, (gen, h·X₀ + Xᵣ + m·X₁))` gives `(1 − h·η)·x₀`, degenerate when it wins by `h·η = 1`. Each wins
 with probability about `1/(p − 1)`.
-The Claims therefore carry the degenerate probability `omufDegenerateProb`, summed over the three
-variables, as an explicit term, which is a true bound. A repair of the paper's argument bounds it or
+The Claims therefore carry their degenerate probability as an explicit term, which is a true
+bound: `omufDegenerateProbU` for Claim 5.12 (no `u_j` that occurs leaves a nonzero polynomial),
+`omufDegenerateProbEta` for Claim 5.13 (the run is degenerate in `η`) and `omufDegenerateProb` for
+Claim 5.14, summed over the three variables. `omufDegenerateProbAll` is their sum, which the
+bounds of Theorem 5.11 carry. A repair of the paper's argument bounds it or
 changes the events, and the rest of {uses "omuf_two_dl_extraction"}[] is unaffected.
 :::
 
