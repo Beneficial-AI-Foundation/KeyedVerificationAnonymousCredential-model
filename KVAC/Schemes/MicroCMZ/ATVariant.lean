@@ -82,11 +82,11 @@ the AGM layer, which is only needed once discrete logs are taken.
 - The one-more unforgeability analysis (O24 Theorem 5.11, Claims
   5.12–5.14) — the AGM-instrumented game and the polynomial layer are
   planned for the Track CMZ-OMUF files under #12.
-- The anonymity clause of Theorem 5.3 — blocked on the Definition 4.4
-  game and Theorem 5.8 (Track CMZ-A), and stated only for the
-  `π_is`-carrying variant: the anonymity simulator extracts from `π_is`
-  and the Theorem 5.3 bound carries its knowledge-soundness term, so the
-  core defined here cannot carry that clause.
+- The anonymity clause of Theorem 5.3 — stated in `AnonymousToken.lean`
+  for the `π_is`-carrying variant as a credential: the anonymity simulator
+  extracts from `π_is` and the Theorem 5.3 bound carries its
+  knowledge-soundness term, so the core defined here cannot carry that
+  clause.
 -/
 
 namespace KVAC.Schemes.MicroCMZ

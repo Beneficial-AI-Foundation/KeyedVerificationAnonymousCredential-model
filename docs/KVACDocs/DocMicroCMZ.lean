@@ -1124,11 +1124,17 @@ Theorem 5.11 proof analyzes the scheme without the server proof `π_is`
 as well; see the deviation note in the node below. The unforgeability
 analysis on top of it is open.
 
-The AGM-instrumented OMUF game over the core is merged in two steps.
-The instrumented oracle is {bpref "agm_omuf_oracle"}[]; the algebraic
-adversary, the winning condition, the experiment and its advantage are
-{bpref "agm_omuf_game"}[]. Theorem 5.11 and the one-more unforgeability
-clause of Theorem 5.3 will be stated over that game.
+The OMUF game in the algebraic group model over the core is merged in two
+steps. The oracle that takes the algebraic representations is
+{bpref "agm_omuf_oracle"}[]; the algebraic adversary, the winning condition,
+the experiment and its advantage are {bpref "agm_omuf_game"}[]. Theorem 5.11
+is stated over that game. The one-more unforgeability clause of Theorem 5.3
+is stated over the game of Figure 6 at the oracle carrier for the
+`π_is`-carrying variant, with the Theorem 5.11 bound and one zero-knowledge
+term for `π_is`, as {bpref "mucmz_at_anonymous_token"}[], together with the
+correctness and anonymity clauses. The token as a credential, on which
+Definition 4.4 states the anonymity clause, and its simulator are
+{bpref "mucmz_at_credential"}[].
 
 Theorem 5.11 is stated, `sorry`d, at `n = 1` as
 {bpref "mucmz_at_agm_omuf_n1"}[] and for every `n` as
@@ -1145,8 +1151,9 @@ Equation 22 with the case split of the proof is
 {bpref "omuf_transcript"}[], and the polynomials and case events read off
 it are {bpref "omuf_case_events"}[].
 
-*TODO (Track CMZ-OMUF).* The Theorem 5.3 one-more unforgeability clause,
-then the proofs of the Claims and of Theorem 5.11.
+*TODO (Track CMZ-OMUF).* The lifting lemma of #205, the bridge from the game
+in the algebraic group model to the plain game, then the proofs of the Claims
+and of Theorem 5.11.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
 The `μCMZ_AT` *core* scheme: Figure 9's anonymous-token variant with
@@ -1172,9 +1179,10 @@ anonymity clause of Theorem 5.3: the anonymity simulator extracts from
 `π_is` and the bound carries its knowledge-soundness term, so that clause
 is stated only for the `π_is`-carrying variant, while the core is the
 scheme over which Theorem 5.11 is stated. The `π_is`-carrying variant is
-{bpref "mucmz_at_pi_is"}[]; a zero-knowledge lifting lemma relating the two
-follows once the upstream erratum is settled, and the printed Theorem 5.3
-node {bpref "mucmz_at_omuf"}[] stays unanchored meanwhile.
+{bpref "mucmz_at_pi_is"}[]; the zero-knowledge lifting lemma relating the two
+is issue #205, and the Theorem 5.3 statement {bpref "mucmz_at_anonymous_token"}[]
+carries its term through a named reduction. The node of the printed Theorem
+5.3, {bpref "mucmz_at_omuf"}[], names no Lean declarations.
 :::
 
 :::definition "mucmz_at_pi_is" (lean := "KVAC.Schemes.MicroCMZ.atIssueSrvPiIs, KVAC.Schemes.MicroCMZ.atIssueUsr₁PiIs, KVAC.Schemes.MicroCMZ.μCMZATSyntax") (parent := "cmz_omuf") (tags := "milestone")
@@ -1248,13 +1256,63 @@ The correspondence with the plain game is a deferred bridge.
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
 *O24 Theorem 5.3.* If ZKP proves `R ⊇ R_cmz.p ∪ R_cmz.is`
 ({uses "zk_arguments"}[]), the variant `μCMZ_AT` {uses "mucmz_at_pi_is"}[] is an
-anonymous token ({uses "anonymous_tokens"}[]) with both an anonymity
-advantage and, in the algebraic group model, a one-more unforgeability
-advantage in the game of {uses "omuf_game_ro"}[].
+anonymous token ({uses "anonymous_tokens"}[]) with anonymity advantage
+`Adv^zk_cmz.iu + Adv^zk_cmz.p + Adv^ksnd_cmz.is` and, in the algebraic group
+model, one-more unforgeability advantage `Adv^2dl + q·Adv^dl + (q+5)/p` in
+the game of {uses "omuf_game_ro"}[]. The node names no Lean declarations,
+since the printed bounds are not the ones the paper proves. The first
+anonymity term charges the simulation of a proof the token's user never
+sends (errata item 18), and the printed one-more unforgeability bound is the
+one of the ePrint version of October 2024, which no version proves (errata
+item 19). The corrected statement is {uses "mucmz_at_anonymous_token"}[].
 :::
 
 :::proof "mucmz_at_omuf"
-Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
+The corrected statement {uses "mucmz_at_anonymous_token"}[], whose proof
+reduces to the one-more unforgeability bound of Theorem 5.11
+{uses "mucmz_at_agm_omuf"}[] and to the anonymity of μCMZ
+{uses "mucmz_anonymity"}[].
+:::
+
+:::definition "mucmz_at_credential" (lean := "KVAC.Schemes.MicroCMZ.μCMZATCredentialSyntax, KVAC.Schemes.MicroCMZ.μCMZATAnonSimulator") (parent := "cmz_omuf") (tags := "milestone")
+The anonymous token `μCMZ_AT` as a credential, a `KVACSyntax` at the oracle
+carrier on which Definition 4.4 {uses "kvac_anonymity"}[] states the anonymity
+clause of Theorem 5.3, per §3.4 (p. 26), which omits unlinkability and keeps
+"the stronger anonymity properties". Issuance is that of
+{uses "mucmz_at_pi_is"}[], the user sends `C'` alone, and presentation is that
+of the credential {uses "mucmz_construction"}[]. Its simulator is the
+Theorem 5.8 simulator {uses "mucmz_anonymity_simulator"}[] without the
+simulator of `ZKP_cmz.iu`, since `Sim.I` has nothing to simulate at issuance.
+:::
+
+:::theorem "mucmz_at_anonymous_token" (lean := "KVAC.Schemes.MicroCMZ.risNIZKPSampled, KVAC.Schemes.MicroCMZ.risDecRelSampled, KVAC.Schemes.MicroCMZ.RisSimulator, KVAC.Schemes.MicroCMZ.risSimToZK, KVAC.Schemes.MicroCMZ.OMUFQueryRO.isSign, KVAC.Schemes.MicroCMZ.OMUFQueryRO.instDecidablePredIsSign, KVAC.Schemes.MicroCMZ.omufATDLReduction, KVAC.Schemes.MicroCMZ.omufATTwoDLReduction, KVAC.Schemes.MicroCMZ.omufATGapDLReduction, KVAC.Schemes.MicroCMZ.omufPiIsZKAdversary, KVAC.Schemes.MicroCMZ.μCMZAT_anonymous_token") (parent := "cmz_omuf") (tags := "milestone")
+*Theorem 5.3, corrected.* `μCMZ_AT` with `π_is` is an anonymous token
+({uses "anonymous_tokens"}[]), stated with `sorry` as the conjunction of
+three clauses. Correctness is {uses "mucmz_at_pi_is_correctness"}[].
+Anonymity is Definition 4.4 on {uses "mucmz_at_credential"}[] with the
+bound `Adv^zk_cmz.p + Adv^ksnd_cmz.is`, for reductions `D'` and `A''`, the
+Theorem 5.8 bound {uses "mucmz_anonymity"}[] without the `π_iu` term and
+without the Remark 5.9 hypotheses, since no simulated proof precedes the
+issuer's `π_is`. One-more unforgeability is in the game of Figure 6 at the
+oracle carrier {uses "omuf_game_ro"}[], for forgers with at most `q` Sign
+queries, with the bound `omufBound` of Theorem 5.11
+{uses "mucmz_at_agm_omuf"}[] plus the zero-knowledge advantage of
+`ZKP_cmz.is` ({uses "zk_arguments"}[]) for the reduction
+`omufPiIsZKAdversary`, the term of the lifting lemma of #205 (errata item 7),
+all four reductions declared with `sorry` bodies. The Lean statement does not
+restrict the forger to algebraic adversaries, the game of Theorem 5.11 being
+that of the core without `π_is`, so the clause claims more than the paper
+proves until the bridge to the plain game exists
+(`docs/DESIGN_ALTERNATIVES.md`, *Theorem 5.3 takes its clauses from Theorems
+5.8 and 5.11*).
+:::
+
+:::proof "mucmz_at_anonymous_token"
+Correctness is {uses "mucmz_at_pi_is_correctness"}[]. Anonymity is the proof
+of {uses "mucmz_anonymity"}[] without hybrid H1. One-more unforgeability is
+the lifting lemma of #205, from the scheme with `π_is` to the core at the
+cost of one `Adv^zk_cmz.is`, then the bridge from the game in the algebraic
+group model to the plain game, then {uses "mucmz_at_agm_omuf"}[].
 :::
 
 :::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")

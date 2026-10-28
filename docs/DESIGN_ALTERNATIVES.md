@@ -1024,11 +1024,36 @@ Theorem 5.11". Four points.
    and the presentation of μCMZ, with the Theorem 5.8 simulator
    `μCMZAnonSimulator` without its `π_iu` simulator, under the Remark 5.9
    hypotheses of `μCMZ_anonymity` for `π_is` and `π_p` alone.
-3. *The one-more unforgeability clause.* The game in the algebraic group
-   model, `AGM_OMUFAdv` on `AGMOMUFAdversary`, the game of Theorem 5.11
-   (`agm_omuf_le`), with the Sign budget `q` as a hypothesis.
+3. *The one-more unforgeability clause.* The game of Figure 6 at the oracle
+   carrier, `OMUFAdvRO` on `μCMZATSyntax`, the game of the definition of an
+   anonymous token (§3.4), with the Sign budget `q` as a hypothesis counted
+   by `OMUFQueryRO.isSign`. The term for `π_is` is the zero-knowledge
+   advantage of the named reduction `omufPiIsZKAdversary`, declared with a
+   `sorry` body, which the lifting lemma of #205 defines without changing the
+   statement. The words "in the algebraic group model" of the print are not a
+   hypothesis of the Lean statement. Theorem 5.11 is proved in that model,
+   and its game `AGM_OMUFGame` runs the core without `π_is`, while no game in
+   that model exists for the scheme with `π_is`, and the plain game cannot
+   restrict its quantifier to algebraic adversaries. So the sorried clause
+   claims the bound for every adversary of Figure 6, more than the paper
+   proves. The restriction returns with the bridge from the game of Theorem
+   5.11 to the plain game, which the proof of the clause needs.
 4. *The group.* Fixed `F` and `G`, the clause "n = poly(λ)" left to #148, as
    for Theorems 5.2, 5.8 and 5.10.
+
+Two further points follow from the first two.
+
+- *No Remark 5.9 hypotheses.* `μCMZ_anonymity` carries the condition of
+  Remark 5.9 as region hypotheses, since hybrid H3 extracts from a `π_is`
+  produced after the simulated `π_iu` of H1. The token's user sends `C'`
+  alone, no simulated proof precedes the issuer's `π_is`, and hybrid H2
+  simulates `π_p` after issuance has ended. The anonymity clause therefore
+  takes the printed `Adv^ksnd` without those hypotheses.
+- *The blueprint node of the printed theorem.* The node `mucmz_at_omuf`
+  names no Lean declarations, since the Lean statement is the corrected one,
+  per the honesty rule of `docs/BLUEPRINT_MAINTENANCE.md` and the plan Jin
+  sent to Rolfe on 20 August 2026 (errata item 7). Its proof cites the
+  milestone node `mucmz_at_anonymous_token`, which names the theorem.
 
 **Rejected alternatives.**
 
@@ -1039,14 +1064,20 @@ Theorem 5.11". Four points.
 - *A sorried unlinkability predicate on `ATSyntax`.* §3.4 (p. 26) omits the
   definition of unlinkability and keeps "the stronger anonymity properties",
   so the anonymity clause is Definition 4.4, not a new notion.
-- *The plain Figure 6 game, `OMUFAdvRO`, as the one-more unforgeability
-  target.* Theorem 5.11 is proved in the algebraic group model, and no lemma
-  carries its bound to the plain game. The clause would then rest on a bridge
-  that does not exist.
+- *The game of Theorem 5.11, `AGM_OMUFAdv` on `AGMOMUFAdversary`, as the
+  one-more unforgeability target.* That game runs the core without `π_is`,
+  so the clause would be about a scheme other than the one Theorem 5.3
+  defines, the choice errata item 7 rules out. A game in the algebraic group
+  model for the scheme with `π_is` is new work of the size of #181, beyond a
+  statement with `sorry`.
+- *Waiting for the author's correction before the π_is-carrying instance and
+  the lifting lemma*, the plan of 20 August. The instance (#183) and the
+  lemma (#205) proceed, and the errata record the departure from the print.
 
 **Fidelity argument.** Theorem 5.3 is a corollary, p. 35, so its faithful
 statement is what its two sources establish for the scheme defined on p. 35,
-μCMZ_AT with `π_is`. Every departure from the print is an errata item.
+μCMZ_AT with `π_is`, in the game of the definition of §3.4. Every departure
+from the print is an errata item.
 
 Decided 28 October 2026 (Track CMZ-OMUF, #184).
 
