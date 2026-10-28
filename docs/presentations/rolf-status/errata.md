@@ -291,10 +291,36 @@ the clause with the two terms, in the Theorem 5.3 statement under issue #184,
 and the simulator of that statement is the Theorem 5.8 simulator without its
 π<sub>iu</sub> simulator.
 
+## 19. Theorem 5.3 prints the one-more unforgeability bound of the October 2024 version (pp. 35, 43)
+
+Theorem 5.3 (p. 35) bounds the one-more unforgeability advantage of
+μCMZ<sub>AT</sub> by
+Adv<sup>2dl</sup> + q·Adv<sup>dl</sup> + (q+5)/p, "from the above, and
+Theorem 5.11". Theorem 5.11 (p. 43) prints
+(q+6)/p + (q+1)·Adv<sup>dl</sup> + 3·Adv<sup>2dl</sup> + Adv<sup>gapdl</sup>,
+the sum of Claims 5.12 to 5.14 (Equation 23, p. 46) and of the general-n
+case, so Theorem 5.11 does not imply the printed Theorem 5.3. The ePrint
+history explains the gap. In the version of 3 October 2024 the §5 theorem
+(then Theorem 14) printed
+2·Adv<sup>2dl</sup> + q·Adv<sup>dl</sup> + (q+5)/p, with one discrete-log
+reduction credited to [CDV22], and the summary theorem (then Theorem 9)
+printed the bound above, already off by one in the 2-DL coefficient. The
+revision of 24 February 2025 rewrote the proof into the three Claims and
+changed the bound of Theorem 5.11, and Theorem 5.3 was not updated. Theorem 1
+(p. 4), present from the version of 27 March 2026 on, follows the revised
+Theorem 5.11 with O(q)·Adv<sup>dl</sup> + 3·Adv<sup>2dl</sup>. No version
+proves the bound printed in Theorem 5.3.
+
+Proposed correction: the one-more unforgeability bound of Theorem 5.3 is that
+of Theorem 5.11, plus the Adv<sup>zk</sup><sub>cmz.is</sub> term of item 7.
+The formalization states the clause with `omufBound` of
+`Schemes/MicroCMZ/OneMoreUnforgeability/Statements.lean` and that term, in
+the Theorem 5.3 statement under issue #184.
+
 ## Status
 
 Items 16 and 17 concern §5.4 and are recorded in `docs/DESIGN_ALTERNATIVES.md`
-and in `Schemes/MicroCMZ/Anonymity.lean`. Item 18 concerns §5.2 and is
+and in `Schemes/MicroCMZ/Anonymity.lean`. Items 18 and 19 concern §5.2 and are
 recorded on issue #184 and in the Theorem 5.3 statement.
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
