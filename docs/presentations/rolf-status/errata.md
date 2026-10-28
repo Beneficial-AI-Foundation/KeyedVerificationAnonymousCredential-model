@@ -270,10 +270,32 @@ Remark as the lemma `ksndSimAdv_le_ksndAdv_of_domainSeparated` in
 `Core/NIZKP/Composition.lean`, with the mismatch as an explicit region of the
 random-oracle domain.
 
+## 18. Theorem 5.3 charges Adv<sup>zk</sup><sub>cmz.iu</sub> to a scheme without π<sub>iu</sub> (pp. 35, 40–41)
+
+Theorem 5.3 (p. 35) bounds the anonymity advantage of μCMZ<sub>AT</sub> by
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub></sub> +
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub> +
+Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub></sub>, the bound of Theorem 5.8
+(p. 40) unchanged, "from the above". μCMZ<sub>AT</sub> is defined on p. 35 as
+Figure 9 "where the issuance algorithm does not return the proof
+π<sub>iu</sub>". The first term pays for hybrid H1 of the Theorem 5.8 proof
+(p. 41), which replaces the user's π<sub>iu</sub> by a simulated one. The
+token's user sends no π<sub>iu</sub>, so H1 changes nothing and the term is
+vacuous. The hypothesis of Theorem 5.3 agrees, since its relation
+R ⊇ R<sub>cmz.p</sub> ∪ R<sub>cmz.is</sub> names no R<sub>cmz.iu</sub>.
+
+Proposed correction: the anonymity bound of Theorem 5.3 is
+Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub></sub> +
+Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub></sub>. The formalization states
+the clause with the two terms, in the Theorem 5.3 statement under issue #184,
+and the simulator of that statement is the Theorem 5.8 simulator without its
+π<sub>iu</sub> simulator.
+
 ## Status
 
 Items 16 and 17 concern §5.4 and are recorded in `docs/DESIGN_ALTERNATIVES.md`
-and in `Schemes/MicroCMZ/Anonymity.lean`.
+and in `Schemes/MicroCMZ/Anonymity.lean`. Item 18 concerns §5.2 and is
+recorded on issue #184 and in the Theorem 5.3 statement.
 The corrections to Eqs. 13/14 are visible today in the open PR #88 diff
 (module `AGMReduction/Core`); the remaining §5.3 items are documented in the
 reduction modules queued behind it, in the order shown on the
