@@ -107,9 +107,23 @@ Proposed correction: keep π<sub>is</sub> in the scheme and add one
 Adv<sup>zk</sup><sub>cmz.is</sub> term to the one-more unforgeability bound,
 obtained from the π<sub>is</sub>-less core by a simulation hybrid (a lifting
 lemma). The formalization states the core as `μCMZATCore`
-(`Schemes/MicroCMZ/ATVariant.lean`, PR #147) and defers the
-π<sub>is</sub>-carrying variant and the lifting lemma to Phase B of the
-Theorem 5.3 plan (issue #12). Reported to the author in August 2026.
+(`Schemes/MicroCMZ/ATVariant.lean`, PR #147), the π<sub>is</sub>-carrying
+variant as `μCMZATSyntax` (`Schemes/MicroCMZ/ATVariantPiIs.lean`, #183), and
+the lifting lemma under issue #205. The Theorem 5.3 statement (#184) carries
+the added term through the named reduction `omufPiIsZKAdversary`, which #205
+defines.
+
+Correspondence. Jin Xing Lim raised the item with Rolfe Schmidt on 20 August
+2026 on the Signal Shot KVAC channel on Signal, with the correction above and
+the plan to state the core under its own name, prove the printed Theorem 5.11
+bound for it, add the π<sub>is</sub>-carrying instance and the lifting lemma
+on top, and keep the blueprint node of the printed Theorem 5.3 without Lean
+declarations until the paper is corrected. Rolfe Schmidt replied: "This is
+good work, thank you! I expect as more papers are formalized these findings
+will be common." The plan is followed except for the wait on the paper. The
+instance and the lifting lemma proceed now, and the node of the printed
+Theorem 5.3 cites a milestone node for the corrected statement. No report to
+the author is on record.
 
 ## 8. Figure 9 writes ℤ<sub>p</sub> where §5.1 and correctness need ℤ<sub>p</sub><sup>×</sup> (pp. 33–34)
 
