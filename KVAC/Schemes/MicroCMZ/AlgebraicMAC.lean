@@ -279,10 +279,10 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 
 /-! ## Forgetting the representations
 
-An algebraic adversary is an adversary of the game with `Help` of `UFCMVAHelp.lean`
-that evaluates its own representations: it keeps the MAC codes it receives and submits
-the evaluated elements. The two games then answer every query alike, so the advantages
-are equal, with no condition on the adversary. -/
+`AGMUFAdversary.forget` turns an algebraic adversary `A` into an adversary of the game
+with `Help` of `UFCMVAHelp.lean`: it keeps the MAC codes it receives, and it submits the
+elements that `A`'s representations evaluate to. The two games then answer every query
+alike, so the advantages are equal, with no condition on the adversary. -/
 
 /-- The queries of the AGM game as queries of the game with `Help`, for the crs `H` and
 the public parameters `pp`. The state is the list of MAC codes issued so far, in
@@ -291,6 +291,8 @@ issuance order: `sign` forwards and appends the MAC code it receives, and `verif
 def agmQueryToHelp (H : G) (pp : Params G n) :
     QueryImpl (AGMOracleSpec F G n) (StateT (List (G × G)) (OracleComp (UFHelpOracleSpec F G n)))
   | .sign m => StateT.mk fun tags => do
+      -- `σ : G × G`: unascribed, `σ` has type `(UFHelpOracleSpec F G n).Range (.sign m)`,
+      -- so `tags ++ [σ]` finds no `HAppend` with `List (G × G)`.
       let σ : G × G ← query (spec := UFHelpOracleSpec F G n) (.sign m)
       pure (σ, tags ++ [σ])
   | .verify m ρU ρV => StateT.mk fun tags => do
@@ -312,6 +314,7 @@ def AGMUFAdversary.forget (A : AGMUFAdversary F G n) : UFHelpAdversary F G n whe
     let ((mStar, ρU, ρV), tags) ← (simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run []
     pure (mStar, (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
 
+omit hgen in
 /-- Forgetting the representations preserves the advantage: the advantage of
 `A.forget gen` in the game with `Help` is the advantage of `A` in the AGM game. -/
 theorem UF_CMVAHelpAdv_forget (secParam : ℕ) (A : AGMUFAdversary F G n) :

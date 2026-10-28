@@ -686,16 +686,15 @@ correct on every branch, so carrying a bound from the gated game to the honest
 game needs a hypothesis on the adversary. Under the restriction the AGM game is
 the honest game with `Help` (`UFCMVAHelp.lean`) run on the evaluated elements,
 and the transfer between the two, `UF_CMVAHelpAdv_forget`, needs no side
-condition. The reductions keep
-what they used: `reductionOracleImpl` answers `Verify` and `Help` by evaluating
-the represented polynomial at the embedded 3-DL instance, the gap-DL simulator
-evaluates the representations on known group elements, and the `n → 1`
-collapse forwards a `Help` query's weighted sum `Σᵢ rᵢ • Aᵢ` as one
-representation, which the 1-attribute oracle evaluates exactly, with no check
-of the individual representations first. Representations compose linearly, so
-a reduction that submits linear combinations of represented elements stays
-algebraic, as the reduction `B` of Theorem 5.10 does with `(U′, C_V − r′H)`
-(p. 43). Decided October 2026 (Track CMZ-M, #235).
+condition. The reductions keep what they used: `reductionOracleImpl` answers
+`Verify` and `Help` by evaluating the represented polynomial at the embedded
+3-DL instance, the gap-DL simulator evaluates the representations on known group
+elements, and the `n → 1` collapse forwards a `Help` query's weighted sum
+`Σᵢ rᵢ • Aᵢ` as one representation, which the 1-attribute oracle evaluates
+exactly, with no check of the individual representations first. Representations
+compose linearly, so a reduction that submits linear combinations of represented
+elements stays algebraic, as the reduction `B` of Theorem 5.10 does with
+`(U′, C_V − r′H)` (p. 43). Decided October 2026 (Track CMZ-M, #235).
 
 ## Claim 5.7: the `n → 1` collapse translates representations, not only messages
 
