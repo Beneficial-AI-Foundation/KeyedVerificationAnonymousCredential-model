@@ -5,7 +5,6 @@ Authors: Semar Augusto
 -/
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.Construction
-import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import Mathlib.Tactic.Module
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.SimSemantics.Append
@@ -181,7 +180,7 @@ def AGMRepr.evalParams (ρ : AGMRepr F n) (g₀ H : G) (pp : Params G n)
 
 /--
 The three oracles of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
-from O24 Figure 5, `help` added in §5.3). Every group element the adversary
+from O24 Figure 5, `help` added in §5.2/§5.3). Every group element the adversary
 submits is given by its representation alone.
 -/
 inductive AGMQuery (F : Type) (n : ℕ) : Type where
@@ -191,7 +190,7 @@ inductive AGMQuery (F : Type) (n : ℕ) : Type where
   /-- `verify m⃗ ρ_U ρ_V`, the verification bit for the MAC code `(U, V)` that `ρ_U`,
   `ρ_V` represent. -/
   | verify : (Fin n → F) → AGMRepr F n → AGMRepr F n → AGMQuery F n
-  /-- `help ρ₀ ρ⃗ ρ_Z`, the §5.3 helper oracle: whether `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` for
+  /-- `help ρ₀ ρ⃗ ρ_Z`, the §5.2 helper oracle: whether `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` for
   the elements `A₀`, `A⃗`, `Z` that `ρ₀`, `ρ⃗`, `ρ_Z` represent. -/
   | help : AGMRepr F n → (Fin n → AGMRepr F n) → AGMRepr F n → AGMQuery F n
 
@@ -250,7 +249,7 @@ structure AGMUFAdversary (F G : Type) (n : ℕ) where
     OracleComp (AGMOracleSpec F G n) ((Fin n → F) × AGMRepr F n × AGMRepr F n)
 
 /--
-The AGM UF-CMVA(+Help) experiment for μCMZ (O24 Figure 5 with the §5.3 Help
+The AGM UF-CMVA(+Help) experiment for μCMZ (O24 Figure 5 with the §5.2 Help
 oracle, for algebraic adversaries). Setup and keygen delegate to
 `μCMZBaseMACSyntax F gen`; the adversary runs against `agmOracleImpl`; the forged
 MAC code `(U*, V*)` is the evaluation of the forgery representations over the
