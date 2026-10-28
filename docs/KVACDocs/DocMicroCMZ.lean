@@ -1607,7 +1607,7 @@ support of the reduction's experiment and applies the union bound, with the expe
 read through the trace map.
 :::
 
-:::theorem "omuf_extraction_obligation" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.substPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.Degenerate, KVAC.Schemes.MicroCMZ.omufDegenerateProb") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_extraction_obligation" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.substPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.Degenerate, KVAC.Schemes.MicroCMZ.omufDegenerateProb, KVAC.Schemes.MicroCMZ.omufDegenerateProbU, KVAC.Schemes.MicroCMZ.omufDegenerateProbEta, KVAC.Schemes.MicroCMZ.omufDegenerateProbAll") (parent := "cmz_omuf") (tags := "milestone")
 The extraction obligation of the Theorem 5.11 proof at `n = 1`, in the form the 2-DL reduction
 needs. A run is *degenerate in a key variable* when every forgery polynomial vanishes identically in
 it once the other variables are evaluated at the run's values, so that substituting the challenge
@@ -1620,8 +1620,11 @@ guesses `g` and forges `(m, (H, X₀ + g·(Xᵣ + m·X₁)))` has the polynomial
 degenerate in `xᵣ` and `x₁` exactly when it wins by `g = η`; for `x₀`, guessing `h` and forging
 `(m, (gen, h·X₀ + Xᵣ + m·X₁))` gives `(h·η − 1)·x₀`, degenerate when it wins by `h·η = 1`. Each wins
 with probability about `1/(p − 1)`.
-The Claims therefore carry the degenerate probability `omufDegenerateProb`, summed over the three
-variables, as an explicit term, which is a true bound. A repair of the paper's argument bounds it or
+The Claims therefore carry their degenerate probability as an explicit term, which is a true
+bound: `omufDegenerateProbU` for Claim 5.12 (no `u_j` that occurs leaves a nonzero polynomial),
+`omufDegenerateProbEta` for Claim 5.13 (the run is degenerate in `η`) and `omufDegenerateProb` for
+Claim 5.14, summed over the three variables. `omufDegenerateProbAll` is their sum, which the
+bounds of Theorem 5.11 carry. A repair of the paper's argument bounds it or
 changes the events, and the rest of {uses "omuf_two_dl_extraction"}[] is unaffected.
 :::
 
