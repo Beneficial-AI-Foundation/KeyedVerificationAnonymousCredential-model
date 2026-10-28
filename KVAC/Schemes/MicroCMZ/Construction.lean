@@ -262,7 +262,7 @@ def verify {n : ℕ} (sk : Key F n) (m : Fin n → F) (t : Code G) : Bool :=
 
 /-- The equation of the oracle `Help(A₀, A⃗, Z)` of O24 §5.2 (p. 35),
 `Z = (x₀ + xᵣ)•A₀ + Σᵢ xᵢ•Aᵢ`, read with the key. Both the honest game with
-`Help` and the instrumented AGM game answer `Help` through it. -/
+`Help` and the AGM game answer `Help` through it. -/
 def helpEq {n : ℕ} (sk : Key F n) (A₀ : G) (A : Fin n → G) (Z : G) : Bool :=
   decide (Z = (sk.1 + sk.2.1) • A₀ + ∑ i, sk.2.2 i • A i)
 
