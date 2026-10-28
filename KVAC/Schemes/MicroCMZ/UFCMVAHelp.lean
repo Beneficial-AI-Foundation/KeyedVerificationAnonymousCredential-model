@@ -128,8 +128,8 @@ def ufQueryToHelp {secParam : ℕ} (H : G) :
 
 /-- An adversary of the plain game at μCMZ as an adversary of the game with
 `Help`, which never queries `Help` and never draws a coin. -/
-def ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
-    (secParam : ℕ) : UFHelpAdversary F G n where
+def ufAdversaryToHelp (secParam : ℕ)
+    (A : UFAdversary (μCMZBaseMACSyntax F gen)) : UFHelpAdversary F G n where
   run H pp :=
     simulateQ (ufQueryToHelp gen (secParam := secParam) H)
       (A.run (secParam := secParam) (n := n) H pp)
@@ -137,9 +137,9 @@ def ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
 /-- The embedding preserves the advantage. Setup and key generation are shared, and
 the oracles of the game with `Help`, composed with `ufQueryToHelp`, are those of the
 plain game query by query. -/
-theorem UF_CMVAHelpAdv_ufAdversaryToHelp (A : UFAdversary (μCMZBaseMACSyntax F gen))
-    (secParam : ℕ) :
-    UF_CMVAHelpAdv gen (ufAdversaryToHelp gen A secParam (n := n)) secParam =
+theorem UF_CMVAHelpAdv_ufAdversaryToHelp (secParam : ℕ)
+    (A : UFAdversary (μCMZBaseMACSyntax F gen)) :
+    UF_CMVAHelpAdv gen (ufAdversaryToHelp gen secParam A (n := n)) secParam =
       UF_CMVAAdv (μCMZBaseMACSyntax F gen) A secParam n := by
   refine congrArg (Pr[= true | ·]) ?_
   simp only [UF_CMVAHelpGame, UF_CMVAGame, ufAdversaryToHelp, ← QueryImpl.simulateQ_compose]
