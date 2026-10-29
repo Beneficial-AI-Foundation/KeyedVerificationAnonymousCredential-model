@@ -64,7 +64,7 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
   `Polynomial.lean`, `Transcript.lean`, `CaseEvents.lean` and
-  `Statements.lean`) — Section 5.6, the AGM-instrumented OMUF game over the
+  `Statements.lean`) — Section 5.6, the AGM OMUF game over the
   core, the Equations 17 to 22 polynomial layer, the game trace with its
   case events, and the Theorem 5.11 statements — Track CMZ-OMUF.
 
@@ -1128,8 +1128,8 @@ Theorem 5.11 proof analyzes the scheme without the server proof `π_is`
 as well; see the deviation note in the node below. The unforgeability
 analysis on top of it is open.
 
-The AGM-instrumented OMUF game over the core is merged in two steps.
-The instrumented oracle is {bpref "agm_omuf_oracle"}[]; the algebraic
+The AGM OMUF game over the core has two parts.
+The oracle is {bpref "agm_omuf_oracle"}[]; the algebraic
 adversary, the winning condition, the experiment and its advantage are
 {bpref "agm_omuf_game"}[]. Theorem 5.11 and the one-more unforgeability
 clause of Theorem 5.3 will be stated over that game.
@@ -1208,7 +1208,7 @@ gives the MAC equation of {uses "mucmz_base_mac"}[].
 :::
 
 :::definition "agm_omuf_oracle" (lean := "KVAC.Schemes.MicroCMZ.AGMOMUFQuery, KVAC.Schemes.MicroCMZ.AGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.AGMOMUFLog, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_some, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_append_none, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_length_le, KVAC.Schemes.MicroCMZ.AGMRepr.normalize, KVAC.Schemes.MicroCMZ.AGMRepr.normalize_uv_length, KVAC.Schemes.MicroCMZ.AGMRepr.eval_normalize, KVAC.Schemes.MicroCMZ.AGMRepr.eval_append_of_length_eq, KVAC.Schemes.MicroCMZ.agmOMUFOracleImpl") (parent := "cmz_omuf") (tags := "milestone")
-The instrumented Sign and Verify oracles of the algebraic-group-model
+The Sign and Verify oracles of the algebraic-group-model
 one-more unforgeability game for the core scheme {uses "mucmz_at_core"}[]
 (O24 §5.6), the oracle side of the game of Figure 6
 ({uses "omuf_game"}[]) specialised to algebraic adversaries. Every
@@ -1231,9 +1231,9 @@ never calling a hash.
 :::
 
 :::definition "agm_omuf_game" (lean := "KVAC.Schemes.MicroCMZ.AGMOMUFQuery.isSign, KVAC.Schemes.MicroCMZ.AGMOMUFQuery.instDecidablePredIsSign, KVAC.Schemes.MicroCMZ.AGMOMUFForgery, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.plain, KVAC.Schemes.MicroCMZ.AGMOMUFAdversary, KVAC.Schemes.MicroCMZ.AGMOMUFWins, KVAC.Schemes.MicroCMZ.AGM_OMUFGame, KVAC.Schemes.MicroCMZ.AGM_OMUFAdv") (parent := "cmz_omuf") (tags := "milestone")
-The AGM-instrumented one-more unforgeability game over the oracle
+The AGM one-more unforgeability game over the oracle
 {uses "agm_omuf_oracle"}[]: the algebraic adversary, with a private coin
-oracle beside the instrumented oracles, returning a list of
+oracle beside the Sign and Verify oracles, returning a list of
 forgeries, each an attribute vector with one representation per token
 component (O24 Equation 19); the winning condition, namely the plain
 Figure 6 condition of {uses "omuf_game"}[] at `q` = the number of Sign
@@ -1262,7 +1262,7 @@ Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
 attributes. Stated as `agm_omuf_le` over the merged core scheme
-{uses "mucmz_at_core"}[] in the AGM-instrumented game
+{uses "mucmz_at_core"}[] in the AGM game
 {uses "agm_omuf_game"}[] for every `n > 0`, the plain game following by a
 deferred bridge, with the printed bound
 `(q + 6)/p + (q + 1)·Adv^dl + 3·Adv^2-dl + Adv^gapdl` behind the named
@@ -1293,7 +1293,7 @@ of Lemma 5.5 ({uses "attribute_lifting"}[]), which adds `2/p + Adv^gapdl` to Equ
 :::theorem "mucmz_at_agm_omuf_n1" (lean := "KVAC.Schemes.MicroCMZ.omufBoundN1, KVAC.Schemes.MicroCMZ.omufDLReduction, KVAC.Schemes.MicroCMZ.omufTwoDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le_n1") (parent := "cmz_omuf") (tags := "milestone")
 Theorem 5.11 at `n = 1`, the case the paper proves directly. For every
 algebraic adversary against the core {uses "mucmz_at_core"}[] in the
-AGM-instrumented game {uses "agm_omuf_game"}[] whose program makes at
+AGM game {uses "agm_omuf_game"}[] whose program makes at
 most `q` Sign queries for every crs and public parameters, a static
 hypothesis on the adversary, the advantage is at most Equation 23's
 `(q + 4)/p + (q + 1)·Adv^dl + 3·Adv^2-dl` ({uses "hardness_assumptions"}[]),
@@ -1397,9 +1397,9 @@ constant, provisional until the Track CMZ-OMUF constant audit.
 :::proof "omuf_case_i"
 The reduction samples a position `ι ∈ [q]` uniformly, the guess that costs
 the factor `q`, answers the `ι`-th issued Sign query with the challenge
-embedded in `U_ι = a·G + b·X`, and at the end solves for the logarithm the equation that a forgery
-polynomial with that monomial, of {uses "omuf_forgery_polynomial"}[], gives at
-`u_ι`.
+embedded in `U_ι = a·G + b·X`, and at the end solves for the logarithm the
+equation that a forgery polynomial with that monomial, of
+{uses "omuf_forgery_polynomial"}[], gives at `u_ι`.
 The paper's `1/p` is the degenerate mask, `b` being uniform and hidden by
 `a` (p. 46). That the monomial's coefficient remains nonzero after the
 evaluation of the other variables at the run's values is an obligation of the

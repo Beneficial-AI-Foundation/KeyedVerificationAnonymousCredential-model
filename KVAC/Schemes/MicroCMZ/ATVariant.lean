@@ -80,8 +80,8 @@ the AGM layer, which is only needed once discrete logs are taken.
 ## Out of scope
 
 - The one-more unforgeability analysis (O24 Theorem 5.11, Claims
-  5.12–5.14) — the AGM-instrumented game and the polynomial layer are
-  planned for the Track CMZ-OMUF files under #12.
+  5.12–5.14) — the AGM game and the polynomial layer are in
+  `OneMoreUnforgeability/` (Track CMZ-OMUF, #12).
 - The anonymity clause of Theorem 5.3 — blocked on the Definition 4.4
   game and Theorem 5.8 (Track CMZ-A), and stated only for the
   `π_is`-carrying variant: the anonymity simulator extracts from `π_is`

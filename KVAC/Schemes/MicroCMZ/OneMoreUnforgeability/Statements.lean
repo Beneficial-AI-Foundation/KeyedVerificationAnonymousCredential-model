@@ -12,7 +12,7 @@ import VCVio.OracleComp.QueryTracking.QueryBound
 # μCMZ_AT one-more unforgeability — the Theorem 5.11 target statements (O24 §5.6)
 
 Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
-(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM-instrumented game of
+(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM game of
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
 case the paper proves directly, for every `n` (the printed bound), and the
 Claims 5.12 to 5.14 of the `n = 1` proof over the case events of

@@ -143,7 +143,7 @@ The Figure 6 winning condition, for `q` Sign queries and output list
 (`List.Nodup`, Figure 6's `∀ i ≠ j : m⃗ᵢ ≠ m⃗ⱼ`), and every pair verifying
 (`∀ i ∈ [q+1] : AT.V(sk, m⃗ᵢ, σᵢ) = 1`). A named `Prop` (decidable, so the
 game can `decide` it) so that the security theorems and the
-AGM-instrumented OMUF game (Track CMZ-OMUF) can reuse it verbatim.
+AGM OMUF game (Track CMZ-OMUF) can reuse it verbatim.
 -/
 abbrev OMUFWins (tok : ATSyntax M) (crs : tok.Crs secParam n)
     (sk : tok.Sk crs) (q : Nat)

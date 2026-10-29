@@ -13,9 +13,9 @@ The pure-algebra layer of the Theorem 5.11 proof at `n = 1`, over Mathlib only
 (no game imports), mirroring `AGMPolynomial.lean`, the Lemma 5.4 layer it
 extends: the polynomials the proof reads off an algebraic transcript, in the
 ring `AGMPoly.P F r = F[η, x₀, xᵣ, x₁, u₁, …, u_r]` of that file. Track CMZ-OMUF,
-step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189), delivered
-in two parts: Equations 17 and 18, the commitment polynomials, then Equation 22,
-the forgery polynomial with the case split of the proof.
+step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189). Contents:
+Equations 17 and 18, the commitment polynomials, and Equation 22, the forgery
+polynomial with the case split of the proof.
 
 ## Setting
 
@@ -53,21 +53,18 @@ the forgery polynomial with the case split of the proof.
 
 ## Obligations deferred to the proof phase
 
-The game-level evaluation bridge, the Equation 18 bridge announced in the
-module docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log
-point of an honest run, `c_k` evaluates to the logarithm of the `k`-th issued
-commitment and `toPolyAt γ cs` to the
-logarithm of the element `γ` represents, by induction over the transcript
-through the logged representations and the server's honest answers, so that
-`φ` vanishes at that point exactly when the verification equation
-`V* = (x₀ + xᵣ + m*·x₁)·U*` holds
-(acceptance also needs `U* ≠ 0`, so a verifying forgery has vanishing `φ`, not
-conversely). `eval_toPolyAt` is its algebraic half;
-the induction over the run belongs to the proof of Theorem 5.11. So do the
-coefficient
-identities of Equations 20 and 21 (in particular that, for the normalized
-representations of the log, `u_k` occurs in `c_j` only for `k < j`), the degree
-bounds, and the constant audit.
+The game-level evaluation bridge, the Equation 18 bridge announced in the module
+docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log point of an
+honest run, `c_k` evaluates to the logarithm of the `k`-th issued commitment and
+`toPolyAt γ cs` to the logarithm of the element `γ` represents, by induction
+over the transcript through the logged representations and the server's honest
+answers, so that `φ` vanishes at that point exactly when the verification
+equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds (acceptance also needs `U* ≠ 0`, so a
+verifying forgery has vanishing `φ`, not conversely). `eval_toPolyAt` is its
+algebraic half; the induction over the run belongs to the proof of Theorem 5.11.
+So do the coefficient identities of Equations 20 and 21 (in particular that, for
+the normalized representations of the log, `u_k` occurs in `c_j` only for
+`k < j`), the degree bounds, and the constant audit.
 
 ## Conventions
 
@@ -77,9 +74,8 @@ Equation 18 reads earlier polynomials through `List.getD … 0`, so a slot not y
 issued contributes `γ_{u,k}·u_k + γ_{v,k}·u_k·(x₀ + xᵣ)` rather than nothing;
 for a representation the game's Sign oracle normalized, the conversion
 `toReprCoeffs` pads both coefficients of every not-yet-issued pair with `0`, so
-the contribution is `0`. The layer itself accepts any coefficient lists, so
-this triangularity is a property of normalized inputs, stated in the proof
-phase.
+the contribution is `0`. The layer itself accepts any coefficient lists, so this
+triangularity is a property of normalized inputs, stated in the proof phase.
 -/
 
 set_option autoImplicit false

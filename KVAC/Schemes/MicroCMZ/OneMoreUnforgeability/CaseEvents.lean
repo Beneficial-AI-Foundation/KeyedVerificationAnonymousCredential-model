@@ -30,11 +30,11 @@ Theorem 5.3 plan, part 17a of item 17 (issue #189).
                                the events Claims 5.12 to 5.14 bound
 
 `AGMRepr.toReprCoeffs` of `AGMReduction/Core.lean` converts a game
-representation to polynomial-layer coefficients at a given arity, reading
-absent issued-pair slots as `0`, which for the normalized representations of the log is
+representation to polynomial-layer coefficients at a given arity, reading absent
+issued-pair slots as `0`, which for the normalized representations of the log is
 the right value. The arity is the number of issued pairs, not the Sign budget,
-since a Sign query the server refuses issues no pair and gets no variable,
-while the winning condition counts every Sign query.
+since a Sign query the server refuses issues no pair and gets no variable, while
+the winning condition counts every Sign query.
 
 ## The lemma the proof phase proves
 
