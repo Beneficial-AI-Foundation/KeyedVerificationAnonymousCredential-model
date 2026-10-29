@@ -1574,11 +1574,21 @@ advantage is the sum of the three. The coupling of its run with the real game is
 extraction obligation of {bpref "omuf_case_iii"}[].
 :::
 
-:::theorem "omuf_two_dl_run_coupling" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "medium")
+:::theorem "omuf_two_dl_run_coupling" (lean := "KVAC.Schemes.MicroCMZ.twoDLAuxOf, KVAC.Schemes.MicroCMZ.twoDLXTags_auxOf, KVAC.Schemes.MicroCMZ.smul_zipWith_sum_tags, KVAC.Schemes.MicroCMZ.twoDLParams_eq, KVAC.Schemes.MicroCMZ.twoDLxEval_eq, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_some, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_none, KVAC.Schemes.MicroCMZ.twoDL_step_sign, KVAC.Schemes.MicroCMZ.twoDL_step_verify, KVAC.Schemes.MicroCMZ.twoDL_step_coin, KVAC.Schemes.MicroCMZ.twoDL_run") (parent := "cmz_omuf") (tags := "milestone")
 The run of the 2-DL reduction of {uses "omuf_two_dl_reduction"}[] is the run of the game of
 {uses "agm_omuf_game"}[] at the key `(a₀ + b₀·x, aᵣ + bᵣ·x, a₁ + b₁·x)`, the crs `η·G` and the
 parameters the reduction presents, followed by the multiples it records, as an equality of
 computations (O24 p. 47).
+:::
+
+:::proof "omuf_two_dl_run_coupling"
+The Sign and Verify steps are the oracle's arms unfolded on both sides. The reduction's Sign
+answer is the real one by module algebra over `x₀ = a + b·x`, and the record `x·V` it stores is
+`x` times the real `V` once `x·C` is the multiple of the commitment's representation
+(`twoDLxEval_eq`, the gate giving `C` as that representation's evaluation). The Verify test is
+the real one on consistent representations, since `x·U` is the multiple computed from the
+representation. The run-level statement is induction on the adversary's computation through
+these steps, with the records a function of the log (`twoDLAuxOf`).
 :::
 
 :::theorem "omuf_two_dl_key_law" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "medium")
