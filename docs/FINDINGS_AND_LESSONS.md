@@ -52,7 +52,13 @@ None of the findings below weakens a result. The assumptions are the paper's own
 | 6 | Theorem 5.1's printed bound elides the gap-DL term | Lemma 5.5 sends the collision case to gap-DL, and the printed Theorem 5.1 bound drops that term. The formal bound is Adv^3-dl + Adv^gap-dl + 5/p. | `agm_ufcmva_le_explicit`, the Lemma 5.5 bound that Theorem 5.1 wraps | proof | on `main` | Lemma 5.5 statement (#209) |
 | 12 | Claim 5.13's bound has no term for Verify queries (pp. 46–47) | A forger with no Sign query and Q < p Verify queries learns x₀ + xᵣ with probability (Q+1)/p, then wins whenever H ≠ 0. The reduction of Claim 5.13 extracts nothing from it. The bound needs a term of about Q/p, or the forger goes to the x₀ embedding of Claim 5.14. | module docstring of `OneMoreUnforgeability/Statements.lean` | proof | on `main` | Theorem 5.11 statements (#189) |
 
-**What we did.** Every formal statement is an inequality on named reductions. The bound of Theorem 5.1 is Adv^3-dl(B₁) + Adv^gap-dl(B_gap) + 5/p, where 5/p is 3/p (item 1), 1/p for Σᵢ Δᵢbᵢ = 0 in Claim 5.6 and 1/p for x₁ = 0 in Claim 5.7 (DA *Schwartz–Zippel bound 3/p, not the paper's 1/p*). The 3/p is the generic Schwartz–Zippel bound for a degree-3 polynomial, and the entry records that a structural argument might recover the printed 1/p, which the paper does not give. Item 12 is recorded in the module docstring of `OneMoreUnforgeability/Statements.lean` as an obligation on the Claims, whose constants are provisional until the Track CMZ-OMUF audit.
+**What we did.** Every formal statement is an inequality on named reductions. Three bounds are stated.
+
+- Lemma 5.4, one attribute. The paper prints Adv^3-dl + Adv^dl + 1/p. The formal bound is Adv^3-dl(B₁) + 3/p. The 3/p replaces the 1/p (item 1), and the Adv^dl term is gone (item 2).
+- Lemma 5.5 and Theorem 5.1, n attributes. The paper prints Adv^3-dl + Adv^dl + 3/p. The formal bound is Adv^3-dl(B₁) + Adv^gap-dl(B_gap) + 5/p. The gap-DL term is the collision case of Claim 5.6 (item 6). The 5/p is the 3/p of Lemma 5.4 plus 1/p for the event Σᵢ Δᵢbᵢ = 0 of Claim 5.6 plus 1/p for the event x₁ = 0 of Claim 5.7.
+- Theorem 5.11. The printed constants are kept, provisional until the constant audit of Track CMZ-OMUF, and item 12 is recorded as an obligation on the Claims.
+
+The 3/p is the generic Schwartz–Zippel bound for a polynomial of degree 3. The design record leaves open whether a structural argument recovers the printed 1/p, which the paper does not derive (DA *Schwartz–Zippel bound 3/p, not the paper's 1/p*).
 
 **Lesson.** A Lean statement must name every summand and the reduction behind it. A bound term without a reduction (item 2) has nowhere to come from, and a constant has to be derived (items 1, 6, 12). All four were caught because a statement had to say which event has which probability.
 
