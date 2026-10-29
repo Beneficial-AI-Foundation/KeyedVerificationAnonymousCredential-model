@@ -1138,6 +1138,8 @@ not consider the multi-user setting" and the reduction of Theorem 5.10
 win by a malleable proof of an honest presentation, whose attributes lie
 outside `Qrs`. The multi-user extension is step 8 of item 13 of
 `docs/MICROCMZ_REMAINING.md`.
+:::
+
 :::definition "mucmz_ufcmva_help_game" (lean := "KVAC.Schemes.MicroCMZ.UFHelpQuery, KVAC.Schemes.MicroCMZ.UFHelpOracleSpec, KVAC.Schemes.MicroCMZ.ufHelpOracleImpl, KVAC.Schemes.MicroCMZ.UFHelpAdversary, KVAC.Schemes.MicroCMZ.UF_CMVAHelpGame, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv, KVAC.Schemes.MicroCMZ.ufQueryToHelp, KVAC.Schemes.MicroCMZ.ufAdversaryToHelp") (parent := "cmz_extract") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] for the base MAC of
 {uses "mucmz_construction"}[], with the oracle `Help(A₀, A⃗, Z)` of §5.2
