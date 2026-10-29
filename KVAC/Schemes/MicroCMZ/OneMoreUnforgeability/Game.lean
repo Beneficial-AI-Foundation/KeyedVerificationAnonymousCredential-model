@@ -8,25 +8,24 @@ import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Preliminaries.AnonymousTokens.Security
 
 /-!
-# μCMZ_AT one-more unforgeability: the AGM-instrumented game (O24 §5.6)
+# μCMZ_AT one-more unforgeability: the AGM game (O24 §5.6)
 
 The algebraic group model (AGM) one-more unforgeability game for the μCMZ_AT
 core scheme (`μCMZATCoreSyntax`), following Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the
 AGM UF-CMVA(+Help) game of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
 step A4 of #12 (Track CMZ-OMUF, issue #181): the query type, the oracle spec,
-the transcript log, the instrumented oracles, the algebraic adversary, the
+the transcript log, the oracles, the algebraic adversary, the
 winning condition, the experiment `AGM_OMUFGame` and its advantage
 `AGM_OMUFAdv`, together with the decidable Sign predicate the static
 query-budget hypotheses of Theorem 5.11 count.
 
 The algebraic group model restricts the adversary's type and nothing else.
-Every group element the adversary submits, a commitment or a forged token, is
+Every group element the adversary submits, a commitment or a token, is
 given by its representation alone, and the oracles and the winning condition
 evaluate it and proceed as the plain `OMUFGame` of
 `KVAC.Preliminaries.AnonymousTokens.Security` does on the evaluated elements.
-A theorem about this game is not by itself a theorem about the plain game; that
-correspondence is deferred to Phase B of the Theorem 5.3 plan.
+A theorem about this game is not by itself a theorem about the plain game.
 
 ## Where the representations sit
 
@@ -40,21 +39,21 @@ Equation 19 for the forgeries). The representation type is the MAC game's
 MAC, so the fixed basis is the same, and the Sign answers are pairs of group
 elements like the MAC codes, so they extend the basis the same way.
 
-The MAC game's Sign oracle takes a message and no group element. Here Sign takes
-a group element, the commitment, so it is the first issuance request in the
-repository given by a representation. That is what the Theorem 5.11 proof needs,
-since Equation 18 substitutes each commitment's representation into the server's
-answer.
+The MAC game's Sign oracle takes a message and no group element. Here Sign's
+input is a group element, the commitment, given by its representation, the first
+issuance request in the repository given that way. That is what the Theorem 5.11
+proof needs, since Equation 18 substitutes each commitment's representation into
+the server's answer.
 
 ## Design notes (Track CMZ-OMUF decisions, September and October 2026)
 
 **Coefficients only.** The Sign oracle evaluates the submitted representation
 over the current public elements and issued pairs and answers the resulting
 commitment through the core's server algorithm. The Verify oracle and the
-winning condition evaluate the token's representations the same way. Neither an
-oracle nor the winning condition compares a representation with a submitted
-element, as in the MAC game
-(`DESIGN_ALTERNATIVES.md`, *Algebraic adversaries submit coefficients only*).
+winning condition evaluate the token's representations the same way. As in the
+MAC game, neither an oracle nor the winning condition compares a representation
+with a submitted element (`DESIGN_ALTERNATIVES.md`, *Algebraic adversaries
+submit coefficients only*).
 
 **Normalized pair coefficients.** The Sign oracle logs the representation with
 its pair-coefficient list cut, or padded with zeros, to exactly one entry per
@@ -63,9 +62,9 @@ the commitment the representation names at its own transcript
 (`AGMRepr.eval_normalize`), since `AGMRepr.eval`'s `zipWith` ignores excess
 entries and reads missing ones as zero. It buys one guarantee: a logged
 representation names the same commitment under any later extension of the
-transcript (`AGMRepr.eval_append_of_length_eq`), so the winning condition and
-the reduction can read the finished log against one final list of pairs instead
-of carrying a per-query prefix. Verify and forgery representations are
+transcript (`AGMRepr.eval_append_of_length_eq`), so the Theorem 5.11 reduction
+can read the finished log against one final list of pairs instead of carrying a
+per-query prefix. Verify and forgery representations are
 evaluated once, against the transcript at the moment they are submitted, and
 are not normalized. The comparison with the alternatives is in
 `DESIGN_ALTERNATIVES.md`, *Normalized representations in the AGM OMUF game*.
@@ -134,7 +133,7 @@ variable {F G : Type} {n : ℕ}
 
 /--
 The two oracles of the AGM one-more unforgeability game for μCMZ_AT (O24
-Figure 6, instrumented per §5.6).
+Figure 6 against an algebraic adversary, §5.6).
 -/
 inductive AGMOMUFQuery (F : Type) (n : ℕ) : Type where
   /-- `sign ρ` — an issuance request: the Pedersen commitment `C'` (Figure 9's
@@ -157,11 +156,10 @@ def AGMOMUFOracleSpec (F G : Type) (n : ℕ) : OracleSpec (AGMOMUFQuery F n)
 /--
 The transcript log threaded through the game: every Sign query in issuance
 order, each as the commitment, its normalized representation, and the server's
-answer. The log's *length* is Figure 6's query
-counter `q` (every Sign query counts); its issued pairs, `AGMOMUFLog.tags`,
-extend the representation basis; the representations are kept for the
-Theorem 5.11 reduction (see *The log keeps the representations* in the module
-docstring).
+answer. The log's *length* is Figure 6's query counter `q` (every Sign query
+counts); its issued pairs, `AGMOMUFLog.tags`, extend the representation basis;
+the representations are kept for the Theorem 5.11 reduction (see *The log keeps
+the representations* in the module docstring).
 -/
 abbrev AGMOMUFLog (F G : Type) (n : ℕ) : Type := List (G × AGMRepr F n × Option (G × G))
 
@@ -227,14 +225,14 @@ structure AGMOMUFForgery (F : Type) (n : ℕ) where
 /--
 An algebraic one-more unforgeability adversary against μCMZ_AT for `n`
 attributes (O24 §5.6): given the crs `H` and the public parameters
-`(X₀, Xᵣ, X⃗)`, it queries a private coin oracle and the instrumented oracles
+`(X₀, Xᵣ, X⃗)`, it queries a private coin oracle and the Sign and Verify oracles
 and outputs its list of forgeries, `q + 1` of them to win. The shape of the
 plain `OMUFAdversary`, private coin oracle included (*The adversary has a
 private coin oracle* in the module docstring).
 -/
 structure AGMOMUFAdversary (F G : Type) (n : ℕ) where
   /-- The adversary's program: from `(H, pp)`, query the private coin oracle and
-  the instrumented Sign and Verify oracles and output the forgeries with their
+  the Sign and Verify oracles and output the forgeries with their
   representations. -/
   run : G → Params G n →
     OracleComp (unifSpec + AGMOMUFOracleSpec F G n) (List (AGMOMUFForgery F n))
@@ -253,14 +251,13 @@ entries: one per issued pair when `k` is the number of pairs issued so far (see
 *Normalized pair coefficients* in the module docstring).
 -/
 def AGMRepr.normalize (k : ℕ) (ρ : AGMRepr F n) : AGMRepr F n :=
-  { ρ with uv := ρ.uv.take k ++ List.replicate (k - ρ.uv.length) (0, 0) }
+  { ρ with uv := ρ.uv.takeD k (0, 0) }
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
 /-- A normalized representation has exactly `k` pair coefficients. -/
 @[simp] theorem AGMRepr.normalize_uv_length (k : ℕ) (ρ : AGMRepr F n) :
-    (ρ.normalize k).uv.length = k := by
-  simp only [AGMRepr.normalize, List.length_append, List.length_take, List.length_replicate]
-  omega
+    (ρ.normalize k).uv.length = k :=
+  List.takeD_length _ _ _
 
 /-- Normalizing at the number of issued pairs does not change the element a
 representation names, since `zipWith` ignores excess entries and the padding
@@ -273,19 +270,11 @@ theorem AGMRepr.eval_normalize (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fi
   obtain ⟨-, -, -, -, -, uv⟩ := ρ
   dsimp only
   induction tags generalizing uv with
-  | nil => simp only [List.zipWith_nil_right]
+  | nil => simp
   | cons t ts ih =>
       cases uv with
-      | nil =>
-          have h := ih []
-          simp only [List.take_nil, List.nil_append, List.length_nil, Nat.sub_zero,
-            List.zipWith_nil_left, List.sum_nil] at h
-          simp only [List.length_cons, List.take_nil, List.nil_append, List.length_nil,
-            Nat.sub_zero, List.replicate_succ, List.zipWith_cons_cons, List.sum_cons,
-            List.zipWith_nil_left, List.sum_nil, h, zero_smul, add_zero]
-      | cons c l =>
-          simp only [List.length_cons, List.take_succ_cons, Nat.add_sub_add_right,
-            List.cons_append, List.zipWith_cons_cons, List.sum_cons, ih]
+      | nil => simpa using ih []
+      | cons c l => simp [ih]
 
 /--
 The payoff of normalization (see *Normalized pair coefficients* in the module
@@ -300,12 +289,12 @@ theorem AGMRepr.eval_append_of_length_eq (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : 
   rw [AGMRepr.eval, AGMRepr.eval, ← List.append_nil ρ.uv, List.zipWith_append h,
     List.zipWith_nil_left, List.append_nil, List.append_nil]
 
-/-! ## The instrumented oracle -/
+/-! ## The oracles -/
 
 variable (gen : G)
 
 /--
-Honest instrumented oracles over the interface `μCMZATCoreSyntax F gen` of the core scheme
+Honest oracles over the interface `μCMZATCoreSyntax F gen` of the core scheme
 (as the MAC game's are over `μCMZBaseMACSyntax`), for the
 generator `gen` (a section variable, hence the first explicit argument), the
 security parameter, the secret key `sk`, the crs `H`, and the public parameters
@@ -323,14 +312,14 @@ noncomputable def agmOMUFOracleImpl (secParam : ℕ) (sk : Key F n) (H : G)
     QueryImpl (AGMOMUFOracleSpec F G n) (StateT (AGMOMUFLog F G n) ProbComp)
   | .sign ρ => StateT.mk fun log => do
       let tags := AGMOMUFLog.tags log
-      let C' := ρ.eval gen H pp.1 pp.2.1 pp.2.2 tags
+      let C' := ρ.evalParams gen H pp tags
       let resp? : Option (G × G) ←
         (μCMZATCoreSyntax F gen).issueSrv (secParam := secParam) H sk C'
       pure (resp?, log ++ [(C', ρ.normalize tags.length, resp?)])
   | .verify m ρU ρV => StateT.mk fun log =>
       let tags := AGMOMUFLog.tags log
       pure ((μCMZATCoreSyntax F gen).verify (secParam := secParam) H sk m
-        (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags), log)
+        (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags), log)
 
 /-! ## The winning condition, the experiment and the advantage -/
 
@@ -339,8 +328,7 @@ representations over the issued pairs `tags`: the part the Figure 6 winning
 condition `OMUFWins` reads. -/
 def AGMOMUFForgery.plain (H : G) (pp : Params G n) (tags : List (G × G))
     (e : AGMOMUFForgery F n) : (Fin n → F) × Code G :=
-  (e.msg,
-    (e.reprU.eval gen H pp.1 pp.2.1 pp.2.2 tags, e.reprV.eval gen H pp.1 pp.2.1 pp.2.2 tags))
+  (e.msg, (e.reprU.evalParams gen H pp tags, e.reprV.evalParams gen H pp tags))
 
 /--
 The winning condition of the AGM OMUF game, read off the final transcript `log`
@@ -355,18 +343,18 @@ supported by an issued pair by pigeonhole (O24 p. 45). An `abbrev`, like
 abbrev AGMOMUFWins (secParam : ℕ) (sk : Key F n) (H : G) (pp : Params G n)
     (log : AGMOMUFLog F G n) (out : List (AGMOMUFForgery F n)) : Prop :=
   OMUFWins (μCMZATCoreSyntax F gen) (secParam := secParam) H sk log.length
+    -- `(F := F)`: without it, elaboration fails to synthesize
+    -- `Field ((μCMZATCoreSyntax F gen).Msg H)`.
     (out.map (AGMOMUFForgery.plain (F := F) gen H pp (AGMOMUFLog.tags log)))
 
 /--
-The AGM one-more unforgeability experiment for μCMZ_AT (O24 Figure 6,
-instrumented per §5.6). Setup and key generation delegate to
+The AGM one-more unforgeability experiment for μCMZ_AT (O24 Figure 6 against
+an algebraic adversary, §5.6). Setup and key generation delegate to
 `μCMZATCoreSyntax F gen`, as the plain `OMUFGame` delegates to its scheme; the
 adversary runs from the empty log with its private coin oracle answered by
-`ProbComp` and its instrumented queries by `agmOMUFOracleImpl`; returns `true`
+`ProbComp` and its Sign and Verify queries by `agmOMUFOracleImpl`; returns `true`
 iff `AGMOMUFWins` holds for the final log and the output. Stated for every `n`
 and every `secParam` (unused by the core, kept threaded as in the plain game).
-The correspondence with the plain `OMUFGame` is the deferred bridge described
-in the module docstring.
 -/
 noncomputable def AGM_OMUFGame (secParam : ℕ) (A : AGMOMUFAdversary F G n) :
     ProbComp Bool := do
