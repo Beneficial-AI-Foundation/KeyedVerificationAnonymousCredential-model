@@ -61,7 +61,7 @@ The 3/p is the generic Schwartz–Zippel bound for a polynomial of degree 3. The
 
 **What we did.** Each correction is documented at its use site in the reduction, `redTrace` and `reductionSignStep` for Eqs. 13 and 14 (DA *Eq. 13*, *Eq. 14*), `gapDlReduction`, `gapDlKeyParts` and `gapDlOracleImpl` for Claim 5.6. The Verify query of Claim 5.6 is formalized as Ddh(d·U, V − c·U), which needs no inverse and covers d = 0 as well (item 10). Item 11 is charged to ZKP_cmz.p in `μCMZ_anonymity`.
 
-**Lesson.** None of these changes a result, and each stopped a proof until it was found. Eqs. 13 and 14 surfaced when the coupling between the reduction and the real game would not close with the printed coefficients. A reader who fills in the intended value never sees them.
+**Lesson.** None of these changes a result, and each stopped a proof until it was found. Eqs. 13 and 14 surfaced when the coupling between the reduction and the real game would not close with the printed coefficients. A reader who knows what the coefficient has to be reads that value into the equation and never notices the printed one, so these typos are visible only to a check that uses the printed value as written.
 
 ### A3. The scheme in the figure is not the scheme in the proof
 
