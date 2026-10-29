@@ -42,7 +42,7 @@ the UF-CMVA game with `Help` against the μCMZ base MAC is at most the 3-DL adva
 `microCMZN3DLReduction gen A` plus the gap-DL advantage of `gapDlReduction gen A` plus
 `5/p`.
 
-**Proof.** `UF_CMVAHelpAdv_forget` rewrites the advantage to the AGM advantage
+**Proof.** `UF_CMVAHelpAdv_forget` equates the advantage with the AGM advantage
 `AGM_UF_CMVAAdv gen A secParam`, which Lemma 5.5, `agm_ufcmva_le_explicit`, bounds by the
 same right-hand side. -/
 theorem microCMZ_ufcmvaHelp_le (secParam : ℕ) (A : AGMUFAdversary F G n) :
