@@ -10,7 +10,7 @@ Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint
 
 **Status of the formalization, theorem by theorem.**
 
-- Theorem 1 is not stated. It is the conjunction of Theorems 5.2 and 5.3, and its μCMZ clauses can proceed while the token clause waits on Theorem 5.3.
+- Theorem 1 is not stated. It is the conjunction of Theorems 5.2 and 5.3, and its μCMZ clauses can proceed while the anonymous token clause waits on Theorem 5.3.
 - Theorem 5.1 is stated for algebraic adversaries in a form that excludes the Help oracle the paper adds after it, and its restatement for the game with Help is under review.
 - Theorem 5.2 is not stated. Its two clauses are Theorems 5.8 and 5.10.
 - Theorem 5.3 is stated on a branch and postponed until a game in the algebraic group model exists for the scheme with π_is.
