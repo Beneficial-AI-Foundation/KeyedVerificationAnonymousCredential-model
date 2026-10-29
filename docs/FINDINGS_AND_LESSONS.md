@@ -26,7 +26,7 @@ None of the findings below weakens a result. The assumptions are the paper's own
 
 ### A1. Bounds and probabilities stated wrongly (the arguments are right, the constants or the relation are not)
 
-| # | Errata section | What is wrong | Lean | Kind | Status | Origin |
+| Errata # | Errata section | What is wrong | Lean | Kind | Status | Origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | The 1/p non-vanishing bound should be 3/p (p. 38) | The partial evaluation ψ of the forgery polynomial is nonzero "except with probability 1/p", without derivation. The polynomial ϕ has total degree 3, so Schwartz–Zippel gives 3/p, and whether a structural argument recovers 1/p is left open. | `agm_ufcmva_le_n1_explicit`, the term `3 * (card F)⁻¹` | proof | on `main` | Lemma 5.4 proof |
 | 2 | Lemma 5.4's printed Adv<sup>dl</sup> summand has no reduction behind it (pp. 36–38) | The statement carries an Adv^dl term. The proof builds one reduction, to 3-DL, so the term is slack. | `agm_ufcmva_le_n1_explicit`, no DL term | proof | on `main` | Lemma 5.4 proof |
@@ -39,7 +39,7 @@ None of the findings below weakens a result. The assumptions are the paper's own
 
 ### A2. Typos in the equations
 
-| # | Errata section | What is wrong | Lean | Kind | Status | Origin |
+| Errata # | Errata section | What is wrong | Lean | Kind | Status | Origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | 3 | Eq. 13: X₀'s X-coefficient (typo) | X₀'s X-coefficient drops the factor a₀. The correct coefficient is a₀b_h + b₀a_h. | `redTrace` | proof | on `main` | Lemma 5.4 coupling (#88) |
 | 4 | Eq. 14: signing-response coefficient (typo) | Vⱼ's G-coefficient is a_{u,j}(a₀ + aᵣ + a₁mⱼ), not a_{u,j}(a_h a₀ + a_h + a₁mⱼ). | `reductionSignStep` | proof | on `main` | Lemma 5.4 coupling (#88) |
@@ -55,7 +55,7 @@ None of the findings below weakens a result. The assumptions are the paper's own
 
 ### A3. The scheme in the figure is not the scheme in the proof
 
-| # | Errata section | What is wrong | Lean | Kind | Status | Origin |
+| Errata # | Errata section | What is wrong | Lean | Kind | Status | Origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | 7 | Figure 9 boxes only π<sub>iu</sub>, but the Theorem 5.11 proof analyzes the scheme without π<sub>is</sub> (pp. 34–35, 40, 44) | Figure 9 removes π_iu only, Theorem 5.3 keeps π_is, and the proof of Theorem 5.11 analyzes the scheme with neither proof. | `μCMZATCoreSyntax`, `μCMZATSyntax`. `omufPiIsZKAdversary` on the branch | proof | on `main` | Theorem 5.3 track. Raised with Rolfe on 20 August |
 | 8 | Figure 9 writes ℤ<sub>p</sub> where §5.1 and correctness need ℤ<sub>p</sub><sup>×</sup> (pp. 33–34) | Three scalars are drawn from ℤ_p where §5.1 needs ℤ_p^×. A zero draw makes an honest run fail, with negligible probability, so the figure still satisfies Definition 4.3 and the erratum is the inconsistency with the prose. | `uniformUnits` in `credIssueSrv`, `credIssueUsr₂`, `credPresentUsr`, `atIssueSrv`, `atIssueUsr₂` | impl | on `main` | Theorem 5.3 track (#146, #147, #206) |
@@ -71,7 +71,7 @@ None of the findings below weakens a result. The assumptions are the paper's own
 
 ### A4. The overview statements disagree with the proved theorems
 
-| # | Errata section | What is wrong | Lean | Kind | Status | Origin |
+| Errata # | Errata section | What is wrong | Lean | Kind | Status | Origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | 17 | Theorem 1 prints Adv<sup>simex</sup> where Theorem 5.8 prints Adv<sup>ksnd</sup> (pp. 4, 40, 42) | Theorem 1 prints Adv^simex where Theorem 5.8 prints Adv^ksnd, and Remark 5.9's bridge covers Schnorr proofs alone. | `μCMZ_anonymity`, `ksndSimAdv_le_ksndAdv_of_domainSeparated` | proof | on `main` | Theorem 5.8 statement (#10) |
 | 18 | Theorem 5.3 charges Adv<sup>zk</sup><sub>cmz.iu</sub> to a scheme without π<sub>iu</sub> (pp. 35, 40–41) | Theorem 5.3's anonymity bound charges Adv^zk_cmz.iu for a proof the token's user never sends. | `μCMZAT_anonymous_token` | proof | on the branch `microcmz-theorem-5-3` (#184) | Theorem 5.3 statement (#184) |
