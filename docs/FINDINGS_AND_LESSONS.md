@@ -8,7 +8,19 @@ This is based on:
 
 Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, cited as O24, in its version of 27 March 2026 unless a version is named. Errata numbers refer to `errata.md`. "DA" refers to an entry of `DESIGN_ALTERNATIVES.md`, by its heading. **Kind** says whether an item lives only in the security argument (*proof*) or constrains an implementation (*impl*), as input for KVAC-verify. **Status** says where the item stands, on `main` or on a branch.
 
-**Status on main.** The statements of Lemma 5.4, Lemma 5.5, Theorem 5.1 in its `WellBehaved` form, Theorem 5.8, and Theorem 5.11 with Claims 5.12 to 5.14 are on `main` with `sorry`, the blueprint reporting their proof status. The #235 stack restates Theorem 5.1 for the game with Help (PRs 246 and 247 approved, parts 3 to 7 to follow). Of the Theorem 5.10 stack, the game with Help (PR 243) and the framework extractor (PR 245) are merged, the setting (PR 244) is under review and the statement (PR 242) is a draft. The Theorem 5.3 statement is on its branch and postponed (#184). None of the findings below weakens a result. The assumptions are the paper's own, with one addition, the condition of Remark 5.9 that `μCMZ_anonymity` takes as hypotheses (item 17). One unjustified summand is dropped (item 2), the additive constant of Theorem 5.1 goes from 3/p to 5/p, both about 2⁻²⁵⁰ at ristretto255, the Theorem 5.11 bound loosens by (q+3)/(p(p−1)) under the nonzero crs (item 13), one zero-knowledge term enters the one-more unforgeability bound (item 7), and the overview bounds of Theorems 1 and 5.3 give way to the bounds of the theorems they summarize (items 17 to 19).
+**Status of the formalization, theorem by theorem.**
+
+- Theorem 1 is not stated. It is the conjunction of Theorems 5.2 and 5.3, and its μCMZ clauses can proceed while the token clause waits on Theorem 5.3.
+- Theorem 5.1 is stated for algebraic adversaries in a form that excludes the Help oracle the paper adds after it, and its restatement for the game with Help is under review.
+- Theorem 5.2 is not stated. Its two clauses are Theorems 5.8 and 5.10.
+- Theorem 5.3 is stated on a branch and postponed until a game in the algebraic group model exists for the scheme with π_is.
+- Lemma 5.4 is stated at n = 1, with the 3-DL reduction built, the Schwartz–Zippel bound 3/p proved and the coupling of the reduction with the real game in progress.
+- Lemma 5.5 is stated, with the n → 1 attribute collapse and the gap-DL reduction of Claim 5.6 defined and their proofs open.
+- Theorem 5.8 is stated with its simulator defined, the condition of Remark 5.9 as hypotheses, and its proof open.
+- Theorem 5.10 has its game with Help and its extractor interface merged, its setting under review and its statement in draft.
+- Theorem 5.11 is stated at n = 1 and for every n, with Claims 5.12 to 5.14 stated and the reductions named, for the core without π_is, and its proofs open.
+
+None of the findings below weakens a result. The assumptions are the paper's own, with one addition, the condition of Remark 5.9 that `μCMZ_anonymity` takes as hypotheses (item 17). One unjustified summand is dropped (item 2), the additive constant of Theorem 5.1 goes from 3/p to 5/p, both about 2⁻²⁵⁰ at ristretto255, the Theorem 5.11 bound loosens by (q+3)/(p(p−1)) under the nonzero crs (item 13), one zero-knowledge term enters the one-more unforgeability bound (item 7), and the overview bounds of Theorems 1 and 5.3 give way to the bounds of the theorems they summarize (items 17 to 19).
 
 ## Part A. Findings about the paper
 
