@@ -1542,6 +1542,29 @@ representation. The run-level statement is induction on the adversary's
 computation through these steps.
 :::
 
+:::theorem "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix") (parent := "cmz_omuf") (tags := "milestone")
+The 2-DL reduction of {bpref "omuf_case_iii"}[] (O24 p. 47), built from an
+algebraic one-more forger and run against the game of {uses "agm_omuf_game"}[]. The paper writes the `x₀`
+case and calls `xᵣ` and `x₁` "almost identical"; all three are one construction with a key that is
+affine in the challenge in every component, `(a₀ + b₀·x, aᵣ + bᵣ·x, a₁ + b₁·x)`, the case being the
+choice of nonzero slopes. It samples the offsets, the slope and `η`, hands the forger `H = η·G`,
+`X₀ = a₀·H + b₀·η·X`, `Xᵣ = aᵣ·G + bᵣ·X`, `X₁ = a₁·G + b₁·X`, and answers Sign as the paper prescribes,
+`V = a₀·U + b₀·u·X + u·(C + Xᵣ)`, without the key. Verify tests `V = (x₀ + xᵣ + m·x₁)·U` as
+`V = (a₀ + aᵣ + m·a₁)·U + (b₀ + bᵣ + m·b₁)·(x·U)`, the multiple `x·U` being computed from the
+representation of `U`: each basis element has a known multiple by `x`, the quadratic terms using the
+second challenge element, and the reduction records the multiples of the pairs it issues. At the end it
+substitutes the key variables by their affine functions of `χ` into the forgery polynomials of
+{uses "omuf_case_events"}[] and outputs the root `r` of the first nonzero one with `r·G = X`. The
+theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
+advantage is the sum of the three. Not yet shown: the coupling of its run with the real game, the distribution of the key and of `H`
+the reduction presents, and that the substituted polynomial is nonzero (the extraction obligation of
+{bpref "omuf_case_iii"}[]).
+:::
+
+:::proof "omuf_two_dl_reduction"
+Definitions only: the reduction is built from the oracle simulation, the extraction and the uniform
+mixture of the three cases, and the statements about them follow.
+:::
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
 *O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
 item (i) of the case split, the adversary wins and some forgery polynomial
