@@ -319,11 +319,51 @@ def AGMUFAdversary.forget (A : AGMUFAdversary F G n) : UFHelpAdversary F G n whe
     pure (mStar, (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
 
 omit hgen in
+/-- The oracles of the game with `Help`, run on the queries `agmQueryToHelp` forwards and
+started from the MAC codes and the reversed messages of an AGM log `log`, compute what the
+AGM oracles compute from `log`, read through the same two projections of the final log. -/
+private theorem run_simulateQ_agmQueryToHelp {α : Type} (secParam : ℕ) (H : G)
+    (sk : Key F n) (pp : Params G n) (oa : OracleComp (AGMOracleSpec F G n) α)
+    (log : AGMLog F G n) :
+    (simulateQ
+        ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp) +
+          ufHelpOracleImpl gen secParam H sk)
+        ((simulateQ (agmQueryToHelp gen H pp) oa).run (log.map Prod.snd))).run
+          (log.map Prod.fst).reverse =
+      (fun z => ((z.1, z.2.map Prod.snd), (z.2.map Prod.fst).reverse)) <$>
+        (simulateQ (agmOracleImpl gen secParam sk H pp) oa).run log := by
+  induction oa using OracleComp.inductionOn generalizing log with
+  | pure x => simp
+  | query_bind t oa ih =>
+      cases t with
+      | sign m =>
+          simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
+            OracleQuery.cont_query, agmQueryToHelp, HasQuery.instOfMonadLift_query, id_map,
+            StateT.run_bind, StateT.run_mk, bind_assoc, pure_bind, QueryImpl.add_apply_inr,
+            ufHelpOracleImpl, ufOracleImpl, agmOracleImpl, map_bind]
+          exact (bind_assoc _ _ _).trans (bind_congr fun σ => by
+            simpa using ih σ (log.concat (m, σ)))
+      | verify m ρU ρV => exact ih _ log
+      | help ρ₀ ρA ρZ => exact ih _ log
+
+omit hgen in
 /-- Forgetting the representations preserves the advantage: the advantage of
-`A.forget gen` in the game with `Help` is the advantage of `A` in the AGM game. -/
+`A.forget gen` in the game with `Help` is the advantage of `A` in the AGM game.
+
+**Proof.** Induction on `A.run`: the MAC codes `agmQueryToHelp` keeps are those of the
+AGM log, so both games answer each query on the same elements, `A.forget gen` draws no
+coin, and the game with `Help` records the log's messages in reverse order, which
+freshness does not see. -/
 theorem UF_CMVAHelpAdv_forget (secParam : ℕ) (A : AGMUFAdversary F G n) :
     UF_CMVAHelpAdv gen (A.forget gen) secParam = AGM_UF_CMVAAdv gen A secParam := by
-  sorry
+  refine congrArg (Pr[= true | ·]) ?_
+  simp only [UF_CMVAHelpGame, AGM_UF_CMVAGame]
+  refine bind_congr fun H => bind_congr fun ⟨sk, pp⟩ => ?_
+  have h := run_simulateQ_agmQueryToHelp gen secParam H sk pp (A.run H pp) []
+  simp only [List.map_nil, List.reverse_nil, QueryImpl.ofLift_eq_id'] at h
+  -- `-List.mem_map`: otherwise the two freshness checks normalize to `!decide (∃ …)` and
+  -- `decide (∀ …)`, which `simp` does not identify.
+  simp [AGMUFAdversary.forget, h, -List.mem_map]
 
 /-! ## Security statements (O24 §5.3)
 
