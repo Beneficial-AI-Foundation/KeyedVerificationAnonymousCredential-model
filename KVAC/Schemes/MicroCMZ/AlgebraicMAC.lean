@@ -10,14 +10,14 @@ import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.SimSemantics.Append
 
 /-!
-# μCMZ as an algebraic MAC: AGM game scaffolding (O24 §5.3)
+# μCMZ as an algebraic MAC: the instrumented AGM game (O24 §5.3)
 
-Instrumented scaffolding for the algebraic group model (AGM) UF-CMVA(+Help) game
+The instrumented algebraic group model (AGM) UF-CMVA(+Help) game
 of the μCMZ base MAC (`μCMZBaseMAC`), following Orrù, *Revisiting
 Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, §5.3. This is
 the `AGMPolynomial`-free foundation: the game definitions the Lemma 5.4 reduction
-consumes, but not the reduction itself (that lands in `AGMReduction`), and not the
-sign-arm distribution lemmas (those live in the sibling module `SignMask`).
+consumes, but not the reduction itself (that is included in `AGMReduction`), and not the
+Sign-oracle distribution lemmas (those live in the sibling module `SignMask`).
 
 A word of caution on naming: this is the instrumented game, not the honest game. The
 oracles here are *gated* — they answer honestly only when the submitted
@@ -41,11 +41,12 @@ condition — this is the gate. It is exactly the interface the Lemma 5.4 reduct
 wants: it answers `Verify`/`Help` by evaluating the represented degree-≤3
 polynomial at the embedded 3-DL instance. Gating the *answers* like this, rather
 than restricting the adversary *type*, is a deliberate choice; see
-`DESIGN_ALTERNATIVES.md` for the alternative we passed over. Tag coefficients are
-stored as a *list* (one `(αᵤ, αᵥ)` per Sign query, `zipWith`-evaluated against
-issued tags), keeping the type independent of the dynamic query count.
+`DESIGN_ALTERNATIVES.md` for the alternative we passed over. The coefficients for
+issued MAC codes are stored as a *list* (one `(αᵤ, αᵥ)` per Sign query,
+`zipWith`-evaluated against the issued MAC codes), keeping the type independent
+of the dynamic query count.
 
-The `Help(A₀, A⃗, Z)` arm (O24 §5.2/§5.3) answers whether
+The `Help(A₀, A⃗, Z)` oracle (O24 §5.2/§5.3) answers whether
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`, the stronger notion the credential-level
 extractability proof consumes (Thm 5.11 / Thm 5.2); it does not change the bound.
 -/
@@ -142,9 +143,9 @@ attribute [irreducible] glog
 /--
 An algebraic representation (O24 §5.3, the adversary's `~` coefficients) over the
 μCMZ transcript basis: coefficients for `G₀`, `H`, `X₀`, `Xᵣ`, `X⃗`, and one
-`(αᵤ, αᵥ)` pair per issued tag `(Uⱼ, Vⱼ)`. Tag coefficients are a list, so the type
-is independent of the Sign-query count; `eval` `zipWith`s them against the issued
-tags, ignoring any excess.
+`(αᵤ, αᵥ)` pair per issued MAC code `(Uⱼ, Vⱼ)`. These coefficients are a list, so the
+type is independent of the Sign-query count; `eval` `zipWith`s them against the issued
+MAC codes, ignoring any excess.
 -/
 structure AGMRepr (F : Type) (n : ℕ) where
   /-- Coefficient of the generator `G₀`. -/
@@ -157,13 +158,13 @@ structure AGMRepr (F : Type) (n : ℕ) where
   xr : F
   /-- Coefficients of `Xᵢ = xᵢ·G₀`, `i ∈ [n]`. -/
   x : Fin n → F
-  /-- Coefficients `(αᵤⱼ, αᵥⱼ)` of the issued tags `(Uⱼ, Vⱼ)`, in issuance
+  /-- Coefficients `(αᵤⱼ, αᵥⱼ)` of the issued MAC codes `(Uⱼ, Vⱼ)`, in issuance
   order. -/
   uv : List (F × F)
 
 /--
 Evaluate a representation against a concrete transcript: the fixed basis
-`(g₀, H, X₀, Xᵣ, X⃗)` plus the tags issued so far.
+`(g₀, H, X₀, Xᵣ, X⃗)` plus the MAC codes issued so far.
 -/
 def AGMRepr.eval (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
     (tags : List (G × G)) : G :=
@@ -174,12 +175,12 @@ def AGMRepr.eval (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
 /-! ## The instrumented oracles -/
 
 /--
-The three oracle arms of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
+The three oracles of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
 from O24 Figure 5, `help` added in §5.3):
 
-- `sign m⃗` — request a tag on `m⃗` (no representation: the adversary *receives*
+- `sign m⃗` — request a MAC code on `m⃗` (no representation: the adversary *receives*
   elements here).
-- `verify m⃗ (U,V) ρ_U ρ_V` — verification query; the submitted tag carries
+- `verify m⃗ (U,V) ρ_U ρ_V` — verification query; the submitted MAC code carries
   representations.
 - `help A₀ A⃗ Z ρ₀ ρ⃗ ρ_Z` — the §5.3 helper oracle, answering whether
   `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`; all three submitted elements carry
@@ -191,7 +192,7 @@ inductive AGMQuery (F G : Type) (n : ℕ) : Type where
   | help : G → (Fin n → G) → G → AGMRepr F n → (Fin n → AGMRepr F n) →
       AGMRepr F n → AGMQuery F G n
 
-/-- Response types for `AGMQuery`: a tag for `sign`, a Boolean for `verify`
+/-- Response types for `AGMQuery`: a MAC code for `sign`, a Boolean for `verify`
 and `help`. -/
 def AGMOracleSpec (F G : Type) (n : ℕ) : OracleSpec (AGMQuery F G n)
   | .sign _ => G × G
@@ -200,14 +201,14 @@ def AGMOracleSpec (F G : Type) (n : ℕ) : OracleSpec (AGMQuery F G n)
 
 /--
 The transcript log threaded through the game: the messages signed so far,
-each with the tag issued for it, in issuance order (`sign` appends). The
-message components decide forgery freshness; the tag components extend the
+each with the MAC code issued for it, in issuance order (`sign` appends). The
+message components decide forgery freshness; the MAC codes extend the
 representation basis.
 -/
 abbrev AGMLog (F G : Type) (n : ℕ) := List ((Fin n → F) × (G × G))
 
 /-- Representation consistency of a `help` query against the transcript basis
-`(g₀, H, X₀, Xᵣ, X⃗)` and the issued tags: every submitted element equals the
+`(g₀, H, X₀, Xᵣ, X⃗)` and the issued MAC codes: every submitted element equals the
 evaluation of its representation. -/
 abbrev helpConsistent (H : G) (pp : G × G × (Fin n → G)) (tags : List (G × G))
     (A₀ : G) (A : Fin n → G) (Z : G) (ρ₀ : AGMRepr F n) (ρA : Fin n → AGMRepr F n)
@@ -218,8 +219,8 @@ abbrev helpConsistent (H : G) (pp : G × G × (Fin n → G)) (tags : List (G × 
 
 /--
 Honest instrumented oracles for secret key `sk`, crs `H`, and public parameters
-`pp = (X₀, Xᵣ, X⃗)`. `sign` / `verify` delegate to `μCMZBaseMACSyntax F gen` (the
-seam this game crosses); `help` destructures the concrete μCMZ `sk` directly for
+`pp = (X₀, Xᵣ, X⃗)`. `sign` / `verify` delegate to the interface
+`μCMZBaseMACSyntax F gen`; `help` destructures the concrete μCMZ `sk` directly for
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`.
 
 - `sign` runs `.MAC` and appends `(m⃗, σ)` to the log;

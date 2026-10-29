@@ -50,15 +50,15 @@ The paper's defining MAC equation (Eq. (1) in §5) samples `U ←$ G×` from the
 *punctured* group `G× = G ∖ {0}` (in a prime-order group these are exactly the
 generators, the standard MAC_GGM reading); only the figures write the looser
 `U ←$ G`. We follow Eq. (1). The `verify` algorithm rejects `U = 0` (Figure 9),
-so under the figure's `U ←$ G` the honestly produced `(0, 0)` tag would fail
+so under the figure's `U ←$ G` the honestly produced `(0, 0)` MAC code would fail
 verification — a `1/p` failure mass the figure does not record. Sampling `G×`
 per Eq. (1) removes that mass, and the repo's perfect (support-based) `Correct`
 predicate (in `KVAC.Core.AlgebraicMAC.Correctness`) is then satisfied as a
-direct consequence: every tag in the support of `M` verifies.
+direct consequence: every MAC code in the support of `M` verifies.
 
 The nonzero sampling is realized by `uniformNonzero G : ProbComp G` — it samples
 the subtype `{g : G // g ≠ 0}` internally but *projects the `≠ 0` witness away*,
-returning a plain `G`. Thus `Tag` stays `G × G` and no downstream
+returning a plain `G`. Thus `Tag`, the type of MAC codes, stays `G × G` and no downstream
 definition/theorem mentions `{g : G // g ≠ 0}`; nonzeroness is recovered on
 demand from `mem_support_uniformNonzero` (the `U ≠ 0` check in `verify` is then
 just the support hypothesis, not a definitional fact about `U`).
@@ -125,7 +125,7 @@ noncomputable instance instSampleableTypeNeZero : SampleableType {g : G // g ≠
 /--
 Uniform sampling from `G ∖ {0}`, returned as a plain `G`. This is `U ←$ G∖{0}`
 with the `≠ 0` witness *projected away*, so the subtype `{g : G // g ≠ 0}` never
-leaks into tag types or into downstream definitions/theorems: callers see a
+leaks into the MAC-code type `Tag` or into downstream definitions/theorems: callers see a
 `ProbComp G`, and recover nonzeroness from `mem_support_uniformNonzero` when they
 need it (e.g. the correctness proof). Noncomputable via `instSampleableTypeNeZero`.
 -/
@@ -294,7 +294,7 @@ Carrier types:
 - `Msg _   := F`            — attributes live in the scalar field;
 - `Sk _    := F × F × (Fin n → F)`  — `(x₀, xᵣ, x⃗)`;
 - `Pp _    := G × G × (Fin n → G)`  — `(X₀, Xᵣ, X⃗)`;
-- `Tag _   := G × G`        — `(U, V)`.
+- `Tag _   := G × G`        — the MAC code `(U, V)`.
 -/
 noncomputable def μCMZBaseMACSyntax (gen : G) :
     AlgebraicMACSyntax ProbComp where
@@ -311,8 +311,8 @@ noncomputable def μCMZBaseMACSyntax (gen : G) :
 
 
 /--
-μCMZ satisfies perfect (support-based) correctness: every honestly produced tag
-verifies. The MAC samples a nonzero `U`, so the `U ≠ 0` check passes; the
+μCMZ satisfies perfect (support-based) correctness: every honestly produced MAC
+code verifies. The MAC samples a nonzero `U`, so the `U ≠ 0` check passes; the
 verification equation `V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U` holds by construction (`rfl`),
 since `MAC` builds `V` with exactly that scalar.
 -/

@@ -86,8 +86,8 @@ avoids that link step.
 
 Each chapter lives in its own file under `docs/KVACDocs/`. To add one:
 
-1. Create `docs/KVACDocs/Doc<Name>.lean` with a chapter scaffold (see
-   template below).
+1. Create `docs/KVACDocs/Doc<Name>.lean` from the chapter template
+   below.
 2. In both `docs/KVACDocs.lean` and `docs/KVACDocs/Contents.lean`:
    - add `import KVACDocs.Doc<Name>` near the top, and
    - in `Contents.lean`, add `{include 1 KVACDocs.Doc<Name>}` to the body
@@ -97,7 +97,7 @@ Each chapter lives in its own file under `docs/KVACDocs/`. To add one:
    if a referenced Lean declaration is missing or renamed, so this is
    also the cheapest way to catch drift between docs and code.
 
-### Minimal chapter scaffold
+### Minimal chapter template
 
 ```lean
 /-
@@ -134,6 +134,6 @@ resolve to a real declaration; the build fails otherwise.
 
 - [`DocCore.lean`](KVACDocs/DocCore.lean) — chapter with a mix of real
   `(lean := ...)`-backed definitions (the two prime-order-group
-  `class abbrev`s) and TODO groups for files that have not yet landed.
+  `class abbrev`s) and TODO groups for files that have not yet been merged.
 - [`DocFramework.lean`](KVACDocs/DocFramework.lean) — fully TODO chapter,
   shape mirrors the four-file structure of `KVAC/Framework/`.

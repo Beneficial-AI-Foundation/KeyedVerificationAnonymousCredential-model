@@ -8,7 +8,7 @@ import Mathlib.Algebra.MvPolynomial.SchwartzZippel
 import VCVio.ProgramLogic.Relational.Basic
 
 /-!
-# μCMZ AGM unforgeability — coupling bricks and the Schwartz–Zippel static core
+# μCMZ AGM unforgeability — coupling lemmas and the Schwartz–Zippel static core
 
 The first probability-layer slice on top of `AGMReduction/Core.lean`:
 
@@ -16,7 +16,7 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
   and substitution down to the per-index lambdas the coupling lemmas use;
 - marginal uniformity of the affine embedded elements
   (`evalDist_{smul,affine}_gen_uniform`);
-- `relTriple_map_eq`, the deterministic-map coupling brick for the `sign` arm;
+- `relTriple_map_eq`, the deterministic-map coupling lemma for the Sign oracle's coupling;
 - `redLogInv` / `redLogHonestInv`, the log honesty and reduction ↔ honest state invariants, and
   their `maskedKey`;
 - the **static** (view-independent) Schwartz–Zippel bound: the `C★` shift lemma,
@@ -26,7 +26,7 @@ The first probability-layer slice on top of `AGMReduction/Core.lean`:
 A *coupling* pairs the two runs — the reduction's simulated oracle and the
 honest one — on a single probability space, so that a state invariant relating
 their logs survives each query; the consequence is that the two views then have
-the same distribution. What lands here are the supporting lemmas for that
+the same distribution. This file includes the supporting lemmas for that
 argument, not the conclusion itself.
 
 The distribution-layer bad-event bound built on these lives further down the
@@ -77,7 +77,7 @@ lemma bMask_def (L : RedLog F G) :
 lemma msg_def (L : RedLog F G) :
     L.msg = fun j => (L.get j).msg 0 := rfl
 
-/-- The issued tags, unapplied. -/
+/-- The issued MAC codes, unapplied. -/
 lemma tags_def (L : RedLog F G) :
     L.tags = L.map (fun e => e.tag) := rfl
 
@@ -102,7 +102,7 @@ end MaskedSubstNormalForms
 
 end RedLog
 
-/-! ## Uniformity of the embedded elements (coupling bricks) -/
+/-! ## Uniformity of the embedded elements (coupling lemmas) -/
 
 /-- `(· • gen)` is a bijection, so it pushes `$ᵗ F` to `$ᵗ G`. -/
 lemma evalDist_smul_gen_uniform :
@@ -131,11 +131,12 @@ variable [IsUniformSpec specR₁] [IsUniformSpec specR₂]
 /-- **Deterministic map coupling.** If `f <$> a` matches `b` in distribution, then `a` and `b`
 are coupled by `f x = y`. Witness: the graph coupling `evalDist a >>= fun x => pure (x, f x)`.
 
-The per-query brick for the `sign` arm (`reductionSignStep` vs `agmOracleImpl (.sign _)`):
-`embedTag_eq` puts the reduction's tag in the honest shape `(U, key·U)` and
-`sign_masked_tag_dist_eq` matches its distribution to `mac`'s; this lifts that equality to
-“computed tag = sampled tag”, which `relTriple_post_mono` and `relTriple_map` then thread
-through the log append (`SignCoupling`'s `reductionSignStep_relTriple`). -/
+The per-query constituent lemma for the Sign oracle's coupling (`reductionSignStep` vs
+`agmOracleImpl (.sign _)`): `embedTag_eq` puts the reduction's MAC code in the honest shape
+`(U, key·U)` and `sign_masked_tag_dist_eq` matches its distribution to `mac`'s; this lifts that
+equality to “computed MAC code = sampled MAC code”, which `relTriple_post_mono` and
+`relTriple_map` then thread through the log append (`SignCoupling`'s
+`reductionSignStep_relTriple`). -/
 lemma relTriple_map_eq {α β : Type} (a : OracleComp specR₁ α) (f : α → β)
     (b : OracleComp specR₂ β) (h : evalDist (f <$> a) = evalDist b) :
     RelTriple a b (fun x y => f x = y) := by
@@ -175,9 +176,9 @@ lemma macScalar_maskedKey_eq (aM bM : FixedMasks F) (x : F) (m : Fin 1 → F) :
   simp only [macScalar, FixedMasks.keyCoeff, Fin.sum_univ_one]
   ring
 
-/-- Per-entry honesty of a reduction log: the embedded base `Uⱼ = auⱼ·g + buⱼ·X` and the tag
-relation at `maskedKey`. Second conjunct of `redLogHonestInv`; preserved by the simulated oracle
-(`reductionOracleImpl_preservesInv`). -/
+/-- Per-entry honesty of a reduction log: the embedded base `Uⱼ = auⱼ·g + buⱼ·X` and the MAC
+relation `Vⱼ = key·Uⱼ` at `maskedKey`. Second conjunct of `redLogHonestInv`; preserved by the
+simulated oracle (`reductionOracleImpl_preservesInv`). -/
 def redLogInv (x : F) (aM bM : FixedMasks F) (L : RedLog F G) : Prop :=
   ∀ e ∈ L, e.tag.1 = e.au • gen + e.bu • (x • gen) ∧
            e.tag.2 = macScalar (maskedKey x aM bM) e.msg • e.tag.1

@@ -240,7 +240,7 @@ structure DomainSeparated (H : HashSpec) (zkp : NIZKPSyntax (OracleComp (ZKRO H)
 
 /-! ## The reduction of Remark 5.9 -/
 
-/-- The random-oracle arm of the reduction. Queries inside the region go to a
+/-- The reduction's random oracle. Queries inside the region go to a
 lazy random oracle on the local table, every other query to the game's oracle. -/
 def regionROImpl (H : HashSpec) (P : Region H) :
     QueryImpl (ZKRO H) (StateT H.Cache (OracleComp (ZKRO H)))
@@ -248,7 +248,7 @@ def regionROImpl (H : HashSpec) (P : Region H) :
   | .inr t => if P t then StateT.mk fun loc => liftM ((H.roImpl t).run loc)
       else StateT.lift (query (spec := ZKRO H) (.inr t))
 
-/-- The simulation-oracle arm of the reduction. The simulators of the other
+/-- The reduction's simulation oracle. The simulators of the other
 systems run on the local table. -/
 def simulationOracleImpl {H : HashSpec} {zkp : NIZKPSyntax (OracleComp (ZKRO H))}
     (simOracle : SimulationOracle H zkp) {secParam : Nat} (crs : zkp.Crs secParam) :
