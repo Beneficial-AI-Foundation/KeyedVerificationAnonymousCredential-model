@@ -58,8 +58,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   reduction to `n = 1`, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
   statement.
 - `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help.
-- `UFCMVA.lean` — Section 5.3, Theorem 5.1 in the UF-CMVA game with the
-  oracle Help — Track CMZ-M.
+- `UFCMVA.lean` — Section 5.2, Theorem 5.1 in the UF-CMVA game with the
+  oracle Help.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
   `Polynomial.lean`, `Transcript.lean`, `CaseEvents.lean` and
@@ -737,8 +737,9 @@ adversary in the AGM game, with no condition on the adversary.
 :::proof "agm_forget_transfer"
 Induction on the adversary's program. The MAC codes the forgetful adversary
 keeps are those of the AGM game's log, so both games answer each query on the
-same elements, and the messages the game with `Help` records are those of the
-log, so the forged message is fresh in one game exactly when it is in the other.
+same elements, and the game with `Help` records the log's messages in reverse
+order, which freshness does not see, so the forged message is fresh in one game
+exactly when it is in the other.
 :::
 
 :::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmvaHelp_le") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
