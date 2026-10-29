@@ -89,6 +89,29 @@ noncomputable def omufDegenerateProb (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :
       Pr[ fun t => t.CaseX1 gen secParam ∧ t.Degenerate gen AGMPoly.Var.x1 |
         agmOMUFTrace gen secParam A ])
 
+/-- **The degenerate probability of Claim 5.12**: the probability that the run is in item (i) and
+no `u_j` that occurs in a forgery polynomial leaves a nonzero polynomial once the other variables
+are evaluated at the run's values, so that whichever position the selector guesses, the reduction
+has nothing to extract. The paper treats it as `0` (module docstring). -/
+noncomputable def omufDegenerateProbU (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
+  Pr[ fun t => t.CaseU gen secParam ∧ ∀ j : Fin t.arity,
+      (∃ φ ∈ t.forgeryPolys, AGMPoly.Var.u j ∈ φ.vars) →
+        t.Degenerate gen (AGMPoly.Var.u j) | agmOMUFTrace gen secParam A ]
+
+/-- **The degenerate probability of Claim 5.13**: the probability that the run is in item (ii)
+and is degenerate in `η`, so that substituting `a + b·χ` for `η` gives nothing to extract. The
+paper treats it as `0`; the Verify-testing forger of issue #251 realises it with probability
+`(Q + 1)/p`. -/
+noncomputable def omufDegenerateProbEta (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
+  Pr[ fun t => t.CaseEta gen secParam ∧ t.Degenerate gen AGMPoly.Var.eta |
+    agmOMUFTrace gen secParam A ]
+
+/-- The degenerate probabilities of the three Claims, which `agm_omuf_le_n1` and `agm_omuf_le`
+carry as an explicit term. -/
+noncomputable def omufDegenerateProbAll (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
+  omufDegenerateProbU gen secParam A +
+    (omufDegenerateProbEta gen secParam A + omufDegenerateProb gen secParam A)
+
 end Degenerate
 
 section Support
