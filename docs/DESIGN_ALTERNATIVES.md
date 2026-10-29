@@ -717,6 +717,35 @@ keeps one sampler `$ᵗ (Fin n → F)` and one uniform `Xᵢ = rᵢ • X₁` cl
 instead of a distinguished index `0` in `Fin n` with its own case in every
 translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
+## Theorem 5.1 at the game with Help
+
+**Decision.** Theorem 5.1 is formalized as a bound for the game with `Help` of
+`UFCMVAHelp.lean`, against algebraic adversaries, with the bound of Lemma 5.5,
+`agm_ufcmva_le_explicit` (`AGMReduction/Security.lean`). It is reached by
+carrying the advantage in the AGM game of `AlgebraicMAC.lean` over to the game
+with `Help`.
+
+**Rejected alternative.** The printed form, a bound for the Figure 5 game
+`UF_CMVAGame` (`Core/AlgebraicMAC/Security.lean`), which has no `Help` oracle,
+for the translation of an algebraic adversary into an adversary of that game.
+The translated adversary holds no key, so it answers each `Help` query with a
+constant, and its advantage equals the AGM advantage only under a hypothesis
+on the adversary: at every key, crs and public parameters, a run that submits
+no `Help` query and no inconsistent representation, and a consistent forgery.
+The hypothesis excludes every adversary that queries `Help`, and the paper has
+no such hypothesis.
+
+**Fidelity argument.** O24 prints Theorem 5.1 for the Figure 5 game and proves
+it in a stronger form, "the scheme is unforgeable even if the adversary is
+given one additional oracle Help" (p. 35), and the proofs of Lemmas 5.4 and 5.5
+give the adversary `Help` (pp. 36, 38). The printed form is the case of an
+adversary that never queries `Help`: an adversary of the Figure 5 game is an
+adversary of the game with `Help` that never queries it, with the same
+advantage (`UF_CMVAHelpAdv_ufAdversaryToHelp`). The proof of Theorem 5.10
+reads the answer of `Help` (p. 43), so the stronger form is the one it
+consumes (*Theorem 5.10 at the honest UF-CMVA game with Help*). Decided
+October 2026 (Track CMZ-M, #235).
+
 ## Theorem 5.11 stated before its reductions exist
 
 **Decision.** `OneMoreUnforgeability/Statements.lean` states Theorem 5.11 (`n = 1` as
