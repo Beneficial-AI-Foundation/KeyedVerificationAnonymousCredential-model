@@ -852,6 +852,19 @@ samples `r⃗` and runs the `n = 1` reduction of {uses "challenge_embedding"}[] 
 the wrapped adversary; its experiment and advantage fix the base to `gen`.
 :::
 
+:::theorem "attribute_collapse_evaluation_bridges" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.eval_collapseRepr, KVAC.Schemes.MicroCMZ.macScalar_collapseMsg, KVAC.Schemes.MicroCMZ.verify_collapse") (parent := "cmz_amac") (tags := "milestone")
+The evaluation bridges of {uses "attribute_collapse_dictionary"}[]: a collapsed
+representation, evaluated against the 1-attribute basis, evaluates as the
+original does against the embedded basis `Xᵢ = rᵢ•X₁`; and the MAC scalar and
+the verification equation at the embedded key `xᵢ = rᵢx₁` are those of the
+collapsed message `Σᵢ mᵢrᵢ` at the 1-attribute key `x₁`.
+:::
+
+:::proof "attribute_collapse_evaluation_bridges"
+Unfolding the definitions, each is a regrouping of a finite sum over the
+attributes, by `Finset.sum_smul` and `Finset.mul_sum`.
+:::
+
 :::theorem "collapse_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
 Per query, the collapse oracle of {uses "attribute_collapse_reduction"}[] composed
 with the honest 1-attribute oracle answers as the honest `n`-attribute oracle
@@ -860,7 +873,7 @@ does under the embedded key `xᵢ = rᵢx₁`, on all inputs.
 
 :::proof "collapse_oracle_coupling"
 Case split on the arm; each answer is decided in the exponent, where the two
-evaluation bridges of {uses "attribute_collapse_dictionary"}[] rewrite the
+evaluation bridges of {uses "attribute_collapse_evaluation_bridges"}[] rewrite the
 collapsed check into the `n`-attribute one at the embedded key.
 :::
 
@@ -1262,7 +1275,7 @@ advantage in the game of {uses "omuf_game_ro"}[].
 Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 :::
 
-:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
+:::theorem "mucmz_at_agm_omuf" (lean := "KVAC.Schemes.MicroCMZ.omufBound, KVAC.Schemes.MicroCMZ.omufToN1, KVAC.Schemes.MicroCMZ.omufGapDlOracleImpl, KVAC.Schemes.MicroCMZ.collidingForgeries, KVAC.Schemes.MicroCMZ.omufGapDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le") (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.11")
 *O24 Theorem 5.11.* In the algebraic group model, `μCMZ_AT` is a
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
 attributes. Stated as `agm_omuf_le` over the merged core scheme
@@ -1273,8 +1286,10 @@ deferred bridge, with the printed bound
 definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
 and 2-DL advantages are those of the `n = 1` reductions run on the
 transformed adversary `omufToN1`, the gap-DL advantage that of the
-collision-case reduction `omufGapDLReduction`, both declared with `sorry`
-bodies until the proofs build them. *Note.* The constants are the paper's
+collision-case reduction `omufGapDLReduction` (built: it embeds the challenge
+as `Xᵢ = aaᵢ•g + bbᵢ•X`, answers Verify with one DDH query and extracts `x` from
+two forgeries with equal attribute combination), while `omufToN1` is declared
+with a `sorry` body until the proofs build it. *Note.* The constants are the paper's
 and provisional: the core's nonzero issuance nonces condition the paper's
 `ℤ_p` samplers away from their zero cases, so they transfer only up to
 per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles

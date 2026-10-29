@@ -7,6 +7,7 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Preliminaries.Assumptions
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.GapDLReduction
 import VCVio.OracleComp.QueryTracking.QueryBound
 
 /-!
@@ -70,9 +71,10 @@ argument in the style of Lemma 5.5 (which the paper's text cites as Theorem
 5.5). The six named constructions, the theorem's two reductions, the two
 per-Claim discrete-log reductions, the attribute-lifting transformation
 `omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and the gap-DL
-reduction, are declared with `sorry` bodies, the first sorried definitions in
-the repository, and are built with the proofs of the Claims over the polynomial
-layer of Equations 17 to 22 (`Polynomial.lean`, `CaseEvents.lean`). Whether the
+reduction `omufGapDLReduction`: the last is built in `GapDLReduction.lean`, the
+others are declared with `sorry` bodies, the first sorried definitions in the repository,
+and are built with the proofs of the Claims over the polynomial layer of
+Equations 17 to 22 (`Polynomial.lean`, `CaseEvents.lean`). Whether the
 transformation reuses the Lemma 5.5 embedding of the MAC track is open with
 Semar (question C2 of the Theorem 5.3 plan). The adversary has a private coin
 oracle (`Game.lean`, *The adversary has a private coin oracle*), so a
@@ -291,19 +293,6 @@ adversary's private coin oracle (module docstring).
 noncomputable def omufToN1 :
     ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
       AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1 :=
-  sorry
-
-/--
-The gap-DL reduction of the collision case of O24 Theorem 5.11 at general `n`
-(p. 46, two forgeries with equal attribute combination `Σᵢ mᵢ·Xᵢ`, "reduced to
-DL using an argument similar to Theorem 5.5", the paper's text citing its
-Lemma 5.5 as a theorem), built from an `n`-attribute algebraic one-more
-forger. It may randomise freely, since `GapDLogAdversary` has an oracle for
-uniform sampling. Declared with a `sorry` body until built.
--/
-noncomputable def omufGapDLReduction :
-    ∀ {n : ℕ} (gen : G) [Fact (Function.Bijective (fun x : F => x • gen))],
-      AGMOMUFAdversary F G n → GapDLogAdversary F G :=
   sorry
 
 /-! ## The statements -/

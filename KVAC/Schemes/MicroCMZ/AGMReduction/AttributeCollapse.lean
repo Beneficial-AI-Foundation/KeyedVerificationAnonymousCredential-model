@@ -154,6 +154,37 @@ noncomputable def collapseOracleImpl (r : Fin n → F) (H : G)
       else
         pure (false, tags)
 
+lemma AGMRepr.eval_collapseRepr (r : Fin n → F) (ρ : AGMRepr F n)
+    (g₀ H X₀ Xᵣ X₁ : G) (tags : List (G × G)) :
+    (ρ.collapseRepr r).eval g₀ H X₀ Xᵣ (fun _ => X₁) tags
+      = ρ.eval g₀ H X₀ Xᵣ (fun i => r i • X₁) tags := by
+  simp only [AGMRepr.eval, collapseRepr]
+  simp only [add_left_cancel_iff, add_right_cancel_iff]
+  simp only [Finset.sum_smul, Fin.sum_univ_one]
+  apply Finset.sum_congr rfl
+  intros x a
+  rw [mul_comm]
+  rw [mul_smul]
+
+omit [Fintype F] [DecidableEq F] [SampleableType F] in
+lemma macScalar_collapseMsg (r m : Fin n → F) (x₀ xᵣ x₁ : F) :
+    macScalar (x₀, xᵣ, fun i => r i * x₁) m
+      = macScalar (x₀, xᵣ, fun _ : Fin 1 => x₁) (collapseMsg r m) := by
+  simp only [macScalar, collapseMsg]
+  congr 1
+  simp only [Fin.sum_univ_one, Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intros _ _
+  ring
+
+lemma verify_collapse (r m : Fin n → F) (x₀ xᵣ x₁ : F) (t : Code G) :
+    verify (x₀, xᵣ, fun i => r i * x₁) m t
+      = verify (x₀, xᵣ, fun _ : Fin 1 => x₁) (collapseMsg r m) t := by
+  unfold verify
+  rw [macScalar_collapseMsg]
+
+
+
 /-- The `n → 1` attribute-collapse wrapper adversary (Claim 5.7). For a fixed
 direction `r⃗`, a 1-attribute adversary that runs `A` against
 `collapseOracleImpl` and returns the collapsed forgery. The tag-tracking state
