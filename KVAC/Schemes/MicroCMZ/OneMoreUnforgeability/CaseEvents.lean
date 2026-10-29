@@ -39,7 +39,7 @@ counts every Sign query.
 ## The evaluation bridge
 
 The game-level evaluation bridge: at the discrete-log point of a run (`OMUFTrace.point` in
-`Statements.lean`), `t.cs k` evaluates to the logarithm of the `k`-th issued commitment and,
+`Bridge.lean`), `t.cs k` evaluates to the logarithm of the `k`-th issued commitment and,
 for a forgery whose representations match its token and whose token verifies, its polynomial
 vanishes (`eval_point_cs`, `eval_point_forgeryPoly`), by induction over the transcript through
 the gate and the server's answers. Its algebraic half is `eval_toPolyAt` in `Polynomial.lean`;

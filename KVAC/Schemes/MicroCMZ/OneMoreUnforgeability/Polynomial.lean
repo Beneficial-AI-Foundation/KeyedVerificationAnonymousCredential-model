@@ -52,7 +52,7 @@ the forgery polynomial with the case split of the proof.
 (`OMUFTrace`) to define the case events that Claims 5.12 to 5.14 bound
 (`Statements.lean`).
 
-## Obligations deferred to the proof phase
+## Where the game-level facts are proved
 
 The game-level evaluation bridge, the Equation 18 bridge announced in the
 module docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log
@@ -62,12 +62,10 @@ logarithm of the element `γ` represents, by induction over the transcript
 through the gate and the server's honest answers, so that `φ` vanishes at that
 point exactly when the verification equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds
 (acceptance also needs `U* ≠ 0`, so a verifying forgery has vanishing `φ`, not
-conversely). `eval_toPolyAt` is its algebraic half;
-the induction over the run belongs to the proof of Theorem 5.11. So do the
-coefficient
-identities of Equations 20 and 21 (in particular that, under the exact-length
-gate, `u_k` occurs in `c_j` only for `k < j`), the degree bounds, and the
-constant audit.
+conversely). `eval_toPolyAt` is its algebraic half; the induction over the run
+is `OMUFTrace.eval_point_cs` in `Bridge.lean`. The coefficient identities of
+Equations 20 and 21 are `forgeryPoly_eq_zero_coeffs` in this file. The degree
+bounds and the constant audit belong to the proofs of the Claims.
 
 ## Conventions
 
@@ -78,7 +76,7 @@ issued contributes `γ_{u,k}·u_k + γ_{v,k}·u_k·(x₀ + xᵣ)` rather than no
 for a representation accepted by the game's exact-length gate, the conversion
 `toReprCoeffs` pads both coefficients of every not-yet-issued pair with `0`, so
 the contribution is `0`. The layer itself accepts any coefficient lists, so
-this triangularity is a property of gated inputs, stated in the proof phase.
+this triangularity is a property of gated inputs, the `hlen` of `OMUFTrace.eval_point_cs`.
 -/
 
 set_option autoImplicit false
@@ -197,7 +195,7 @@ theorem omufCommitPolys_getElem (γs : List (ReprCoeffs F r)) (j : ℕ)
 The forgery polynomial `φ` of O24 Equation 22 for a forgery `(m*, (U*, V*))`
 with representations `α` of `U*` and `β` of `V*` over the final transcript:
 `toPolyAt α · (x₀ + xᵣ + m*·x₁) − toPolyAt β`. Through the evaluation lemma of
-Equation 18, which the proof phase proves (module docstring), its evaluation at
+Equation 18, which `OMUFTrace.eval_point_forgeryPoly` proves for a run, its evaluation at
 the discrete logarithms of an honest run is `0` when the forgery verifies; the
 pigeonhole step and the coefficient identities of Equations 20 and 21 then show
 that the forgery the pigeonhole step selects, one that is not the unblinding of
@@ -222,9 +220,9 @@ def HasXMonomial (φ : P F r) : Prop :=
   Var.x0 ∈ φ.vars ∨ Var.xr ∈ φ.vars ∨ Var.x1 ∈ φ.vars
 
 /-- The three groups exhaust the variables: any variable occurring in `φ` puts
-`φ` in one of the cases. The proof phase shows that the `φ` of the forgery the
-pigeonhole step selects is a nonzero polynomial vanishing at the secret point,
-hence non-constant, hence has a variable. -/
+`φ` in one of the cases. `omuf_cover` applies it to the `φ` of the forgery the
+pigeonhole step selects, a nonzero polynomial vanishing at the secret point,
+hence non-constant, hence with a variable. -/
 theorem cases_of_mem_vars {φ : P F r} {v : Var r} (hv : v ∈ φ.vars) :
     HasUMonomial φ ∨ HasEtaMonomial φ ∨ HasXMonomial φ := by
   cases v with
@@ -311,7 +309,7 @@ dropped (`ev0_toPolyAt`). -/
 noncomputable def ReprCoeffs.uFree (γ : ReprCoeffs F r) : P F r :=
   C γ.cg + C γ.ch * η + C γ.c0 * (x₀ * η) + C γ.cr * xᵣ + C γ.c1 * x₁
 
-/-- Item 4: the `u`-free part of the `j`-th commitment polynomial (Equation 18) is that of the
+/-- The `u`-free part of the `j`-th commitment polynomial (Equation 18) is that of the
 `j`-th representation, whatever the earlier polynomials. -/
 theorem ev0_omufCommitPolys_getElem (γs : List (ReprCoeffs F r)) (j : ℕ)
     (hj : j < (omufCommitPolys γs).length) :
@@ -370,7 +368,7 @@ theorem spec_uFree (E P0 Pr P1 : Polynomial F) (Uf : Fin r → Polynomial F)
         Polynomial.C γ.cr * Pr + Polynomial.C γ.c1 * P1 := by
   simp [ReprCoeffs.uFree, spec, η, x₀, xᵣ, x₁]
 
-/-- Item 6: the coefficient reading of Equations 20 and 21. If the forgery polynomial vanishes
+/-- The coefficient reading of Equations 20 and 21. If the forgery polynomial vanishes
 in the ring, and the `u`-free parts of the commitment polynomials are those of the issued
 representations `γ`, then the forgery's `U` representation `α` has no coefficient outside the tag
 slots, no `V` coefficient, and every nonzero `U` coefficient `α.cu j` sits at a slot whose

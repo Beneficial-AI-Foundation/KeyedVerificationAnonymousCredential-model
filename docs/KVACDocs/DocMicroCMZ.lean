@@ -1143,7 +1143,12 @@ The commitment polynomials of Equations 17 and 18 are
 Equation 22 with the case split of the proof is
 {bpref "omuf_forgery_polynomial"}[], the game trace is
 {bpref "omuf_transcript"}[], and the polynomials and case events read off
-it are {bpref "omuf_case_events"}[].
+it are {bpref "omuf_case_events"}[]. The coefficient reading of Equations 20
+and 21 is {bpref "omuf_forgery_coefficients"}[], and the pigeonhole step, the
+server consistency of a run, the evaluation bridge and the case cover of the
+proof at `n = 1` are {bpref "omuf_pigeonhole"}[],
+{bpref "omuf_server_consistency"}[], {bpref "omuf_evaluation_bridge"}[] and
+{bpref "omuf_case_cover"}[].
 
 *TODO (Track CMZ-OMUF).* The Theorem 5.3 one-more unforgeability clause,
 then the proofs of the Claims and of Theorem 5.11.
