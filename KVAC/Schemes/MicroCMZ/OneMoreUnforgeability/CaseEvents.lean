@@ -142,6 +142,27 @@ monomial in `x₀`, `xᵣ` or `x₁`. The event Claim 5.14 bounds. -/
 def OMUFTrace.CaseX (t : OMUFTrace F G) : Prop :=
   t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.HasXMonomial φ
 
+/-- Item (iii), `x₀` case (p. 47): the adversary wins and some forgery polynomial has a nonzero
+monomial in `x₀`. The event the `x₀` reduction of Claim 5.14 bounds. -/
+def OMUFTrace.CaseX0 (t : OMUFTrace F G) : Prop :=
+  t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.Var.x0 ∈ φ.vars
+
+/-- Item (iii), `xᵣ` case: as `CaseX0` for `xᵣ`. -/
+def OMUFTrace.CaseXr (t : OMUFTrace F G) : Prop :=
+  t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.Var.xr ∈ φ.vars
+
+/-- Item (iii), `x₁` case: as `CaseX0` for `x₁`. -/
+def OMUFTrace.CaseX1 (t : OMUFTrace F G) : Prop :=
+  t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.Var.x1 ∈ φ.vars
+
+/-- Item (iii) is the union of its three cases. -/
+theorem OMUFTrace.caseX_imp (t : OMUFTrace F G) (h : t.CaseX gen secParam) :
+    t.CaseX0 gen secParam ∨ t.CaseXr gen secParam ∨ t.CaseX1 gen secParam := by
+  obtain ⟨hw, φ, hφ, h0 | hr | h1⟩ := h
+  · exact Or.inl ⟨hw, φ, hφ, h0⟩
+  · exact Or.inr (Or.inl ⟨hw, φ, hφ, hr⟩)
+  · exact Or.inr (Or.inr ⟨hw, φ, hφ, h1⟩)
+
 end Events
 
 end KVAC.Schemes.MicroCMZ
