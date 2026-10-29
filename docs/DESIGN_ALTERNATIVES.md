@@ -754,11 +754,13 @@ translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
 ## Theorem 5.1 at the game with Help
 
-**Decision.** Theorem 5.1 is formalized as a bound for the game with `Help` of
-`UFCMVAHelp.lean`, against algebraic adversaries, with the bound of Lemma 5.5,
-`agm_ufcmva_le_explicit` (`AGMReduction/Security.lean`). It is reached by
-carrying the advantage in the AGM game of `AlgebraicMAC.lean` over to the game
-with `Help`.
+**Decision.** Theorem 5.1, `microCMZ_ufcmvaHelp_le` of `UFCMVA.lean`, is a
+bound for the game with `Help` of `UFCMVAHelp.lean`, for the image
+`A.forget gen` of an algebraic adversary `A` under the forgetful map, with the
+bound of Lemma 5.5, `agm_ufcmva_le_explicit` (`AGMReduction/Security.lean`).
+The transfer `UF_CMVAHelpAdv_forget` equates it with the advantage in the AGM
+game of `AlgebraicMAC.lean`, and the algebraic group model enters only through
+the adversary type (*Algebraic adversaries submit coefficients only*).
 
 **Rejected alternative.** The printed form, a bound for the Figure 5 game
 `UF_CMVAGame` (`Core/AlgebraicMAC/Security.lean`), which has no `Help` oracle,
