@@ -1,23 +1,26 @@
 # Findings and lessons from the repository record
 
-This report is the merge of the two files in which the project records its
-departures from the paper. The errata, `docs/presentations/rolf-status/errata.md`,
-hold the discrepancies between the printed text and what the paper's own
-arguments require. The design record, `docs/DESIGN_ALTERNATIVES.md`, holds the
-decisions taken where the paper says less than a formalization needs. The two
-files stay the record and keep their full text. This report indexes every item
-of both, in the format of the team's reports of October 2026.
+This report merges the two files in which the project recorded its departures
+from the paper, the errata, `docs/presentations/rolf-status/errata.md`, with
+the discrepancies between the printed text and what the paper's own arguments
+require, and the design record, `docs/DESIGN_ALTERNATIVES.md`, with the
+decisions taken where the paper says less than a formalization needs. Both
+files are discontinued and receive no new items. Their full text stays in the
+repository history, and this report is the record from now on, in the format
+of the team's reports of October 2026.
 
-**How to add an item.** A new finding about the paper goes to `errata.md` first,
-with the next number, then into the table of its category in Part A, in one row
-with the same number, the section heading, what is wrong in one sentence, the
-Lean object that carries the correction, its kind, its status and its origin.
-A new design decision goes to `DESIGN_ALTERNATIVES.md` first, with the decision,
-the rejected alternative and the fidelity argument, then into Part A6 as one
-bullet under the layer of the paper it concerns, or under the item of Part A it
-answers. A lesson that the two records support goes to Part B with the items or
-entries it rests on. The status list and the "What we did" paragraphs are
-revised when a statement or proof lands.
+**How to add an item.** A new finding about the paper takes the next errata
+number and goes into the table of its category in Part A, one row with the
+number, a short heading with the page, what is wrong in one sentence, the Lean
+object that carries the correction, its kind, its status and its origin. Its
+full account, the printed text, why it is wrong, the proposed correction and
+where the formalization records it, goes in a paragraph below the table,
+headed by the number. A new design decision goes into Part A6 as one bullet
+under the layer of the paper it concerns, or under the item of Part A it
+answers, with the decision, the rejected alternative and the fidelity argument
+in full, and the date. A lesson that the record supports goes to Part B with
+the items or decisions it rests on. The status list and the "What we did"
+paragraphs are revised when a statement or a proof lands.
 
 This is based on:
 
@@ -108,7 +111,7 @@ The 3/p is the generic Schwartz–Zippel bound for a polynomial of degree 3. The
 
 ### A6. Things the paper leaves implicit that the formalization had to decide
 
-These are not errors. They are places where the paper says less than a machine needs. The choice is recorded in `docs/DESIGN_ALTERNATIVES.md` with the decision, the rejected alternative and the fidelity argument. The entries that answer an erratum are cited above. The rest follow, by the layer of the paper they concern.
+These are not errors. They are places where the paper says less than a machine needs. Each choice was recorded with the decision, the rejected alternative and the fidelity argument, which the design record holds in full for the entries below. The entries that answer an erratum are cited above. The rest follow, by the layer of the paper they concern.
 
 **The proof-system layer, §3.3.**
 
