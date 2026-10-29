@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
-Authors: Jin Xing Lim
+Authors: Callum Bannister
 -/
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
@@ -39,8 +39,9 @@ variable (secParam : ℕ)
 
 /-- A duplicate-free list all of whose entries are values of a function out of `Fin n` has at most
 `n` entries (pigeonhole). -/
-theorem length_le_of_nodup_of_forall_mem_range {α : Type*} [DecidableEq α] {n : ℕ} {l : List α}
+theorem length_le_of_nodup_of_forall_mem_range {α : Type*} {n : ℕ} {l : List α}
     (hnd : l.Nodup) (f : Fin n → α) (h : ∀ x ∈ l, ∃ j, x = f j) : l.length ≤ n := by
+  letI : DecidableEq α := Classical.decEq α
   have hsub : l.toFinset ⊆ Finset.univ.image f := by
     intro x hx
     obtain ⟨j, hj⟩ := h x (List.mem_toFinset.1 hx)
