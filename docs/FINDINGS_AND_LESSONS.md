@@ -7,7 +7,7 @@ This report merges the two files in which the project recorded its departures fr
 This is based on:
 
 - `docs/presentations/rolf-status/errata.md`, items 1 to 17 on `main`, items 18 and 19 on the branch `microcmz-theorem-5-3` (#184),
-- `docs/DESIGN_ALTERNATIVES.md`, 36 entries on `main` and one on that branch,
+- `docs/DESIGN_ALTERNATIVES.md`, 36 entries on `main` and one on that branch, all but the first, on the set-aside security-model-agnostic specification, which concerns no part of the paper,
 - the reports of Jin, Oana and Semar of October 2026 for the categories and the format only.
 
 Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, cited as O24, in its version of 27 March 2026 unless a version is named. Items are numbered through the file in the first column of the tables, in order of appearance, and the prose refers to items by that number. The second column, "Err.", gives the number of the same item in the frozen `errata.md`, which the docstrings and the design record cite. "DA" abbreviates the design record, `docs/DESIGN_ALTERNATIVES.md`, so a reference of the form "DA *Conditioned η masks*" points at the entry of that file whose heading is *Conditioned η masks*, where the decision, the rejected alternative and the fidelity argument are written in full. **Kind** says whether an item lives only in the security argument (*proof*) or constrains an implementation (*impl*), as input for KVAC-verify. **Status** says where the item stands, on `main` or on a branch, the branch of #184 for items 18 and 19.
@@ -101,7 +101,6 @@ These are not errors. They are places where the paper says less than a machine n
 
 **The proof-system layer, §3.3.**
 
-- **Security-model-agnostic specification set aside.** The NIZKP object is the game-based §3.3 specification. The earlier typeclass with model-supplied relations `indist`, `produces` and `extracts` stays in the tree, unimported, since it abstracts away the computational content a §3.3 citation needs (#43).
 - **Extractor and simulator exhibited existentially.** Both are exhibited in the security statements, not fields of the scheme, as in §3.3 and the standard definitions.
 - **Monadic verifier.** `verify` returns `M Bool`, since the paper writes 0/1 ← ZKP.V with a sampling arrow and a Fiat–Shamir verifier recomputes its challenge through the random oracle.
 - **Proveᵦ guard on the oracle side.** The Proveᵦ oracle checks (x, w) ∈ R and answers `none` on a non-witnessed query, identically in both worlds. A type-level guard on the query was rejected, since the check belongs to the oracle and a type restriction narrows the game's interface.
