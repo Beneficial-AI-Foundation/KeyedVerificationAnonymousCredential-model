@@ -243,8 +243,7 @@ noncomputable def agmOracleImpl (secParam : ℕ) (sk : F × F × (Fin n → F)) 
   | .help A₀ A Z ρ₀ ρA ρZ => StateT.mk fun log =>
       let tags := log.map Prod.snd
       let consistent := helpConsistent gen H pp tags A₀ A Z ρ₀ ρA ρZ
-      pure (decide consistent &&
-        decide (Z = (sk.1 + sk.2.1) • A₀ + ∑ i, sk.2.2 i • A i), log)
+      pure (decide consistent && helpEq sk A₀ A Z, log)
 
 /-! ## The game -/
 
