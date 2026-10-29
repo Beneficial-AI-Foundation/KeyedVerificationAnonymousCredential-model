@@ -600,7 +600,7 @@ as a typo for φ′.
 
 ## Normalized representations in the AGM OMUF game
 
-**Decision.** In the AGM-instrumented one-more unforgeability game for the
+**Decision.** In the AGM one-more unforgeability game for the
 μCMZ_AT core (`OneMoreUnforgeability/Game.lean`) the adversary submits
 representations only, as in the MAC game (*Algebraic adversaries submit
 coefficients only*). A Sign query is the representation of the commitment `C'`
@@ -611,39 +611,39 @@ normalized, its pair-coefficient list cut, or padded with zeros, to exactly one
 entry per pair issued so far (`AGMRepr.normalize`). Verify and forgery
 representations are evaluated once and are not normalized.
 
-**Rejected alternatives.** (i) The gate: Sign and Verify queries carry the
-group elements next to their representations, and the oracle refuses unless the
-representation evaluates to its element with exactly one pair coefficient per
-issued pair. (ii) Logging the representation as submitted, under
-`AGMRepr.eval`'s `zipWith` convention, which ignores excess entries and reads
-missing ones as zero. (iii) Cutting excess entries only and keeping short lists
-as submitted.
+**Rejected alternatives.** (i) The gate: Sign and Verify queries and the
+forgeries carry the group elements next to their representations, the oracles
+refuse, and the winning condition fails, unless each representation evaluates to
+its element with exactly one pair coefficient per issued pair. (ii) Logging the
+representation as submitted, under `AGMRepr.eval`'s `zipWith` convention, which
+ignores excess entries and reads missing ones as zero. (iii) Cutting excess
+entries only and keeping short lists as submitted.
 
 **Fidelity argument.** Against (i) the argument is that of *Algebraic
 adversaries submit coefficients only*: the gated game agrees with the honest
 game only for adversaries whose representations are correct on every branch,
 while the restricted game is the plain Figure 6 game run on the evaluated
 elements. Normalization is a simplification, not a soundness requirement, and
-it changes no answer, since the normalized representation names the commitment
-the submitted one names at its own transcript (`AGMRepr.eval_normalize`). The
-Theorem 5.11 proof (O24 §5.6) substitutes each commitment's representation into
-the server's answer (Equation 18) as coefficients read at the arity of its own
-query. Exact length buys the right to evaluate a logged representation against
-any later transcript, the final one included, with the same result
-(`AGMRepr.eval_append_of_length_eq`), so the winning condition and the
-reduction can read the finished log against one list of pairs instead of a
-per-query prefix. Under (ii) an excess entry ignored at query time contributes
-once more pairs exist, so the same logged representation names two different
-elements at two arities. Under (iii) short lists are extension-stable but one
-coefficient vector has many list forms, differing in omitted trailing zeros,
-and the reduction's coefficient dictionary (`AGMRepr.toReprCoeffs` on the MAC
-side) reads a list position by position, so exact length fixes the list form of
-a chosen vector. Normalization does not make representations unique: distinct
-coefficient vectors can name the same group element, which is why the log keeps
-the adversary's choice. The MAC game does not normalize because its Verify and
-Help representations are consumed once, at the arity of the moment they are
-evaluated, and the Verify and forgery representations of this game are consumed
-the same way.
+it changes no answer, since the oracle answers on the submitted representation
+and only the log stores the normalized one, which names the same commitment at
+its own transcript (`AGMRepr.eval_normalize`). The Theorem 5.11 proof (O24 §5.6)
+substitutes each commitment's representation into the server's answer
+(Equation 18) as coefficients read at the arity of its own query. Normalization
+buys the right to evaluate a logged representation against any later transcript,
+the final one included, with the same result
+(`AGMRepr.eval_append_of_length_eq`), so the reduction can read the finished log
+against one list of pairs instead of a per-query prefix. Under (ii) an excess
+entry ignored at query time contributes once more pairs exist, so the same
+logged representation names two different elements at two arities. Under (iii)
+short lists are extension-stable but one coefficient vector has many list forms,
+differing in omitted trailing zeros, and the reduction's coefficient dictionary
+(`AGMRepr.toReprCoeffs` on the MAC side) reads a list position by position, so
+normalization fixes the list form of a chosen vector. Normalization does not
+make representations unique: distinct coefficient vectors can name the same
+group element, which is why the log keeps the adversary's choice. The MAC game
+does not normalize because its Verify and Help representations are consumed
+once, at the arity of the moment they are evaluated, and the Verify and forgery
+representations of this game are consumed the same way.
 
 **What carries over from the MAC track.** The representation type `AGMRepr`,
 the coefficient conversion `AGMRepr.toReprCoeffs`, and the generic
