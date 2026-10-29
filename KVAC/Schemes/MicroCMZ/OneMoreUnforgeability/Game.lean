@@ -399,7 +399,7 @@ def agmOMUFQueryToPlain {secParam : ℕ} (H : G) (pp : Params G n) :
         OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H) (.inl t)
       pure (u, tags)
   | .inr (.sign ρ) => StateT.mk fun tags => do
-      let C' : G := ρ.eval gen H pp.1 pp.2.1 pp.2.2 tags
+      let C' : G := ρ.evalParams gen H pp tags
       let resp? : Option (G × G) ← query (spec := unifSpec +
         OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)
         (.inr (.sign C'))
@@ -407,8 +407,7 @@ def agmOMUFQueryToPlain {secParam : ℕ} (H : G) (pp : Params G n) :
   | .inr (.verify m ρU ρV) => StateT.mk fun tags => do
       let b ← query (spec := unifSpec +
         OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)
-        (.inr (.verify m
-          (ρU.eval gen H pp.1 pp.2.1 pp.2.2 tags, ρV.eval gen H pp.1 pp.2.1 pp.2.2 tags)))
+        (.inr (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)))
       pure (b, tags)
 
 /-- An algebraic adversary as an adversary of the plain Figure 6 game over the core
