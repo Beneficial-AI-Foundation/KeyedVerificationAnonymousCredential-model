@@ -1550,7 +1550,7 @@ representation. The run-level statement is induction on the adversary's
 computation through these steps.
 :::
 
-:::theorem "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix, KVAC.Schemes.MicroCMZ.twoDLAuxOf, KVAC.Schemes.MicroCMZ.twoDLXTags_auxOf, KVAC.Schemes.MicroCMZ.smul_zipWith_sum_tags, KVAC.Schemes.MicroCMZ.twoDLParams_eq, KVAC.Schemes.MicroCMZ.twoDLxEval_eq, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_some, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_none, KVAC.Schemes.MicroCMZ.twoDL_step_sign, KVAC.Schemes.MicroCMZ.twoDL_step_verify, KVAC.Schemes.MicroCMZ.twoDL_step_coin, KVAC.Schemes.MicroCMZ.twoDL_run") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix, KVAC.Schemes.MicroCMZ.twoDLAuxOf, KVAC.Schemes.MicroCMZ.twoDLXTags_auxOf, KVAC.Schemes.MicroCMZ.smul_zipWith_sum_tags, KVAC.Schemes.MicroCMZ.twoDLParams_eq, KVAC.Schemes.MicroCMZ.twoDLxEval_eq, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_some, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_none, KVAC.Schemes.MicroCMZ.twoDL_step_sign, KVAC.Schemes.MicroCMZ.twoDL_step_verify, KVAC.Schemes.MicroCMZ.twoDL_step_coin, KVAC.Schemes.MicroCMZ.twoDL_run, KVAC.Schemes.MicroCMZ.twoDLSampleEmbed, KVAC.Schemes.MicroCMZ.evalDist_map_uniformNonzero, KVAC.Schemes.MicroCMZ.evalDist_uniformUnits_smul_gen, KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_const, KVAC.Schemes.MicroCMZ.evalDist_bind_congr', KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_add_right, KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_fin_one, KVAC.Schemes.MicroCMZ.twoDLSampleEmbed_key, KVAC.Schemes.MicroCMZ.twoDLEmbedAt, KVAC.Schemes.MicroCMZ.omufCrsKey, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_key, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_indep") (parent := "cmz_omuf") (tags := "milestone")
 The 2-DL reduction of {bpref "omuf_case_iii"}[] (O24 p. 47), built from an
 algebraic one-more forger and run against the game of {uses "agm_omuf_game"}[]. The paper writes the `x₀`
 case and calls `xᵣ` and `x₁` "almost identical"; all three are one construction with a key that is
@@ -1565,10 +1565,15 @@ substitutes the key variables by their affine functions of `χ` into the forgery
 {uses "omuf_case_events"}[] and outputs the root `r` of the first nonzero one with `r·G = X`. The
 run-level coupling: at the key of the challenge the simulated run is the real run of the instrumented
 oracle of {uses "agm_omuf_oracle"}[] followed by the records of the final log, an equality of
-computations. The theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
-advantage is the sum of the three. Not yet shown: the distribution of the key and of `H` the reduction
-presents, and that the substituted polynomial is nonzero (the extraction obligation of
-{bpref "omuf_case_iii"}[]).
+computations. The paper's hiding step, "`b` is uniformly distributed and perfectly hidden by `a`",
+is that at every slope `b`, including the degenerate `b = 0` of probability `1/p`, the crs and the
+key the reduction presents have the distribution of the real game, so the view does not depend on
+`b` and the slope is independent of it: the slope times the challenge only shifts the offsets, which
+are uniform, and `η·G` for `η` uniform among the nonzero scalars is the nonzero crs of `setup`. Over
+the whole randomness of the reduction this gives the real view for every slope pattern and
+challenge. The theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
+advantage is the sum of the three. Not yet shown: that the substituted polynomial is nonzero (the
+extraction obligation of {bpref "omuf_case_iii"}[]).
 :::
 
 :::proof "omuf_two_dl_reduction"
