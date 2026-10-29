@@ -12,7 +12,7 @@ import KVAC.Preliminaries.Assumptions
 
 The second half of the proof of O24 Claim 5.14 for the three cases `x₀`, `xᵣ`, `x₁`, on top of
 the reduction and its coupling of `TwoDLReduction.lean`: when the reduction's extraction can
-succeed it does.
+succeed it does, and everything else is the event that does not depend on the reduction.
 Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17.
 
 ## What is proved
@@ -21,6 +21,13 @@ Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17.
   the embedded variable once every other variable is set to the run's values, the reduction
   returns the challenge `x`. The substituted polynomial of a forgery vanishes at `x` by the
   evaluation bridge (`OMUFTrace.eval_point_of_wins`), and the root with `r·G = X` is `x`.
+- `twoDL_claim_of_sound`: the probability of a case event is at most the degenerate-mask
+  probability `1/p`, plus the 2-DL advantage of the reduction, plus the probability of the event
+  together with the degeneracy of the run. The run of the reduction is the run of the game
+  (`twoDLRunAt_trace`), the extraction succeeds off the degeneracy, and the challenge is
+  recovered with the probability that defines the advantage.
+- `omuf_claim_5_14_x0`, `omuf_claim_5_14_xr`, `omuf_claim_5_14_x1`: Claim 5.14 for each case, with
+  the degenerate probability as an explicit extra term (`omufDegenerateProb`).
 
 ## The extraction obligation, and the bound proved instead
 
@@ -275,5 +282,278 @@ theorem twoDLExtract_eq (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
       · exact ⟨_, rfl⟩
 
 end Soundness
+
+section Probability
+
+variable (gen : G) [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
+
+/-- The reduction's experiment, unfolded: the challenge, then the run of the reduction at it. -/
+noncomputable def twoDLExp (A : AGMOMUFAdversary F G 1) (w : F × F × F) :
+    ProbComp (F × (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G)) := do
+  let x ← ($ᵗ F : ProbComp F)
+  let r ← twoDLRunAt gen A w x
+  pure (x, r)
+
+/-- What the reduction outputs at a run of its experiment. -/
+noncomputable def twoDLOutput (x : F)
+    (r : TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G) : F :=
+  twoDLExtract (twoDLTraceOf gen x r) gen (x • gen) r.1 (r.2.2.2.map Prod.fst)
+
+/-- The 2-DL experiment of the reduction is its run at a uniform challenge, followed by the
+comparison of its output with the challenge. -/
+lemma qdlogExp_omufTwoDLReductionAt (A : AGMOMUFAdversary F G 1) (w : F × F × F) :
+    qdlogExp 2 gen (omufTwoDLReductionAt gen A w) =
+      (fun p => decide (twoDLOutput gen p.1 p.2 = p.1)) <$> twoDLExp gen A w := by
+  have h0 : ∀ x : F, x ^ (((0 : Fin 2) : ℕ) + 1) • gen = x • gen := fun x => by simp
+  have h1 : ∀ x : F, x ^ (((1 : Fin 2) : ℕ) + 1) • gen = x • (x • gen) := fun x => by
+    simp [pow_two, smul_smul]
+  simp only [qdlogExp, omufTwoDLReductionAt, twoDLExp, twoDLRunAt, twoDLOutput, map_bind,
+    bind_pure_comp, h0, h1, Functor.map_map]
+  rfl
+
+omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G]
+  hgen in
+/-- Computations with the same evaluation distribution give every event the same probability. -/
+lemma probEvent_eq_of_evalDist_eq' {α : Type} {mx my : ProbComp α} (h : 𝒟[mx] = 𝒟[my])
+    (p : α → Prop) : Pr[p | mx] = Pr[p | my] := by
+  rw [probEvent_def, probEvent_def, h]
+
+omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G]
+  hgen in
+/-- A bad event of the sampler that every run outside it avoids has at most the probability of the
+sampler's event. -/
+lemma probEvent_bind_le_of_imp {α β : Type} (mx : ProbComp α) (my : α → ProbComp β)
+    (q : α → Prop) (p : β → Prop)
+    (h : ∀ a ∈ support mx, ¬ q a → ∀ b ∈ support (my a), ¬ p b) :
+    Pr[p | mx >>= my] ≤ Pr[q | mx] := by
+  classical
+  rw [probEvent_bind_eq_tsum, probEvent_eq_tsum_ite]
+  refine ENNReal.tsum_le_tsum fun a => ?_
+  by_cases ha : q a
+  · rw [if_pos ha]
+    exact (mul_le_mul' le_rfl probEvent_le_one).trans (mul_one _).le
+  · rw [if_neg ha]
+    by_cases hs : a ∈ support mx
+    · have h0 : Pr[p | my a] = 0 := by
+        rw [probEvent_eq_zero_iff]
+        exact h a hs ha
+      rw [h0, mul_zero]
+    · rw [probOutput_eq_zero_of_not_mem_support hs, zero_mul]
+
+/-- The trace of the reduction's experiment is the trace of the game, in distribution. -/
+lemma evalDist_twoDLExp_trace (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F) :
+    𝒟[(fun p => twoDLTraceOf gen p.1 p.2) <$> twoDLExp gen A w] =
+      𝒟[agmOMUFTrace gen secParam A] := by
+  have h : (fun p => twoDLTraceOf gen p.1 p.2) <$> twoDLExp gen A w =
+      (do let x ← ($ᵗ F : ProbComp F); twoDLTraceOf gen x <$> twoDLRunAt gen A w x) := by
+    simp [twoDLExp, monad_norm]
+  rw [h]
+  exact (evalDist_bind_congr' _ fun x => twoDLRunAt_trace gen secParam A w x).trans
+    (evalDist_bind_uniform_const _)
+
+/-- A run of the experiment gives a trace in the support of the game's. -/
+lemma twoDLTraceOf_mem_support (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
+    (p : F × (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G))
+    (hp : p ∈ support (twoDLExp gen A w)) :
+    twoDLTraceOf gen p.1 p.2 ∈ support (agmOMUFTrace gen secParam A) := by
+  have hmem : twoDLTraceOf gen p.1 p.2 ∈
+      support ((fun p => twoDLTraceOf gen p.1 p.2) <$> twoDLExp gen A w) := by
+    rw [support_map]
+    exact ⟨p, hp, rfl⟩
+  rw [mem_support_iff, probOutput_def] at hmem ⊢
+  rwa [← evalDist_twoDLExp_trace gen secParam A w]
+
+omit hgen in
+/-- A bad event of the slope that the embedding avoids away from `b = 0` has probability at most
+`1/p`: the degenerate mask of the paper. -/
+lemma probEvent_sampleEmbed_le (w : F × F × F) (Z : TwoDLEmbed F → Prop)
+    (hZ : ∀ b : F, ∀ e ∈ support (twoDLEmbedAt w b), Z e → b = 0) :
+    Pr[Z | twoDLSampleEmbed w] ≤ (Fintype.card F : ℝ≥0∞)⁻¹ := by
+  unfold twoDLSampleEmbed
+  calc Pr[Z | (do let b ← ($ᵗ F : ProbComp F); twoDLEmbedAt w b)]
+      ≤ Pr[(· = (0 : F)) | ($ᵗ F : ProbComp F)] :=
+        probEvent_bind_le_of_imp _ _ _ _ fun b _ hb e he hZe => hb (hZ b e he hZe)
+    _ = (Fintype.card F : ℝ≥0∞)⁻¹ := by
+        rw [probEvent_eq_eq_probOutput, probOutput_uniformSample]
+
+omit hgen in
+/-- The degenerate-mask event of the reduction's experiment has at most the sampler's
+probability. -/
+lemma probEvent_twoDLExp_le (A : AGMOMUFAdversary F G 1) (w : F × F × F)
+    (Z : TwoDLEmbed F → Prop) :
+    Pr[fun p => Z p.2.1 | twoDLExp gen A w] ≤ Pr[Z | twoDLSampleEmbed w] := by
+  unfold twoDLExp
+  refine probEvent_bind_le_of_forall_le fun x _ => ?_
+  unfold twoDLRunAt
+  simp only [bind_assoc, pure_bind]
+  refine probEvent_bind_le_of_imp _ _ Z _ fun e _ hne b hb => ?_
+  simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at hb
+  obtain ⟨os, -, rfl⟩ := hb
+  exact hne
+
+/-- Events of the game's trace are events of the reduction's experiment read through
+`twoDLTraceOf`. -/
+lemma probEvent_agmOMUFTrace_eq (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
+    (Q : OMUFTrace F G → Prop) :
+    Pr[Q | agmOMUFTrace gen secParam A] =
+      Pr[fun p => Q (twoDLTraceOf gen p.1 p.2) | twoDLExp gen A w] := by
+  rw [← probEvent_eq_of_evalDist_eq' (evalDist_twoDLExp_trace gen secParam A w) Q,
+    probEvent_map]
+  rfl
+
+/-- The 2-DL advantage of the reduction is the probability that its output is the challenge. -/
+lemma qdlogAdv_omufTwoDLReductionAt (A : AGMOMUFAdversary F G 1) (w : F × F × F) :
+    qdlogAdv 2 gen (omufTwoDLReductionAt gen A w) =
+      Pr[fun p => twoDLOutput gen p.1 p.2 = p.1 | twoDLExp gen A w] := by
+  rw [qdlogAdv, qdlogExp_omufTwoDLReductionAt, ← probEvent_eq_eq_probOutput, probEvent_map]
+  simp [Function.comp_def]
+
+omit [Field F] [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G]
+  hgen in
+/-- The arithmetic of the accounting. -/
+lemma ennreal_accounting {c s z b D : ℝ≥0∞} (hcov : c ≤ s + (z + b)) (hz : z ≤ D) :
+    c ≤ D + s + b := by
+  calc c ≤ s + (z + b) := hcov
+    _ ≤ s + (D + b) := add_le_add_right (add_le_add_left hz _) _
+    _ = D + s + b := by ring
+
+omit hgen in
+/-- The union bound for an event covered by three on the support. -/
+lemma probEvent_le_of_covered {β : Type} (J : ProbComp β) (E s z b : β → Prop)
+    (h : ∀ p ∈ support J, E p → s p ∨ z p ∨ b p) :
+    Pr[E | J] ≤ Pr[s | J] + (Pr[z | J] + Pr[b | J]) :=
+  (probEvent_mono h).trans
+    ((probEvent_or_le J s fun p => z p ∨ b p).trans
+      (add_le_add_right (probEvent_or_le J z b) _))
+
+/-- **The reduction's accounting.** The probability of a case event `P` is at most the
+degenerate-mask probability `1/p`, plus the 2-DL advantage of the reduction, plus the probability
+that `P` holds on a run that is degenerate: off the degeneracy, away from the mask, the
+reduction's extraction returns the challenge (`hsound`). -/
+theorem twoDL_claim_of_sound (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
+    (P Deg : OMUFTrace F G → Prop) (Z : TwoDLEmbed F → Prop)
+    (hZ : Pr[Z | twoDLSampleEmbed w] ≤ (Fintype.card F : ℝ≥0∞)⁻¹)
+    (hsound : ∀ p ∈ support (twoDLExp gen A w), P (twoDLTraceOf gen p.1 p.2) →
+      ¬ Deg (twoDLTraceOf gen p.1 p.2) → ¬ Z p.2.1 → twoDLOutput gen p.1 p.2 = p.1) :
+    Pr[P | agmOMUFTrace gen secParam A] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + qdlogAdv 2 gen (omufTwoDLReductionAt gen A w) +
+        Pr[fun t => P t ∧ Deg t | agmOMUFTrace gen secParam A] := by
+  rw [probEvent_agmOMUFTrace_eq gen secParam A w P,
+    probEvent_agmOMUFTrace_eq gen secParam A w fun t => P t ∧ Deg t,
+    qdlogAdv_omufTwoDLReductionAt gen A w]
+  have hcov := probEvent_le_of_covered (twoDLExp gen A w)
+    (fun p => P (twoDLTraceOf gen p.1 p.2))
+    (fun p => twoDLOutput gen p.1 p.2 = p.1) (fun p => Z p.2.1)
+    (fun p => P (twoDLTraceOf gen p.1 p.2) ∧ Deg (twoDLTraceOf gen p.1 p.2)) (by
+      intro p hp hP
+      by_cases hD : Deg (twoDLTraceOf gen p.1 p.2)
+      · exact Or.inr (Or.inr ⟨hP, hD⟩)
+      · by_cases hz : Z p.2.1
+        · exact Or.inr (Or.inl hz)
+        · exact Or.inl (hsound p hp hP hD hz))
+  have hz := (probEvent_twoDLExp_le gen A w Z).trans hZ
+  exact ennreal_accounting hcov hz
+
+end Probability
+
+section Claims
+
+variable (gen : G) [hgen : Fact (Function.Bijective (fun x : F => x • gen))] (secParam : ℕ)
+
+omit hgen in
+/-- The slopes of an embedding drawn at the slope `b`. -/
+lemma twoDLEmbedAt_support (w : F × F × F) (b : F) (e : TwoDLEmbed F)
+    (he : e ∈ support (twoDLEmbedAt w b)) :
+    e.b₀ = w.1 * b ∧ e.bᵣ = w.2.1 * b ∧ e.b₁ = w.2.2 * b := by
+  simp only [twoDLEmbedAt, mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at he
+  obtain ⟨η, -, a₀, -, aᵣ, -, a₁, -, rfl⟩ := he
+  exact ⟨rfl, rfl, rfl⟩
+
+omit hgen in
+/-- The slopes of an embedding the sampler draws. -/
+lemma twoDLSampleEmbed_support (w : F × F × F) (e : TwoDLEmbed F)
+    (he : e ∈ support (twoDLSampleEmbed w)) :
+    ∃ b, e.b₀ = w.1 * b ∧ e.bᵣ = w.2.1 * b ∧ e.b₁ = w.2.2 * b := by
+  simp only [twoDLSampleEmbed, mem_support_bind_iff] at he
+  obtain ⟨b, -, hb⟩ := he
+  exact ⟨b, twoDLEmbedAt_support w b e hb⟩
+
+/-- What a run of the reduction's experiment guarantees: its trace is consistent, its records are
+those of its log, and its embedding has the slopes the sampler draws. -/
+lemma twoDLExp_facts (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
+    (p : F × (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G))
+    (hp : p ∈ support (twoDLExp gen A w)) :
+    (twoDLTraceOf gen p.1 p.2).ServerConsistent gen ∧
+      p.2.2.2.2 = twoDLAuxOf gen p.1 (AGMOMUFLog.tags p.2.2.2.1) ∧
+      ∃ b, p.2.1.b₀ = w.1 * b ∧ p.2.1.bᵣ = w.2.1 * b ∧ p.2.1.b₁ = w.2.2 * b := by
+  have hcons := OMUFTrace.serverConsistent_of_mem_support gen secParam A _
+    (twoDLTraceOf_mem_support gen secParam A w p hp)
+  have hrun : p.2 ∈ support (twoDLRunAt gen A w p.1) := by
+    unfold twoDLExp at hp
+    simp only [mem_support_bind_iff, support_pure, Set.mem_singleton_iff] at hp
+    obtain ⟨x, -, r, hr, rfl⟩ := hp
+    exact hr
+  obtain ⟨he, hs⟩ := twoDLRunAt_support gen A w p.1 p.2 hrun
+  exact ⟨hcons, hs, twoDLSampleEmbed_support w _ he⟩
+
+/-- **O24 Claim 5.14, `x₀` case**, with the degenerate probability of the extraction as an extra
+term (module docstring). -/
+theorem omuf_claim_5_14_x0 (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseX0 gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReductionAt gen A (1, 0, 0)) +
+        Pr[ fun t => t.CaseX0 gen secParam ∧ t.Degenerate gen AGMPoly.Var.x0 |
+          agmOMUFTrace gen secParam A ] := by
+  have h := twoDL_claim_of_sound gen secParam A (1, 0, 0)
+    (fun t => t.CaseX0 gen secParam) (fun t => t.Degenerate gen AGMPoly.Var.x0)
+    (fun e => e.b₀ = 0)
+    (probEvent_sampleEmbed_le _ _ fun b e he hz => by
+      have := (twoDLEmbedAt_support _ b e he).1
+      simpa [hz] using this.symm)
+    (by
+      rintro ⟨x, e, out, s⟩ hp hP hD hz
+      obtain ⟨hcons, hs, b, h0, hr, h1⟩ := twoDLExp_facts gen secParam A _ _ hp
+      exact twoDLExtract_eq gen secParam x e out s hs _ rfl hcons hP.1 AGMPoly.Var.x0
+        (Or.inl ⟨rfl, by simpa using hr, by simpa using h1, hz⟩) hD)
+  exact h
+
+/-- **O24 Claim 5.14, `xᵣ` case** ("almost identical"), as `omuf_claim_5_14_x0`. -/
+theorem omuf_claim_5_14_xr (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseXr gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 1, 0)) +
+        Pr[ fun t => t.CaseXr gen secParam ∧ t.Degenerate gen AGMPoly.Var.xr |
+          agmOMUFTrace gen secParam A ] := by
+  have h := twoDL_claim_of_sound gen secParam A (0, 1, 0)
+    (fun t => t.CaseXr gen secParam) (fun t => t.Degenerate gen AGMPoly.Var.xr)
+    (fun e => e.bᵣ = 0)
+    (probEvent_sampleEmbed_le _ _ fun b e he hz => by
+      have := (twoDLEmbedAt_support _ b e he).2.1
+      simpa [hz] using this.symm)
+    (by
+      rintro ⟨x, e, out, s⟩ hp hP hD hz
+      obtain ⟨hcons, hs, b, h0, hr, h1⟩ := twoDLExp_facts gen secParam A _ _ hp
+      exact twoDLExtract_eq gen secParam x e out s hs _ rfl hcons hP.1 AGMPoly.Var.xr
+        (Or.inr (Or.inl ⟨rfl, by simpa using h0, by simpa using h1, hz⟩)) hD)
+  exact h
+
+/-- **O24 Claim 5.14, `x₁` case**, as `omuf_claim_5_14_x0`. -/
+theorem omuf_claim_5_14_x1 (A : AGMOMUFAdversary F G 1) :
+    Pr[ OMUFTrace.CaseX1 gen secParam | agmOMUFTrace gen secParam A ] ≤
+      (Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 0, 1)) +
+        Pr[ fun t => t.CaseX1 gen secParam ∧ t.Degenerate gen AGMPoly.Var.x1 |
+          agmOMUFTrace gen secParam A ] := by
+  have h := twoDL_claim_of_sound gen secParam A (0, 0, 1)
+    (fun t => t.CaseX1 gen secParam) (fun t => t.Degenerate gen AGMPoly.Var.x1)
+    (fun e => e.b₁ = 0)
+    (probEvent_sampleEmbed_le _ _ fun b e he hz => by
+      have := (twoDLEmbedAt_support _ b e he).2.2
+      simpa [hz] using this.symm)
+    (by
+      rintro ⟨x, e, out, s⟩ hp hP hD hz
+      obtain ⟨hcons, hs, b, h0, hr, h1⟩ := twoDLExp_facts gen secParam A _ _ hp
+      exact twoDLExtract_eq gen secParam x e out s hs _ rfl hcons hP.1 AGMPoly.Var.x1
+        (Or.inr (Or.inr ⟨rfl, by simpa using h0, by simpa using hr, hz⟩)) hD)
+  exact h
+
+end Claims
 
 end KVAC.Schemes.MicroCMZ
