@@ -42,8 +42,8 @@ Sign query, `zipWith`-evaluated against the issued MAC codes), keeping the type
 independent of the dynamic query count.
 
 The `Help(A₀, A⃗, Z)` oracle (O24 §5.2/§5.3) answers whether
-`Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` through `helpEq`, the equation of the game with Help
-of `UFCMVAHelp.lean`. It is the stronger notion the credential-level
+`Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` through `helpEq` (`Construction.lean`), as the game
+with Help of `UFCMVAHelp.lean` does. It is the stronger notion the credential-level
 extractability proof consumes (Thm 5.10, for Thm 5.2); it does not change the
 bound.
 -/
