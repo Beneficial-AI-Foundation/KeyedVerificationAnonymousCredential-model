@@ -1324,14 +1324,16 @@ the mixture of the two Claim reductions that extract a discrete logarithm, so th
 `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)`; the Claim reductions `omufDLReductionU` and
 `omufDLReductionEta` are declared with `sorry` bodies until the proofs build them.
 `omufTwoDLReduction` is built too, the uniform mixture of the three cases of the 2-DL reduction
-({uses "omuf_two_dl_reduction"}[]). Claims 5.12 and 5.13 and the per-variable claims of Claim 5.14
-that the proof rests on are stated, not proved, since at
+({uses "omuf_two_dl_reduction"}[]). Claim 5.14 is proved. Claims 5.12 and 5.13, which the proof
+rests on, are stated, not proved, since at
 fixed parameters an existential quantification over unrestricted
 reduction adversaries is vacuous and a bound below one on every
 discrete-log adversary is false. The printed constants are provisional until the Track
 CMZ-OMUF constant audit, with an errata item on any change, and the bound
 sits behind the named definition `omufBoundN1` so the statement survives
-such a change.
+such a change. *The bound proved is not Equation 23 alone*: it carries the degenerate probability
+of Claim 5.14's extraction, `omufDegenerateProb` ({uses "omuf_extraction_obligation"}[]), as an
+extra term, which the paper takes to be `0` and which is not (issue #251).
 :::
 
 :::proof "mucmz_at_agm_omuf_n1"
@@ -1590,22 +1592,28 @@ representation. The run-level statement is induction on the adversary's computat
 these steps, with the records a function of the log (`twoDLAuxOf`).
 :::
 
-:::theorem "omuf_two_dl_extraction" (lean := "KVAC.Schemes.MicroCMZ.twoDLRunAt_support, KVAC.Schemes.MicroCMZ.eval_aeval_polynomial, KVAC.Schemes.MicroCMZ.twoDLSubst_eval, KVAC.Schemes.MicroCMZ.twoDLExtract_eq_aux, KVAC.Schemes.MicroCMZ.twoDLExtract_eq") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_two_dl_extraction" (lean := "KVAC.Schemes.MicroCMZ.twoDLRunAt_support, KVAC.Schemes.MicroCMZ.eval_aeval_polynomial, KVAC.Schemes.MicroCMZ.twoDLSubst_eval, KVAC.Schemes.MicroCMZ.twoDLExtract_eq_aux, KVAC.Schemes.MicroCMZ.twoDLExtract_eq, KVAC.Schemes.MicroCMZ.twoDLExp, KVAC.Schemes.MicroCMZ.twoDLOutput, KVAC.Schemes.MicroCMZ.qdlogExp_omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.probEvent_eq_of_evalDist_eq', KVAC.Schemes.MicroCMZ.probEvent_bind_le_of_imp, KVAC.Schemes.MicroCMZ.evalDist_twoDLExp_trace, KVAC.Schemes.MicroCMZ.twoDLTraceOf_mem_support, KVAC.Schemes.MicroCMZ.probEvent_sampleEmbed_le, KVAC.Schemes.MicroCMZ.probEvent_twoDLExp_le, KVAC.Schemes.MicroCMZ.probEvent_agmOMUFTrace_eq, KVAC.Schemes.MicroCMZ.qdlogAdv_omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.ennreal_accounting, KVAC.Schemes.MicroCMZ.probEvent_le_of_covered, KVAC.Schemes.MicroCMZ.twoDL_claim_of_sound, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_support, KVAC.Schemes.MicroCMZ.twoDLSampleEmbed_support, KVAC.Schemes.MicroCMZ.twoDLExp_facts") (parent := "cmz_omuf") (tags := "milestone")
 The extraction half of the proof of {bpref "omuf_case_iii"}[] for the three cases, on top of the
 reduction of {uses "omuf_two_dl_reduction"}[]. *Soundness*: on a winning run of the reduction whose
 forgery polynomials do not all vanish identically in the embedded variable once the other variables
 are set to the run's values, the reduction returns the challenge. The substituted polynomial of each
 forgery vanishes at the challenge by the evaluation bridge ({uses "omuf_evaluation_bridge"}[]), the
 substituted polynomial of some forgery is nonzero because the substitution of the embedded variable is
-a degree-one polynomial in the challenge, and the root with `r·G = X` is the challenge.
-The degenerate probability of {uses "omuf_extraction_obligation"}[] is the probability that this
-substituted polynomial is zero.
+a degree-one polynomial in the challenge, and the root with `r·G = X` is the challenge. *Accounting*:
+the probability of a case event is at most the degenerate-mask probability `1/p`, plus the 2-DL
+advantage of the reduction, plus the probability of the event together with the degeneracy of the run.
+The run of the reduction is the run of the game (the trace-level statement of
+{uses "omuf_two_dl_reduction"}[]), the extraction succeeds off the degeneracy, and the mask is zero with
+probability `1/p` independently of the view. Each case of {bpref "omuf_case_iii"}[] follows from the
+degenerate probability of {uses "omuf_extraction_obligation"}[], carried as an extra term.
 :::
 
 :::proof "omuf_two_dl_extraction"
 Soundness is the root argument above: a nonzero polynomial with the challenge as a root has it in its
 list of roots, the first such root satisfying `r·G = X` is the challenge by injectivity of the
-generator.
+generator. The accounting covers the event by the three events of success, mask and degeneracy on the
+support of the reduction's experiment and applies the union bound, with the experiment's events
+read through the trace map.
 :::
 
 :::theorem "omuf_extraction_obligation" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.substPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.Degenerate, KVAC.Schemes.MicroCMZ.omufDegenerateProb") (parent := "cmz_omuf") (tags := "milestone")
@@ -1687,12 +1695,14 @@ queries, shows that it is not automatic.
 item (iii) of the case split, the adversary wins and some forgery
 polynomial has a nonzero monomial in `x₀`, `xᵣ` or `x₁`, the event `CaseX`
 of {uses "omuf_case_events"}[] over the trace of {uses "omuf_transcript"}[],
-has probability at most `3(1/p + Adv^{2-dl})` for every algebraic adversary,
+has probability at most `3(1/p + Adv^{2-dl})` plus the degenerate probability of the extraction
+({uses "omuf_extraction_obligation"}[], which the paper takes to be `0`) for every algebraic adversary,
 the 2-DL advantage ({uses "hardness_assumptions"}[]) being that of the named
 reduction `omufTwoDLReduction` the theorem cites, anchored on its `n = 1`
-node. Proved from the three per-variable claims `x₀`, `xᵣ`, `x₁`, themselves stated and `sorry`d,
-by the union bound and the mixture identity of {uses "omuf_two_dl_reduction"}[]. Printed constant,
-provisional until the Track CMZ-OMUF constant audit.
+node. Proved from the three per-variable claims `x₀`, `xᵣ`, `x₁`, by the union bound and the mixture
+identity of {uses "omuf_two_dl_reduction"}[]; each per-variable claim is proved with the degenerate
+probability of {uses "omuf_extraction_obligation"}[] as an extra term. Printed constant, provisional
+until the Track CMZ-OMUF constant audit.
 :::
 
 :::proof "omuf_case_iii"
@@ -1702,5 +1712,5 @@ element and Verify with the help of the second, for the quadratic term, and
 solves the equation that a forgery polynomial with that monomial, of
 {uses "omuf_forgery_polynomial"}[], gives at `x₀`, the paper's `1/p` being
 the degenerate mask. The `xᵣ` and `x₁` cases are "almost identical" (p. 47).
-The same obligation as for item (i) applies.
+The extraction obligation as for item (i) applies, as an extra term.
 :::
