@@ -24,7 +24,7 @@ Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint
 - Theorem 5.10 has its game with Help merged, together with its extractor interface. Its setting is under review, its statement in draft.
 - Theorem 5.11 is stated at n = 1 and for every n, for the core without π_is. Claims 5.12 to 5.14 are stated with their reductions named, the proofs open.
 
-None of the findings below weakens a result. The assumptions are the paper's own, with one addition, the condition of Remark 5.9 that `μCMZ_anonymity` takes as hypotheses (item 17). One unjustified summand is dropped (item 2). The additive constant of Theorem 5.1 goes from 3/p to 5/p, both about 2⁻²⁵⁰ at ristretto255. The Theorem 5.11 bound loosens by (q+3)/(p(p−1)) under the nonzero crs (item 14). One zero-knowledge term enters the one-more unforgeability bound (item 12). The overview bounds of Theorems 1 and 5.3 give way to the bounds of the theorems they summarize (items 17 to 19).
+None of the findings of Part A, numbered below, weakens a result. The assumptions are the paper's own, with one addition, the condition of Remark 5.9 that the anonymity theorem takes as hypotheses (item 17). One unjustified summand is dropped (item 2). The additive constant of Theorem 5.1 goes from 3/p to 5/p, both about 2⁻²⁵⁰ at ristretto255. The Theorem 5.11 bound loosens by (q+3)/(p(p−1)) under the nonzero crs (item 14). One zero-knowledge term enters the one-more unforgeability bound (item 12). The overview bounds of Theorems 1 and 5.3 give way to the bounds of the theorems they summarize (items 17 to 19).
 
 ## Part A. Findings about the paper
 
