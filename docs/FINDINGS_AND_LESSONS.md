@@ -25,7 +25,7 @@ This is based on:
 - `docs/DESIGN_ALTERNATIVES.md`, 36 entries on `main` and one on that branch,
 - the reports of Jin, Oana and Semar of October 2026 for the categories and the format only.
 
-Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, cited as O24, in its version of 27 March 2026 unless a version is named. Errata numbers refer to `errata.md`. "DA" refers to an entry of `DESIGN_ALTERNATIVES.md`, by its heading. **Kind** says whether an item lives only in the security argument (*proof*) or constrains an implementation (*impl*), as input for KVAC-verify. **Status** says where the item stands, on `main` or on a branch.
+Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, cited as O24, in its version of 27 March 2026 unless a version is named. Errata numbers refer to `errata.md`. "DA" abbreviates the design record, `docs/DESIGN_ALTERNATIVES.md`, so a reference of the form "DA *Conditioned η masks*" points at the entry of that file whose heading is *Conditioned η masks*, where the decision, the rejected alternative and the fidelity argument are written in full. **Kind** says whether an item lives only in the security argument (*proof*) or constrains an implementation (*impl*), as input for KVAC-verify. **Status** says where the item stands, on `main` or on a branch.
 
 **Status of the formalization, theorem by theorem.**
 
