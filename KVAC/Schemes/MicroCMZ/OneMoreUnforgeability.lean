@@ -34,8 +34,8 @@ documents its own contents in its module docstring:
 - `CaseEvents` — the polynomials of Equations 18 and 22 read off a trace, and
   the win and the three case events of the proof's case split, items (i) to
   (iii), that Claims 5.12 to 5.14 bound;
-- `TwoDLReduction` — the 2-DL reduction of Claim 5.14 for the `x₀` case and its simulated
-  oracles;
+- `TwoDLReduction` — the 2-DL reduction of Claim 5.14 for the `x₀` case, its simulated
+  oracles, and the coupling of its run with the real game at the key `x₀ = a + b·x`;
 - `Bridge` — the pigeonhole step, the evaluation bridge of a run and the case cover, the facts
   about a winning run that the case analysis rests on;
 - `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds

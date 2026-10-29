@@ -1542,7 +1542,7 @@ representation. The run-level statement is induction on the adversary's
 computation through these steps.
 :::
 
-:::theorem "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix, KVAC.Schemes.MicroCMZ.twoDLAuxOf, KVAC.Schemes.MicroCMZ.twoDLXTags_auxOf, KVAC.Schemes.MicroCMZ.smul_zipWith_sum_tags, KVAC.Schemes.MicroCMZ.twoDLParams_eq, KVAC.Schemes.MicroCMZ.twoDLxEval_eq, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_some, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_none, KVAC.Schemes.MicroCMZ.twoDL_step_sign, KVAC.Schemes.MicroCMZ.twoDL_step_verify, KVAC.Schemes.MicroCMZ.twoDL_step_coin, KVAC.Schemes.MicroCMZ.twoDL_run") (parent := "cmz_omuf") (tags := "milestone")
 The 2-DL reduction of {bpref "omuf_case_iii"}[] (O24 p. 47), built from an
 algebraic one-more forger and run against the game of {uses "agm_omuf_game"}[]. The paper writes the `x₀`
 case and calls `xᵣ` and `x₁` "almost identical"; all three are one construction with a key that is
@@ -1555,15 +1555,22 @@ representation of `U`: each basis element has a known multiple by `x`, the quadr
 second challenge element, and the reduction records the multiples of the pairs it issues. At the end it
 substitutes the key variables by their affine functions of `χ` into the forgery polynomials of
 {uses "omuf_case_events"}[] and outputs the root `r` of the first nonzero one with `r·G = X`. The
-theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
-advantage is the sum of the three. Not yet shown: the coupling of its run with the real game, the distribution of the key and of `H`
-the reduction presents, and that the substituted polynomial is nonzero (the extraction obligation of
+run-level coupling: at the key of the challenge the simulated run is the real run of the instrumented
+oracle of {uses "agm_omuf_oracle"}[] followed by the records of the final log, an equality of
+computations. The theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
+advantage is the sum of the three. Not yet shown: the distribution of the key and of `H` the reduction
+presents, and that the substituted polynomial is nonzero (the extraction obligation of
 {bpref "omuf_case_iii"}[]).
 :::
 
 :::proof "omuf_two_dl_reduction"
-Definitions only: the reduction is built from the oracle simulation, the extraction and the uniform
-mixture of the three cases, and the statements about them follow.
+The Sign and Verify steps are the oracle's arms unfolded on both sides. The reduction's Sign
+answer is the real one by module algebra over `x₀ = a + b·x`, and the record `x·V` it stores is
+`x` times the real `V` once `x·C` is the multiple of the commitment's representation
+(`twoDLxEval_eq`, the gate giving `C` as that representation's evaluation). The Verify test is
+the real one on consistent representations, since `x·U` is the multiple computed from the
+representation. The run-level statement is induction on the adversary's computation through
+these steps, with the records a function of the log (`twoDLAuxOf`).
 :::
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
 *O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
