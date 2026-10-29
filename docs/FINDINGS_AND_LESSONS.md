@@ -1,5 +1,24 @@
 # Findings and lessons from the repository record
 
+This report is the merge of the two files in which the project records its
+departures from the paper. The errata, `docs/presentations/rolf-status/errata.md`,
+hold the discrepancies between the printed text and what the paper's own
+arguments require. The design record, `docs/DESIGN_ALTERNATIVES.md`, holds the
+decisions taken where the paper says less than a formalization needs. The two
+files stay the record and keep their full text. This report indexes every item
+of both, in the format of the team's reports of October 2026.
+
+**How to add an item.** A new finding about the paper goes to `errata.md` first,
+with the next number, then into the table of its category in Part A, in one row
+with the same number, the section heading, what is wrong in one sentence, the
+Lean object that carries the correction, its kind, its status and its origin.
+A new design decision goes to `DESIGN_ALTERNATIVES.md` first, with the decision,
+the rejected alternative and the fidelity argument, then into Part A6 as one
+bullet under the layer of the paper it concerns, or under the item of Part A it
+answers. A lesson that the two records support goes to Part B with the items or
+entries it rests on. The status list and the "What we did" paragraphs are
+revised when a statement or proof lands.
+
 This is based on:
 
 - `docs/presentations/rolf-status/errata.md`, items 1 to 17 on `main`, items 18 and 19 on the branch `microcmz-theorem-5-3` (#184),
