@@ -102,8 +102,8 @@ noncomputable def ReprCoeffs.toPolyAt (γ : ReprCoeffs F r) (cs : Fin r → P F 
     ∑ k, (C (γ.cu k) * u k + C (γ.cv k) * (u k * (x₀ + xᵣ + cs k)))
 
 /-- Evaluation of `toPolyAt` at a point, in closed form: the algebraic half of
-the Equation 18 bridge (module docstring, *Obligations deferred to the proof
-phase*), the counterpart for the OMUF game of `ReprCoeffs.eval_toPoly`. -/
+the Equation 18 bridge (module docstring, *Where the game-level facts are proved*), the
+counterpart for the OMUF game of `ReprCoeffs.eval_toPoly`. -/
 theorem ReprCoeffs.eval_toPolyAt (pt : Var r → F) (γ : ReprCoeffs F r)
     (cs : Fin r → P F r) :
     eval pt (γ.toPolyAt cs)

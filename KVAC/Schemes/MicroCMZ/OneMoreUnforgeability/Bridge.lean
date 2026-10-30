@@ -10,8 +10,7 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
 # μCMZ_AT one-more unforgeability — the pigeonhole step and the evaluation bridge (O24 §5.6)
 
 The facts about a winning run of the `n = 1` game that the case analysis of the Theorem 5.11
-proof (p. 45) rests on, none of which is a statement about a reduction. Track CMZ-OMUF, step A3 of
-the Theorem 5.3 plan, part 17a of item 17.
+proof (p. 45) rests on, none of which is a statement about a reduction.
 
 - the pigeonhole step: a winning run has a forgery whose polynomial (Equation 22) is nonzero
   (`OMUFTrace.exists_forgeryPoly_ne_zero`);

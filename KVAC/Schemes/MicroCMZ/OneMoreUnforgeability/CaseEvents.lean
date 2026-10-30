@@ -13,7 +13,7 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.Core
 The polynomials of Equations 18 and 22 (`Polynomial.lean`) read off the game
 transcript (`Transcript.lean`), and the win and the three case events of the
 Theorem 5.11 proof's case split at `n = 1`, items (i) to (iii) of p. 45, that
-Claims 5.12 to 5.14 bound in `Statements.lean`. It is part of issue #189.
+Claims 5.12 to 5.14 bound in `Statements.lean`.
 
 ## What is defined, and what uses it
 
