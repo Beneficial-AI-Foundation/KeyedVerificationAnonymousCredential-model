@@ -8,7 +8,7 @@ This is based on:
 
 - `docs/presentations/rolf-status/errata.md`, items 1 to 17 on `main`, items 18 and 19 on the branch `microcmz-theorem-5-3` (#184),
 - `docs/DESIGN_ALTERNATIVES.md`, 36 entries on `main` and one on that branch, all but the first, on the set-aside security-model-agnostic specification, which concerns no part of the paper,
-- the reports of Jin, Oana and Semar of October 2026 for the categories and the format only.
+- the reports of Jin, Oana and Semar of October 2026 for the categories and the format. Semar's report of 28 October is also the source of items 20 to 22 plus the restricted one-more forger of Part A5.
 
 Paper: Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, cited as O24, in its version of 27 March 2026 unless a version is named. Items are numbered in the first column of the tables, 1 to 19 in order of appearance for the items of the frozen errata, later items in order of addition, and the prose refers to items by that number. The second column, "Err.", gives the number of the same item in the frozen `errata.md`, which the docstrings and the design record cite. "DA" abbreviates the design record, `docs/DESIGN_ALTERNATIVES.md`, so a reference of the form "DA *Conditioned η masks*" points at the entry of that file whose heading is *Conditioned η masks*, where the decision, the rejected alternative and the fidelity argument are written in full. **Kind** says whether an item lives only in the security argument (*proof*) or constrains an implementation (*impl*), as input for KVAC-verify. **Status** says where the item stands, on `main` or on a branch, the branch of #184 for items 18 and 19. It says where the corrected statement is, not that it is proved. Every security statement of the repository carries `sorry`, and a reduction named in a bound is a definition with a `sorry` body until its proof is built.
 
@@ -36,6 +36,9 @@ The corrections of Part A, numbered below, aim at the security claims the paper 
 | 2 | 2 | proof | main | Lemma 5.4's printed Adv^dl summand has no reduction behind it (pp. 36–38) | The statement carries an Adv^dl term. The proof builds one reduction, to 3-DL, so the term is slack. | `agm_ufcmva_le_n1_explicit`, no DL term | Lemma 5.4 proof |
 | 3 | 6 | proof | main | Theorem 5.1's printed bound elides the gap-DL term | Lemma 5.5 sends the collision case to gap-DL, and the printed Theorem 5.1 bound drops that term. The formal bound is Adv^3-dl + Adv^gap-dl + 5/p. | `agm_ufcmva_le_explicit`, the Lemma 5.5 bound that Theorem 5.1 wraps | Lemma 5.5 statement (#209) |
 | 4 | 12 | proof | main | Claim 5.13's bound has no term for Verify queries (pp. 46–47) | A forger with no Sign query and Q < p Verify queries learns x₀ + xᵣ with probability (Q+1)/p, then wins whenever H ≠ 0. The reduction of Claim 5.13 extracts nothing from it. The bound needs a term of about Q/p, or the forger goes to the x₀ embedding of Claim 5.14. | module docstring of `OneMoreUnforgeability/Statements.lean` | Theorem 5.11 statements (#189) |
+| 20 | | proof | main | Lemmas 5.4 and 5.5 are stated with "=" (pp. 36, 38) | Both lemmas print Adv^ufcmva = Adv^3-dl + …. The advantage is per adversary, and a forger whose forgery has U* = 0 has advantage 0 while the right side is at least 1/p. A reduction proves ≤, as Theorem 5.1 (p. 35) states. | `agm_ufcmva_le_n1_explicit`, `agm_ufcmva_le_explicit` | #217 candidate 19 (Oana), accepted 30 October. Semar's report |
+
+**Item 20.** Lemmas 5.4 (p. 36) and 5.5 (p. 38) write Adv^ufcmva = Adv^3-dl + …. The advantage is defined per adversary (p. 25), so the equality is a claim about every adversary. The adversary that outputs a forgery with U* = 0 never wins, since μCMZ.V rejects U = 0, so its advantage is 0 while the right side is at least 1/p. A reduction yields ≤, which Theorem 5.1 (p. 35) states. The formal statements are inequalities. Oana found it while writing the Lemma 5.5 proofs document (PR 212) and proposed it as candidate 19 of #217 on 3 October. Christiano accepted it on 30 October. Semar's report of 28 October lists it as well.
 
 **What we did.** Every formal statement is an inequality on named reductions. Three bounds are stated.
 
@@ -47,7 +50,7 @@ The 3/p is the generic Schwartz–Zippel bound for a polynomial of degree 3. The
 
 **Lesson.** A Lean statement must name every summand and the reduction behind it. A bound term without a reduction (item 2) has nowhere to come from, and a constant has to be derived (items 1, 3, 4). All four were caught because a statement had to say which event has which probability.
 
-### A2. Typos in the equations
+### A2. Typos in the equations and the cross-references
 
 | # | Err. | Kind | Status | Errata section | What is wrong | Lean | Origin |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -58,6 +61,12 @@ The 3/p is the generic Schwartz–Zippel bound for a polynomial of degree 3. The
 | 9 | 10 | proof | main | Claim 5.6's Verify query drops the Σᵢ aᵢmᵢ term (p. 39) | The Verify query subtracts zU alone where the full constant part cU must go. | `gapDlOracleImpl` | Lemma 5.5 (#207) |
 | 10 | 11 | proof | main | Claim 5.6's Verify query misplaces the inverse (p. 39) | The inverse applies to V alone instead of V − cU. | `gapDlOracleImpl` | Lemma 5.5 (#207) |
 | 11 | 16 | proof | main | Hybrid H2 of Theorem 5.8 charges ZKP_cmz.iu for the simulation of π_p (p. 41) | Hybrid H2's displayed bound charges ZKP_cmz.iu where the simulated proof is π_p of ZKP_cmz.p. | `μCMZ_anonymity` | Theorem 5.8 statement (#10) |
+| 21 | | proof | main | Eq. 14 gives Verify the powers (X, X′) only (p. 37) | Eq. 14's Verify bullet gives that oracle (X, X′) "as the maximum degree of the resulting polynomial is 2". The verification polynomial has degree 3, so Verify needs X″ as Help does. | `exponentEval`, `reductionVerifyStep` | Lemma 5.4 coupling, DA *Eq. 14*. Semar's report |
+| 22 | | proof | main | The Lemma 5.4 and 5.5 proofs say Help "will simplify the proof of Theorem 5.11" (pp. 36, 38) | The proof that uses Help's answer is Theorem 5.10 (pp. 42–43). The proof of Theorem 5.11 (pp. 43–47) never mentions Help. | none, a cross-reference | Semar's review of PR 243, DA *Theorem 5.10 at the honest UF-CMVA game with Help* |
+
+**Item 21.** Eq. 14 (p. 37) gives the Verify oracle of the Lemma 5.4 reduction the powers (X, X′) only, "as the maximum degree of the resulting polynomial is 2". The verification check is the product of the key polynomial, of degree 1, with the representation polynomial, of degree 2, so it has degree 3. Verify needs X″ as Help does. The reduction evaluates both arms with `exponentEval` at (G, X, X′, X″). The design entry *Eq. 14* records it next to the coefficient typo of item 6, and Semar's report of 28 October lists it as not yet in the errata.
+
+**Item 22.** The proofs of Lemmas 5.4 and 5.5 say that giving the adversary Help "will simplify the proof of Theorem 5.11" (pp. 36, 38). The proof of Theorem 5.10 is the one that uses Help's answer, on p. 42 to check the candidate Z and on p. 43 for the first equality of its display. The proof of Theorem 5.11 (pp. 43–47) never mentions Help. Semar raised it in his review of PR 243, and the design entry *Theorem 5.10 at the honest UF-CMVA game with Help* records it. No Lean object carries a cross-reference.
 
 **What we did.** Each correction is documented at its use site in the reduction, `redTrace` and `reductionSignStep` for Eqs. 13 and 14 (DA *Eq. 13*, *Eq. 14*), `gapDlReduction`, `gapDlKeyParts` and `gapDlOracleImpl` for Claim 5.6. The Verify query of Claim 5.6 is formalized as Ddh(d·U, V − c·U), which needs no inverse and covers d = 0 as well (item 10). Item 11 is charged to ZKP_cmz.p in `μCMZ_anonymity`.
 
@@ -136,6 +145,7 @@ These are not errors of the paper, with one reading of a printed φ as a typo. T
 **One-more unforgeability and the anonymous token, §5.6 and §5.2.**
 
 - **Exact-length representations in the AGM OMUF game.** A representation is accepted only with one coefficient per issued pair, so it evaluates the same against any later transcript. A simplification, not a soundness requirement, with three alternatives recorded.
+- **Restricted algebraic one-more forger.** *In open PRs.* The game of #181 gates each query on a matching representation, with the bridge to the plain Figure 6 game deferred as the one-more counterpart of the `WellBehaved` bridge (#81). Issue #235, parts 5 to 7, replaces the gate by a forger that submits coefficients only, normalized to the issued pairs, with a forget map into the plain game and a transfer lemma without side condition. Theorem 5.11 then bounds the plain Figure 6 advantage the paper states (pp. 27, 43). Part 5 is PR 268, open on 30 October. Parts 6 and 7 have no PR yet. From Semar's report of 28 October.
 - **Theorem 5.11 stated before its reductions exist.** The reductions are definitions with `sorry` bodies at the whole function type, named in the bound. Existential reductions are vacuous at a fixed group. A uniform ε on every discrete-log adversary is false or trivial. A `sorry` under the binders makes f A₁ = f A₂ hold by `rfl`. Claims 5.12 and 5.13 each name their own reduction, the theorem's being their mixture.
 - **One-more forgers have a private coin oracle.** The forger the lifting lemma builds samples a random-oracle cache and simulator runs, which a coinless type cannot express (#232).
 - **Two carriers for one-more unforgeability.** The core and Figure 6 stay at `ProbComp`. The scheme with π_is runs at the oracle carrier with its own game, through one `runRO`. One experiment `omufExp` is generic in the carrier, with a bridge equating the lifted advantage with the `ProbComp` one (#183).
