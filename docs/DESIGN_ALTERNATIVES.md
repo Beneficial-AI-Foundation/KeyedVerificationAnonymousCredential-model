@@ -685,9 +685,7 @@ plain game carries no representations.
 only messages (and `A⃗`) collapse, exactly as in the paper.
 
 **Fidelity argument.** The `n = 1` target `agm_ufcmva_le_n1_explicit` is stated
-on the AGM game, and the AGM ↔ plain bridge is open work (#81; the
-`AlgebraicMAC.lean` docstring records the gate and the deferred `WellBehaved`
-bridge). Until #81 closes, a reduction to the plain game has no `n = 1` bound to
+on the AGM game, so a reduction to the plain game has no `n = 1` bound to
 invoke, and a reduction to the AGM game must hand the 1-attribute oracles
 representations they accept, hence the extra translation step and its bridges.
 The step adds no adversarial power: the translated representation is computed
@@ -719,66 +717,34 @@ keeps one sampler `$ᵗ (Fin n → F)` and one uniform `Xᵢ = rᵢ • X₁` cl
 instead of a distinguished index `0` in `Fin n` with its own case in every
 translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
-## `WellBehaved` and the translation to the plain game
+## Theorem 5.1 at the game with Help
 
-**Decision.** `WellBehaved` (`AGMBridge.lean`) is the hypothesis under which the
-AGM game of an algebraic adversary and the plain Figure 5 game of its
-translation agree. It asks for two conditions, a never-failing run of the
-oracle guarded by `agmGood` and a consistent forgery, at every key `sk`, crs
-`H` and public parameters `pp`. The guard `agmGood` rejects every Help query.
+**Decision.** Theorem 5.1 is formalized as a bound for the game with `Help` of
+`UFCMVAHelp.lean`, against algebraic adversaries, with the bound of Lemma 5.5,
+`agm_ufcmva_le_explicit` (`AGMReduction/Security.lean`). It is reached by
+carrying the advantage in the AGM game of `AlgebraicMAC.lean` over to the game
+with `Help`.
 
-O24 (p. 24) calls an adversary algebraic when it returns, with each group
-element, a representation over the elements it received: a plain-game
-adversary with the representations as side information. Here an algebraic
-adversary is an `AGMUFAdversary` of the instrumented game, and Theorem 5.1 is
-stated for its translation `AGMUFAdversary.toUFAdversary` (`AGMBridge.lean`),
-which makes two choices the paper does not need. It answers a Help query with
-`false` (`forgetReprImpl`). At attribute counts other than the adversary's own
-`n`, it outputs the zero forgery `(fun _ => 0, (0, 0))`.
+**Rejected alternative.** The printed form, a bound for the Figure 5 game
+`UF_CMVAGame` (`Core/AlgebraicMAC/Security.lean`), which has no `Help` oracle,
+for the translation of an algebraic adversary into an adversary of that game.
+The translated adversary holds no key, so it answers each `Help` query with a
+constant, and its advantage equals the AGM advantage only under a hypothesis
+on the adversary: at every key, crs and public parameters, a run that submits
+no `Help` query and no inconsistent representation, and a consistent forgery.
+The hypothesis excludes every adversary that queries `Help`, and the paper has
+no such hypothesis.
 
-**Rejected alternatives.** (i) The two conditions only where Figure 5 samples
-(O24 p. 25, `crs ← MAC.S(λ, n)` and `(sk, pp) ← MAC.K(crs)`), that is on the
-supports of `setup` and `keygen`. (ii) Admitting Help queries, the oracle O24
-adds after Theorem 5.1 (p. 35) for its stronger claim. (iii) An algebraic
-adversary type over Sign and Verify only, so that the translation has no Help
-query to answer. (iv) An algebraic adversary that runs at every attribute
-count, like `UFAdversary`, so that the translation has no other count to fill.
-
-**Fidelity argument.** (i) The bridge (#81) rewrites under the binds of
-`setup` and `keygen`. It applies the never-fails condition to the transport
-theorem `map_run_simulateQ_eq_of_guard_neverFails` (`Core/SimulateQGuarded.lean`)
-and the consistency condition to the win bit of each reachable forgery, so it
-uses both only at sampled values. Quantifying over every value keeps
-`WellBehaved` a property of the adversary alone, free of the supports of
-`setup` and `keygen`, as the algebraic group model states algebraicity on every
-input. An adversary that computes each group element it submits from the
-elements it received, with the representation it reports, meets both
-conditions at every `(sk, H, pp)`.
-
-(ii) Theorem 5.1 is stated for the Figure 5 game, whose oracles are Sign and
-Verify (`UFOracleSpec`). A plain-game adversary has no Help oracle, so the AGM
-adversaries that translate plain-game adversaries are those that never query
-Help. The Help-strengthened claim is the Lemma 5.5 bound in the AGM game, which
-keeps Help (`agm_ufcmva_le_explicit`). Help's test
-`Z = (x₀ + xᵣ)A₀ + Σᵢ xᵢAᵢ` reads the μCMZ key, so it has no place in
-Figure 5, which is stated for every algebraic MAC of Definition 3.1.
-
-(iii) The Lemma 5.5 bound `agm_ufcmva_le_explicit` is stated for
-`AGMUFAdversary`, whose oracles include Help, so a Help-free type would need its
-own embedding into that game before the bound applies. The plain game has no
-Help oracle, and the translated adversary holds no key, so it cannot compute
-the Help bit and answers with a constant. `agmGood` rejects every Help query,
-so under `WellBehaved` no Help query is reachable and the constant is never
-read.
-
-(iv) `UFAdversary.run` (`Core/AlgebraicMAC/Security.lean`) takes the attribute
-count as an argument, because Figure 5 is stated for every algebraic MAC, while
-`AGMUFAdversary F G n`, the AGM game and the reductions of Lemmas 5.4 and 5.5
-are fixed at `n`. `UF_CMVAAdv` at `n` runs the translation only at `n`, where
-`toUFAdversary_run` unfolds it to the algebraic adversary. The output at any
-other count therefore never enters the bound, and the zero forgery is the
-simplest value of the output type. Decided October 2026 (Track CMZ-AGM,
-Theorem 5.1).
+**Fidelity argument.** O24 prints Theorem 5.1 for the Figure 5 game and proves
+it in a stronger form, "the scheme is unforgeable even if the adversary is
+given one additional oracle Help" (p. 35), and the proofs of Lemmas 5.4 and 5.5
+give the adversary `Help` (pp. 36, 38). The printed form is the case of an
+adversary that never queries `Help`: an adversary of the Figure 5 game is an
+adversary of the game with `Help` that never queries it, with the same
+advantage (`UF_CMVAHelpAdv_ufAdversaryToHelp`). The proof of Theorem 5.10
+reads the answer of `Help` (p. 43), so the stronger form is the one it
+consumes (*Theorem 5.10 at the honest UF-CMVA game with Help*). Decided
+October 2026 (Track CMZ-M, #235).
 
 ## Theorem 5.11 stated before its reductions exist
 
@@ -933,9 +899,8 @@ to μCMZ. The embedding `ufAdversaryToHelp` of a plain adversary never draws a
 coin.
 
 **Rejected alternatives.** First, the plain advantage `UF_CMVAAdv` of the Figure
-5 game, which the statement of Theorem 5.1 for well-behaved algebraic
-adversaries (PR #220) bounds. Its `WellBehaved` hypothesis rejects every `Help`
-query, and the proof of Theorem 5.10 (§5.5) uses the answer of `Help`.
+5 game, which has no `Help` oracle, while the proof of Theorem 5.10 (§5.5) uses
+the answer of `Help`.
 Second, the advantage `AGM_UF_CMVAAdv` in the instrumented game
 `AGM_UF_CMVAGame` of `AlgebraicMAC.lean`, whose `verify` and `help` queries
 carry representations. That choice forces the reduction `B` to supply
@@ -956,13 +921,12 @@ and of Lemma 5.4 (pp. 35, 36), where the reduction answers `Help` from the
 representations of an algebraic adversary (p. 38), and of nothing in §5.5. The
 printed Theorems 5.2 and 5.10 (pp. 35, 42) put no algebraic restriction on their
 adversary. The instrumented game is the device of that reduction, and its module
-docstring calls it "the instrumented game, not the honest game".
-`microCMZ_ufcmva_le_of_wellBehaved` of `UFCMVA.lean` bounds the plain game for
-well-behaved algebraic adversaries, whose translation (`AGMBridge.lean`) answers
-`help` by `false`. A bound for the game with `Help` is open, issue #235. That is
-where the model enters when the two theorems are chained. `Help` reads the key
+docstring calls it "the instrumented game, not the honest game". Theorem 5.1
+bounds the game with `Help` for algebraic adversaries, and that is where the
+model enters when the two theorems are chained. `Help` reads the key
 `(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ and not an extension of the
 generic `UF_CMVAGame` of `Core/AlgebraicMAC/Security.lean`.
+
 ## The anonymity simulator takes a trace extractor
 
 **Decision.** The extractor of `ZKP_cmz.is` that the simulator of Theorem 5.8

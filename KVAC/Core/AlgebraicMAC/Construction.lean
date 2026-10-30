@@ -49,8 +49,7 @@ message space, and `setup`/`keygen`) with the MAC-specific carrier `Tag` (the
 type of MAC codes) and the `MAC` / `verify` algorithms, all under an abstract monad `M`.
 
 Correctness and UF-CMVA security are *not* fields of this structure —
-both are proved per scheme as standalone obligations in
-`Correctness.lean` and `UFCMVA.lean`. Trade-off: lose the
+both are proved per scheme as standalone obligations. Trade-off: lose the
 by-construction guarantee of a bundled correctness field (cf. PQXDH's
 `KEM`); gain monad polymorphism, since correctness statements differ in
 shape between `Id` (Bool equation) and `ProbComp` (`support` / `evalDist`
