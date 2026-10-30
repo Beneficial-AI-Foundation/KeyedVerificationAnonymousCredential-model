@@ -20,7 +20,10 @@ documents its own contents in its module docstring:
 - `Game` — the AGM one-more unforgeability game: the query type and log, the
   Sign and Verify oracles that evaluate the submitted representations, their
   normalization, the algebraic adversary and its forgeries, the winning
-  condition, the experiment `AGM_OMUFGame` and its advantage;
+  condition, the experiment `AGM_OMUFGame` and its advantage, and the forgetful
+  map to the plain Figure 6 game of `KVAC.Preliminaries.AnonymousTokens.Security`
+  (`agmOMUFQueryToPlain`, `AGMOMUFAdversary.forget`, and `OMUFAdv_forget`, which
+  equates the two advantages);
 - `Polynomial` — the pure-algebra layer of Equations 17 to 22 over the ring of
   `AGMPolynomial.lean`: the exponent of a representation given the commitment
   polynomials, the commitment polynomials `c_1, …, c_r` (Equations 17 and 18),
@@ -31,15 +34,10 @@ documents its own contents in its module docstring:
 - `CaseEvents` — the polynomials of Equations 18 and 22 read off a trace, and
   the win and the three case events of the proof's case split, items (i) to
   (iii), that Claims 5.12 to 5.14 bound;
-- `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds
-  `omufBoundN1` and `omufBound`, the named reductions (the theorem's, and
-  one each for Claims 5.12 and 5.13), `agm_omuf_le_n1` at `n = 1` (Equation
-  23), `agm_omuf_le` for every `n`, `microCMZAT_omuf_le`, its bound in the plain
+- `Statements` — the Theorem 5.11 statements: the named bounds `omufBoundN1`
+  and `omufBound`, the named reductions (the theorem's, and one each for
+  Claims 5.12 and 5.13), `agm_omuf_le_n1` at `n = 1` (Equation 23),
+  `agm_omuf_le` for every `n`, `microCMZAT_omuf_le`, its bound in the plain
   Figure 6 game, and the Claims 5.12 to 5.14 over the case events of
   `CaseEvents`.
-
-The plain Figure 6 game of `KVAC.Preliminaries.AnonymousTokens.Security` is
-reached from the AGM game by forgetting the representations
-(`AGMOMUFAdversary.forget`), and `OMUFAdv_forget` of `Game` equates the two
-advantages.
 -/

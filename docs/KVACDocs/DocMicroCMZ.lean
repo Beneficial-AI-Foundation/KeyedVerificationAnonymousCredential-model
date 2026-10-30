@@ -1247,13 +1247,15 @@ pigeonhole.
 :::
 
 :::theorem "agm_omuf_forget_transfer" (lean := "KVAC.Schemes.MicroCMZ.agmOMUFQueryToPlain, KVAC.Schemes.MicroCMZ.AGMOMUFAdversary.forget, KVAC.Schemes.MicroCMZ.OMUFAdv_forget") (parent := "cmz_omuf") (tags := "milestone")
-An algebraic adversary of {uses "agm_omuf_game"}[] is an adversary of the
-plain one-more unforgeability game of {uses "omuf_game"}[] over the core
-scheme {uses "mucmz_at_core"}[] that keeps the pairs the server issues and
-submits the elements its representations evaluate to, and outputs no forgery
-at any other number of attributes. At its own number of attributes its
-advantage in the plain game equals its advantage in the AGM game, with no
-condition on the adversary.
+The forgetful map turns an algebraic adversary of {uses "agm_omuf_game"}[]
+into an adversary of the plain one-more unforgeability game of
+{uses "omuf_game"}[] over the core scheme {uses "mucmz_at_core"}[]. At the
+algebraic adversary's number of attributes, it keeps the pairs the server
+issues and submits the elements that the algebraic adversary's
+representations evaluate to. At any other number of attributes, it outputs no
+forgery. At the algebraic adversary's number of attributes, the advantage of
+the forgetful adversary in the plain game equals the advantage of the
+algebraic adversary in the AGM game, with no condition on the adversary.
 :::
 
 :::proof "agm_omuf_forget_transfer"
@@ -1282,7 +1284,7 @@ one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
 attributes. Stated for every `n > 0` over the merged core scheme
 {uses "mucmz_at_core"}[] as `agm_omuf_le` in the AGM game
 {uses "agm_omuf_game"}[] and as `microCMZAT_omuf_le` in the plain game for
-the forgetful image of the algebraic adversary, with the printed bound
+the forgetful adversary `A.forget gen`, with the printed bound
 `(q + 6)/p + (q + 1)·Adv^dl + 3·Adv^2-dl + Adv^gapdl` behind the named
 definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
 and 2-DL advantages are those of the `n = 1` reductions run on the

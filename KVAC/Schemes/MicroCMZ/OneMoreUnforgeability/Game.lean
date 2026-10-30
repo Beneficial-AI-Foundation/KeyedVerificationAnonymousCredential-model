@@ -18,7 +18,9 @@ step A4 of #12 (Track CMZ-OMUF, issue #181): the query type, the oracle spec,
 the transcript log, the oracles, the algebraic adversary, the
 winning condition, the experiment `AGM_OMUFGame` and its advantage
 `AGM_OMUFAdv`, together with the decidable Sign predicate the static
-query-budget hypotheses of Theorem 5.11 count.
+query-budget hypotheses of Theorem 5.11 count. It ends with the forgetful map to
+the plain game (`agmOMUFQueryToPlain`, `AGMOMUFAdversary.forget`,
+`OMUFAdv_forget`).
 
 The algebraic group model restricts the adversary's type and nothing else.
 Every group element the adversary submits, a commitment or a token, is
@@ -381,9 +383,10 @@ noncomputable abbrev AGM_OMUFAdv (A : AGMOMUFAdversary F G n) (secParam : ℕ) :
 
 /-! ## Forgetting the representations
 
-An algebraic adversary is an adversary of the plain Figure 6 game over the core
-scheme: it keeps the pairs the server issues and submits the elements its
-representations evaluate to. -/
+`AGMOMUFAdversary.forget` turns an algebraic adversary `A` into an adversary of the plain
+Figure 6 game over the core scheme: it keeps the pairs the server issues, and it submits the
+elements that `A`'s representations evaluate to. The two games then answer every query alike,
+so the advantages are equal, with no condition on the adversary. -/
 
 /-- The queries of the AGM OMUF game as queries of the plain Figure 6 game over the
 core scheme, for the crs `H` and the public parameters `pp`, with the pairs issued so

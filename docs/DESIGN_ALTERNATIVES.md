@@ -623,11 +623,12 @@ entries only and keeping short lists as submitted.
 adversaries submit coefficients only*: the gated game agrees with the honest
 game only for adversaries whose representations are correct on every branch,
 while the restricted game is the plain Figure 6 game run on the evaluated
-elements, and the transfer between the two, `OMUFAdv_forget`, needs no side
-condition. Normalization is a simplification, not a soundness requirement, and
-it changes no answer, since the oracle answers on the submitted representation
-and only the log stores the normalized one, which names the same commitment at
-its own transcript (`AGMRepr.eval_normalize`). The Theorem 5.11 proof (O24 §5.6)
+elements, and the transfer from the restricted game to the plain one,
+`OMUFAdv_forget`, needs no side condition. Normalization is a simplification,
+not a soundness requirement, and it changes no answer, since the oracle
+answers on the submitted representation and only the log stores the
+normalized one, which names the same commitment at its own transcript
+(`AGMRepr.eval_normalize`). The Theorem 5.11 proof (O24 §5.6)
 substitutes each commitment's representation into the server's answer
 (Equation 18) as coefficients read at the arity of its own query. Normalization
 buys the right to evaluate a logged representation against any later transcript,

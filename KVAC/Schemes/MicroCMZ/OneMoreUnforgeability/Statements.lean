@@ -16,13 +16,13 @@ Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
 case the paper proves directly, for every `n` (the printed bound), and the
 Claims 5.12 to 5.14 of the `n = 1` proof over the case events of
-`CaseEvents.lean`. `microCMZAT_omuf_le` carries the bound for every `n` to the
-plain Figure 6 game through `OMUFAdv_forget`. Track CMZ-OMUF, step A3 of the
-Theorem 5.3 plan, part 17a of item 17 (issue #189). Stated first and `sorry`d on the pattern of
+`CaseEvents.lean`. Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of
+item 17 (issue #189). Stated first and `sorry`d on the pattern of
 `AGMReduction/SecurityN1.lean`, so that the reductions review against visible
 targets; the blueprint nodes `mucmz_at_agm_omuf_n1`, `mucmz_at_agm_omuf` and
 `omuf_case_i` to `omuf_case_iii` show "contains sorry" until the proofs are
-merged.
+merged. `microCMZAT_omuf_le` carries the bound for every `n` to the plain
+Figure 6 game through `OMUFAdv_forget`.
 
 ## The statements and their parts
 
@@ -30,9 +30,11 @@ merged.
                     for every  A : AGMOMUFAdversary F G 1
   agm_omuf_le    :  AGM_OMUFAdv gen A secParam  ≤  omufBound F q εdl' ε2dl' εgap
                     for every  0 < n  and  A : AGMOMUFAdversary F G n
-  microCMZAT_omuf_le :  OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n
-                          ≤  omufBound F q εdl' ε2dl' εgap
-                    the same bound in the plain Figure 6 game, by OMUFAdv_forget
+  microCMZAT_omuf_le :
+                    OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n
+                      ≤  omufBound F q εdl' ε2dl' εgap
+                    for every  0 < n  and  A : AGMOMUFAdversary F G n,
+                    in the plain Figure 6 game, by OMUFAdv_forget
     all three under the budget hypothesis
       ∀ H pp, IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q     at most q Sign queries,
                                                                     refused ones included
@@ -153,8 +155,7 @@ own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 
-The `π_is`-carrying variant and its lifting lemma (items 18 and 17b), and any
-proof.
+The `π_is`-carrying variant and its lifting lemma (items 18 and 17b).
 -/
 
 set_option autoImplicit false
@@ -332,7 +333,7 @@ theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
   sorry
 
 /--
-**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
+**O24 Theorem 5.11 in the AGM game, every `n`**, in the shape drawn in the module docstring,
 stated first and `sorry`d, with the paper's printed bound. The proof splits the
 winning event by whether the forgeries' attribute combinations are pairwise
 distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
