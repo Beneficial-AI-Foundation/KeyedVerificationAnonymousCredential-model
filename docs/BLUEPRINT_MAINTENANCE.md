@@ -235,7 +235,7 @@ family are resolved by the root `lake-manifest.json` and built once. CI caches
   `zk_arguments` element (then complete), and drop the two "#54 in review"
   TODO notes (Core and Preliminaries).
 - **Upstream nits found by the docs build**: anchored structure fields and
-  constructors lacking docstrings (`UFQuery.sign`, `AGMQuery.help`, …)
+  constructors lacking docstrings (`UFQuery.sign`, …)
   produce build warnings.
 
 Keep this ledger current: when an entry ships, delete it here and record any

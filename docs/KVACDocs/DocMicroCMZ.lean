@@ -101,7 +101,7 @@ the credential at the oracle carrier.
 :::definition "mucmz_base_mac" (lean := "KVAC.Schemes.MicroCMZ.Params, KVAC.Schemes.MicroCMZ.Key, KVAC.Schemes.MicroCMZ.Code, KVAC.Schemes.MicroCMZ.keygen, KVAC.Schemes.MicroCMZ.setup, KVAC.Schemes.MicroCMZ.macScalar, KVAC.Schemes.MicroCMZ.mac, KVAC.Schemes.MicroCMZ.verify, KVAC.Schemes.MicroCMZ.helpEq, KVAC.Schemes.MicroCMZ.μCMZBaseMACSyntax, KVAC.Schemes.MicroCMZ.μCMZBaseMAC, KVAC.Schemes.MicroCMZ.μCMZBaseMAC_correct, KVAC.Schemes.MicroCMZ.uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_uniformNonzero, KVAC.Schemes.MicroCMZ.mem_support_setup, KVAC.Schemes.MicroCMZ.instSampleableTypeNeZero") (parent := "cmz_construction") (tags := "milestone")
 The μCMZ base MAC over an abstract prime-order group
 ({uses "sampleable_group"}[]): key sampling, the scalar-side MAC
-`V = (x₀ + xᵣ + m·x₁)·U` with a nonvanishing base `U`, deterministic
+`V = (x₀ + xᵣ + Σᵢ xᵢmᵢ)·U` with a nonvanishing base `U`, deterministic
 verification, the equation of the oracle `Help` of §5.2 that the games with
 `Help` share, the packaging as an algebraic MAC ({uses "algebraic_mac"}[])
 with its correctness proof, and the sampler of nonzero group elements
@@ -238,13 +238,14 @@ adversary's own polynomial, which depends on its view.
 from these pieces, then assemble Lemma 5.4, and prove Lemma 5.5 and the
 transfer from the AGM game to the game with `Help` behind Theorem 5.1.
 
-:::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.helpConsistent, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
+:::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMRepr.evalParams, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] specialised to algebraic
-adversaries against the single-attribute base MAC
-({uses "mucmz_base_mac"}[]): adversaries return AGM representations for
-every output group element, oracles gate on representation consistency,
-and the discrete-log bookkeeping runs through `glog` with its linearity
-laws, over a {uses "sampleable_group"}[] carrier.
+adversaries against the `n`-attribute base MAC
+({uses "mucmz_base_mac"}[]): adversaries give every group element they submit
+by its AGM representation alone, the challenger evaluates the representations
+and answers honestly on the evaluated elements, and the discrete-log
+bookkeeping runs through `glog` with its linearity laws, over a
+{uses "sampleable_group"}[] carrier.
 :::
 
 :::theorem "identity_case_lem54" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.spec, KVAC.Schemes.MicroCMZ.AGMPoly.identity_case, KVAC.Schemes.MicroCMZ.AGMPoly.toPoly_eq_zero_of_verifPoly_eq_zero") (parent := "cmz_amac") (tags := "milestone")
@@ -796,9 +797,9 @@ direction `r⃗`, the wrapper runs the `n`-attribute adversary of
 {uses "agm_model"}[] with public parameters `Xᵢ = rᵢ•X₁` and answers its queries
 through a translation oracle that forwards each query to the 1-attribute game,
 collapsing messages to `Σᵢ mᵢrᵢ` and representations through
-{uses "attribute_collapse_dictionary"}[]; on a `help` query it first checks the
-per-attribute representation consistency the honest oracle checks, since the
-collapsed sum check is weaker for `n ≥ 2`. The general-`n` 3-DL reduction
+{uses "attribute_collapse_dictionary"}[], with a `help` query's vector of
+representations collapsed to the representation of the weighted sum
+`Σᵢ rᵢ•Aᵢ`. The general-`n` 3-DL reduction
 samples `r⃗` and runs the `n = 1` reduction of {uses "challenge_embedding"}[] on
 the wrapped adversary; its experiment and advantage fix the base to `gen`.
 :::
@@ -846,8 +847,8 @@ self-sampled masks, it presents the public parameters `Xᵢ = aaᵢ•g + bbᵢ�
 `X₀ = z•H`, `Xᵣ = xᵣ•g` to the adversary of {uses "agm_model"}[] and answers its
 queries: `sign` with a nonzero scalar `u` and `V = c•U + u•(d•X)`, where `c` and
 `d` are the known and the `x`-multiplied parts of the key on the message;
-`verify` and `help` by the honest representation check followed by one DDH
-decision on the `x`-dependent part of the equation. On verify and help the
+`verify` and `help` by evaluating the submitted representations followed by
+one DDH decision on the `x`-dependent part of the equation. On verify and help the
 oracle answers equal the honest answers; for a generator `g`, sign answers are
 identically distributed with the honest ones, `u ↦ u•g` carrying the scalar
 sampler onto `U ←$ G∖{0}`.
@@ -1054,7 +1055,7 @@ carries a representation. The paper proves Theorem 5.1
 ({bpref "mucmz_mac_security"}[]), in the algebraic group model, for this game:
 "the scheme is unforgeable even if the adversary is given one additional oracle
 Help". The proof of Theorem 5.10 (p. 43) uses the answer of `Help` for its
-candidate `Z`. The paper ties `Help` to no model. The instrumented game of
+candidate `Z`. The paper ties `Help` to no model. The AGM game of
 {bpref "agm_model"}[] is the device of the proof of Lemma 5.4, where the
 reduction answers `Help` from the representations of an algebraic adversary.
 `Help` reads the key `(x₀, xᵣ, x⃗)`, so the game is specific to μCMZ. An
@@ -1197,9 +1198,9 @@ the repository to be so gated: a commitment whose representation does not
 evaluate to it, or whose list of issued-pair coefficients has not exactly one entry per
 issued pair, is refused with `none` and still logged, so every Sign query
 counts toward Figure 6's counter while only issued pairs extend the
-representation basis. The Verify oracle is gated like the MAC game's, with the
-same exact-length rule, so one decidable predicate serves the oracles and
-the winning condition. The log keeps each commitment's representation for
+representation basis. The Verify oracle is gated with the same exact-length
+rule, so one decidable predicate serves the oracles and the winning
+condition. The log keeps each commitment's representation for
 the Theorem 5.11 reduction. Exact-length lists depart from the MAC game's
 permissive `zipWith` evaluation so that an accepted representation
 evaluates to the same element against every later transcript, the final

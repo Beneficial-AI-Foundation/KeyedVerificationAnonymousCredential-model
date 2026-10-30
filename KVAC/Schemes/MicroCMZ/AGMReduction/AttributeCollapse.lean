@@ -19,8 +19,8 @@ The paper's reduction `B` (Claim 5.7) fixes `z₁ = 1`, samples `zᵢ` for
 `i ∈ [2, n]`, and collapses *messages* to `m₁ + Σᵢ zᵢ mᵢ`. Here the direction
 `r⃗` ranges over all `n` coordinates: the `n`-game's first attribute element
 (index `0` in `Fin n`) is `r₁ • X₁`, with `X₁` the 1-attribute game's public
-element (the paper's `z₁ = 1` is the case `r₁ = 1`). Because the instrumented
-game's `verify`/`help` queries carry algebraic representations, those are
+element (the paper's `z₁ = 1` is the case `r₁ = 1`). Because the AGM game's
+`verify`/`help` queries and forgery are algebraic representations, those are
 collapsed too. The message collapse `Σᵢ mᵢ rᵢ` is the wrapper's job.
 
 This file holds the pure algebra of that collapse and the wrapper
@@ -110,62 +110,34 @@ def collapseMsg (r m : Fin n → F) : Fin 1 → F := fun _ => ∑ i, m i * r i
 /-- Query-translation oracle of the `n → 1` collapse. Each `n`-attribute query
 becomes one 1-attribute `query` in `OracleComp (AGMOracleSpec F G 1)`: messages
 through `collapseMsg`, representations through `AGMRepr.collapseRepr` /
-`AGMRepr.linCombCollapse`, and the `help` query's `A⃗` field to `Σᵢ rᵢ • Aᵢ`.
-Response types (`G × G` / `Bool`) agree in both specs, so responses pass through.
+`AGMRepr.linCombCollapse`. Response types (`G × G` / `Bool`) agree in both specs,
+so responses pass through.
 
-On a `help` query the oracle first checks the honest `n`-attribute representation
-consistency `helpConsistent` (`∀ i, (ρA i).eval = Aᵢ`, plus `ρ₀`, `ρZ`) against
-the embedded `n`-attribute basis, and forwards the collapsed 1-attribute `help`
-query only if it holds; otherwise it answers `false`, as the honest `n`-attribute
-oracle does. The check is needed because the honest `help` check is per attribute
-(`∀ i`), while `linCombCollapse` only lets the 1-attribute oracle re-check the
-`r`-weighted *sum* `Σᵢ rᵢ·(ρA i).eval = Σᵢ rᵢ·Aᵢ`, which is strictly weaker for
-`n ≥ 2` (individually wrong representations whose weighted errors cancel). A
-genuine algebraic adversary never trips it (its `Aᵢ = (ρA i).eval`). The
-pre-check is what lets the `sign`/`verify`/`help` answers be coupled exactly with
-the embedded-key `n`-attribute oracle; that coupling is the unanchored blueprint node
-`collapse_oracle_coupling`, not in this file.
-
-The oracle tracks the list `List (G × G)` of issued MAC codes as its state (each
-forwarded `sign` appends the returned MAC code) so that the `help` consistency `eval` uses the
-same transcript the honest oracle would. The closed-over `(H, pp_n)` is the
-embedded `n`-attribute basis `(H, X₀, Xᵣ, X⃗)`. -/
-noncomputable def collapseOracleImpl (r : Fin n → F) (H : G)
-    (pp_n : G × G × (Fin n → G)) :
-    QueryImpl (AGMOracleSpec F G n)
-      (StateT (List (G × G)) (OracleComp (AGMOracleSpec F G 1)))
-  | .sign m => StateT.mk fun tags => do
-      let σ : G × G ← query (spec := AGMOracleSpec F G 1)
-        (AGMQuery.sign (collapseMsg r m))
-      pure (σ, tags ++ [σ])
-  | .verify m σ ρU ρV => StateT.mk fun tags => do
-      let b ← query (spec := AGMOracleSpec F G 1)
-        (AGMQuery.verify (collapseMsg r m) σ
-          (AGMRepr.collapseRepr r ρU) (AGMRepr.collapseRepr r ρV))
-      pure (b, tags)
-  | .help A₀ A Z ρ₀ ρA ρZ => StateT.mk fun tags => do
-      let consistent := helpConsistent gen H pp_n tags A₀ A Z ρ₀ ρA ρZ
-      if consistent then do
-        let b ← query (spec := AGMOracleSpec F G 1)
-          (AGMQuery.help A₀ (fun _ => ∑ i, r i • A i) Z
-            (AGMRepr.collapseRepr r ρ₀) (fun _ => AGMRepr.linCombCollapse r ρA)
-            (AGMRepr.collapseRepr r ρZ))
-        pure (b, tags)
-      else
-        pure (false, tags)
+A `help` query's vector `ρ⃗` collapses to the single representation
+`linCombCollapse r ρ⃗`, which the 1-attribute oracle evaluates to the weighted sum
+`Σᵢ rᵢ • Aᵢ` of the elements `Aᵢ` that `ρ⃗` represents over the embedded basis
+`Xᵢ = rᵢ • X₁`. Its `help` answer `Z = (x₀+xᵣ)•A₀ + x₁•Σᵢ rᵢ•Aᵢ` is then the
+`n`-attribute answer at the embedded key `xᵢ = rᵢ·x₁`. -/
+noncomputable def collapseOracleImpl (r : Fin n → F) :
+    QueryImpl (AGMOracleSpec F G n) (OracleComp (AGMOracleSpec F G 1))
+  | .sign m => query (spec := AGMOracleSpec F G 1) (AGMQuery.sign (collapseMsg r m))
+  | .verify m ρU ρV => query (spec := AGMOracleSpec F G 1)
+      (AGMQuery.verify (collapseMsg r m) (AGMRepr.collapseRepr r ρU)
+        (AGMRepr.collapseRepr r ρV))
+  | .help ρ₀ ρA ρZ => query (spec := AGMOracleSpec F G 1)
+      (AGMQuery.help (AGMRepr.collapseRepr r ρ₀) (fun _ => AGMRepr.linCombCollapse r ρA)
+        (AGMRepr.collapseRepr r ρZ))
 
 /-- The `n → 1` attribute-collapse wrapper adversary (Claim 5.7). For a fixed
-direction `r⃗`, a 1-attribute adversary that runs `A` against
-`collapseOracleImpl` and returns the collapsed forgery. The state of issued MAC codes
-starts empty and is projected away (`StateT.run' []`). -/
+direction `r⃗`, a 1-attribute adversary that runs `A` on the `n`-attribute public
+parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` against `collapseOracleImpl` and returns
+the collapsed forgery. -/
 noncomputable def nTo1Adversary (A : AGMUFAdversary F G n) (r : Fin n → F) :
     AGMUFAdversary F G 1 where
   run H pp := do
     let pp_n : G × G × (Fin n → G) := (pp.1, pp.2.1, fun i => r i • pp.2.2 0)
-    let (mStar_n, σStar, ρU_n, ρV_n) ←
-      (simulateQ (collapseOracleImpl gen r H pp_n) (A.run H pp_n)).run' []
-    pure (collapseMsg r mStar_n, σStar,
-      AGMRepr.collapseRepr r ρU_n, AGMRepr.collapseRepr r ρV_n)
+    let (mStar_n, ρU_n, ρV_n) ← simulateQ (collapseOracleImpl r) (A.run H pp_n)
+    pure (collapseMsg r mStar_n, AGMRepr.collapseRepr r ρU_n, AGMRepr.collapseRepr r ρV_n)
 
 /-- The 3-DL reduction for general `n` (Claim 5.7 on top of Lemma 5.4): samples
 the direction `r⃗ ←$ Fⁿ`, wraps `A` as a 1-attribute adversary, and runs the
@@ -176,7 +148,7 @@ at base `gen`; the `QDLogAdversary` shape is formed once, in
 noncomputable def microCMZN3DLReduction (A : AGMUFAdversary F G n) (pows : Fin 3 → G) :
     ProbComp F := do
   let r ← $ᵗ (Fin n → F)
-  microCMZ3DLReduction gen (nTo1Adversary gen A r) pows
+  microCMZ3DLReduction gen (nTo1Adversary A r) pows
 
 /-- The 3-DL experiment for the general-`n` reduction, the counterpart of
 `microCMZ3DLReductionExp`: the challenge base is fixed to `gen` and the base slot

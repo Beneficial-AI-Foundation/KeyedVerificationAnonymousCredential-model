@@ -18,7 +18,7 @@ adversary is given one additional oracle Help". The proof of Theorem 5.10
 
 The game is the honest one. The challenger holds the key and answers `Help` by
 evaluating the equation, and no query carries an algebraic representation. The
-instrumented game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean` is the device of the
+AGM game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean` is the device of the
 proof of Lemma 5.4, where the reduction answers `Help` from the representations
 of an algebraic adversary (p. 38). Among the MAC results, the paper assumes the
 algebraic group model in Theorem 5.1 and Lemma 5.4 only.

@@ -15,7 +15,7 @@ prove:
   `AGM_UF_CMVAAdv gen A secParam ≤
      microCMZN3DLReductionAdv gen A + gapDlogAdv gen (gapDlReduction gen A) + 5/p`.
 
-The bound speaks of the instrumented AGM(+Help) game `AGM_UF_CMVAGame` of
+The bound speaks of the AGM(+Help) game `AGM_UF_CMVAGame` of
 `AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 is formalized in
 the stronger form its proof establishes, "the scheme is unforgeable even if the
 adversary is given one additional oracle Help" (p. 35), as a bound for the game with
@@ -59,7 +59,7 @@ variable {n : ℕ}
 
 /-! ## Lemma 5.5 -/
 
-/-- **O24 Lemma 5.5** (μCMZ is UF-CMVA for any `n` in the AGM, instrumented game):
+/-- **O24 Lemma 5.5** (μCMZ is UF-CMVA for any `n` in the AGM game):
 the AGM advantage of an `n`-attribute algebraic adversary is at most the 3-DL
 advantage of `microCMZN3DLReduction gen A` plus the gap-DL advantage of
 `gapDlReduction gen A` plus `5/p`.
@@ -75,7 +75,7 @@ combination collides with that of a message queried to the MAC oracle:
    extracts `x = num·den⁻¹` from the collision relation. The bad
    event is the vanishing denominator `Σᵢ bbᵢ·(mⱼ,ᵢ − m*ᵢ) = 0`, degree 1 in the
    perfectly hidden `bb⃗`: probability at most `1/p`.
-2. *No collision* (Claim 5.7): along a uniform direction `r⃗`, `nTo1Adversary gen A r`
+2. *No collision* (Claim 5.7): along a uniform direction `r⃗`, `nTo1Adversary A r`
    runs `A` against the 1-attribute game with `xᵢ = rᵢ·x₁`, translating each
    query's representation (`collapseOracleImpl`); for `x₁ ≠ 0` the key marginal is
    the honest one and a fresh, non-colliding `n`-attribute forgery collapses to a
