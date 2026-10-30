@@ -72,7 +72,7 @@ coefficients, which it combines into
 issued MAC codes unchanged, since the issued MAC codes are the same list in both
 games. Its evaluation at the 1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)`
 equals the evaluation of `ρ` at the embedded basis
-`(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`; that evaluation bridge is not in this file. -/
+`(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`; that evaluation bridge is `AGMRepr.eval_collapseRepr`, below. -/
 def AGMRepr.collapseRepr (r : Fin n → F) (ρ : AGMRepr F n) : AGMRepr F 1 where
   g := ρ.g
   h := ρ.h
@@ -139,6 +139,9 @@ noncomputable def collapseOracleImpl (r : Fin n → F) :
       (AGMQuery.help (AGMRepr.collapseRepr r ρ₀) (fun _ => AGMRepr.linCombCollapse r ρA)
         (AGMRepr.collapseRepr r ρZ))
 
+/-- The evaluation bridge of `AGMRepr.collapseRepr`: the collapsed representation, evaluated
+against the 1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, evaluates as `ρ` does against
+the embedded basis `(g₀, H, X₀, Xᵣ, fun i => r i • X₁)`. -/
 lemma AGMRepr.eval_collapseRepr (r : Fin n → F) (ρ : AGMRepr F n)
     (g₀ H X₀ Xᵣ X₁ : G) (tags : List (G × G)) :
     (ρ.collapseRepr r).eval g₀ H X₀ Xᵣ (fun _ => X₁) tags
@@ -152,6 +155,8 @@ lemma AGMRepr.eval_collapseRepr (r : Fin n → F) (ρ : AGMRepr F n)
   rw [mul_smul]
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] in
+/-- The MAC scalar of `m` at the embedded key `xᵢ = rᵢ · x₁` is that of the collapsed message
+`collapseMsg r m` at the 1-attribute key `x₁`. -/
 lemma macScalar_collapseMsg (r m : Fin n → F) (x₀ xᵣ x₁ : F) :
     macScalar (x₀, xᵣ, fun i => r i * x₁) m
       = macScalar (x₀, xᵣ, fun _ : Fin 1 => x₁) (collapseMsg r m) := by
@@ -162,6 +167,8 @@ lemma macScalar_collapseMsg (r m : Fin n → F) (x₀ xᵣ x₁ : F) :
   intros _ _
   ring
 
+/-- Verifying a MAC code `t` on `m` at the embedded key `xᵢ = rᵢ · x₁` is verifying it on the
+collapsed message `collapseMsg r m` at the 1-attribute key `x₁`. -/
 lemma verify_collapse (r m : Fin n → F) (x₀ xᵣ x₁ : F) (t : Code G) :
     verify (x₀, xᵣ, fun i => r i * x₁) m t
       = verify (x₀, xᵣ, fun _ : Fin 1 => x₁) (collapseMsg r m) t := by

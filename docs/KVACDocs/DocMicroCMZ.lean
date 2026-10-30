@@ -788,7 +788,8 @@ translated to a 1-attribute one by combining the attribute coefficients into
 represented elements gets the combined representation whose coefficients for issued
 MAC codes are merged position by position. The evaluation bridges, that each
 translation, against the 1-attribute basis, evaluates as the original does
-against the embedded basis `Xᵢ = rᵢ•X₁`, are not part of this node.
+against the embedded basis `Xᵢ = rᵢ•X₁`: that of the first translation is
+{bpref "attribute_collapse_evaluation_bridges"}[], that of the second is not yet stated.
 :::
 
 :::definition "attribute_collapse_reduction" (lean := "KVAC.Schemes.MicroCMZ.collapseMsg, KVAC.Schemes.MicroCMZ.collapseOracleImpl, KVAC.Schemes.MicroCMZ.nTo1Adversary, KVAC.Schemes.MicroCMZ.microCMZN3DLReduction, KVAC.Schemes.MicroCMZ.microCMZN3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZN3DLReductionAdv") (parent := "cmz_amac") (tags := "milestone")
