@@ -5,6 +5,7 @@ Authors: Semar Augusto
 -/
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.Construction
+import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import Mathlib.Tactic.Module
 import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.SimSemantics.Append
@@ -20,8 +21,10 @@ reduction itself (that is delivered by `AGMReduction`), and not the
 Sign-oracle distribution lemmas (those live in the sibling module `SignMask`).
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
-`AGMRepr` / `AGMRepr.eval`; and the AGM game (`AGMQuery`, `AGMOracleSpec`,
-`agmOracleImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`).
+`AGMRepr` / `AGMRepr.eval`; the AGM game (`AGMQuery`, `AGMOracleSpec`,
+`agmOracleImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`); and the
+forgetful map to the game with `Help` (`agmQueryToHelp`, `AGMUFAdversary.forget`,
+`UF_CMVAHelpAdv_forget`).
 
 The AGM is a restriction on the adversary class: an algebraic adversary that
 returns a group element "must also return coefficients ζ₁, …, ζₙ so that
@@ -274,6 +277,53 @@ function of `secParam` so the (deferred) negligibility statement can quantify ov
 it. -/
 noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) : ℝ≥0∞ :=
   Pr[= true | AGM_UF_CMVAGame (gen := gen) secParam A]
+
+/-! ## Forgetting the representations
+
+`AGMUFAdversary.forget` turns an algebraic adversary `A` into an adversary of the game
+with `Help` of `UFCMVAHelp.lean`: it keeps the MAC codes it receives, and it submits the
+elements that `A`'s representations evaluate to. The two games then answer every query
+alike, so the advantages are equal, with no condition on the adversary. -/
+
+/-- The queries of the AGM game as queries of the game with `Help`, for the crs `H` and
+the public parameters `pp`, on the game's side of the coin oracle. The state is the list
+of MAC codes issued so far, in issuance order: `sign` forwards and appends the MAC code
+it receives, and `verify` and `help` forward the elements their representations evaluate
+to. -/
+def agmQueryToHelp (H : G) (pp : Params G n) :
+    QueryImpl (AGMOracleSpec F G n)
+      (StateT (List (G × G)) (OracleComp (unifSpec + UFHelpOracleSpec F G n)))
+  | .sign m => StateT.mk fun tags => do
+      -- `σ : G × G`: unascribed, `σ` has type
+      -- `(unifSpec + UFHelpOracleSpec F G n).Range (.inr (.sign m))`, so `tags ++ [σ]`
+      -- finds no `HAppend` with `List (G × G)`.
+      let σ : G × G ← query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
+      pure (σ, tags ++ [σ])
+  | .verify m ρU ρV => StateT.mk fun tags => do
+      let b ← query (spec := unifSpec + UFHelpOracleSpec F G n)
+        (.inr (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)))
+      pure (b, tags)
+  | .help ρ₀ ρA ρZ => StateT.mk fun tags => do
+      let b ← query (spec := unifSpec + UFHelpOracleSpec F G n)
+        (.inr (.help (ρ₀.evalParams gen H pp tags)
+          (fun i => (ρA i).evalParams gen H pp tags)
+          (ρZ.evalParams gen H pp tags)))
+      pure (b, tags)
+
+/-- An algebraic adversary as an adversary of the game with `Help`: it runs `A` through
+`agmQueryToHelp` from no MAC codes, and its forgery is the evaluation of `A`'s forgery
+representations over the MAC codes issued. It never draws a coin. -/
+def AGMUFAdversary.forget (A : AGMUFAdversary F G n) : UFHelpAdversary F G n where
+  run H pp := do
+    let ((mStar, ρU, ρV), tags) ← (simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run []
+    pure (mStar, (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
+
+omit hgen in
+/-- Forgetting the representations preserves the advantage: the advantage of
+`A.forget gen` in the game with `Help` is the advantage of `A` in the AGM game. -/
+theorem UF_CMVAHelpAdv_forget (secParam : ℕ) (A : AGMUFAdversary F G n) :
+    UF_CMVAHelpAdv gen (A.forget gen) secParam = AGM_UF_CMVAAdv gen A secParam := by
+  sorry
 
 /-! ## Security statements (O24 §5.3)
 

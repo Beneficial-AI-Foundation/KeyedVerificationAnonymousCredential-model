@@ -685,16 +685,16 @@ agrees with the honest game only for adversaries whose representations are
 correct on every branch, so carrying a bound from the gated game to the honest
 game needs a hypothesis on the adversary. Under the restriction the AGM game is
 the honest game with `Help` (`UFCMVAHelp.lean`) run on the evaluated elements,
-and the transfer between the two needs no side condition. The reductions keep
-what they used: `reductionOracleImpl` answers `Verify` and `Help` by evaluating
-the represented polynomial at the embedded 3-DL instance, the gap-DL simulator
-evaluates the representations on known group elements, and the `n → 1`
-collapse forwards a `Help` query's weighted sum `Σᵢ rᵢ • Aᵢ` as one
-representation, which the 1-attribute oracle evaluates exactly, with no check
-of the individual representations first. Representations compose linearly, so
-a reduction that submits linear combinations of represented elements stays
-algebraic, as the reduction `B` of Theorem 5.10 does with `(U′, C_V − r′H)`
-(p. 43). Decided October 2026 (Track CMZ-M, #235).
+and the transfer between the two, `UF_CMVAHelpAdv_forget`, needs no side
+condition. The reductions keep what they used: `reductionOracleImpl` answers
+`Verify` and `Help` by evaluating the represented polynomial at the embedded
+3-DL instance, the gap-DL simulator evaluates the representations on known group
+elements, and the `n → 1` collapse forwards a `Help` query's weighted sum
+`Σᵢ rᵢ • Aᵢ` as one representation, which the 1-attribute oracle evaluates
+exactly, with no check of the individual representations first. Representations
+compose linearly, so a reduction that submits linear combinations of represented
+elements stays algebraic, as the reduction `B` of Theorem 5.10 does with
+`(U′, C_V − r′H)` (p. 43). Decided October 2026 (Track CMZ-M, #235).
 
 ## Claim 5.7: the `n → 1` collapse translates representations, not only messages
 
@@ -754,11 +754,13 @@ translation. Decided September 2026 (Track CMZ-AGM, Lemma 5.5).
 
 ## Theorem 5.1 at the game with Help
 
-**Decision.** Theorem 5.1 is formalized as a bound for the game with `Help` of
-`UFCMVAHelp.lean`, against algebraic adversaries, with the bound of Lemma 5.5,
-`agm_ufcmva_le_explicit` (`AGMReduction/Security.lean`). It is reached by
-carrying the advantage in the AGM game of `AlgebraicMAC.lean` over to the game
-with `Help`.
+**Decision.** Theorem 5.1, `microCMZ_ufcmvaHelp_le` of `UFCMVA.lean`, is a
+bound for the game with `Help` of `UFCMVAHelp.lean`, for the image
+`A.forget gen` of an algebraic adversary `A` under the forgetful map, with the
+bound of Lemma 5.5, `agm_ufcmva_le_explicit` (`AGMReduction/Security.lean`).
+The transfer `UF_CMVAHelpAdv_forget` equates it with the advantage in the AGM
+game of `AlgebraicMAC.lean`, and the algebraic group model enters only through
+the adversary type (*Algebraic adversaries submit coefficients only*).
 
 **Rejected alternative.** The printed form, a bound for the Figure 5 game
 `UF_CMVAGame` (`Core/AlgebraicMAC/Security.lean`), which has no `Help` oracle,
@@ -778,8 +780,12 @@ adversary that never queries `Help`: an adversary of the Figure 5 game is an
 adversary of the game with `Help` that never queries it, with the same
 advantage (`UF_CMVAHelpAdv_ufAdversaryToHelp`). The proof of Theorem 5.10
 reads the answer of `Help` (p. 43), so the stronger form is the one it
-consumes (*Theorem 5.10 at the honest UF-CMVA game with Help*). Decided
-October 2026 (Track CMZ-M, #235).
+consumes (*Theorem 5.10 at the honest UF-CMVA game with Help*). Theorem 5.1,
+like Lemmas 5.4 and 5.5, bounds algebraic adversaries that draw no random
+coins, because `AGMUFAdversary` has no private coin oracle, while O24's
+adversaries draw random coins (§3, *Notation*, p. 24); the oracle is planned
+on the pattern of *One-more forgers have a private coin oracle* (issue #269).
+Decided October 2026 (Track CMZ-M, #235).
 
 ## Theorem 5.11 stated before its reductions exist
 

@@ -16,6 +16,7 @@ import KVAC.Schemes.MicroCMZ.AGMPolynomial
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
 import KVAC.Schemes.MicroCMZ.AGMReduction
+import KVAC.Schemes.MicroCMZ.UFCMVA
 import KVAC.Schemes.MicroCMZ.UFCMVAHelp
 import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.ATVariantPiIs
@@ -45,7 +46,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
 - `Credential.lean` — Section 5.1, the credential of Figure 9 — Track CMZ-C.
 - `ProofSystems.lean` — Section 5.1, Figure 9, the three proof-system
   parameters of the credential — Track CMZ-C.
-- `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
+- `AlgebraicMAC.lean` — Section 5.3, AGM game and its forgetful map to the
+  UF-CMVA game with the oracle Help — Track CMZ-M.
 - `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
 - `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`,
@@ -55,6 +57,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   coupling and analysis experiment, the Lemma 5.4 statement, the Claim 5.7
   attribute collapse, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
   statement — Track CMZ-M.
+- `UFCMVA.lean` — Section 5.2, Theorem 5.1 in the UF-CMVA game with the
+  oracle Help — Track CMZ-M.
 - `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help —
   Track CMZ-E.
 - `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
@@ -722,21 +726,39 @@ Read on the AGM game through the run-level coupling
 `winBit` the same law; there the union bound of the body splits the win as stated.
 :::
 
-:::theorem "mucmz_mac_security" (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1") (effort := "small") (priority := "high")
+:::theorem "agm_forget_transfer" (lean := "KVAC.Schemes.MicroCMZ.agmQueryToHelp, KVAC.Schemes.MicroCMZ.AGMUFAdversary.forget, KVAC.Schemes.MicroCMZ.UF_CMVAHelpAdv_forget") (parent := "cmz_amac") (tags := "milestone")
+The forgetful map turns an algebraic adversary of {uses "agm_model"}[] into an
+adversary of the game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: it keeps
+the MAC codes it receives, and it submits the elements that the algebraic
+adversary's representations evaluate to. The advantage of the forgetful
+adversary in the game with `Help` equals the advantage of the algebraic
+adversary in the AGM game, with no condition on the adversary.
+:::
+
+:::proof "agm_forget_transfer"
+Induction on the adversary's program. The MAC codes the forgetful adversary
+keeps are those of the AGM game's log, so both games answer each query on the
+same elements, and the game with `Help` records the log's messages in reverse
+order, which freshness does not see, so the forged message is fresh in one game
+exactly when it is in the other.
+:::
+
+:::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmvaHelp_le") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
 *O24 Theorem 5.1.* μCMZ is an `n`-attribute algebraic MAC
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: the advantage of an
-algebraic adversary is at most the 3-DL advantage
+algebraic adversary that draws no random coins is at most the 3-DL advantage
 ({uses "hardness_assumptions"}[]) of the collapse reduction
 ({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
 of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
-this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
+this is the bound of Lemma 5.5. A private coin oracle for the adversary type is
+planned (issue #269). O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
 :::
 
 :::proof "mucmz_mac_security"
 The advantage of an algebraic adversary in the game with `Help` equals its
-advantage in the AGM game of {uses "agm_model"}[], which
-{uses "attribute_lifting"}[] bounds.
+advantage in the AGM game of {uses "agm_model"}[] ({uses "agm_forget_transfer"}[]),
+which {uses "attribute_lifting"}[] bounds.
 :::
 
 :::theorem "single_attribute_mac" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_n1_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.4")
