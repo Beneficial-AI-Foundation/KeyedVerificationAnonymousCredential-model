@@ -780,8 +780,12 @@ adversary that never queries `Help`: an adversary of the Figure 5 game is an
 adversary of the game with `Help` that never queries it, with the same
 advantage (`UF_CMVAHelpAdv_ufAdversaryToHelp`). The proof of Theorem 5.10
 reads the answer of `Help` (p. 43), so the stronger form is the one it
-consumes (*Theorem 5.10 at the honest UF-CMVA game with Help*). Decided
-October 2026 (Track CMZ-M, #235).
+consumes (*Theorem 5.10 at the honest UF-CMVA game with Help*). Theorem 5.1,
+like Lemmas 5.4 and 5.5, bounds algebraic adversaries that draw no random
+coins, because `AGMUFAdversary` has no private coin oracle, while O24's
+adversaries draw random coins (§3, *Notation*, p. 24); the oracle is planned
+on the pattern of *One-more forgers have a private coin oracle* (issue #269).
+Decided October 2026 (Track CMZ-M, #235).
 
 ## Theorem 5.11 stated before its reductions exist
 
