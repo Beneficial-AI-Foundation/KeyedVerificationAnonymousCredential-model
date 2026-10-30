@@ -1126,7 +1126,12 @@ The commitment polynomials of Equations 17 and 18 are
 Equation 22 with the case split of the proof is
 {bpref "omuf_forgery_polynomial"}[], the game trace is
 {bpref "omuf_transcript"}[], and the polynomials and case events read off
-it are {bpref "omuf_case_events"}[].
+it are {bpref "omuf_case_events"}[]. The coefficient reading of Equations 20
+and 21 is {bpref "omuf_forgery_coefficients"}[], and the pigeonhole step, the
+server consistency of a run, the evaluation bridge and the case cover of the
+proof at `n = 1` are {bpref "omuf_pigeonhole"}[],
+{bpref "omuf_server_consistency"}[], {bpref "omuf_evaluation_bridge"}[] and
+{bpref "omuf_case_cover"}[].
 
 *TODO (Track CMZ-OMUF).* The Theorem 5.3 one-more unforgeability clause,
 then the proofs of the Claims and of Theorem 5.11.
@@ -1296,12 +1301,12 @@ forgery more than there were Sign queries, hence more than the issued
 pairs, so by pigeonhole one forgery is not the unblinding of any pair. Its
 polynomial of Equation 22, {uses "omuf_forgery_polynomial"}[], read off
 the run by {uses "omuf_case_events"}[], then has a nonzero monomial in one
-of three variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`, and the three cases
-are bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
+of three variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`
+({uses "omuf_case_cover"}[]), and the three cases are bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
 {uses "omuf_case_iii"}[].
 :::
 
-:::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_getElem") (parent := "cmz_omuf") (tags := "milestone")
 The commitment polynomials of O24 Equations 17 and 18 for the Theorem 5.11
 proof at `n = 1`, over the ring of {uses "agm_verification_polynomial"}[]:
 the exponent of a representation given the commitment polynomials
@@ -1311,11 +1316,13 @@ with `c_k` in place of `m_k·x₁` because a blind-issuance answer is
 `u_k·(x₀ + xᵣ + c_k)`), with its evaluation at a point in closed form, and
 the commitment polynomials `c_1, …, c_r` by a fold in issuance order, each
 given the earlier polynomials as arguments (Equation 18), with its length and
-one-step unrolling.
+one-step unrolling, and the `k`-th polynomial itself: `toPolyAt` of the `k`-th
+representation with the earlier polynomials in the slots below `k` and `0` from
+slot `k` on.
 The arity `r` is the number of issued pairs, since a refused query gets no
-variable. The game-level evaluation bridge, that at an honest run's
-discrete-log point `c_k` evaluates to the logarithm of the `k`-th issued
-commitment, is the proof phase's.
+variable. The game-level evaluation bridge, that at the discrete-log point of
+a run `c_k` evaluates to the logarithm of the `k`-th issued commitment, is
+{bpref "omuf_evaluation_bridge"}[].
 :::
 
 :::definition "omuf_forgery_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.omufForgeryPoly, KVAC.Schemes.MicroCMZ.AGMPoly.HasUMonomial, KVAC.Schemes.MicroCMZ.AGMPoly.HasEtaMonomial, KVAC.Schemes.MicroCMZ.AGMPoly.HasXMonomial, KVAC.Schemes.MicroCMZ.AGMPoly.cases_of_mem_vars") (parent := "cmz_omuf") (tags := "milestone")
@@ -1327,9 +1334,34 @@ the proof's case split, items (i) to (iii) of p. 45: a nonzero monomial in
 some `u_j`, in `η`, or in `x₀`, `xᵣ` or `x₁`, as membership in Mathlib's
 `vars`, with the lemma that a variable of `φ` falls in one of the three
 groups. That the `φ` of the forgery the pigeonhole step selects is nonzero
-and vanishes at the discrete-log point, hence has a variable, is the
-pigeonhole step and the coefficient identities of Equations 20 and 21, the
-proof phase's.
+and vanishes at the discrete-log point, hence has a variable, is
+{bpref "omuf_pigeonhole"}[] and {bpref "omuf_case_cover"}[].
+:::
+
+:::theorem "omuf_forgery_coefficients" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.uFree, KVAC.Schemes.MicroCMZ.AGMPoly.ev0, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_u, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_eta, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_x₀, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_x₁, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_eta, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_x₀, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_x₁, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_u, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_pderiv_u_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.pderiv_u_keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_forgeryPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_pderiv_u_forgeryPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ev0_omufCommitPolys_getElem, KVAC.Schemes.MicroCMZ.AGMPoly.spec_keyPoly', KVAC.Schemes.MicroCMZ.AGMPoly.spec_C, KVAC.Schemes.MicroCMZ.AGMPoly.spec_x₀, KVAC.Schemes.MicroCMZ.AGMPoly.spec_xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.spec_toPolyAt_uZero, KVAC.Schemes.MicroCMZ.AGMPoly.spec_uFree, KVAC.Schemes.MicroCMZ.AGMPoly.forgeryPoly_eq_zero_coeffs") (parent := "cmz_omuf") (tags := "milestone")
+The coefficient reading of O24 Equations 20 and 21 for the Theorem 5.11 proof
+at `n = 1`: if the forgery polynomial of {uses "omuf_forgery_polynomial"}[]
+vanishes in the ring, and the `u`-free parts of the commitment polynomials of
+{uses "omuf_commitment_polynomials"}[] are those of the issued representations,
+then the representation `α` of `U*` has no coefficient outside the tag slots,
+no `V` coefficient, and each nonzero `U` coefficient `α.cu j` sits at a slot
+whose representation has `x₁` coefficient `m*`. With it, the `u`-free part of
+the `j`-th commitment polynomial is that of the `j`-th representation,
+whatever the earlier polynomials, and the supporting lemmas on the `u`-free
+and `u_j`-linear parts and the univariate specializations. The pigeonhole step
+that selects the forgery is {bpref "omuf_pigeonhole"}[]; the degree bounds are
+the proof phase's.
+:::
+
+:::proof "omuf_forgery_coefficients"
+Setting every `u_k` to `0` leaves a polynomial identity in `η, x₀, xᵣ, x₁`
+alone, since the commitment polynomials enter only multiplied by some `u_k`,
+and each tag coefficient is read off at a monomial the other side lacks.
+Differentiating in `u_j` first and then setting the `u`s to `0` isolates the
+`u_j`-linear part, where the `u`-free part of `c_j` is the representation's
+by the commitment-polynomial fold; again one coefficient per monomial gives
+the `V` coefficient and the `U` slot condition. The coefficients are read
+through univariate specializations, which work over any field.
 :::
 
 :::definition "omuf_transcript" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace, KVAC.Schemes.MicroCMZ.agmOMUFTrace, KVAC.Schemes.MicroCMZ.AGM_OMUFGame_eq_trace") (parent := "cmz_omuf") (tags := "milestone")
@@ -1344,7 +1376,7 @@ that an item happens, made an object, on the pattern of the MAC track's
 reduction trace.
 :::
 
-:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedRepr, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedCoeffs, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX") (parent := "cmz_omuf") (tags := "milestone")
 The polynomials of a run and its case events, for the Theorem 5.11 proof
 at `n = 1`: the issued representations of a trace of
 {uses "omuf_transcript"}[], converted by {uses "agm_eval_bridge"}[] and
@@ -1354,12 +1386,97 @@ aligned with the issued pairs (proved), the commitment polynomials of
 issued pairs, with the index lemmas showing the defaults are never reached
 (proved), and the win and the three case events, items (i) to (iii) of
 p. 45, the win conjoined with a forgery polynomial having a nonzero
-monomial in the group, the events Claims 5.12 to 5.14 bound. The
-game-level evaluation bridge, that at an honest run's discrete-log point
-each `c_j` evaluates to the logarithm of the `j`-th issued commitment and,
-for a forgery whose representations match its token, its `φ` evaluates to
-the residual `(x₀ + xᵣ + m*·x₁)·log U* − log V*`, needs the run's honesty
-invariants, and the proof of Theorem 5.11 establishes it.
+monomial in the group, the events Claims 5.12 to 5.14 bound. The `j`-th issued
+representation and its coefficients over the ring of the run are named
+(`issuedRepr`, `issuedCoeffs`), so statements about slot `j` need no index
+proofs. The game-level evaluation bridge, that at the discrete-log point of
+a run each `c_j` evaluates to the logarithm of the `j`-th issued commitment
+and, for a forgery whose representations match its token, its `φ`
+vanishes when the verification equation holds, is
+{bpref "omuf_evaluation_bridge"}[], and it needs the invariants of
+{bpref "omuf_server_consistency"}[].
+:::
+
+:::theorem "omuf_pigeonhole" (lean := "KVAC.Schemes.MicroCMZ.length_le_of_nodup_of_forall_mem_range, KVAC.Schemes.MicroCMZ.OMUFTrace.ev0_cs, KVAC.Schemes.MicroCMZ.OMUFTrace.msg_mem_of_forgeryPoly_eq_zero, KVAC.Schemes.MicroCMZ.OMUFTrace.exists_forgeryPoly_ne_zero") (parent := "cmz_omuf") (tags := "milestone")
+The pigeonhole step of the Theorem 5.11 proof at `n = 1` (p. 45): a winning
+run has a forgery whose polynomial of {uses "omuf_forgery_polynomial"}[] is
+nonzero. The `u`-free part of the `k`-th commitment polynomial of
+{uses "omuf_commitment_polynomials"}[] is that of the `k`-th issued
+representation. A forgery with a vanishing polynomial and a nonzero `U` then
+has its message at the `x₁` coefficient of some issued representation, by the
+coefficient reading of {uses "omuf_forgery_coefficients"}[]. The `q + 1` forged
+messages are pairwise distinct while there are at most as many such
+coefficients as issued pairs, so not every forgery polynomial vanishes. The
+counting is a generic lemma: a duplicate-free list whose entries are values of
+a function out of `Fin n` has at most `n` entries.
+:::
+
+:::proof "omuf_pigeonhole"
+If every forgery polynomial vanished, each forged message would be one of the
+at most `r ≤ q` coefficients, since a verifying forgery has `U* ≠ 0`;
+the messages are distinct and number `q + 1`, so the counting lemma is
+contradicted.
+:::
+
+:::theorem "omuf_server_consistency" (lean := "KVAC.Schemes.MicroCMZ.agmOMUFImpl, KVAC.Schemes.MicroCMZ.agmOMUFImpl_inr, KVAC.Schemes.MicroCMZ.AGMOMUFLog.issued, KVAC.Schemes.MicroCMZ.AGMOMUFLog.tags_eq_map_issued, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_eq_map_issued, KVAC.Schemes.MicroCMZ.exists_index_of_getElem_filterMap, KVAC.Schemes.MicroCMZ.filterMap_take_eq_take, KVAC.Schemes.MicroCMZ.mem_support_atIssueSrv, KVAC.Schemes.MicroCMZ.AGMOMUFLog.Consistent, KVAC.Schemes.MicroCMZ.AGMOMUFLog.consistent_nil, KVAC.Schemes.MicroCMZ.AGMOMUFLog.consistent_append, KVAC.Schemes.MicroCMZ.agmOMUFImpl_preservesInv, KVAC.Schemes.MicroCMZ.OMUFTrace.ServerConsistent, KVAC.Schemes.MicroCMZ.OMUFTrace.serverConsistent_of_consistent, KVAC.Schemes.MicroCMZ.OMUFTrace.serverConsistent_of_mem_support") (parent := "cmz_omuf") (tags := "milestone")
+The invariants of the run of {uses "omuf_transcript"}[] that the evaluation
+bridge needs, from membership of the trace in the support of `agmOMUFTrace`.
+The server's answer is `(u•g, x₀•(u•g) + u•(C' + xᵣ•g))` for a nonzero `u`.
+A log is consistent when every issued entry passed the gate of
+{uses "agm_omuf_oracle"}[] at the pairs issued before it and carries such an
+answer, stated at the entry's own log position so that appending an entry
+leaves the earlier ones alone. The instrumented oracle preserves it, the
+support of the run is consistent (a `simulateQ` induction through the
+invariant-preservation theorem of VCV-io, with the public parameters read off
+the key generator), and consistency at log positions gives it at issuance
+positions, the form the evaluation bridge reads, by a statement about the
+index of the `k`-th kept element of a `filterMap`.
+:::
+
+:::proof "omuf_server_consistency"
+Coin queries and Verify leave the log alone, a refused Sign appends an entry
+that was not issued, and an accepted one appends the support of the core's
+issuance. Positions are converted by pairing each issued representation with
+its pair, so that the pairs and the representations share one index.
+:::
+
+:::theorem "omuf_evaluation_bridge" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.point, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_eq_smul_eval_toPolyAt, KVAC.Schemes.MicroCMZ.OMUFTrace.tag_eq_of_eval, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_point_cs, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_point_forgeryPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_point_of_wins") (parent := "cmz_omuf") (tags := "milestone")
+The game-level evaluation bridge of the Theorem 5.11 proof at `n = 1`, over
+the invariants of {uses "omuf_server_consistency"}[]. At the discrete-log point of
+a run, `η = log H`, the key, and `u_j` the logarithm of the `j`-th issued
+`U'`, the group value of a representation is the evaluation of its polynomial
+whenever the tags it reads satisfy `V_j = (x₀ + xᵣ + c_j)·U_j`, the
+counterpart for the OMUF game of the evaluation bridge of
+{uses "agm_eval_bridge"}[]; the tags do satisfy it, given the value of the
+commitment polynomial. The `k`-th commitment polynomial of
+{uses "omuf_commitment_polynomials"}[] evaluates to the logarithm of the `k`-th
+issued commitment, and the forgery polynomial of {uses "omuf_forgery_polynomial"}[]
+of a forgery with matching representations whose token satisfies the
+verification equation vanishes.
+:::
+
+:::proof "omuf_evaluation_bridge"
+The commitment polynomial is read by strong induction on the issuance
+position: the fold of Equation 18 gives the earlier polynomials in the slots
+below `k` and `0` from `k` on, the latter slots carrying a `0` coefficient by
+the exact-length gate, and the honest answers turn the earlier tags into the
+exponents the polynomial evaluates to. The forgery polynomial is then the
+difference of the two representations' values, scaled by the key.
+:::
+
+:::theorem "omuf_case_cover" (lean := "KVAC.Schemes.MicroCMZ.omuf_cover") (parent := "cmz_omuf") (tags := "milestone")
+The three cases of the Theorem 5.11 proof at `n = 1` cover a win
+({uses "omuf_case_events"}[]): a winning run in the support of the trace has a
+forgery polynomial with a nonzero monomial in some `u_j`, in `η`, or in
+`x₀`, `xᵣ` or `x₁`. The polynomial of the forgery selected by
+{uses "omuf_pigeonhole"}[] is nonzero and, by {uses "omuf_evaluation_bridge"}[],
+vanishes at the discrete-log point, so it is not constant and has a variable.
+:::
+
+:::proof "omuf_case_cover"
+A nonzero polynomial with a root is not a constant, and a polynomial with no
+variable is a constant; a variable falls in one of the three groups of
+{uses "omuf_forgery_polynomial"}[].
 :::
 
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
