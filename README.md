@@ -56,7 +56,7 @@ When a track is split into sub-issues, list them as nested bullets under the tra
     - [ ] μCMZ `KVACSyntax` instance, Issuance and Presentation with π_iu, π_is, π_p ([#163])
   - ~~Track BBS-C~~ — μBBS descoped from v1 ([#7], closed as not planned)
 - [ ] **Wave 3** — security tracks (μCMZ)
-  - [ ] Track CMZ-M — μCMZ as algebraic MAC, Theorem 5.1 ([#8]); AGM game, polynomial backbone, reduction core and coupling merged, Lemma 5.4 bound stated (PR #155), open sub-issues [#80], [#81], [#107] to [#116]
+  - [ ] Track CMZ-M — μCMZ as algebraic MAC, Theorem 5.1 ([#8]); AGM game, polynomial backbone, reduction core and coupling merged, Lemma 5.4 bound stated (PR #155), open sub-issues [#80], [#107] to [#116]
   - [ ] Track CMZ-A — μCMZ anonymity, Theorem 5.8 ([#10])
   - [ ] Track CMZ-E — μCMZ extractability, Theorem 5.2 ([#11])
   - [ ] Track CMZ-OMUF — μCMZ one-more unforgeability, Theorem 5.3 ([#12])
@@ -98,7 +98,6 @@ Per-track status and dependency graph in [`docs/TRACKS.md`](docs/TRACKS.md).
 [#40]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/40
 [#41]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/41
 [#80]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/80
-[#81]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/81
 [#104]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/104
 [#107]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/107
 [#116]: https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/116
