@@ -12,7 +12,7 @@ import VCVio.OracleComp.QueryTracking.QueryBound
 # μCMZ_AT one-more unforgeability — the Theorem 5.11 target statements (O24 §5.6)
 
 Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
-(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM-instrumented game of
+(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM game of
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
 case the paper proves directly, for every `n` (the printed bound), and the
 Claims 5.12 to 5.14 of the `n = 1` proof over the case events of
@@ -283,7 +283,7 @@ embedding is question C2 of the Theorem 5.3 plan. One constraint on the
 construction: it must preserve the Sign budget, forwarding each Sign query of
 the `n`-attribute forger exactly once and making none of its own, since
 `agm_omuf_le` runs the `n = 1` reductions at the same `q`, while translating
-the representation gates and the transcript and carrying a distinct-combination
+the representations and the transcript and carrying a distinct-combination
 win into a single-attribute win. Its coins, if it needs any, come from the
 adversary's private coin oracle (module docstring).
 -/

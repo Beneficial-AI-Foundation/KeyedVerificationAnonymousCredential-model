@@ -30,19 +30,19 @@ Theorem 5.3 plan, part 17a of item 17 (issue #189).
                                the events Claims 5.12 to 5.14 bound
 
 `AGMRepr.toReprCoeffs` of `AGMReduction/Core.lean` converts a game
-representation to polynomial-layer coefficients at a given arity, reading
-absent issued-pair slots as `0`, which under the exact-length gate is the right value.
-The arity is the number of issued pairs, not the Sign budget, since a refused
-Sign query issues no pair and gets no variable, while the winning condition
-counts every Sign query.
+representation to polynomial-layer coefficients at a given arity, reading absent
+issued-pair slots as `0`, which for the normalized representations of the log is
+the right value. The arity is the number of issued pairs, not the Sign budget,
+since a Sign query the server refuses issues no pair and gets no variable, while
+the winning condition counts every Sign query.
 
 ## The lemma the proof phase proves
 
 The game-level evaluation bridge: at the discrete-log point of an honest run,
-`t.cs k` evaluates to the logarithm of the `k`-th issued commitment and, for a
-forgery whose representations match its token, which `Wins` supplies, its
-polynomial vanishes exactly when the verification equation holds, by induction
-over the transcript through the gate and the server's honest answers. Its
+`t.cs k` evaluates to the logarithm of the `k`-th issued commitment and the
+polynomial of a forgery vanishes exactly when the verification equation holds
+of the token its representations name, by induction over the transcript through
+the logged representations and the server's honest answers. Its
 algebraic half is `eval_toPolyAt` in `Polynomial.lean`; the induction needs the
 run's honesty invariants, recovered from membership in the support of
 `agmOMUFTrace`, and belongs to the proof of Theorem 5.11.

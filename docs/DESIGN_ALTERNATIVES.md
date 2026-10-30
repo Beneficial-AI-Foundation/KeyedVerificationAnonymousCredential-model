@@ -598,67 +598,61 @@ predicate. The comparison with CMZ14 that follows the definition speaks of
 presentations under the predicates the verifier asks for. The printed φ reads
 as a typo for φ′.
 
-## Exact-length representations in the AGM OMUF game
+## Normalized representations in the AGM OMUF game
 
-**Decision.** In the AGM-instrumented one-more unforgeability game for the
-μCMZ_AT core (`OneMoreUnforgeability/Game.lean`) a submitted representation is
-accepted only when its list of issued-pair coefficients has exactly one entry per blinded
-pair issued so far, in addition to evaluating to the submitted element
-(`reprMatches`). The Sign oracle applies this gate to its *input*, the
-commitment `C'` of O24 Equation 17, refusing with `none` on failure and still
-logging the query together with its representation. The Verify oracle applies
-the same predicate to the submitted token, so that one decidable predicate
-serves the oracles and the winning condition.
+**Decision.** In the AGM one-more unforgeability game for the
+μCMZ_AT core (`OneMoreUnforgeability/Game.lean`) the adversary submits
+representations only, as in the MAC game (*Algebraic adversaries submit
+coefficients only*). A Sign query is the representation of the commitment `C'`
+of O24 Equation 17, a Verify query and a forgery carry the representations of
+the token's components, and the challenger evaluates them over the fixed basis
+and the pairs issued so far. The Sign oracle logs each representation
+normalized, its pair-coefficient list cut, or padded with zeros, to exactly one
+entry per pair issued so far (`AGMRepr.normalize`). Verify and forgery
+representations are evaluated once and are not normalized.
 
-**Rejected alternatives.** (i) The MAC game's convention, `AGMRepr.eval`'s
-`zipWith` against the issued pairs, which ignores excess entries and reads
-missing ones as zero, with no length check. (ii) Canonical normalization,
-accepting any list and storing it cut to the current transcript length.
-(iii) Rejecting excess entries only and accepting short lists as zero-padded.
+**Rejected alternatives.** (i) The gate: Sign and Verify queries and the
+forgeries carry the group elements next to their representations, the oracles
+refuse, and the winning condition fails, unless each representation evaluates to
+its element with exactly one pair coefficient per issued pair. (ii) Logging the
+representation as submitted, under `AGMRepr.eval`'s `zipWith` convention, which
+ignores excess entries and reads missing ones as zero. (iii) Cutting excess
+entries only and keeping short lists as submitted.
 
-**Fidelity argument.** The rule is a simplification, not a soundness
-requirement. The Theorem 5.11 proof (O24 §5.6) substitutes each commitment's
-representation into the server's answer (Equation 18) as coefficients read at
-the arity of its own query, and a dictionary reading exactly that many
-positions is correct on any list. Exact length buys the right to evaluate an
-accepted representation against any later transcript, the final one included,
-with the same result, so the winning condition and the reduction can read the
-finished log against one list of pairs instead of a per-query prefix. Under
-(i) an excess entry ignored at query time contributes once more pairs exist, so
-the same representation names two different elements at two arities. Under
-(iii) short lists are extension-stable but one coefficient vector has many list
-forms, differing in omitted trailing zeros, and the reduction's coefficient
-dictionary (`AGMRepr.toReprCoeffs` on the MAC side) reads an exact-length list
-position by position, so exact length fixes the list form of a chosen vector
-with no padding or truncation lemma. It does not make representations unique:
-distinct coefficient vectors can name the same group element, which is why the
-log keeps the adversary's choice. The precise guarantee is that `AGMRepr.eval`
-of an accepted representation is unchanged under any later extension of the
-transcript (`AGMRepr.eval_append_of_length_eq`), while `reprMatches` itself is
-not, its length conjunct failing once more pairs exist. Lemmas about an
-earlier commitment must evaluate its representation and never re-check the
-gate at a grown transcript. The MAC game does not need the rule because its
-Verify and Help representations are consumed once, at the arity of the moment
-they are evaluated. (ii) gives the same guarantee at the cost of a normalization
-lemma and is the fallback if a uniform game interface across the two tracks is
-preferred.
-
-**Why the gate cannot strengthen the adversary.** The gate is computable from
-the adversary's own view, the public elements, the pairs it received, and the
-representation it chose, so a refusal reveals nothing about the secret key,
-and an adversary loses nothing by pre-checking its own queries. Counting
-refused queries toward Figure 6's counter, rejecting short lists, and gating
-the Verify oracle are therefore conventions that change no adversary's power up
-to a query-preserving simulation.
+**Fidelity argument.** Against (i) the argument is that of *Algebraic
+adversaries submit coefficients only*: the gated game agrees with the honest
+game only for adversaries whose representations are correct on every branch,
+while the restricted game is the plain Figure 6 game run on the evaluated
+elements. Normalization is a simplification, not a soundness requirement, and
+it changes no answer, since the oracle answers on the submitted representation
+and only the log stores the normalized one, which names the same commitment at
+its own transcript (`AGMRepr.eval_normalize`). The Theorem 5.11 proof (O24 §5.6)
+substitutes each commitment's representation into the server's answer
+(Equation 18) as coefficients read at the arity of its own query. Normalization
+buys the right to evaluate a logged representation against any later transcript,
+the final one included, with the same result
+(`AGMRepr.eval_append_of_length_eq`), so the reduction can read the finished log
+against one list of pairs instead of a per-query prefix. Under (ii) an excess
+entry ignored at query time contributes once more pairs exist, so the same
+logged representation names two different elements at two arities. Under (iii)
+short lists are extension-stable but one coefficient vector has many list forms,
+differing in omitted trailing zeros, and the reduction's coefficient dictionary
+(`AGMRepr.toReprCoeffs` on the MAC side) reads a list position by position, so
+normalization fixes the list form of a chosen vector. Normalization does not
+make representations unique: distinct coefficient vectors can name the same
+group element, which is why the log keeps the adversary's choice. The MAC game
+does not normalize because its Verify and Help representations are consumed
+once, at the arity of the moment they are evaluated, and the Verify and forgery
+representations of this game are consumed the same way.
 
 **What carries over from the MAC track.** The representation type `AGMRepr`,
 the coefficient conversion `AGMRepr.toReprCoeffs`, and the generic
-`sum_zipWith_eq_fin_sum_getD` apply to exact-length lists as they are. The
+`sum_zipWith_eq_fin_sum_getD` apply to normalized lists as they are. The
 evaluation bridge `agmRepr_eval_eq_eval_toPoly` does not, since it assumes every
 issued pair is a MAC code `V = macScalar(sk, m)·U` on a known message, whereas a
 blind-issuance answer is `V' = (x₀ + xᵣ)·U' + u·C'`, a polynomial in the
 commitment's representation. The Equation 18 bridge is new work. Decided
-September 2026 (Track CMZ-OMUF, step A4 of #12).
+October 2026 (Track CMZ-OMUF, #235).
 
 ## Algebraic adversaries submit coefficients only
 
@@ -668,7 +662,9 @@ queries and the forgery carry only representations (`AGMRepr`), coefficients
 over the generator `G₀`, the crs `H`, the public parameters `X₀, Xᵣ, X⃗` and the
 MAC codes issued so far. The challenger evaluates them (`AGMRepr.eval`) and
 answers honestly on the evaluated elements, and neither an oracle nor the win
-condition tests a representation against a submitted element.
+condition tests a representation against a submitted element. The AGM one-more
+unforgeability game restricts its adversary the same way (*Normalized
+representations in the AGM OMUF game*).
 
 **Rejected alternative.** Gating the answers, the encoding PR #73 introduced:
 queries and the forgery carry group elements next to their representations, and

@@ -8,7 +8,7 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 /-!
 # μCMZ_AT one-more unforgeability — the game trace (O24 §5.6)
 
-The run of the AGM-instrumented game of `Game.lean` as a record, for the
+The run of the AGM game of `Game.lean` as a record, for the
 Theorem 5.11 proof at `n = 1`: `OMUFTrace` holds everything a run produces
 before its decision, `agmOMUFTrace` is the run with the decision left out, and
 `AGM_OMUFGame_eq_trace` says the game is the trace followed by the decision.
@@ -66,7 +66,7 @@ structure OMUFTrace (F G : Type) where
   /-- The final transcript of the Sign oracle. -/
   log : AGMOMUFLog F G 1
   /-- The forgeries with their representations (O24 Equation 19). -/
-  out : List (AGMOMUFForgery F G 1)
+  out : List (AGMOMUFForgery F 1)
 
 /--
 The run of `AGM_OMUFGame` at `n = 1` with the decision left out, in the shape of
