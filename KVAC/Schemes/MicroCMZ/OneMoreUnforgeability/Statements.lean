@@ -363,9 +363,8 @@ theorem microCMZAT_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (
     OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n ≤
       omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
         (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
-        (gapDlogAdv gen (omufGapDLReduction gen A)) := by
-  rw [OMUFAdv_forget]
-  exact agm_omuf_le gen secParam hn A q hq
+        (gapDlogAdv gen (omufGapDLReduction gen A)) :=
+  (OMUFAdv_forget gen secParam A).trans_le (agm_omuf_le gen secParam hn A q hq)
 
 /-! ## The Claims
 

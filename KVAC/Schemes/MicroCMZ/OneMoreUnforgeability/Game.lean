@@ -394,20 +394,19 @@ def agmOMUFQueryToPlain {secParam : ℕ} (H : G) (pp : Params G n) :
     QueryImpl (unifSpec + AGMOMUFOracleSpec F G n)
       (StateT (List (G × G)) (OracleComp
         (unifSpec + OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)))
-  | .inl t => StateT.mk fun tags => do
-      let u ← query (spec := unifSpec +
-        OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H) (.inl t)
-      pure (u, tags)
+  | .inl t => query (spec := unifSpec) t
   | .inr (.sign ρ) => StateT.mk fun tags => do
-      let C' : G := ρ.evalParams gen H pp tags
-      let resp? : Option (G × G) ← query (spec := unifSpec +
-        OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)
-        (.inr (.sign C'))
+      let C' := ρ.evalParams gen H pp tags
+      -- `resp? : Option (G × G)`: unascribed, `resp?` has type
+      -- `Option ((μCMZATCoreSyntax F gen).BlindToken H)`, so `tags ++ resp?.toList` finds
+      -- no `HAppend` with `List (G × G)`.
+      let resp? : Option (G × G) ← query (spec :=
+        OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H) (.sign C')
       pure (resp?, tags ++ resp?.toList)
   | .inr (.verify m ρU ρV) => StateT.mk fun tags => do
-      let b ← query (spec := unifSpec +
+      let b ← query (spec :=
         OMUFOracleSpec (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H)
-        (.inr (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)))
+        (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
       pure (b, tags)
 
 /-- An algebraic adversary as an adversary of the plain Figure 6 game over the core
@@ -417,12 +416,13 @@ from no issued pair and evaluates the forgeries over the final pairs
 which loses. -/
 def AGMOMUFAdversary.forget (A : AGMOMUFAdversary F G n) :
     OMUFAdversary (μCMZATCoreSyntax F gen) where
-  run {secParam n'} H pp :=
-    if h : n = n' then by
-      subst h
-      exact (fun z => z.1.map (AGMOMUFForgery.plain (F := F) gen H pp z.2)) <$>
+  run {_ n'} :=
+    if h : n = n' then h ▸ fun H pp =>
+      -- `(F := F)`: without it, elaboration fails to synthesize
+      -- `Field ((μCMZATCoreSyntax F gen).Msg H)`.
+      (fun z => z.1.map (AGMOMUFForgery.plain (F := F) gen H pp z.2)) <$>
         (simulateQ (agmOMUFQueryToPlain gen H pp) (A.run H pp)).run []
-    else pure []
+    else fun _ _ => pure []
 
 /-- Forgetting the representations preserves the advantage: the advantage of
 `A.forget gen` in the plain Figure 6 game over the core scheme, at `A`'s number of
