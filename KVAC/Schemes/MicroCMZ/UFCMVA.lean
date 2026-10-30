@@ -37,10 +37,11 @@ variable {n : ℕ}
 variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
-/-- **O24 Theorem 5.1.** For an algebraic adversary `A`, the advantage of `A.forget gen` in
-the UF-CMVA game with `Help` against the μCMZ base MAC is at most the 3-DL advantage of
-`microCMZN3DLReduction gen A` plus the gap-DL advantage of `gapDlReduction gen A` plus
-`5/p`.
+/-- **O24 Theorem 5.1.** For an algebraic adversary `A` that draws no random coins, the
+advantage of `A.forget gen` in the UF-CMVA game with `Help` against the μCMZ base MAC is at
+most the 3-DL advantage of `microCMZN3DLReduction gen A` plus the gap-DL advantage of
+`gapDlReduction gen A` plus `5/p`. A private coin oracle for `AGMUFAdversary`, as
+`AGMOMUFAdversary` has, is planned (issue #269).
 
 **Proof.** `UF_CMVAHelpAdv_forget` equates the advantage with the AGM advantage
 `AGM_UF_CMVAAdv gen A secParam`, which Lemma 5.5, `agm_ufcmva_le_explicit`, bounds by the
