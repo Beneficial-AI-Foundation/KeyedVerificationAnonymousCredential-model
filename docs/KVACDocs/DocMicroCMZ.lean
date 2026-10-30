@@ -747,11 +747,12 @@ exactly when it is in the other.
 *O24 Theorem 5.1.* μCMZ is an `n`-attribute algebraic MAC
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: the advantage of an
-algebraic adversary is at most the 3-DL advantage
+algebraic adversary that draws no random coins is at most the 3-DL advantage
 ({uses "hardness_assumptions"}[]) of the collapse reduction
 ({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
 of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
-this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
+this is the bound of Lemma 5.5. A private coin oracle for the adversary type is
+planned (issue #269). O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
 :::
 
 :::proof "mucmz_mac_security"
