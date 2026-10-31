@@ -37,9 +37,10 @@ valid message/token pairs with pairwise-distinct messages.
 **Query count `q` is dynamic.** Figure 6 reads `q` off the run (`q := q + 1`
 in the Sign oracle); here `q` is the length of the `SignLog` at the end of
 the game, so the win condition `q + 1` moves with the adversary's behaviour.
-Security *theorems* over this game (Track CMZ-OMUF, Theorem 5.11) are
-expected to add a static query-budget hypothesis so their `q`-dependent
-bounds are well-formed; the game itself, like the merged UF-CMVA and AGM
+Security *theorems* over the AGM-instrumented form of this game (Theorem 5.11,
+`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements`) add a static
+query-budget hypothesis so their `q`-dependent bounds are well-formed; the game
+itself, like the merged UF-CMVA and AGM
 games, carries none.
 
 **Every Sign query counts.** The Sign oracle logs the request whether or
@@ -143,7 +144,8 @@ The Figure 6 winning condition, for `q` Sign queries and output list
 (`List.Nodup`, Figure 6's `∀ i ≠ j : m⃗ᵢ ≠ m⃗ⱼ`), and every pair verifying
 (`∀ i ∈ [q+1] : AT.V(sk, m⃗ᵢ, σᵢ) = 1`). A named `Prop` (decidable, so the
 game can `decide` it) so that the security theorems and the
-AGM-instrumented OMUF game (Track CMZ-OMUF) can reuse it verbatim.
+AGM-instrumented OMUF game (`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`)
+can reuse it verbatim.
 -/
 abbrev OMUFWins (tok : ATSyntax M) (crs : tok.Crs secParam n)
     (sk : tok.Sk crs) (q : Nat)
@@ -187,8 +189,8 @@ O24 §3.4's `Adv^omuf_{AT,A}(λ)`.
 A scheme is one-more unforgeable if this advantage is negligible in
 `secParam` for every PPT adversary; the asymptotic / negligibility
 statement, and the static query-budget hypotheses the concrete bounds
-need, live with the security theorems (Track CMZ-OMUF,
-Theorem 5.11).
+need, live with the security theorems (Theorem 5.11,
+`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements`).
 -/
 noncomputable abbrev OMUFAdv (tok : ATSyntax ProbComp)
     (A : OMUFAdversary tok) (secParam n : Nat) : ℝ≥0∞ :=

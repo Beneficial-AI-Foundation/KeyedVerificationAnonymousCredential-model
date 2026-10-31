@@ -81,9 +81,9 @@ the AGM layer, which is only needed once discrete logs are taken.
 
 - The one-more unforgeability analysis (O24 Theorem 5.11, Claims
   5.12–5.14) — the AGM-instrumented game and the polynomial layer are
-  planned for the Track CMZ-OMUF files under #12.
+  in the `OneMoreUnforgeability/` files (#12).
 - The anonymity clause of Theorem 5.3 — blocked on the Definition 4.4
-  game and Theorem 5.8 (Track CMZ-A), and stated only for the
+  game and Theorem 5.8, and stated only for the
   `π_is`-carrying variant: the anonymity simulator extracts from `π_is`
   and the Theorem 5.3 bound carries its knowledge-soundness term, so the
   core defined here cannot carry that clause.
@@ -238,9 +238,11 @@ makes that explicit).
 
 Per the `AnonymousToken` layering, the bundle certifies *only* syntax
 and correctness. One-more unforgeability stays the standalone game of
-`KVAC.Preliminaries.AnonymousTokens.Security` (Track CMZ-OMUF states
-Theorem 5.11 over it), and no unlinkability or anonymity claim is
-carried — in particular, O24's anonymity argument for `μCMZ_AT`
+`KVAC.Preliminaries.AnonymousTokens.Security` (the Theorem 5.11
+statements of `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements` rest on
+its AGM-instrumented form, `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`),
+and the bundle carries no unlinkability or anonymity
+claim — in particular, O24's anonymity argument for `μCMZ_AT`
 verifies and extracts `π_is`, so it does not even apply to this
 `π_is`-less core (the `π_is`-carrying variant is `μCMZATSyntax` of
 `ATVariantPiIs.lean`). Noncomputable (via `μCMZATCoreSyntax`).

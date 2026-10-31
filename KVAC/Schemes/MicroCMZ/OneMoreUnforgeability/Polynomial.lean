@@ -12,8 +12,8 @@ import Mathlib.Algebra.MvPolynomial.Variables
 The pure-algebra layer of the Theorem 5.11 proof at `n = 1`, over Mathlib only
 (no game imports), mirroring `AGMPolynomial.lean`, the Lemma 5.4 layer it
 extends: the polynomials the proof reads off an algebraic transcript, in the
-ring `AGMPoly.P F r = F[η, x₀, xᵣ, x₁, u₁, …, u_r]` of that file. Track CMZ-OMUF,
-step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189), delivered
+ring `AGMPoly.P F r = F[η, x₀, xᵣ, x₁, u₁, …, u_r]` of that file. Step A3
+of the Theorem 5.3 plan, part 17a of item 17 (issue #189), delivered
 in two parts: Equations 17 and 18, the commitment polynomials, then Equation 22,
 the forgery polynomial with the case split of the proof.
 
@@ -66,7 +66,7 @@ the induction over the run belongs to the proof of Theorem 5.11. So do the
 coefficient
 identities of Equations 20 and 21 (in particular that, under the exact-length
 gate, `u_k` occurs in `c_j` only for `k < j`), the degree bounds, and the
-constant audit.
+printed constants, which the proofs of Claims 5.12 to 5.14 decide.
 
 ## Conventions
 

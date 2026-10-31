@@ -14,7 +14,8 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements
 
 Aggregator for the one-more unforgeability analysis of the μCMZ_AT core scheme
 (`ATVariant.lean`), which lives in the `OneMoreUnforgeability/` subdirectory on
-the pattern of `AGMReduction/`. Track CMZ-OMUF of the Theorem 5.3 plan. Each part
+the pattern of `AGMReduction/`. It is the one-more unforgeability part of the
+Theorem 5.3 plan. Each part
 documents its own contents in its module docstring:
 
 - `Game` — the AGM-instrumented one-more unforgeability game: the representation

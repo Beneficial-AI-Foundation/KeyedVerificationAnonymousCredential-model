@@ -75,14 +75,14 @@ combination collides with that of a message queried to the MAC oracle:
    extracts `x = num·den⁻¹` from the collision relation. The bad
    event is the vanishing denominator `Σᵢ bbᵢ·(mⱼ,ᵢ − m*ᵢ) = 0`, degree 1 in the
    perfectly hidden `bb⃗`: probability at most `1/p`.
-2. *No collision* (Claim 5.7): along a uniform direction `r⃗`, `nTo1Adversary A r`
+2. *No collision* (Claim 5.7): at uniform scalars `r⃗`, `nTo1Adversary A r`
    runs `A` against the 1-attribute game with `xᵢ = rᵢ·x₁`, translating each
    query's representation (`collapseOracleImpl`); for `x₁ ≠ 0` the key marginal is
-   the honest one and a fresh, non-colliding `n`-attribute forgery collapses to a
+   the honest one and a fresh, non-colliding `n`-attribute forgery translates to a
    fresh 1-attribute forgery, so the win transfers. The excluded event `x₁ = 0`
    costs `1/p`.
-3. *Lemma 5.4 on the wrapper*: `agm_ufcmva_le_n1_explicit` bounds each direction's
-   1-attribute advantage by the 3-DL advantage of `microCMZ3DLReduction` plus
+3. *Lemma 5.4 on the wrapper*: `agm_ufcmva_le_n1_explicit` bounds the
+   1-attribute advantage at each `r⃗` by the 3-DL advantage of `microCMZ3DLReduction` plus
    `3/p`; `microCMZN3DLReduction` samples `r⃗` inside the 3-DL experiment, so by
    linearity the average is `microCMZN3DLReductionAdv gen A + 3/p`.
 

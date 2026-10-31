@@ -12,8 +12,7 @@ The run of the AGM-instrumented game of `Game.lean` as a record, for the
 Theorem 5.11 proof at `n = 1`: `OMUFTrace` holds everything a run produces
 before its decision, `agmOMUFTrace` is the run with the decision left out, and
 `AGM_OMUFGame_eq_trace` says the game is the trace followed by the decision.
-Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue
-#189).
+Step A3 of the Theorem 5.3 plan, part 17a of item 17 (issue #189).
 
 The paper never names this object. Its proof speaks of "the execution": the
 Sign queries `C_j` with their representations `γ⃗^(j)` (Equation 17), the
