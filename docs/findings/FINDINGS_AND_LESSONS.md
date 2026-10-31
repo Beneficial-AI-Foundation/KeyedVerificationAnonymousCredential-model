@@ -239,7 +239,7 @@ These lessons rest on the reports of Jin, Oana and Semar, lessons 6 and 7 also o
 ### C3. The blueprint as status board
 
 6. **Anchor a milestone node only when all its declarations exist.** Statements go on `main` with `sorry` before any proof, each sub-lemma a blueprint node, so that reviews of a statement catch the modelling errors before anyone spends proof effort. The rule that makes it safe is in [docs/BLUEPRINT_MAINTENANCE.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/BLUEPRINT_MAINTENANCE.md), never half-anchor a milestone. Lesson 1 of Jin's report.
-7. **One tracker, computed from the code.** The team retired the hand-maintained progress tool. The blueprint, with the CI check that exactly one node anchors each public declaration ([scripts/blueprint_coverage_check.py](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/scripts/blueprint_coverage_check.py)), is the only status board, since hand-maintained tables drifted within weeks. Lesson 2 of Jin's report.
+7. **One tracker, computed from the code.** The team stopped the progress table generated from hand-maintained TOML sources. Its workflow runs on manual dispatch only, and the table was last regenerated on 14 August. The blueprint, with the CI check that exactly one node anchors each public declaration ([scripts/blueprint_coverage_check.py](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/scripts/blueprint_coverage_check.py)), is the only status board, since hand-maintained tables drifted within weeks. Lesson 2 of Jin's report.
 
 ## Part D. Lessons about the use of AI assistants
 
