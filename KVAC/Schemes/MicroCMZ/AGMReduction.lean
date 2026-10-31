@@ -23,14 +23,14 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   branch, the reduction adversary with its simulated oracle and run trace, and
   root recovery;
 - `Coupling` — the first probability-layer slice: the uniformity and relational
-  coupling bricks, the reduction ↔ honest state invariant, and the **static**
+  coupling lemmas, the reduction ↔ honest state invariant, and the **static**
   Schwartz–Zippel core;
 - `SignCoupling` — the deterministic core of the coupling: the sign-step
   coupling triple (Eq. 14) and the transcript log invariants it establishes,
   plus the lemmas at abstract arity derived from the embedding — the
   consistency⇒vanishing step (Eq. 12 evaluated in the relative discrete
   logarithms), its identity-branch companion `Ustar_eq_zero_of_verifPoly_zero`,
-  and the represented-value bridge the `verify`/`help` arms consume;
+  and the represented-value bridge the couplings for the Verify and Help oracles consume;
 - `RedFull` — the analysis experiment `redFull`: the reduction's run at the
   genuine challenge powers, returning the record `RedBits` (win, extraction,
   Schwartz–Zippel bad and shift bits);
@@ -52,7 +52,7 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
 
 Lemmas 5.4 and 5.5 stay untagged here until their proofs are sorry-free.
 
-**Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` arms the
+**Why this is not in `AlgebraicMAC`.** Importing `AGMPolynomial` triggers the
 order-instance hazard (see the `glog` note in `AlgebraicMAC.lean`); here we
 only *use* the sealed `glog`.
 

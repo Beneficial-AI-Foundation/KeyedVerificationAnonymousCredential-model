@@ -149,8 +149,8 @@ own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 
-The plain Figure 6 game (the OMUF analogue of the MAC track's #81 bridge), the
-`π_is`-carrying variant and its lifting lemma (items 18 and 17b), and any proof.
+The plain Figure 6 game, the `π_is`-carrying variant and its lifting lemma
+(items 18 and 17b), and any proof.
 -/
 
 set_option autoImplicit false

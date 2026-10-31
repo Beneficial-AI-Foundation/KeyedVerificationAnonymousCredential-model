@@ -14,8 +14,7 @@ subdirectory exists to prove:
 
   `AGM_UF_CMVAAdv gen A secParam ≤ microCMZ3DLReductionAdv gen A + 3/p`.
 
-The bound speaks of the instrumented AGM game `AGM_UF_CMVAGame` of
-`AlgebraicMAC.lean`; the bridge to the plain `UF_CMVAGame` is tracked in #81.
+The bound speaks of the AGM game `AGM_UF_CMVAGame` of `AlgebraicMAC.lean`.
 
 The statement is deliberately added first so that every part of the reduction
 (`Core`, `Coupling`, `SignCoupling`, `RedFull`, and the parts still to be added)
@@ -65,9 +64,9 @@ variable (secParam : ℕ)
 
 /-- **Keygen + oracle reparametrization.** The real UF-CMVA game and `redFull`'s `winBit`
 marginal are *identically distributed*: the embedded public elements (`H, X₀, Xᵣ`,
-`X₁`) and every issued tag are identically distributed to the real game's — the
+`X₁`) and every issued MAC code are identically distributed to the real game's — the
 conditioned η masks make `H` uniform on the nonzero elements, as `setup` draws it
-(`sign_U_dist_eq`, issue #149), the masks make `Xᵣ`, `X₁` uniform and the tags
+(`sign_U_dist_eq`, issue #149), the masks make `Xᵣ`, `X₁` uniform and the MAC codes
 identically distributed, while `X₀ = x₀·H` (the key component `x₀ = a₀+x·b₀` acting
 on the embedded `H`) is carried by the reparametrization itself, not by a
 mask-uniformity lemma. The reconstructed secret
@@ -76,9 +75,9 @@ oracle reproduces the honest oracle's observable behaviour.
 
 Route: couple `reductionOracleImpl` (`Core.lean`) against `agmOracleImpl`
 (`AlgebraicMAC.lean`) under the state invariant `redLogHonestInv` (`Coupling.lean`),
-after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the `sign` arm
+after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle's case
 through `sign_masked_tag_dist_eq` (`SignMask.lean`, whose module doc records why the
-mask sample is kept opaque there), the `verify`/`help` arms through
+mask sample is kept opaque there), the Verify and Help oracles' cases through
 `represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). -/
 lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
     evalDist (AGM_UF_CMVAGame gen secParam A)
@@ -99,7 +98,7 @@ lemma redFull_recBit_eq (A : AGMUFAdversary F G 1) :
   rw [microCMZ3DLReductionAdv, ← probEvent_eq_eq_probOutput, ← hmap, probEvent_map]; rfl
 
 /-- What one run of `redTrace` at the challenge powers certifies about its trace: the
-embedding holds at the challenge exponent (`RedEmbedding`), and every logged tag is honest
+embedding holds at the challenge exponent (`RedEmbedding`), and every logged MAC code is honest
 (`redLog_honest`) and in `U`-form (`redLog_U_form`). The one place `redTrace`'s support is
 destructured. -/
 lemma redTrace_support_facts {x : F} (A : AGMUFAdversary F G 1) (t : RedTrace F G)
@@ -115,7 +114,7 @@ lemma redTrace_support_facts {x : F} (A : AGMUFAdversary F G 1) (t : RedTrace F 
     redLog_honest gen x _ _ _ _ _ hout, redLog_U_form gen x _ _ _ _ _ hout⟩
 
 /-- **Win without extraction forces the bad event (deterministic core).** On
-`redFull`'s support, `winBit = true` (the real `verify`/consistency/freshness on
+`redFull`'s support, `winBit = true` (the real freshness and `verify` on
 `sk = maskedKey x t.aM t.bM`) together with `recBit ≠ true` (`recoverDlog gen X ψ ≠ x`)
 forces the Schwartz–Zippel bad event `badBit = true`, i.e. `φ ≠ 0 ∧ ψ = 0` for
 `φ := t.verifPoly` and `ψ := t.psi = t.log.maskedSubst t.aM t.bM φ`. The proof reads the
@@ -132,15 +131,14 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
   obtain ⟨hemb, hhon, hUform⟩ := redTrace_support_facts gen A tr htr
   obtain ⟨htag, htagU⟩ := redLog_transcript_facts gen hhon hUform
   simp only [Bool.and_eq_true, decide_eq_true_eq, verify] at hw
-  obtain ⟨⟨⟨hconsU, hconsV⟩, hfresh⟩, hσ1, hmaceq⟩ := hw
+  obtain ⟨hfresh, hσ1, hmaceq⟩ := hw
   simp only [ne_eq, decide_eq_true_eq] at hr
   simp only [decide_eq_true_eq]
   -- the MAC relation between the two represented values, in the form the embedding lemmas take
   have hkey : tr.ρV.evalAt gen tr.ep tr.log.tags
       = macScalar (maskedKey x tr.aM tr.bM) (fun _ => tr.mStar 0)
           • tr.ρU.evalAt gen tr.ep tr.log.tags := by
-    rw [hconsV, hconsU, hmaceq]
-    simp only [macScalar_maskedKey_eq]
+    simpa only [macScalar_maskedKey_eq] using hmaceq
   have heval0 : MvPolynomial.eval
       (fun v => tr.aM.embed tr.log.aMask v + x * tr.bM.embed tr.log.bMask v) tr.verifPoly = 0 :=
     verifPoly_eval_embed_eq_zero gen tr.ρU tr.ρV hemb tr.log.aMask tr.log.bMask tr.log.msg
@@ -154,7 +152,7 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
     rw [Fin.eq_zero i]
     exact hj.symm
   refine ⟨fun hφ0 => hσ1 (Ustar_eq_zero_of_verifPoly_zero gen tr.ρU tr.ρV hemb tr.log.msg
-    (tr.mStar 0) tr.σStar.1 tr.log.tags tr.log.length_tags htag hfresh' hconsU hφ0),
+    (tr.mStar 0) tr.log.tags tr.log.length_tags htag hfresh' hφ0),
     of_not_not (mt (recoverDlog_verifPoly_eq gen heval0) hr)⟩
 
 /-! ### The bad-event bound
