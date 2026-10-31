@@ -135,7 +135,7 @@ Items A1.1 to A1.4, A2.7, A3.1 and A4.1 to A4.3 change a printed statement, the 
 
 ### A6. Things the paper leaves implicit that the formalization had to decide
 
-Part A6 lists the decisions the formalization took where the paper says less than a machine needs, or where a first choice was corrected. Each entry gives the decision, the rejected alternative and the fidelity argument, and the entries are grouped by the layer of the paper they concern. The decisions that answer an item of A1 to A5 are cited in its table. Two open questions close the part.
+Part A6 lists the design decisions of the formalization, the places where the paper says less than a machine needs. Each entry states the decision, the rejected alternative and the fidelity argument. The entries follow the layers of the paper, from the proof systems of §3.3 to the anonymous token of §5.6. The decisions that answer an item of A1 to A5 are cited in its table. Two open questions close the part.
 
 **The proof-system layer, §3.3.**
 
