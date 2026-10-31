@@ -25,6 +25,7 @@ The paper is Orrù, *Revisiting Keyed-Verification Anonymous Credentials*, IACR 
 - Theorem 5.8 is stated with its simulator defined, the condition of Remark 5.9 as hypotheses, and its proof open.
 - Theorem 5.10 has its game with Help merged, together with its extractor interface. Its setting is under review, its statement in draft.
 - Theorem 5.11 is stated at n = 1 and for every n, for the core without π_is. Claims 5.12 to 5.14 are stated with their reductions named, the proofs open.
+- μCMZ_AT, the anonymous token of Figure 9, is stated in two forms. The core without issuance proofs, `μCMZATCore` ([PR 147](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/147)), is the scheme the proof of Theorem 5.11 analyzes, and Theorem 5.11 is stated for it (item 12). The scheme with π_is, `μCMZATSyntax` at the oracle carrier ([#183](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/183), [PR 238](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/238)), has its syntax, its correctness and its one-more game, with no security statement yet. The lifting lemma from the core to it, one Adv^zk_cmz.is term, is [#205](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/205), split from the Theorem 5.11 statement of [#182](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/182) for this reason, and open.
 
 ## Part A. Findings about the paper
 
