@@ -131,7 +131,7 @@ Items A1.1 to A1.4, A2.7, A3.1 and A4.1 to A4.3 change a printed statement, the 
 **What we did.** Both steps are in the reductions as definitions. The theorems that the simulated oracles equal the real ones are open.
 
 - Item A5.1. The check is the conjunct `σ.1 ≠ 0` of `gapDlOracleImpl`, since [PR 207](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/207).
-- Item A5.2. The translation of representations is `AGMRepr.collapseRepr`, `AGMRepr.linCombCollapse` and `collapseOracleImpl`, since [PR 195](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/195).
+- Item A5.2. The translation of representations is `AGMRepr.collapseRepr` and `AGMRepr.linCombCollapse`, since [PR 194](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/194), and `collapseOracleImpl`, since [PR 195](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/195).
 
 ### A6. Things the paper leaves implicit that the formalization had to decide
 
