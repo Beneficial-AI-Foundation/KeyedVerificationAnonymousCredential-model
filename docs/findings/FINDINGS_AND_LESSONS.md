@@ -6,9 +6,7 @@ This report merges the two files in which the project recorded its departures fr
 
 **How to add an item.** A new finding about the paper takes the next number after the highest in the file and goes at the end of the table of its category, so that numbers never change once given, one row with that number, an empty errata column, a short heading with the page, what is wrong in one sentence, the Lean object that carries the correction, its kind, its status and its origin. Its full account, the printed text, why it is wrong, the proposed correction and where the formalization records it, goes in a paragraph below the table, headed by the number. A new design decision goes into Part A6 as one bullet under the layer of the paper it concerns, or under the item of Part A it answers, with the decision, the rejected alternative and the fidelity argument in full, and the date. A lesson that the record supports goes to Part B with the items or decisions it rests on. A lesson on engineering goes to Part C and a lesson on the use of AI assistants to Part D. The status list and the "What we did" paragraphs are revised when a statement or a proof lands.
 
-## Sources
-
-The report rests on three sources.
+**Sources.** The report rests on three sources.
 
 - [docs/presentations/rolf-status/errata.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/presentations/rolf-status/errata.md), items 1 to 17 on `main`, items 18 and 19 on the branch [microcmz-theorem-5-3](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/tree/microcmz-theorem-5-3) ([#184](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/184)),
 - [docs/DESIGN_ALTERNATIVES.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/DESIGN_ALTERNATIVES.md), 36 entries on `main` and one on that branch. The first entry, on the set-aside security-model-agnostic specification, concerns no part of the paper and stays out,
