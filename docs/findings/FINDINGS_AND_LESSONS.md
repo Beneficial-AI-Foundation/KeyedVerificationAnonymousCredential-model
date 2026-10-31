@@ -1,6 +1,6 @@
 # Findings and lessons from the repository record
 
-The KVAC team, 31 October 2026.
+The KVAC team (Semar Augusto, Christiano Braga, Oana Ciobotaru, Jin Xing Lim), 31 October 2026.
 
 The project formalizes in Lean 4 the keyed-verification anonymous credentials of Orrù's paper, *Revisiting Keyed-Verification Anonymous Credentials* (IACR ePrint 2024/1552), with their security proofs. This report merges the two files in which the project recorded its departures from the paper so far. The errata, [docs/presentations/rolf-status/errata.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/presentations/rolf-status/errata.md), hold the discrepancies between the printed text and what the paper's own arguments require. The design record, [docs/DESIGN_ALTERNATIVES.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/DESIGN_ALTERNATIVES.md), holds the decisions taken where the paper says less than a formalization needs. Both files stay in the repository with their full text, frozen, and receive no new items. This report is the record from now on, in the format of the team's reports of October 2026.
 
