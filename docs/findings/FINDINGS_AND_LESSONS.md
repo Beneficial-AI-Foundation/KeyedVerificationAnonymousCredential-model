@@ -50,7 +50,7 @@ Items A1.1 to A1.4, A2.7, A3.1 and A4.1 to A4.3 change a printed statement, the 
 - Item A1.1. The Lemma 5.4 bound is Adv^3-dl(B₁) + 3/p, where the paper prints Adv^3-dl + Adv^dl + 1/p. The 3/p is the generic Schwartz–Zippel bound for a polynomial of degree 3. The design record leaves open whether a structural argument recovers the printed 1/p, which the paper does not derive (DA *Schwartz–Zippel bound 3/p, not the paper's 1/p*).
 - Item A1.2. The same bound has no Adv^dl term.
 - Item A1.3. The Lemma 5.5 bound is Adv^3-dl(B₁) + Adv^gap-dl(B_gap) + 5/p, where the paper prints Adv^3-dl + Adv^dl + 3/p. The gap-DL term is the collision case of Claim 5.6. The 5/p is the 3/p of Lemma 5.4 plus 1/p for the event Σᵢ Δᵢbᵢ = 0 of Claim 5.6 plus 1/p for the event x₁ = 0 of Claim 5.7. The bound is on the algebraic game with Help. Theorem 5.1 for that game is [PR 256](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/256).
-- Item A1.4. The bounds `omufBound` and `omufBoundN1` state the printed constants. Whether they hold is decided by the proofs of Claims 5.12 to 5.14, as item A1.1 was for Lemma 5.4. The item is recorded as an obligation on the Claims.
+- Item A1.4. `omufBound` and `omufBoundN1` state the printed constants. Whether they hold is decided by the proofs of Claims 5.12 to 5.14, as item A1.1 was for Lemma 5.4. The item is recorded as an obligation on the Claims.
 - Item A1.5. Both lemma statements, `agm_ufcmva_le_n1_explicit` and `agm_ufcmva_le_explicit`, are inequalities.
 - Item A1.6. No code carries the two sentences. The docstrings of the gap-DL simulator and of the Lemma 5.5 statement state the two events with probability at most 1/p.
 
@@ -75,20 +75,19 @@ Items A1.1 to A1.4, A2.7, A3.1 and A4.1 to A4.3 change a printed statement, the 
 **Item A2.9.** The proofs of Lemmas 5.4 and 5.5 say that giving the adversary Help "will simplify the proof of Theorem 5.11" (pp. 36, 38). The proof of Theorem 5.10 is the one that uses Help's answer, on p. 42 to check the candidate Z and on p. 43 for the first equality of its display. The proof of Theorem 5.11 (pp. 43–47) never mentions Help. The review of [PR 243](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/243), and the design entry *Theorem 5.10 at the honest UF-CMVA game with Help* records it. No Lean object carries a cross-reference.
 
 **Item A2.10.** Claim 5.7 (pp. 39–40) runs A on the public parameters (X₀, X₁, …, Xₙ), with Xᵣ missing, and its displayed verification equation (U\*, V\*) = (U, x₀U + Σᵢ m\*ᵢxᵢU) has no xᵣ term, although the reduction's own input is (Γ, H, X₀, Xᵣ, X₁). The n → 1 reduction receives Xᵣ from its 1-attribute challenger and forwards it, so A sees the full parameters. In the code `nTo1Adversary` passes `pp.2.1`, the challenger's Xᵣ, inside `pp_n`. Claim 5.6 omits xᵣ in its own way, item A2.4. The writing of [docs/CRYPTOGRAPHIC_PROOFS_MICROCMZ_LEMMA55.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/CRYPTOGRAPHIC_PROOFS_MICROCMZ_LEMMA55.md) produced it, candidate 17 of [#217](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/217).
-
 **Item A2.11.** Two index slips in Claim 5.6 (p. 39). The extraction formula x = (Σᵢ aᵢ(mⱼ,ᵢ − m\*))(Σᵢ bᵢ(mⱼ,ᵢ − m\*))⁻¹ writes m\* for m\*ᵢ in both sums, besides the sign of item A2.3. The Sign reply V := (z + Σᵢ aᵢmⱼ,ᵢ)U + u(Σᵢ bᵢmᵢ)X writes the queried message as mⱼ,ᵢ in its first sum and as mᵢ in its second, although both sums run over the j-th query. Neither slip affects the argument. The docstring of the gap-DL reduction prints the extraction with m\*ᵢ, and its `.sign m` branch uses one message. The writing of [docs/CRYPTOGRAPHIC_PROOFS_MICROCMZ_LEMMA55.md](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/CRYPTOGRAPHIC_PROOFS_MICROCMZ_LEMMA55.md) produced it, candidate 20 of [#217](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/217).
 
 **What we did.** Each correction is documented at its use site in the reduction.
 
-- Item A2.1. The trace `redTrace` carries the corrected X-coefficient of Eq. 13 (DA *Eq. 13*).
-- Item A2.2. The signing step `reductionSignStep` carries the corrected signing-response coefficient of Eq. 14 (DA *Eq. 14*).
-- Item A2.3. The reduction `gapDlReduction` extracts the discrete logarithm with the right sign.
-- Item A2.4. The key parts `gapDlKeyParts` carry xᵣ in the key's constant part.
+- Item A2.1. `redTrace` carries the corrected X-coefficient of Eq. 13 (DA *Eq. 13*).
+- Item A2.2. `reductionSignStep` carries the corrected signing-response coefficient of Eq. 14 (DA *Eq. 14*).
+- Item A2.3. `gapDlReduction` extracts the discrete logarithm with the right sign.
+- Item A2.4. `gapDlKeyParts` carries xᵣ in the key's constant part.
 - Items A2.5 and A2.6. The Verify query of Claim 5.6 is formalized in `gapDlOracleImpl` as Ddh(d·U, V − c·U), which removes the full constant part, needs no inverse and covers d = 0 as well.
-- Item A2.7. The theorem `μCMZ_anonymity` charges hybrid H2 to ZKP_cmz.p.
-- Item A2.8. The evaluation `exponentEval` evaluates the Verify arm at (G, X, X′, X″).
+- Item A2.7. `μCMZ_anonymity` charges hybrid H2 to ZKP_cmz.p.
+- Item A2.8. `exponentEval` evaluates the Verify arm at (G, X, X′, X″).
 - Item A2.9. A cross-reference, with no code behind it.
-- Item A2.10. The adversary `nTo1Adversary` forwards the challenger's Xᵣ in `pp_n`.
+- Item A2.10. `nTo1Adversary` forwards the challenger's Xᵣ in `pp_n`.
 - Item A2.11. The docstring of `gapDlOracleImpl` prints the extraction with m\*ᵢ, and its `.sign` branch uses one message.
 
 ### A3. The scheme in the figure is not the scheme in the proof
@@ -106,9 +105,9 @@ Items A1.1 to A1.4, A2.7, A3.1 and A4.1 to A4.3 change a printed statement, the 
 
 **What we did.**
 
-- Item A3.1. The scheme the proof of Theorem 5.11 analyzes, with neither issuance proof, is stated under its own name, `μCMZATCore`, and Theorem 5.11 is stated for it. The scheme of Figure 9 with π_is is `μCMZATSyntax` at the oracle carrier ([#183](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/183)). A lifting lemma, the simulation hybrid that replaces each real π_is by a simulated one, would return to the paper's scheme at the cost of one Adv^zk_cmz.is term, one and not q since the §3.3 zero-knowledge game answers adaptive Prove queries ([#205](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/205)). Its definition is open, and with it whether the simulated proofs keep the forger algebraic. The Theorem 5.3 statement carries that term through a named reduction with a `sorry` body (DA *The μCMZ_AT core removes both issuance proofs, not only the boxed π_iu*, and *Theorem 5.3 takes its clauses from Theorems 5.8 and 5.11* on the branch). The item went to Rolfe on 20 August with this correction and the plan to build the core first. The team did not wait for the paper's correction.
+- Item A3.1. The scheme the proof of Theorem 5.11 analyzes, with neither issuance proof, is stated under its own name, `μCMZATCore`, and Theorem 5.11 is stated for it. The scheme of Figure 9 with π_is is `μCMZATSyntax` at the oracle carrier ([#183](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/183)). A lifting lemma, the simulation hybrid that replaces each real π_is by a simulated one, would return to the paper's scheme at the cost of one Adv^zk_cmz.is term, one and not q since the §3.3 zero-knowledge game answers adaptive Prove queries ([#205](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/issues/205)). Its definition is open, and with it whether the simulated proofs keep the forger algebraic. The Theorem 5.3 statement carries that term through a named reduction with a `sorry` body (DA *The μCMZ_AT core removes both issuance proofs, not only the boxed π_iu*, and *Theorem 5.3 takes its clauses from Theorems 5.8 and 5.11* on the branch). The item went to Rolfe on 20 August with this correction and the plan to build the core first, who acknowledged it. The team did not wait for the paper's correction.
 - Item A3.2. The formalization draws the three scalars of Figure 9 from the nonzero elements with `uniformUnits`, so no honest run fails on a zero draw (DA *Nonzero issuance nonces*).
-- Item A3.3. It draws the crs H from the nonzero elements of 𝔾 in `setup`, so a proof recovers `H ≠ 0` from `mem_support_setup` where it needs it (DA *Nonzero crs H*). This is the finding with the largest consequence. At H = 0 a distinguisher holding sk wins with advantage above 1 − 4/p whatever the simulator, so Definition 4.4 fails for μCMZ. No simulator repairs it.
+- Item A3.3. It draws the crs H from the nonzero elements of 𝔾 in `setup`, so `H ≠ 0` is recovered from `mem_support_uniformNonzero` where a proof needs it (DA *Nonzero crs H*). This is the finding with the largest consequence. At H = 0 a distinguisher holding sk wins with advantage above 1 − 4/p whatever the simulator, so Definition 4.4 fails for μCMZ. No simulator repairs it.
 - Item A3.4. The simulator `μCMZAnonSimulator` samples u′ from the nonzero scalars and sets U′ = u′G.
 - Item A3.5. It adds u′Xᵣ to Z, which then equals the server's Z.
 - Item A3.6. The base MAC draws its tag base U with `uniformNonzero` in `mac` since [PR 31](https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/pull/31), and `μCMZBaseMAC_correct` proves the correctness predicate under that sampler. The design entry is in Part A6, §5.3.
