@@ -62,8 +62,11 @@ proof lies outside `PQrs`, and its attributes lie outside `Qrs`.
 
 **Formalized.** The Theorem 5.10 statement of #179 quantifies over
 `SUEXTAdversary`, an adversary that never queries `NewUsr` or `PresentUsr`,
-embedded in `EXTGame` by `SUEXTAdversary.toEXTAdversary`. The multi-user
-extension is step 8 of item 13 of `docs/MICROCMZ_REMAINING.md`.
+embedded in `EXTGame` by `SUEXTAdversary.toEXTAdversary`. This weakens the
+printed statement. Definition 4.5 quantifies over all adversaries of Figure 8,
+`μCMZ_extractability` over those that never query `NewUsr` or `PresentUsr`
+(the second relation of #240). The multi-user extension is step 8 of item 13 of
+`docs/MICROCMZ_REMAINING.md`.
 
 -/
 

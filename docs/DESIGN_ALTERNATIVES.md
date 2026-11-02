@@ -949,8 +949,11 @@ malleable. A presentation of an honest user with a modified proof verifies, lies
 outside `PQrs`, and its attributes lie outside `Qrs`, which Figure 8 fills from
 `Issue` only. The adversary wins whether or not the extractor opens it, while
 every hypothesis of the theorem holds. §4.4 says that strong simulation
-extractability is what the condition `(φ*, ρ*) ∉ PQrs` needs. The multi-user
-extension is step 8 of item 13 of `docs/MICROCMZ_REMAINING.md`.
+extractability is what the condition `(φ*, ρ*) ∉ PQrs` needs. The restriction
+weakens the printed statement. Definition 4.5 quantifies over all adversaries of
+Figure 8, `μCMZ_extractability` over those that never query `NewUsr` or
+`PresentUsr`, the second relation of #240. The multi-user extension is step 8 of
+item 13 of `docs/MICROCMZ_REMAINING.md`.
 ## The extractor of Definition 4.5 takes the random-oracle table
 
 **Decision.** `Extractor` of `Framework/Extractability.lean` receives the

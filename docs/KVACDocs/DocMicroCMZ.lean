@@ -65,17 +65,8 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   core, the Equations 17 to 22 polynomial layer, the game trace with its
   case events, and the Theorem 5.11 statements.
 - `Anonymity.lean` — Section 5.4, the Theorem 5.8 statement and its simulator.
-
 - `Extractability.lean` — Section 5.5, the proof systems at the sampled crs, the
-  candidate `Z` and the single-user extraction adversary — Track CMZ-E.
-
-One more is planned:
-
-- `Anonymity.lean` — Section 5.4 — Track CMZ-A.
-
-One more is planned:
-
-- `Extractability.lean` — Section 5.5.
+  candidate `Z` and the single-user extraction adversary.
 
 :::theorem "mucmz_is_kvac" (tags := "paper, O24 Thm 1") (effort := "small") (priority := "medium")
 *O24 Theorem 1.* μCMZ is a keyed-verification anonymous credential
@@ -1060,7 +1051,7 @@ The proof system parameters `ZKP_cmz.iu`, `ZKP_cmz.is` and `ZKP_cmz.p` of {uses 
 relations {uses "riu_relation"}[], {uses "ris_relation"}[] and {uses "rp_relation"}[], with the crs sampled as the credential's setup samples it,
 through {uses "mucmz_proof_system_parameters"}[], and their relations decidable.
 Definition 4.5 samples the crs inside the game, so every advantage of the
-Theorem 5.10 bound uses the same distribution of the crs. The views of {uses "mucmz_proof_systems_fixed_crs"}[] fix it for the pointwise Definition 4.4.
+Theorem 5.10 bound uses the same distribution of the crs. The views of {bpref "mucmz_proof_systems_fixed_crs"}[] fix it for the pointwise Definition 4.4.
 :::
 
 :::definition "mucmz_extractors_simulator" (lean := "KVAC.Schemes.MicroCMZ.RiuExtractor, KVAC.Schemes.MicroCMZ.RpExtractor, KVAC.Schemes.MicroCMZ.RisSimulator") (parent := "cmz_extract") (tags := "milestone")
@@ -1126,13 +1117,17 @@ are one computation and the win bits agree.
 :::theorem "mucmz_extractability" (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
 *O24 Theorem 5.10.* If ZKP proves `R ⊇ R_cmz` ({uses "zk_arguments"}[]), then
 μCMZ is extractable ({uses "kvac_extractability"}[]) for the supported attribute
-family.
+family. The statement is over the proof systems at the sampled crs
+{uses "mucmz_proof_systems_sampled_crs"}[], a candidate `Z`
+{uses "mucmz_candidate_z"}[] and an adversary of the single-user setting
+{uses "mucmz_single_user_adversary"}[].
 :::
 
 :::proof "mucmz_extractability"
-The credential extractors wrap the proof system's extractors; the
-proof reduces to MAC unforgeability {uses "mucmz_mac_security"}[], with the
-candidate instance `Z` checked through the auxiliary Help oracle.
+The credential extractors wrap the extractors of {uses "mucmz_extractors_simulator"}[],
+and the reduction simulates `π_is` with its simulator. The proof reduces to MAC
+unforgeability {uses "mucmz_mac_security"}[] in the game with Help
+{uses "mucmz_ufcmva_help_game"}[], which checks the candidate instance `Z`.
 :::
 
 # One-more unforgeability (Section 5.6)
