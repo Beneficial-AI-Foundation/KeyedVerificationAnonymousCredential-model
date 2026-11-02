@@ -188,7 +188,7 @@ function diagram(mode) {
     var c1 = fix ? '#d1d5db' : '#1d4ed8', c2 = fix ? '#d1d5db' : '#b91c1c';
     s += '<line x1="470" y1="216" x2="395" y2="246" stroke="' + c1 + '" stroke-width="1.4"/>' +
       '<line x1="275" y1="336" x2="330" y2="300" stroke="' + c2 + '" stroke-width="1.4"/>' +
-      '<line x1="800" y1="366" x2="782" y2="384" stroke="' + c2 + '" stroke-width="1.4"/>';
+      '<line x1="800" y1="355" x2="782" y2="384" stroke="' + c2 + '" stroke-width="1.4"/>';
   }
   if (fix) s += '<line x1="346" y1="446" x2="436" y2="494" stroke="#15803d" stroke-width="2" stroke-dasharray="5 4"/>';
   s += '</svg>';
@@ -215,7 +215,7 @@ function diagram(mode) {
     var t1 = fix ? 'gray' : 'blue', t2 = fix ? 'gray' : 'redb';
     s += '<div class="abs tag ' + t1 + '" style="left:393px;top:193px;width:299px;text-align:center">' + v('H1', 'H1') + ', π<sub>iu</sub> simulated, a proof step that holds</div>';
     s += '<div class="abs tag ' + t2 + '" style="left:93px;top:336px;width:279px"><b>' + v('H3', 'H3') + ', extract from π<sub>is</sub></b>A saw a simulated <span style="font-weight:700">π<sub>iu</sub></span> first. The knowledge-soundness game of ZKP<sub>cmz.is</sub> (§3.3, p. 26) has none.</div>';
-    s += '<div class="abs tag ' + t2 + '" style="left:729px;top:316px;width:250px"><b>' + v('H2', 'H2') + ', π<sub>p</sub> simulated</b>D′ runs the π<sub>iu</sub> simulator, which programs H.</div>';
+    s += '<div class="abs tag ' + t2 + '" style="left:729px;top:316px;width:300px"><b>' + v('H2', 'H2') + ', π<sub>p</sub> simulated</b>D′ runs the π<sub>iu</sub> simulator, which programs H.</div>';
   }
   if (fix) s += '<div class="abs" style="left:392px;top:441px;width:376px;font-size:10.7px;line-height:1.3;color:#15803d">The paper uses a single oracle H. A region is a set of inputs of H. They give each proof system (π<sub>iu</sub>, π<sub>is</sub>, π<sub>p</sub>) its own random oracle inside the one H of the game.</div>';
   if (fix) s += '<div class="abs tag greenb" style="left:96px;top:417px;width:250px"><b>Remark 5.9 as hypotheses</b>One region of H per proof system, pairwise disjoint.</div>';
