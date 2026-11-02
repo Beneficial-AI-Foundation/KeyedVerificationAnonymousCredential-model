@@ -78,7 +78,7 @@ private coin oracle and collapsing queries and forgeries along them. The other f
 declared with `sorry` bodies, the first sorried definitions in the repository, and are built
 with the proofs of the Claims over the polynomial layer of Equations 17 to 22
 (`Polynomial.lean`, `CaseEvents.lean`). Whether the transformation reuses the Lemma 5.5
-embedding of the MAC track is open with Semar (question C2 of the Theorem 5.3 plan). The
+embedding of the MAC track is not settled. The
 adversary has a private coin oracle (`Game.lean`, *The adversary has a private coin oracle*),
 so a transformation that needs randomness samples through it. Extra Sign queries are
 not a source of randomness, they break the budget and the one-more count.
@@ -325,7 +325,7 @@ a single-attribute one against which the `n = 1` reductions run. It samples
 scalars `r ∈ Fⁿ` through the private coin oracle, hands the `n`-attribute forger the
 public parameters `Xᵢ = rᵢ • X₁`, answers its queries through `omufCollapseImpl` and
 collapses its forgeries along `r`. Whether this is the MAC track's Lemma 5.5 embedding
-is question C2 of the Theorem 5.3 plan. The construction preserves the Sign budget,
+is not settled. The construction preserves the Sign budget,
 forwarding each Sign query of the `n`-attribute forger exactly once and making none of its
 own (`omufToN1_isQueryBoundP`), since `agm_omuf_le` runs the `n = 1` reductions at the same
 `q`. Carrying a distinct-combination win into a single-attribute win is
