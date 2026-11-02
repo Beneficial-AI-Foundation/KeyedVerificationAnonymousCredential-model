@@ -1067,11 +1067,13 @@ The candidate `Z` of O24 §5.5 (p. 42). The server recomputes `Z = (x₀ + xᵣ)
 not hold, so the paper assumes "that the proof itself can provide a candidate
 instance `Z`". The candidates are a list read from the crs, the statement of {uses "rp_relation"}[] without `Z`, the proof `π_p` and the random-oracle table. The
 assumption is that `Z` is in the list whenever `π_p` verifies on it from that
-table with no fresh query. A run with a fresh query samples the challenge, so a
-fixed proof verifies with one `Z` per challenge and no function of the table
-names it. Such a proof is accepted with probability 1/p per `Present` query, a
-term the printed bound (p. 42) lacks and the Theorem 5.10 statement records.
-The instance fact for the Fiat–Shamir Σ-protocols belongs to issue #3.
+table with no fresh query. A run with a fresh query samples the challenge, and
+no function of the table returns the `Z` of each accepting run. A proof whose
+`Z` the list misses is accepted with probability at most 1/p per `Present`
+query once `0` is a candidate, a term the printed bound (p. 42) lacks and the
+Theorem 5.10 statement has to account for. The instance fact for the
+Fiat–Shamir Σ-protocols belongs to issue #3 and needs the query log, since the
+table enumerates no queries.
 :::
 
 :::definition "mucmz_single_user_adversary" (lean := "KVAC.Schemes.MicroCMZ.SUEXTQuery, KVAC.Schemes.MicroCMZ.SUEXTOracleSpec, KVAC.Schemes.MicroCMZ.SUEXTAdvSpec, KVAC.Schemes.MicroCMZ.SUEXTAdversary, KVAC.Schemes.MicroCMZ.suQueryImpl, KVAC.Schemes.MicroCMZ.SUEXTAdversary.toEXTAdversary") (parent := "cmz_extract") (tags := "milestone")

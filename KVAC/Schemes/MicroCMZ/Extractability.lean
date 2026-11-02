@@ -38,17 +38,26 @@ whenever `π_p` verifies on it from that table with no fresh query. The Theorem
 5.10 statement of #179 takes both as hypotheses. The instance fact for the
 Fiat–Shamir Σ-protocols belongs to issue #3.
 
-**Gap.** A run with a fresh query samples the challenge, so a fixed proof
-verifies with one `Z` per challenge, and no function of the table names it. A
-candidate that is a single group element, sound for every table, exists for no
-Fiat–Shamir proof system. A fresh-challenge proof is accepted with probability
-1/p per `Present` query, q_P/p over the run, and the reduction `B` then holds
-no candidate. The extractor of §9 opens such a proof from its representations,
-so Adv^ksnd of `ZKP_cmz.p` does not count the event and the term is additive.
-The printed bound (p. 42) carries no such term. The Theorem 5.10 statement of
-#179 records it. The all-zero presentation, every `Cᵢ = 0`, `Z = 0`, zero
-announcement and zero response, verifies under every challenge, so `B` tests
-`Z = 0` through Help on every `Present` query, its list always containing `0`.
+**Gap.** The hypothesis covers the run with no fresh query alone. From a table
+without the proof's hash query the verifier samples the challenge, and for the
+Σ-protocol of Equation 11 under Fiat–Shamir no single candidate is sound for
+every table. In the instance of Jin's review of PR 244 (`n = 1`, `C₁ = 0`, zero
+announcement and zero response), the `C₁` row holds under every challenge, and
+the `Z` row accepts `Z = 0` under every challenge and every `Z` under the
+challenge `0`, so no function of the table returns the `Z` of each accepting
+run. A fresh-challenge proof whose `Z` the list misses is accepted with
+probability at most 1/p once `0` is a candidate, since its `Z` row then admits
+one challenge, and at most (q_P + 1)/p over the `Present` queries and the final
+output. Such a failure need not be a failure of the extractor of `ZKP_cmz.p`,
+which in §9 opens a proof from its representations, so the reduction cannot
+charge it to Adv^ksnd. The printed bound (p. 42) carries no term for it, and
+the Theorem 5.10 statement of #179 has to account for it, by a term or by a
+further hypothesis. The reduction of that statement tests `Z = 0` through Help
+on every `Present` query, so its candidate list has to contain `0`. A
+presentation with every `Cᵢ = 0` and `Z = 0`, zero announcement and zero
+response, satisfies the verification equations under every challenge.
+`HS.Cache` is a function of the query, with no enumeration of the queried
+points, so the instance fact of issue #3 needs the query log.
 
 ### 5. The crs is sampled in the §3.3 views
 
@@ -170,8 +179,8 @@ abbrev ZCandidates {n : ℕ} (π : RpProofSystem HS G F n) : Type :=
 /-- The assumption of §5.5 on the candidates. Whenever `π_p` verifies on the
 statement `(U', X, C, Z, φ)` from a table with no fresh query, the table coming
 back unchanged, `Z` is among the candidates read from that table. A run with a
-fresh query samples the challenge, so every `Z` verifies under some challenge
-and no function of the table names it, point 2 of the module docstring. -/
+fresh query samples the challenge, and no function of the table returns the `Z`
+of each accepting run, point 2 of the module docstring. -/
 def ZCandidatesSound {n : ℕ} (π : RpProofSystem HS G F n) (zc : ZCandidates HS π) : Prop :=
   ∀ (H U' : G) (X : PublicBases G n) (C : Fin n → G) (Z : G) (φ : Policy F n)
     (pr : π.Proof) (c : HS.Cache),
