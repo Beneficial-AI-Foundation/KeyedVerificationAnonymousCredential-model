@@ -19,7 +19,7 @@ tag := "proof_systems"
 
 The proof-system technology that underpins every credential proof,
 corresponding to O24 Section 9 plus supporting Σ-protocol meta-theory.
-Three planned files under `KVAC/ProofSystems/` (none landed yet):
+Three planned files under `KVAC/ProofSystems/` (none merged yet):
 
 - `SigmaProtocol.lean` — Σ-protocol theory,
 - `FiatShamir.lean` — the non-interactive transformation in the random-oracle model,

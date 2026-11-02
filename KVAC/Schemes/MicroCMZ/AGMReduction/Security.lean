@@ -15,10 +15,13 @@ prove:
   `AGM_UF_CMVAAdv gen A secParam ≤
      microCMZN3DLReductionAdv gen A + gapDlogAdv gen (gapDlReduction gen A) + 5/p`.
 
-The bound speaks of the instrumented AGM(+Help) game `AGM_UF_CMVAGame` of
-`AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 proper, this
-bound for the plain Figure 5 game and `WellBehaved` algebraic adversaries, is
-reached from this one through the AGM↔plain bridge tracked in #81.
+The bound speaks of the AGM(+Help) game `AGM_UF_CMVAGame` of
+`AlgebraicMAC.lean`, as `SecurityN1` does for `n = 1`. Theorem 5.1 is formalized in
+the stronger form its proof establishes, "the scheme is unforgeable even if the
+adversary is given one additional oracle Help" (p. 35), as a bound for the game with
+Help of `UFCMVAHelp.lean`, and not in the weaker printed form, a bound for the Figure 5
+game, which has no Help. It is reached from this one by carrying the AGM advantage over
+to that game.
 
 The statement is added first, so that the two reductions it bounds by
 (`microCMZN3DLReduction` of `AttributeCollapse`, `gapDlReduction` of
@@ -56,7 +59,7 @@ variable {n : ℕ}
 
 /-! ## Lemma 5.5 -/
 
-/-- **O24 Lemma 5.5** (μCMZ is UF-CMVA for any `n` in the AGM, instrumented game):
+/-- **O24 Lemma 5.5** (μCMZ is UF-CMVA for any `n` in the AGM game):
 the AGM advantage of an `n`-attribute algebraic adversary is at most the 3-DL
 advantage of `microCMZN3DLReduction gen A` plus the gap-DL advantage of
 `gapDlReduction gen A` plus `5/p`.
@@ -72,14 +75,14 @@ combination collides with that of a message queried to the MAC oracle:
    extracts `x = num·den⁻¹` from the collision relation. The bad
    event is the vanishing denominator `Σᵢ bbᵢ·(mⱼ,ᵢ − m*ᵢ) = 0`, degree 1 in the
    perfectly hidden `bb⃗`: probability at most `1/p`.
-2. *No collision* (Claim 5.7): along a uniform direction `r⃗`, `nTo1Adversary gen A r`
+2. *No collision* (Claim 5.7): at uniform scalars `r⃗`, `nTo1Adversary A r`
    runs `A` against the 1-attribute game with `xᵢ = rᵢ·x₁`, translating each
    query's representation (`collapseOracleImpl`); for `x₁ ≠ 0` the key marginal is
-   the honest one and a fresh, non-colliding `n`-attribute forgery collapses to a
+   the honest one and a fresh, non-colliding `n`-attribute forgery translates to a
    fresh 1-attribute forgery, so the win transfers. The excluded event `x₁ = 0`
    costs `1/p`.
-3. *Lemma 5.4 on the wrapper*: `agm_ufcmva_le_n1_explicit` bounds each direction's
-   1-attribute advantage by the 3-DL advantage of `microCMZ3DLReduction` plus
+3. *Lemma 5.4 on the wrapper*: `agm_ufcmva_le_n1_explicit` bounds the
+   1-attribute advantage at each `r⃗` by the 3-DL advantage of `microCMZ3DLReduction` plus
    `3/p`; `microCMZN3DLReduction` samples `r⃗` inside the 3-DL experiment, so by
    linearity the average is `microCMZN3DLReductionAdv gen A + 3/p`.
 

@@ -14,8 +14,9 @@ import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements
 
 Aggregator for the one-more unforgeability analysis of the μCMZ_AT core scheme
 (`ATVariant.lean`), which lives in the `OneMoreUnforgeability/` subdirectory on
-the pattern of `AGMReduction/`. Track CMZ-OMUF of the Theorem 5.3 plan. Each part
-documents its own contents in its module docstring:
+the pattern of `AGMReduction/`. It is the one-more unforgeability analysis of
+O24 Section 5.6 (p. 43). Each part documents its own contents in its module
+docstring:
 
 - `Game` — the AGM-instrumented one-more unforgeability game: the representation
   gate, the query type and log, the gated Sign and Verify oracles, the algebraic
@@ -32,7 +33,7 @@ documents its own contents in its module docstring:
   the win and the three case events of the proof's case split, items (i) to
   (iii), that Claims 5.12 to 5.14 bound;
 - `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds
-  `omufBoundN1` and `omufBound`, the named reduction stubs (the theorem's, and
+  `omufBoundN1` and `omufBound`, the named reductions (the theorem's, and
   one each for Claims 5.12 and 5.13), `agm_omuf_le_n1` at `n = 1` (Equation
   23), `agm_omuf_le` for every `n`, and the Claims 5.12 to 5.14 over the case
   events of `CaseEvents`.

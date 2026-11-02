@@ -18,7 +18,7 @@ valid message/token pairs with pairwise-distinct messages.
 
 ## Layout
 
-- `OMUFQuery` — an inductive type enumerating the two oracle arms.
+- `OMUFQuery` — an inductive type enumerating the two oracles.
 - `OMUFOracleSpec` — the `OracleSpec` parametrised by `OMUFQuery`.
 - `OMUFAdversary` — adversaries: `OracleComp`-valued programs that take
   `(crs, pp)` and return candidate message/token pairs.
@@ -37,9 +37,10 @@ valid message/token pairs with pairwise-distinct messages.
 **Query count `q` is dynamic.** Figure 6 reads `q` off the run (`q := q + 1`
 in the Sign oracle); here `q` is the length of the `SignLog` at the end of
 the game, so the win condition `q + 1` moves with the adversary's behaviour.
-Security *theorems* over this game (Track CMZ-OMUF, Theorem 5.11) are
-expected to add a static query-budget hypothesis so their `q`-dependent
-bounds are well-formed; the game itself, like the merged UF-CMVA and AGM
+Security *theorems* over the AGM-instrumented form of this game (Theorem 5.11,
+`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements`) add a static
+query-budget hypothesis so their `q`-dependent bounds are well-formed; the game
+itself, like the merged UF-CMVA and AGM
 games, carries none.
 
 **Every Sign query counts.** The Sign oracle logs the request whether or
@@ -65,7 +66,7 @@ variable {secParam n : Nat}
 variable {M : Type → Type} [Monad M]
 
 /--
-The two oracle arms an OMUF adversary can query against an anonymous-token
+The two oracles an OMUF adversary can query against an anonymous-token
 scheme for a fixed `crs`:
 
 - `sign µ` — submit an issuance request `µ` to the server (Figure 6's
@@ -73,7 +74,7 @@ scheme for a fixed `crs`:
 - `verify m σ` — ask whether `σ` is a valid token for `m` (Figure 6's
   `Verify`).
 
-Mirrors `KVAC.Core.UFQuery`. Note the Sign arm takes the *user message*
+Mirrors `KVAC.Core.UFQuery`. Note the Sign oracle takes the *user message*
 `µ`, not an attribute vector: the adversary blinds for itself, which is
 what makes the issuance blind.
 -/
@@ -85,7 +86,7 @@ inductive OMUFQuery (tok : ATSyntax M)
   | verify : tok.MsgVec crs → tok.Token crs → OMUFQuery tok crs
 
 /--
-The `OracleSpec` for OMUF: each `OMUFQuery` arm maps to the response type
+The `OracleSpec` for OMUF: each `OMUFQuery` oracle maps to the response type
 the adversary expects.
 
 - `sign µ` ↦ `Option (tok.BlindToken crs)` (`none` = the server rejected)
@@ -143,7 +144,8 @@ The Figure 6 winning condition, for `q` Sign queries and output list
 (`List.Nodup`, Figure 6's `∀ i ≠ j : m⃗ᵢ ≠ m⃗ⱼ`), and every pair verifying
 (`∀ i ∈ [q+1] : AT.V(sk, m⃗ᵢ, σᵢ) = 1`). A named `Prop` (decidable, so the
 game can `decide` it) so that the security theorems and the
-AGM-instrumented OMUF game (Track CMZ-OMUF) can reuse it verbatim.
+AGM-instrumented OMUF game (`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`)
+can reuse it verbatim.
 -/
 abbrev OMUFWins (tok : ATSyntax M) (crs : tok.Crs secParam n)
     (sk : tok.Sk crs) (q : Nat)
@@ -187,8 +189,8 @@ O24 §3.4's `Adv^omuf_{AT,A}(λ)`.
 A scheme is one-more unforgeable if this advantage is negligible in
 `secParam` for every PPT adversary; the asymptotic / negligibility
 statement, and the static query-budget hypotheses the concrete bounds
-need, live with the security theorems (Track CMZ-OMUF,
-Theorem 5.11).
+need, live with the security theorems (Theorem 5.11,
+`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements`).
 -/
 noncomputable abbrev OMUFAdv (tok : ATSyntax ProbComp)
     (A : OMUFAdversary tok) (secParam n : Nat) : ℝ≥0∞ :=

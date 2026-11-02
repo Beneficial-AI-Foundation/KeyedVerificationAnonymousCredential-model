@@ -10,7 +10,7 @@ import VCVio.OracleComp.ProbComp
 # Correctness of an algebraic MAC (O24 Definition 3.1)
 
 Correctness predicate `Correct` on an `AlgebraicMACSyntax ProbComp`:
-every honestly produced tag verifies.
+every honestly produced MAC code verifies.
 
 ## Three equivalent formulations
 
@@ -51,7 +51,7 @@ open OracleComp
 /--
 Correctness for an algebraic MAC (O24 Definition 3.1): for every CRS
 in the support of `setup`, every key pair in the support of `keygen`,
-every attribute vector, and every tag in the support of `MAC`, the
+every attribute vector, and every MAC code in the support of `MAC`, the
 deterministic `verify` algorithm returns `true`.
 
 Support-based form — see the module docstring for the four equivalent

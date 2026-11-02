@@ -135,7 +135,7 @@ idiom that every uniform-subtype sample needs. The caller supplies the
 
 Kept as a `def` (not a global `instance`) so a site opts in explicitly — a
 global `SampleableType {x // p x}` instance would risk the `SampleableType` /
-`Fintype` instance-search derailment the AGM scaffolding carefully avoids
+`Fintype` instance-search derailment the AGM supporting lemmas carefully avoid
 (see `KVAC.Schemes.MicroCMZ.SignMask`). Used by μCMZ's `uniformNonzero` over
 `{g : G // g ≠ 0}` and the AGM reduction's non-vanishing signing masks.
 -/

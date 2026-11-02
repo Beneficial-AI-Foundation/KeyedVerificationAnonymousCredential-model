@@ -18,7 +18,7 @@ in ℤp[χ], of degree at most 3, except with probability 1/p".
 
 The degree-3 claim is right; the probability constant is stated without
 derivation and is too small. The bad event is that the hidden shift
-(aₕ, a₀, aᵣ, a₁, a<sub>u,1</sub>, …) lands on a root of the nonzero
+(aₕ, a₀, aᵣ, a₁, a<sub>u,1</sub>, …) is a root of the nonzero
 polynomial ϕ — in particular ψ ≡ 0 forces ψ(0) = ϕ(a⃗) = 0. And ϕ has total
 degree 3: its top monomials come from
 α<sub>v,j</sub>·uⱼ·(x₀+xᵣ+mⱼx₁)·(x₀+xᵣ+m*x₁), a degree-2 representation

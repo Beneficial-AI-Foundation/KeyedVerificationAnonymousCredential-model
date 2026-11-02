@@ -46,7 +46,7 @@ is stated against the paper-level definitions of Section 4 without
 committing to any concrete curve, hash function, or deployment.
 Concrete bindings — a planned Ristretto255 instance from
 [curve25519-dalek-lean-verify](https://github.com/Beneficial-AI-Foundation/curve25519-dalek-lean-verify),
-not yet landed (Track Ex) —
+not yet merged (Track Ex) —
 will be isolated under `KVAC/Instances/` and only reached from
 `KVAC/Examples/`.
 

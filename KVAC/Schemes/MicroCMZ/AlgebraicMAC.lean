@@ -10,44 +10,42 @@ import VCVio.CryptoFoundations.SecExp
 import VCVio.OracleComp.SimSemantics.Append
 
 /-!
-# μCMZ as an algebraic MAC: AGM game scaffolding (O24 §5.3)
+# μCMZ as an algebraic MAC: the AGM game (O24 §5.3)
 
-Instrumented scaffolding for the algebraic group model (AGM) UF-CMVA(+Help) game
-of the μCMZ base MAC (`μCMZBaseMAC`), following Orrù, *Revisiting
-Keyed-Verification Anonymous Credentials*, IACR ePrint 2024/1552, §5.3. This is
-the `AGMPolynomial`-free foundation: the game definitions the Lemma 5.4 reduction
-consumes, but not the reduction itself (that lands in `AGMReduction`), and not the
-sign-arm distribution lemmas (those live in the sibling module `SignMask`).
-
-A word of caution on naming: this is the instrumented game, not the honest game. The
-oracles here are *gated* — they answer honestly only when the submitted
-representation is consistent, and return `false` otherwise. So the game matches
-the honest UF-CMVA game only for *well-behaved* adversaries, the ones that never
-submit an inconsistent representation. Closing that gap is the job of a
-bridging lemma under the `WellBehaved` hypothesis; `WellBehaved` and the
-translation `AGMUFAdversary.toUFAdversary` to the plain game are defined in
-`KVAC.Schemes.MicroCMZ.AGMBridge`.
+The algebraic group model (AGM) UF-CMVA(+Help) game of the μCMZ base MAC
+(`μCMZBaseMAC`), following Orrù, *Revisiting Keyed-Verification Anonymous
+Credentials*, IACR ePrint 2024/1552, §5.3. This is the `AGMPolynomial`-free
+foundation: the game definitions the Lemma 5.4 reduction consumes, but not the
+reduction itself (that is delivered by `AGMReduction`), and not the
+Sign-oracle distribution lemmas (those live in the sibling module `SignMask`).
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
-`AGMRepr` / `AGMRepr.eval`; and the instrumented game (`AGMOracleSpec`,
+`AGMRepr` / `AGMRepr.eval`; and the AGM game (`AGMQuery`, `AGMOracleSpec`,
 `agmOracleImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`).
 
-The AGM is a restriction on the adversary class: every group element the adversary
-submits (in `Verify`/`Help` queries and in the forgery) carries an *algebraic
-representation*, coefficients over the transcript basis received so far
-(`G₀, H, X₀, Xᵣ, X⃗`, and `(Uⱼ, Vⱼ)` per Sign query). Each oracle answers honestly
-iff the representation is transcript-consistent (else `false`), as does the win
-condition — this is the gate. It is exactly the interface the Lemma 5.4 reduction
-wants: it answers `Verify`/`Help` by evaluating the represented degree-≤3
-polynomial at the embedded 3-DL instance. Gating the *answers* like this, rather
-than restricting the adversary *type*, is a deliberate choice; see
-`DESIGN_ALTERNATIVES.md` for the alternative we passed over. Tag coefficients are
-stored as a *list* (one `(αᵤ, αᵥ)` per Sign query, `zipWith`-evaluated against
-issued tags), keeping the type independent of the dynamic query count.
+The AGM is a restriction on the adversary class: an algebraic adversary that
+returns a group element "must also return coefficients ζ₁, …, ζₙ so that
+X = Σᵢ ζᵢ Zᵢ" over the elements it has received (O24 §3.1, p. 24, after
+[FKL18]). Here the restriction is in the adversary's type. Every group element
+it submits, in `Verify`/`Help` queries and in the forgery, is given by its
+coefficients alone (an `AGMRepr`) over the transcript basis received so far
+(`G₀, H, X₀, Xᵣ, X⃗`, and `(Uⱼ, Vⱼ)` per Sign query), and the challenger
+evaluates them (`AGMRepr.eval`). The basis contains the generator `G₀`, so the
+type excludes no group element, and every answer is the honest answer on the
+evaluated elements. This is the interface the Lemma 5.4 reduction wants: it
+answers `Verify`/`Help` by evaluating the represented degree-≤3 polynomial at
+the embedded 3-DL instance. The alternative, queries that carry group elements
+next to their representations and oracles gated on their consistency, is in
+`DESIGN_ALTERNATIVES.md`, *Algebraic adversaries submit coefficients only*.
+Coefficients on the issued MAC codes are stored as a *list* (one `(αᵤ, αᵥ)` per
+Sign query, `zipWith`-evaluated against the issued MAC codes), keeping the type
+independent of the dynamic query count.
 
-The `Help(A₀, A⃗, Z)` arm (O24 §5.2/§5.3) answers whether
-`Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`, the stronger notion the credential-level
-extractability proof consumes (Thm 5.11 / Thm 5.2); it does not change the bound.
+The `Help(A₀, A⃗, Z)` oracle (O24 §5.2/§5.3) answers whether
+`Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` through `helpEq` (`Construction.lean`), as the game
+with Help of `UFCMVAHelp.lean` does. It is the stronger notion the credential-level
+extractability proof consumes (Thm 5.10, for Thm 5.2); it does not change the
+bound.
 -/
 
 set_option autoImplicit false
@@ -142,9 +140,9 @@ attribute [irreducible] glog
 /--
 An algebraic representation (O24 §5.3, the adversary's `~` coefficients) over the
 μCMZ transcript basis: coefficients for `G₀`, `H`, `X₀`, `Xᵣ`, `X⃗`, and one
-`(αᵤ, αᵥ)` pair per issued tag `(Uⱼ, Vⱼ)`. Tag coefficients are a list, so the type
-is independent of the Sign-query count; `eval` `zipWith`s them against the issued
-tags, ignoring any excess.
+`(αᵤ, αᵥ)` pair per issued MAC code `(Uⱼ, Vⱼ)`. These coefficients are a list, so the
+type is independent of the Sign-query count; `eval` `zipWith`s them against the issued
+MAC codes, ignoring any excess.
 -/
 structure AGMRepr (F : Type) (n : ℕ) where
   /-- Coefficient of the generator `G₀`. -/
@@ -157,13 +155,13 @@ structure AGMRepr (F : Type) (n : ℕ) where
   xr : F
   /-- Coefficients of `Xᵢ = xᵢ·G₀`, `i ∈ [n]`. -/
   x : Fin n → F
-  /-- Coefficients `(αᵤⱼ, αᵥⱼ)` of the issued tags `(Uⱼ, Vⱼ)`, in issuance
+  /-- Coefficients `(αᵤⱼ, αᵥⱼ)` of the issued MAC codes `(Uⱼ, Vⱼ)`, in issuance
   order. -/
   uv : List (F × F)
 
 /--
 Evaluate a representation against a concrete transcript: the fixed basis
-`(g₀, H, X₀, Xᵣ, X⃗)` plus the tags issued so far.
+`(g₀, H, X₀, Xᵣ, X⃗)` plus the MAC codes issued so far.
 -/
 def AGMRepr.eval (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
     (tags : List (G × G)) : G :=
@@ -171,61 +169,56 @@ def AGMRepr.eval (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ : G) (X : Fin n → G)
     (List.zipWith (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
       ρ.uv tags).sum
 
-/-! ## The instrumented oracles -/
+/-- `AGMRepr.eval` over the public parameters `pp = (X₀, Xᵣ, X⃗)`, the form the AGM game and its
+simulators evaluate in. The `n = 1` reduction evaluates over `EmbeddedParams` with
+`AGMRepr.evalAt` instead. -/
+def AGMRepr.evalParams (ρ : AGMRepr F n) (g₀ H : G) (pp : Params G n)
+    (tags : List (G × G)) : G :=
+  ρ.eval g₀ H pp.1 pp.2.1 pp.2.2 tags
+
+/-! ## The oracles -/
 
 /--
-The three oracle arms of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
-from O24 Figure 5, `help` added in §5.3):
-
-- `sign m⃗` — request a tag on `m⃗` (no representation: the adversary *receives*
-  elements here).
-- `verify m⃗ (U,V) ρ_U ρ_V` — verification query; the submitted tag carries
-  representations.
-- `help A₀ A⃗ Z ρ₀ ρ⃗ ρ_Z` — the §5.3 helper oracle, answering whether
-  `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`; all three submitted elements carry
-  representations.
+The three oracles of the AGM UF-CMVA(+Help) game for μCMZ (`sign`/`verify`
+from O24 Figure 5, `help` added in §5.2/§5.3). Every group element the adversary
+submits is given by its representation alone.
 -/
-inductive AGMQuery (F G : Type) (n : ℕ) : Type where
-  | sign : (Fin n → F) → AGMQuery F G n
-  | verify : (Fin n → F) → G × G → AGMRepr F n → AGMRepr F n → AGMQuery F G n
-  | help : G → (Fin n → G) → G → AGMRepr F n → (Fin n → AGMRepr F n) →
-      AGMRepr F n → AGMQuery F G n
+inductive AGMQuery (F : Type) (n : ℕ) : Type where
+  /-- `sign m⃗`, a MAC code on `m⃗` (no representation: the adversary *receives*
+  elements here). -/
+  | sign : (Fin n → F) → AGMQuery F n
+  /-- `verify m⃗ ρ_U ρ_V`, the verification bit for the MAC code `(U, V)` that `ρ_U`,
+  `ρ_V` represent. -/
+  | verify : (Fin n → F) → AGMRepr F n → AGMRepr F n → AGMQuery F n
+  /-- `help ρ₀ ρ⃗ ρ_Z`, the §5.2 helper oracle: whether `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` for
+  the elements `A₀`, `A⃗`, `Z` that `ρ₀`, `ρ⃗`, `ρ_Z` represent. -/
+  | help : AGMRepr F n → (Fin n → AGMRepr F n) → AGMRepr F n → AGMQuery F n
 
-/-- Response types for `AGMQuery`: a tag for `sign`, a Boolean for `verify`
+/-- Response types for `AGMQuery`: a MAC code for `sign`, a Boolean for `verify`
 and `help`. -/
-def AGMOracleSpec (F G : Type) (n : ℕ) : OracleSpec (AGMQuery F G n)
+def AGMOracleSpec (F G : Type) (n : ℕ) : OracleSpec (AGMQuery F n)
   | .sign _ => G × G
-  | .verify _ _ _ _ => Bool
-  | .help _ _ _ _ _ _ => Bool
+  | .verify _ _ _ => Bool
+  | .help _ _ _ => Bool
 
 /--
 The transcript log threaded through the game: the messages signed so far,
-each with the tag issued for it, in issuance order (`sign` appends). The
-message components decide forgery freshness; the tag components extend the
+each with the MAC code issued for it, in issuance order (`sign` appends). The
+message components decide forgery freshness; the MAC codes extend the
 representation basis.
 -/
 abbrev AGMLog (F G : Type) (n : ℕ) := List ((Fin n → F) × (G × G))
 
-/-- Representation consistency of a `help` query against the transcript basis
-`(g₀, H, X₀, Xᵣ, X⃗)` and the issued tags: every submitted element equals the
-evaluation of its representation. -/
-abbrev helpConsistent (H : G) (pp : G × G × (Fin n → G)) (tags : List (G × G))
-    (A₀ : G) (A : Fin n → G) (Z : G) (ρ₀ : AGMRepr F n) (ρA : Fin n → AGMRepr F n)
-    (ρZ : AGMRepr F n) : Prop :=
-  ρ₀.eval gen H pp.1 pp.2.1 pp.2.2 tags = A₀ ∧
-  (∀ i, (ρA i).eval gen H pp.1 pp.2.1 pp.2.2 tags = A i) ∧
-  ρZ.eval gen H pp.1 pp.2.1 pp.2.2 tags = Z
-
 /--
-Honest instrumented oracles for secret key `sk`, crs `H`, and public parameters
-`pp = (X₀, Xᵣ, X⃗)`. `sign` / `verify` delegate to `μCMZBaseMACSyntax F gen` (the
-seam this game crosses); `help` destructures the concrete μCMZ `sk` directly for
-`Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ`.
+Honest oracles for secret key `sk`, crs `H`, and public parameters
+`pp = (X₀, Xᵣ, X⃗)`. Every submitted representation is evaluated over the basis
+`(gen, H, X₀, Xᵣ, X⃗)` and the MAC codes issued so far. `sign` / `verify` delegate
+to the interface `μCMZBaseMACSyntax F gen`; `help` reads the concrete μCMZ `sk`
+through `helpEq`.
 
 - `sign` runs `.MAC` and appends `(m⃗, σ)` to the log;
-- `verify` returns `.verify` iff the representations are transcript-consistent
-  (else `false`);
-- `help` answers the linear-form query using `sk` directly.
+- `verify` runs `.verify` on the evaluated MAC code;
+- `help` decides `helpEq` on the evaluated elements.
 -/
 noncomputable def agmOracleImpl (secParam : ℕ) (sk : F × F × (Fin n → F)) (H : G)
     (pp : G × G × (Fin n → G)) :
@@ -233,36 +226,35 @@ noncomputable def agmOracleImpl (secParam : ℕ) (sk : F × F × (Fin n → F)) 
   | .sign m => StateT.mk fun log => do
       let σ : G × G ← (μCMZBaseMACSyntax F gen).MAC (secParam := secParam) H sk m
       pure (σ, log ++ [(m, σ)])
-  | .verify m σ ρU ρV => StateT.mk fun log =>
+  | .verify m ρU ρV => StateT.mk fun log =>
       let tags := log.map Prod.snd
-      let consistent :=
-        ρU.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σ.1 ∧
-        ρV.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σ.2
-      pure (decide consistent &&
-        (μCMZBaseMACSyntax F gen).verify (secParam := secParam) H sk m σ, log)
-  | .help A₀ A Z ρ₀ ρA ρZ => StateT.mk fun log =>
+      let σ := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
+      pure ((μCMZBaseMACSyntax F gen).verify (secParam := secParam) H sk m σ, log)
+  | .help ρ₀ ρA ρZ => StateT.mk fun log =>
       let tags := log.map Prod.snd
-      let consistent := helpConsistent gen H pp tags A₀ A Z ρ₀ ρA ρZ
-      pure (decide consistent && helpEq sk A₀ A Z, log)
+      pure (helpEq sk (ρ₀.evalParams gen H pp tags)
+        (fun i => (ρA i).evalParams gen H pp tags)
+        (ρZ.evalParams gen H pp tags), log)
 
 /-! ## The game -/
 
 /--
 An algebraic UF-CMVA adversary against μCMZ for `n` attributes (O24 §5.3): given
-crs `H` and public parameters `(X₀, Xᵣ, X⃗)`, it queries the instrumented oracles
-and outputs a forgery `(m⃗*, (U*, V*))` with representations of `U*` and `V*` over
-the final transcript.
+crs `H` and public parameters `(X₀, Xᵣ, X⃗)`, it queries the oracles and outputs a
+forged message `m⃗*` with the representations of `U*` and `V*` over the final
+transcript.
 -/
 structure AGMUFAdversary (F G : Type) (n : ℕ) where
   run : G → G × G × (Fin n → G) →
-    OracleComp (AGMOracleSpec F G n)
-      ((Fin n → F) × (G × G) × AGMRepr F n × AGMRepr F n)
+    OracleComp (AGMOracleSpec F G n) ((Fin n → F) × AGMRepr F n × AGMRepr F n)
 
 /--
-The AGM UF-CMVA(+Help) experiment for μCMZ (O24 Figure 5, instrumented per §5.3).
-Setup and keygen delegate to `μCMZBaseMACSyntax F gen`; the adversary runs against
-`agmOracleImpl`; returns `true` iff the forgery representations are transcript-
-consistent, the forged message is fresh, and the forgery verifies.
+The AGM UF-CMVA(+Help) experiment for μCMZ (O24 Figure 5 with the §5.2 Help
+oracle, for algebraic adversaries). Setup and keygen delegate to
+`μCMZBaseMACSyntax F gen`; the adversary runs against `agmOracleImpl`; the forged
+MAC code `(U*, V*)` is the evaluation of the forgery representations over the
+final transcript; returns `true` iff the forged message is fresh and the forgery
+verifies.
 -/
 noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
     ProbComp Bool := do
@@ -270,15 +262,12 @@ noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
   let H : G ← mac.setup secParam n
   let (sk, pp) ← (mac.keygen (secParam := secParam) (n := n) H :
       ProbComp (Key F n × Params G n))
-  let ((mStar, σStar, ρU, ρV), log) ←
+  let ((mStar, ρU, ρV), log) ←
     (simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
   let tags := log.map Prod.snd
-  let consistent :=
-    ρU.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.1 ∧
-    ρV.eval (gen) H pp.1 pp.2.1 pp.2.2 tags = σStar.2
+  let σStar := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
   let fresh := mStar ∉ log.map Prod.fst
-  pure (decide consistent && decide fresh &&
-    mac.verify (secParam := secParam) H sk mStar σStar)
+  pure (decide fresh && mac.verify (secParam := secParam) H sk mStar σStar)
 
 /-- The AGM UF-CMVA(+Help) advantage `Pr[= true | AGM_UF_CMVAGame …]`, kept a
 function of `secParam` so the (deferred) negligibility statement can quantify over
@@ -290,17 +279,16 @@ noncomputable abbrev AGM_UF_CMVAAdv (A : AGMUFAdversary F G n) (secParam : ℕ) 
 
 The `n = 1` reduction's core (the `AGMRepr ↔ ReprCoeffs` eval bridge, the
 mechanized identity-branch contradiction, the reduction adversary, and root
-recovery) lives in `KVAC.Schemes.MicroCMZ.AGMReduction.Core`; the probability
-bound and the security theorems `agm_ufcmva_le_n1` / `agm_ufcmva_le` are still
-forthcoming. The reduction is split into its own file because it imports
-`AGMPolynomial` — see the order-instance hazard note at `glog` above (the bridge
-needs `glog`, but `glog`'s *proof* must elaborate without those instances in
-scope).
+recovery) lives in `KVAC.Schemes.MicroCMZ.AGMReduction.Core`, and the bounds of
+Lemmas 5.4 and 5.5, `agm_ufcmva_le_n1_explicit` and `agm_ufcmva_le_explicit`, in
+`KVAC.Schemes.MicroCMZ.AGMReduction.SecurityN1` and
+`KVAC.Schemes.MicroCMZ.AGMReduction.Security`. The reduction is split into its own
+file because it imports `AGMPolynomial` — see the order-instance hazard note at
+`glog` above (the bridge needs `glog`, but `glog`'s *proof* must elaborate without
+those instances in scope).
 
-`KVAC.Schemes.MicroCMZ.AGMBridge` defines the hypothesis `WellBehaved` and the
-translation `AGMUFAdversary.toUFAdversary` for comparing this game with the plain
-`UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security`. Both games go through the interface
-`AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen` (setup/keygen/MAC/verify are
-delegated to the interface value, not inlined). -/
+The game goes through the interface `AlgebraicMACSyntax` at `μCMZBaseMACSyntax F gen`
+(setup/keygen/MAC/verify are delegated to the interface value, not inlined), as the
+plain `UF_CMVAGame` of `KVAC.Core.AlgebraicMAC.Security` does. -/
 
 end KVAC.Schemes.MicroCMZ
