@@ -147,13 +147,12 @@ open Classical in
 output the root with `r·G = X` of the first one that is nonzero, `0` if there is none. -/
 noncomputable def twoDLExtract (t : OMUFTrace F G) (g X : G) (e : TwoDLEmbed F)
     (us : List F) : F :=
-  let pt : AGMPoly.Var t.arity → Polynomial F
-    | .eta => Polynomial.C e.η
-    | .x0 => Polynomial.C e.a₀ + Polynomial.C e.b₀ * Polynomial.X
-    | .xr => Polynomial.C e.aᵣ + Polynomial.C e.bᵣ * Polynomial.X
-    | .x1 => Polynomial.C e.a₁ + Polynomial.C e.b₁ * Polynomial.X
-    | .u j => Polynomial.C (us.getD j 0)
-  match (t.forgeryPolys.map fun φ => MvPolynomial.aeval pt φ).find? (fun p => decide (p ≠ 0)) with
+  let pt := AGMPoly.spec (Polynomial.C e.η)
+    (Polynomial.C e.a₀ + Polynomial.C e.b₀ * Polynomial.X)
+    (Polynomial.C e.aᵣ + Polynomial.C e.bᵣ * Polynomial.X)
+    (Polynomial.C e.a₁ + Polynomial.C e.b₁ * Polynomial.X)
+    fun j : Fin t.arity => Polynomial.C (us.getD j 0)
+  match (t.forgeryPolys.map fun φ => pt φ).find? (fun p => decide (p ≠ 0)) with
   | some p => (p.roots.toList.find? fun r => decide (r • g = X)).getD 0
   | none => 0
 
