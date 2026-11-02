@@ -380,24 +380,16 @@ theorem twoDL_run {α : Type} (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
           (p.1, (p.2, twoDLAuxOf gen x (AGMOMUFLog.tags p.2)))) <$>
         (simulateQ (agmOMUFImpl gen secParam (e.key x) (e.η • gen)
           (twoDLParams gen (x • gen) e)) oa).run log := by
-  induction oa using OracleComp.inductionOn generalizing log with
-  | pure y => simp only [simulateQ_pure, StateT.run_pure, map_pure]
-  | query_bind t oa ih =>
-    simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
-      OracleQuery.cont_query, id_map, StateT.run_bind, map_bind]
-    rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
-    · rw [twoDL_step_coin gen secParam x e log t, bind_map_left]
-      exact bind_congr fun p => ih _ _
-    · rw [twoDL_step_sign gen secParam x e log C ρ]
-      simp only [OracleSpec.add_apply_inr]
-      refine (bind_map_left _ _ _).trans ?_
-      rw [agmOMUFImpl_inr]
-      exact bind_congr fun p => ih _ _
-    · rw [twoDL_step_verify gen secParam x e log m σ ρU ρV]
-      simp only [OracleSpec.add_apply_inr]
-      refine (bind_map_left _ _ _).trans ?_
-      rw [agmOMUFImpl_inr]
-      exact bind_congr fun p => ih _ _
+  exact (OracleComp.map_run_simulateQ_eq_of_query_map_eq
+    (agmOMUFImpl gen secParam (e.key x) (e.η • gen) (twoDLParams gen (x • gen) e))
+    (twoDLImpl gen (x • gen) (x • (x • gen)) e)
+    (fun l => (l, twoDLAuxOf gen x (AGMOMUFLog.tags l)))
+    (fun t s => by
+      rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
+      · exact (twoDL_step_coin gen secParam x e s t).symm
+      · exact (twoDL_step_sign gen secParam x e s C ρ).symm
+      · exact (twoDL_step_verify gen secParam x e s m σ ρU ρV).symm)
+    oa log).symm
 
 end Coupling
 

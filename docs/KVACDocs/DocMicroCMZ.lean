@@ -1587,8 +1587,9 @@ answer is the real one by module algebra over `x₀ = a + b·x`, and the record 
 `x` times the real `V` once `x·C` is the multiple of the commitment's representation
 (`twoDLxEval_eq`, the gate giving `C` as that representation's evaluation). The Verify test is
 the real one on consistent representations, since `x·U` is the multiple computed from the
-representation. The run-level statement is induction on the adversary's computation through
-these steps, with the records a function of the log (`twoDLAuxOf`).
+representation. The run-level statement is the state-projection transport of the simulation
+along the log, through these steps, with the records a function of the log
+(`twoDLAuxOf`).
 :::
 
 :::theorem "omuf_two_dl_key_law" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "medium")
