@@ -36,8 +36,9 @@ It connects the game (`AlgebraicMAC`) to the polynomial backbone
   Schwartz–Zippel bad and shift bits);
 - `SecurityN1` — the Lemma 5.4 target bound `agm_ufcmva_le_n1_explicit`,
   assembled over the sub-lemmas its module docstring lists;
-- `AttributeCollapse` — the `n → 1` attribute collapse of Lemma 5.5 (Claim 5.7):
-  the representation translations along a direction `r⃗`, the wrapper adversary
+- `AttributeCollapse` — the reduction to `n = 1` of Lemma 5.5 (Claim 5.7), which
+  its identifiers call the collapse: the representation translations at the
+  scalars `r⃗`, the wrapper adversary
   `nTo1Adversary`, and the general-`n` 3-DL reduction `microCMZN3DLReduction`
   with its experiment and advantage at base `gen`;
 - `GapDLReduction` — the Claim 5.6 side of Lemma 5.5: the nonzero-scalar

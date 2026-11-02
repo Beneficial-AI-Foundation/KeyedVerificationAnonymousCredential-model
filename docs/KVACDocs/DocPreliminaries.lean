@@ -107,7 +107,8 @@ Anonymous tokens
 Anonymous-token syntax and the one-more unforgeability (OMUF) game of
 O24 Section 3.4. Anonymous tokens are the headline application of the
 OMUF notion — used in the `μCMZ_AT` and `μBBS_AT` chapters of the two
-scheme directories (Track CMZ-OMUF states Theorem 5.11 over this game).
+scheme directories (the `μCMZ_AT` analysis states Theorem 5.11 over the
+AGM-instrumented form of this game).
 
 :::definition "anonymous_tokens" (lean := "KVAC.Preliminaries.ATSyntax, KVAC.Preliminaries.ATSyntax.issue, KVAC.Preliminaries.ATSyntax.Correct, KVAC.Preliminaries.AnonymousToken") (parent := "pre_anontoken") (tags := "paper, O24 §3.4")
 *O24 Section 3.4.* Syntax and correctness of anonymous token schemes

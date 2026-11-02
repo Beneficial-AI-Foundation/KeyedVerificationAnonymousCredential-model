@@ -143,7 +143,7 @@ is never taken on the happy trace: `newUsr_mac_isSome` shows it is unreachable
 under `CorrectRO`. The obligation is not discharged here — a definition carries no
 proof — nor by `newUsr_mac_isSome` alone, which only states the fact given
 `CorrectRO`. It is discharged at the game-reasoning site, the μCMZ extractability
-proof (O24 Thm 5.2/5.10, Track CMZ-E, issue #11), once the concrete μCMZ scheme
+proof (O24 Thm 5.2/5.10, issue #11), once the concrete μCMZ scheme
 supplies `CorrectRO`. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor H kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)

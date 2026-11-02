@@ -40,34 +40,33 @@ deployed at scale (Signal private groups, Tor's Lox).
 
 Files delivered under `KVAC/Schemes/MicroCMZ/`:
 
-- `Construction.lean` — Section 5.1, base MAC — Track CMZ-C.
-- `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols — Track CMZ-C.
-- `Credential.lean` — Section 5.1, the credential of Figure 9 — Track CMZ-C.
+- `Construction.lean` — Section 5.1, base MAC.
+- `Relations.lean` — Section 5.1, Eqs. 9–11 Σ-protocols.
+- `Credential.lean` — Section 5.1, the credential of Figure 9.
 - `ProofSystems.lean` — Section 5.1, Figure 9, the three proof-system
-  parameters of the credential — Track CMZ-C.
-- `AlgebraicMAC.lean` — Section 5.3, AGM game — Track CMZ-M.
-- `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer — Track CMZ-M.
-- `SignMask.lean` — Section 5.3, sign-mask distributions — Track CMZ-M.
+  parameters of the credential.
+- `AlgebraicMAC.lean` — Section 5.3, AGM game.
+- `AGMPolynomial.lean` — Section 5.3, Lemma 5.4 polynomial layer.
+- `SignMask.lean` — Section 5.3, sign-mask distributions.
 - `AGMReduction.lean` (with `AGMReduction/Core.lean`, `Coupling.lean`,
   `SignCoupling.lean`, `RedFull.lean`, `SecurityN1.lean`,
   `AttributeCollapse.lean`, `GapDLReduction.lean`, and `Security.lean`) —
   Section 5.3, the Lemma 5.4 reduction core, coupling lemmas, Sign-oracle
   coupling and analysis experiment, the Lemma 5.4 statement, the Claim 5.7
-  attribute collapse, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
-  statement — Track CMZ-M.
-- `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help —
-  Track CMZ-E.
-- `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme — Track CMZ-OMUF.
+  reduction to `n = 1`, the Claim 5.6 gap-DL reduction, and the Lemma 5.5
+  statement.
+- `UFCMVAHelp.lean` — Section 5.2, the UF-CMVA game with the oracle Help.
+- `ATVariant.lean` — Section 5.6, the `μCMZ_AT` core scheme.
 - `OneMoreUnforgeability.lean` (with `OneMoreUnforgeability/Game.lean`,
   `Polynomial.lean`, `Transcript.lean`, `CaseEvents.lean` and
   `Statements.lean`) — Section 5.6, the AGM-instrumented OMUF game over the
   core, the Equations 17 to 22 polynomial layer, the game trace with its
-  case events, and the Theorem 5.11 statements — Track CMZ-OMUF.
+  case events, and the Theorem 5.11 statements.
+- `Anonymity.lean` — Section 5.4, the Theorem 5.8 statement and its simulator.
 
-Two more are planned:
+One more is planned:
 
-- `Anonymity.lean` — Section 5.4 — Track CMZ-A.
-- `Extractability.lean` — Section 5.5 — Track CMZ-E.
+- `Extractability.lean` — Section 5.5.
 
 :::theorem "mucmz_is_kvac" (tags := "paper, O24 Thm 1") (effort := "small") (priority := "medium")
 *O24 Theorem 1.* μCMZ is a keyed-verification anonymous credential
@@ -234,7 +233,7 @@ verification polynomial. What remains for Lemma 5.4 itself is to run the
 coupling over the whole game and to carry Schwartz–Zippel over to the
 adversary's own polynomial, which depends on its view.
 
-*TODO (Track CMZ-M).* Finish the reduction's success-probability bound
+*TODO (Section 5.3).* Finish the reduction's success-probability bound
 from these pieces, then assemble Lemma 5.4, and prove Lemma 5.5 and the
 transfer from the AGM game to the game with `Help` behind Theorem 5.1.
 
@@ -727,7 +726,7 @@ Read on the AGM game through the run-level coupling
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: the advantage of an
 algebraic adversary is at most the 3-DL advantage
-({uses "hardness_assumptions"}[]) of the collapse reduction
+({uses "hardness_assumptions"}[]) of the reduction to `n = 1`
 ({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
 of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
 this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
@@ -780,8 +779,9 @@ stated through
 :::
 
 :::definition "attribute_collapse_dictionary" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr, KVAC.Schemes.MicroCMZ.linCombCollapseUVLen, KVAC.Schemes.MicroCMZ.AGMRepr.linCombCollapse") (parent := "cmz_amac") (tags := "milestone")
-The `n → 1` attribute-collapse representation translations of
-{bpref "forgery_case_mac"}[]: along a direction `r⃗`, an `n`-attribute
+The representation translations of {bpref "forgery_case_mac"}[], the reduction
+to `n = 1` of O24 Claim 5.7 (the collapse of the Lean identifiers): at the
+scalars `r⃗`, an `n`-attribute
 representation of {uses "agm_model"}[] is
 translated to a 1-attribute one by combining the attribute coefficients into
 `Σᵢ rᵢ·xᵢ` and keeping every other coefficient, and a weighted sum `Σᵢ rᵢ•Aᵢ` of
@@ -792,20 +792,20 @@ against the embedded basis `Xᵢ = rᵢ•X₁`, are not part of this node.
 :::
 
 :::definition "attribute_collapse_reduction" (lean := "KVAC.Schemes.MicroCMZ.collapseMsg, KVAC.Schemes.MicroCMZ.collapseOracleImpl, KVAC.Schemes.MicroCMZ.nTo1Adversary, KVAC.Schemes.MicroCMZ.microCMZN3DLReduction, KVAC.Schemes.MicroCMZ.microCMZN3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZN3DLReductionAdv") (parent := "cmz_amac") (tags := "milestone")
-The reduction adversaries of {bpref "forgery_case_mac"}[]. Along a fixed
-direction `r⃗`, the wrapper runs the `n`-attribute adversary of
+The reduction adversaries of {bpref "forgery_case_mac"}[]. At fixed
+scalars `r⃗`, the paper's `zᵢ` of Claim 5.7, the wrapper runs the `n`-attribute adversary of
 {uses "agm_model"}[] with public parameters `Xᵢ = rᵢ•X₁` and answers its queries
-through a translation oracle that forwards each query to the 1-attribute game,
-collapsing messages to `Σᵢ mᵢrᵢ` and representations through
+through a translation oracle that forwards each query to the 1-attribute game
+with the message `Σᵢ mᵢrᵢ` and representations through
 {uses "attribute_collapse_dictionary"}[], with a `help` query's vector of
-representations collapsed to the representation of the weighted sum
+representations translated to the representation of the weighted sum
 `Σᵢ rᵢ•Aᵢ`. The general-`n` 3-DL reduction
 samples `r⃗` and runs the `n = 1` reduction of {uses "challenge_embedding"}[] on
 the wrapped adversary; its experiment and advantage fix the base to `gen`.
 :::
 
 :::theorem "collapse_oracle_coupling" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
-Per query, the collapse oracle of {uses "attribute_collapse_reduction"}[] composed
+Per query, the translation oracle of {uses "attribute_collapse_reduction"}[] composed
 with the honest 1-attribute oracle answers as the honest `n`-attribute oracle
 does under the embedded key `xᵢ = rᵢx₁`, on all inputs.
 :::
@@ -813,25 +813,25 @@ does under the embedded key `xᵢ = rᵢx₁`, on all inputs.
 :::proof "collapse_oracle_coupling"
 Case split on the oracle; each answer is decided in the exponent, where the two
 evaluation bridges of {uses "attribute_collapse_dictionary"}[] rewrite the
-collapsed check into the `n`-attribute one at the embedded key.
+translated check into the `n`-attribute one at the embedded key.
 :::
 
 :::theorem "collapse_freshness_transfer" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
 When the forgery's attribute combination collides with no signed message and
-`x₁ ≠ 0`, the collapsed forgery message `Σᵢ m*ᵢrᵢ` is fresh among the collapsed
+`x₁ ≠ 0`, the translated forgery message `Σᵢ m*ᵢrᵢ` is fresh among the translated
 signed messages, so a win of the `n`-attribute adversary is a win of the wrapper
 of {uses "attribute_collapse_reduction"}[].
 :::
 
 :::proof "collapse_freshness_transfer"
 A collision `Σᵢ m*ᵢrᵢ = Σᵢ mᵢrᵢ` with a signed `m⃗ ≠ m⃗*` is a nonzero linear
-form in `r⃗` vanishing at the sampled direction, which the collision-free
+form in `r⃗` vanishing at the sampled scalars, which the collision-free
 hypothesis excludes; the wrapper's forgery is then fresh by definition.
 :::
 
 :::theorem "collapse_direction_averaging" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
 Off the event `x₁ = 0`, the marginal of `x⃗ = r⃗·x₁` for uniform `(r⃗, x₁)` is the
-uniform `n`-attribute key, so averaging the per-direction bound over `r⃗` costs
+uniform `n`-attribute key, so the average over `r⃗` of the bound at fixed `r⃗` costs
 `1/p`.
 :::
 
@@ -867,7 +867,7 @@ denominator vanishes (`0⁻¹ = 0` in the field) or no collision is found.
 
 :::theorem "attribute_lifting" (lean := "KVAC.Schemes.MicroCMZ.agm_ufcmva_le_explicit") (parent := "cmz_amac") (tags := "paper, O24 Lem 5.5")
 *O24 Lemma 5.5.* In the AGM game of {uses "agm_model"}[], the advantage of an
-`n`-attribute adversary is at most the 3-DL advantage of the collapse reduction
+`n`-attribute adversary is at most the 3-DL advantage of the reduction to `n = 1`
 plus the gap discrete-log advantage of the collision reduction
 ({uses "hardness_assumptions"}[]) plus `5/p`.
 :::
@@ -876,8 +876,8 @@ plus the gap discrete-log advantage of the collision reduction
 Split the win event on whether the forgery's attribute combination collides
 with that of a message queried to the MAC oracle. The colliding case is {uses "forgery_case_gap_dl"}[];
 the other is {uses "forgery_case_mac"}[], which ends in
-{uses "single_attribute_mac"}[] on the collapse wrapper, averaged over the
-direction. The additive constant `5/p` is `3/p` from the single-attribute
+{uses "single_attribute_mac"}[] on the wrapper of the reduction to `n = 1`,
+averaged over the scalars `r⃗`. The additive constant `5/p` is `3/p` from the single-attribute
 bound, `1/p` from the keygen shear `x₁ = 0` and `1/p` from the vanishing
 denominator.
 :::
@@ -909,8 +909,8 @@ The forgery's attribute combination `Σᵢ m*ᵢXᵢ` differs from that of every
 signed message. The wrapper of {uses "attribute_collapse_reduction"}[] turns the
 `n`-attribute run into a 1-attribute run whose `sign`, `verify` and `help`
 answers agree with the honest `n`-attribute oracle under the embedded key
-`xᵢ = rᵢx₁` ({uses "collapse_oracle_coupling"}[]); for `x₁ ≠ 0` the collapsed
-forgery message `Σᵢ m*ᵢrᵢ` is then fresh among the collapsed signed messages, so
+`xᵢ = rᵢx₁` ({uses "collapse_oracle_coupling"}[]); for `x₁ ≠ 0` the translated
+forgery message `Σᵢ m*ᵢrᵢ` is then fresh among the translated signed messages, so
 a win transfers to the wrapped adversary ({uses "collapse_freshness_transfer"}[])
 and {uses "single_attribute_mac"}[] bounds it. The marginal of `x⃗ = r⃗·x₁` is
 uniform off `x₁ = 0`, which costs `1/p` ({uses "collapse_direction_averaging"}[]).
@@ -925,8 +925,8 @@ would force this identity in the secret exponents
 
 :::definition "partial_evaluation_psi" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.affineSubst, KVAC.Schemes.MicroCMZ.AGMPoly.eval_affineSubst, KVAC.Schemes.MicroCMZ.AGMPoly.natDegree_affineSubst_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 16")
 *O24 Equation 16.* The partial evaluation `ψ(χ)` of the verification
-polynomial {uses "agm_verification_polynomial"}[]: collapsing the perfectly-hidden mask pairs
-onto one fresh variable `χ` leaves a nonzero polynomial of degree at
+polynomial {uses "agm_verification_polynomial"}[]: substituting one fresh variable `χ`
+for the perfectly hidden mask pairs leaves a nonzero polynomial of degree at
 most 3 that vanishes at the challenge's discrete logarithm. The affine
 substitution and its degree bound are what this node covers; the
 at-most-3-roots count is not formalized, and root recovery does not need
@@ -946,7 +946,7 @@ statistical-anonymity variant follows because μCMZ uses honest-verifier
 zero-knowledge presentations with statistically indistinguishable
 simulators.
 
-*TODO (Track CMZ-A).* State and prove Theorem 5.8. Use the
+*TODO (Section 5.4).* Prove Theorem 5.8, stated in `Anonymity.lean`. Use the
 `SampleableGroup` typeclass (the game-construction variant of the
 prime-order-group typeclass).
 
@@ -1031,7 +1031,7 @@ extractability) in the algebraic group model. The proof uses
 straight-line extraction from the *Proof systems* chapter plus Theorem
 5.1.
 
-*TODO (Track CMZ-E).* State and prove Theorem 5.2. The two key
+*TODO (Section 5.5).* State and prove Theorem 5.2. The two key
 ingredients are AGM straight-line extraction and the MAC unforgeability
 result of Theorem 5.1.
 
@@ -1128,7 +1128,7 @@ Equation 22 with the case split of the proof is
 {bpref "omuf_transcript"}[], and the polynomials and case events read off
 it are {bpref "omuf_case_events"}[].
 
-*TODO (Track CMZ-OMUF).* The Theorem 5.3 one-more unforgeability clause,
+*TODO (Section 5.6).* The Theorem 5.3 one-more unforgeability clause,
 then the proofs of the Claims and of Theorem 5.11.
 
 :::definition "mucmz_at_core" (lean := "KVAC.Schemes.MicroCMZ.atIssueUsr₁, KVAC.Schemes.MicroCMZ.atIssueSrv, KVAC.Schemes.MicroCMZ.atIssueUsr₂, KVAC.Schemes.MicroCMZ.μCMZATCoreSyntax, KVAC.Schemes.MicroCMZ.μCMZATCore_correct, KVAC.Schemes.MicroCMZ.μCMZATCore") (parent := "cmz_omuf") (tags := "milestone")
@@ -1255,7 +1255,7 @@ collision-case reduction `omufGapDLReduction`, both declared with `sorry`
 bodies until the proofs build them. *Note.* The constants are the paper's
 and provisional: the core's nonzero issuance nonces condition the paper's
 `ℤ_p` samplers away from their zero cases, so they transfer only up to
-per-query `1/p` differences, and the Track CMZ-OMUF constant audit settles
+per-query `1/p` differences, and the proof of Theorem 5.11 decides
 the stated bound, with an errata item on any change. The crs `H` is drawn by
 `setup` from the nonzero elements of the group (`uniformNonzero`, the first
 action of #149; it was previously drawn uniformly from the group), and the
@@ -1284,8 +1284,8 @@ and `omufTwoDLReduction` built from the adversary. The reductions are
 declared with `sorry` bodies until the proofs build them, since at
 fixed parameters an existential quantification over unrestricted
 reduction adversaries is vacuous and a bound below one on every
-discrete-log adversary is false. The printed constants are provisional until the Track
-CMZ-OMUF constant audit, with an errata item on any change, and the bound
+discrete-log adversary is false. The printed constants are provisional until the proofs
+of Claims 5.12 to 5.14 decide them, with an errata item on any change, and the bound
 sits behind the named definition `omufBoundN1` so the statement survives
 such a change.
 :::
@@ -1372,7 +1372,7 @@ making at most `q` Sign queries, the discrete-log advantage
 ({uses "hardness_assumptions"}[]) being that of the named reduction
 `omufDLReductionU`, built from the adversary and the budget and declared
 with a `sorry` body until the proof builds it. Stated `sorry`d, printed
-constant, provisional until the Track CMZ-OMUF constant audit.
+constant, provisional until the proof of Claim 5.12 decides it.
 :::
 
 :::proof "omuf_case_i"
@@ -1398,7 +1398,7 @@ has probability at most `1/p + Adv^dl` for every algebraic adversary, the
 discrete-log advantage ({uses "hardness_assumptions"}[]) being that of the
 named reduction `omufDLReductionEta`, built from the adversary alone,
 declared with a `sorry` body until the proof builds it. Stated `sorry`d,
-printed constant, provisional until the Track CMZ-OMUF constant audit.
+printed constant, provisional until the proof of Claim 5.13 decides it.
 :::
 
 :::proof "omuf_case_ii"
@@ -1420,8 +1420,8 @@ of {uses "omuf_case_events"}[] over the trace of {uses "omuf_transcript"}[],
 has probability at most `3(1/p + Adv^{2-dl})` for every algebraic adversary,
 the 2-DL advantage ({uses "hardness_assumptions"}[]) being that of the named
 reduction `omufTwoDLReduction` the theorem cites, anchored on its `n = 1`
-node. Stated `sorry`d, printed constant, provisional until the Track
-CMZ-OMUF constant audit.
+node. Stated `sorry`d, printed constant, provisional until the proof of
+Claim 5.14 decides it.
 :::
 
 :::proof "omuf_case_iii"

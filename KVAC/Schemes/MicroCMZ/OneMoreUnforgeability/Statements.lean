@@ -16,8 +16,8 @@ Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
 case the paper proves directly, for every `n` (the printed bound), and the
 Claims 5.12 to 5.14 of the `n = 1` proof over the case events of
-`CaseEvents.lean`. Track CMZ-OMUF, step A3 of the Theorem 5.3 plan, part 17a of
-item 17 (issue #189). Stated first and `sorry`d on the pattern of
+`CaseEvents.lean`. It is part of issue #189. Stated first and `sorry`d on the
+pattern of
 `AGMReduction/SecurityN1.lean`, so that the reductions review against visible
 targets; the blueprint nodes `mucmz_at_agm_omuf_n1`, `mucmz_at_agm_omuf` and
 `omuf_case_i` to `omuf_case_iii` show "contains sorry" until the proofs are
@@ -105,7 +105,7 @@ cases, so neither takes it.
 `omufBoundN1` carries the printed constants of Equation 23, provisional: the
 repository already documents one Schwartz–Zippel undercount in this section
 family (`3/p` for a printed `1/p`, `AGMPolynomial.lean`), and the Claims share
-the pattern. The constant audit of the proof phase settles them, with an errata
+the pattern. The proofs of Claims 5.12 to 5.14 decide them, with an errata
 item on any change, and the named definitions make such a change one line each.
 The printed general bound `omufBound` exceeds Equation 23 by `2/p + Adv^gapdl`,
 the overhead the paper attributes to the general `n` argument as a whole, "by
@@ -144,8 +144,8 @@ budget in the game. Whether the Claims keep the paper's events, with a covering
 argument that assigns every winning polynomial to a reduction that extracts from
 it, or move to evaluated events, and whether a Verify budget and a
 per-Verify-query term join the statements, is an obligation of the proof phase
-beyond the constant audit, and a decision of the Theorem 5.3 plan. The paper's
-own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
+beyond the check of the printed constants, and an open design decision. The
+paper's own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 
@@ -165,8 +165,8 @@ open KVAC.Core KVAC.Preliminaries OracleSpec OracleComp ENNReal
 The Equation 23 bound of O24 Theorem 5.11 at `n = 1`,
 `(q + 4)/p + (q + 1)·εdl + 3·ε2dl`, for `q` Sign queries, `p = |F|`, and the
 discrete-log and 2-DL advantages `εdl`, `ε2dl` of the reductions. Printed
-constants, provisional until the Track CMZ-OMUF constant audit (module
-docstring, *Constants*).
+constants, provisional until the proofs of Claims 5.12 to 5.14 decide them
+(module docstring, *Constants*).
 -/
 noncomputable def omufBoundN1 (F : Type) [Fintype F] (q : ℕ) (εdl ε2dl : ℝ≥0∞) :
     ℝ≥0∞ :=

@@ -14,7 +14,7 @@ The algebraic group model (AGM) one-more unforgeability game for the μCMZ_AT
 core scheme (`μCMZATCoreSyntax`), following Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the
 AGM UF-CMVA(+Help) game of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
-step A4 of #12 (Track CMZ-OMUF, issue #181), delivered in two parts: first the
+issue #181, delivered in two parts: first the
 representation gate, the query type, the oracle spec, the transcript log, and
 the instrumented oracles; then the algebraic adversary, the winning condition,
 the experiment `AGM_OMUFGame`, and its advantage `AGM_OMUFAdv`, together with
@@ -48,7 +48,7 @@ gate an issuance request on the way in. That is what the Theorem 5.11 proof need
 Equation 18 substitutes each commitment's representation into the server's
 answer.
 
-## Design notes (Track CMZ-OMUF decisions, September 2026)
+## Design notes (decisions of September 2026)
 
 **Gate on the way in.** The Sign oracle evaluates the submitted representation
 over the current public elements and issued pairs and compares it with the
