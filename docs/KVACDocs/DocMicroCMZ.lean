@@ -1528,8 +1528,9 @@ The Sign and Verify steps are the oracle's two arms unfolded on both sides:
 the gate sees the collapsed representation exactly when it sees the original
 (`reprMatches_collapseRepr`), the issued pairs are those of the original log
 (`tags_collapseLog`), and the core's answer does not depend on the
-representation. The run-level statement is induction on the adversary's
-computation through these steps.
+representation. The run-level statement is the state-projection transport of
+`OracleComp.map_run_simulateQ_eq_of_query_map_eq` along `collapseLog`, applied to
+these steps.
 :::
 
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")

@@ -576,28 +576,19 @@ lemma collapse_run {n : ℕ} {α : Type} (gen : G) (secParam : ℕ)
       = Prod.map id (collapseLog r) <$>
         (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
           (X₀, Xᵣ, fun i => r i • X₁)) oa).run log := by
-  induction oa using OracleComp.inductionOn generalizing log with
-  | pure x => simp only [simulateQ_pure, StateT.run_pure, map_pure, Prod.map_apply, id]
-  | query_bind t oa ih => simp only [simulateQ_bind, simulateQ_query]
-                          simp only [OracleQuery.input_query, OracleQuery.cont_query, id_map,
-                            StateT.run_bind, map_bind]
-                          rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
-                          · rw [collapse_step_coin]
-                            rw [bind_map_left]
-                            exact bind_congr fun a => ih _ _
-                          · rw [collapse_step_sign]
-                            simp only [OracleSpec.Range, OracleSpec.add_apply_inr]
-                            rw [bind_map_left]
-                            rw [agmOMUFImpl_inr]
-                            exact bind_congr fun a => ih _ _
-                          · rw [collapse_step_verify]
-                            simp only [OracleSpec.Range, OracleSpec.add_apply_inr]
-                            rw [bind_map_left]
-                            exact bind_congr fun a => ih _ _
-
-
-
-
+  have h := OracleComp.map_run_simulateQ_eq_of_query_map_eq
+    (agmOMUFImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H (X₀, Xᵣ, fun i => r i • X₁))
+    ((agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁)) ∘ₛ
+      omufCollapseImpl r)
+    (collapseLog r)
+    (fun t s => by
+      rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
+      · exact (collapse_step_coin gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s t).symm
+      · exact (collapse_step_sign gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s C ρ).symm
+      · exact (collapse_step_verify gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s m σ ρU ρV).symm)
+    oa log
+  rw [QueryImpl.simulateQ_compose] at h
+  exact h.symm
 
 /-! ## The statements -/
 
