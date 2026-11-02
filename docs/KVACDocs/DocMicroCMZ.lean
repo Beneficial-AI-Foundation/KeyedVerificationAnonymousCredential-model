@@ -1497,7 +1497,7 @@ variable is a constant; a variable falls in one of the three groups of
 {uses "omuf_forgery_polynomial"}[].
 :::
 
-:::theorem "omuf_attribute_collapse" (lean := "KVAC.Schemes.MicroCMZ.instFintypeAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instInhabitedAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instIsUniformSpecAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.omufCollapseImpl, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.collapse, KVAC.Schemes.MicroCMZ.omufToN1_isQueryBoundP, KVAC.Schemes.MicroCMZ.omufWins_collapse, KVAC.Schemes.MicroCMZ.CollapseCollision, KVAC.Schemes.MicroCMZ.collapse_nodup_or_collision, KVAC.Schemes.MicroCMZ.collapseLog, KVAC.Schemes.MicroCMZ.tags_collapseLog, KVAC.Schemes.MicroCMZ.collapseLog_append, KVAC.Schemes.MicroCMZ.map_if, KVAC.Schemes.MicroCMZ.reprMatches_collapseRepr, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_sign, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_verify, KVAC.Schemes.MicroCMZ.collapse_step_sign, KVAC.Schemes.MicroCMZ.collapse_step_verify, KVAC.Schemes.MicroCMZ.collapse_step_coin, KVAC.Schemes.MicroCMZ.collapse_run") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_attribute_collapse" (lean := "KVAC.Schemes.MicroCMZ.instFintypeAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instInhabitedAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instIsUniformSpecAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.omufCollapseImpl, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.collapse, KVAC.Schemes.MicroCMZ.omufToN1_isQueryBoundP, KVAC.Schemes.MicroCMZ.omufWins_collapse, KVAC.Schemes.MicroCMZ.agmOMUFWins_collapse, KVAC.Schemes.MicroCMZ.CollapseCollision, KVAC.Schemes.MicroCMZ.collapse_nodup_or_collision, KVAC.Schemes.MicroCMZ.collapseLog, KVAC.Schemes.MicroCMZ.tags_collapseLog, KVAC.Schemes.MicroCMZ.collapseLog_append, KVAC.Schemes.MicroCMZ.map_if, KVAC.Schemes.MicroCMZ.reprMatches_collapseRepr, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_sign, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_verify, KVAC.Schemes.MicroCMZ.collapse_step_sign, KVAC.Schemes.MicroCMZ.collapse_step_verify, KVAC.Schemes.MicroCMZ.collapse_step_coin, KVAC.Schemes.MicroCMZ.collapse_run") (parent := "cmz_omuf") (tags := "milestone")
 The attribute collapse of the general-`n` Theorem 5.11 proof in the
 AGM-instrumented game of {uses "agm_omuf_game"}[], the facts about the
 transformed adversary `omufToN1` of {bpref "mucmz_at_agm_omuf"}[]. The query
@@ -1506,9 +1506,11 @@ collapsed representations and message of {uses "attribute_collapse_dictionary"}[
 and a forgery collapses along the same scalars, with the uniform-sampling
 instances of the oracle specification that pushing `simulateQ` through it
 needs. The transformed adversary preserves the Sign budget, each Sign query
-being forwarded exactly once. A win whose collapsed messages are pairwise
-distinct and whose forgeries verify at the scaled key `xᵢ = rᵢ·x₁` collapses
-to a win at `n = 1` (using {uses "attribute_collapse_evaluation_bridges"}[]), and
+being forwarded exactly once. A win at the scaled key `xᵢ = rᵢ·x₁` whose
+collapsed messages are pairwise distinct collapses to a win at `n = 1`, with the
+count, the distinct messages and the verification carried over by
+{uses "attribute_collapse_evaluation_bridges"}[] and the representation gate
+preserved, and
 either the collapsed messages are pairwise distinct or two forgeries
 collide, the collision case being that of the gap-DL reduction. The run-level
 coupling: running the collapsed adversary against the instrumented oracle of
@@ -1518,6 +1520,10 @@ coin, Sign and Verify.
 :::
 
 :::proof "omuf_attribute_collapse"
+For the win, the count, the distinct messages and the verification are
+`omufWins_collapse`, and the representation gate of every forgery is
+`reprMatches_collapseRepr` over the issued pairs, which the collapse leaves
+unchanged (`tags_collapseLog`); `agmOMUFWins_collapse` puts the four together.
 The Sign and Verify steps are the oracle's two arms unfolded on both sides:
 the gate sees the collapsed representation exactly when it sees the original
 (`reprMatches_collapseRepr`), the issued pairs are those of the original log

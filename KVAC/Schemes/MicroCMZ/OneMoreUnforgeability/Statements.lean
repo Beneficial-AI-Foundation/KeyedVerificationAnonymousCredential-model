@@ -454,6 +454,41 @@ lemma reprMatches_collapseRepr {n : ℕ} (r : Fin n → F) (ρ : AGMRepr F n) (g
   simp only [reprMatches, AGMRepr.eval_collapseRepr]
   rfl
 
+/-- A win of the `n`-attribute adversary at the scaled key `xᵢ = rᵢ · x₁`, with the parameters
+`Xᵢ = rᵢ • X₁`, whose collapsed messages are pairwise distinct, collapses to a win of the
+game at `n = 1`, at the key `x₁`, the parameters `X₁` and the collapsed log. The count, the
+distinct messages and the verification are `omufWins_collapse`; the representation gate is
+`reprMatches_collapseRepr`, over the issued pairs the collapse leaves unchanged
+(`tags_collapseLog`). -/
+lemma agmOMUFWins_collapse {n : ℕ} (gen : G) (secParam : ℕ) (r : Fin n → F) (x₀ xᵣ x₁ : F)
+    (H X₀ Xᵣ X₁ : G) (log : AGMOMUFLog F G n) (out : List (AGMOMUFForgery F G n))
+    (hwin : AGMOMUFWins gen secParam (x₀, xᵣ, fun i => r i * x₁) H
+      (X₀, Xᵣ, fun i => r i • X₁) log out)
+    (hdistinct : (out.map fun e => collapseMsg r e.msg).Nodup) :
+    AGMOMUFWins gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁)
+      (collapseLog r log) (out.map (AGMOMUFForgery.collapse r)) := by
+  obtain ⟨⟨hlen, -, hver⟩, hgate⟩ := hwin
+  have hlen' : out.length = log.length + 1 := by simpa using hlen
+  have hv : ∀ e ∈ out, verify (x₀, xᵣ, fun i => r i * x₁) e.msg e.token = true := by
+    intro e he
+    simpa [AGMOMUFForgery.plain, μCMZATCoreSyntax] using hver _ (List.mem_map_of_mem he)
+  obtain ⟨-, hnd, hvc⟩ := omufWins_collapse r x₀ xᵣ x₁ log.length out hlen' hdistinct hv
+  have hl : ((out.map (AGMOMUFForgery.collapse r)).map AGMOMUFForgery.plain).length
+      = (collapseLog r log).length + 1 := by
+    simpa [collapseLog] using hlen'
+  have hn : (((out.map (AGMOMUFForgery.collapse r)).map AGMOMUFForgery.plain).map
+      Prod.fst).Nodup := by
+    simpa [List.map_map, Function.comp_def, AGMOMUFForgery.plain] using hnd
+  refine ⟨⟨hl, hn, ?_⟩, ?_⟩
+  · intro p hp
+    obtain ⟨e, he, rfl⟩ := List.mem_map.1 hp
+    simpa [AGMOMUFForgery.plain, μCMZATCoreSyntax] using hvc e he
+  · intro e he
+    obtain ⟨e', he', rfl⟩ := List.mem_map.1 he
+    obtain ⟨h1, h2⟩ := hgate e' he'
+    simp only [AGMOMUFForgery.collapse, tags_collapseLog, reprMatches_collapseRepr]
+    exact ⟨h1, h2⟩
+
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
 lemma simulateQ_omufCollapseImpl_sign {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
     (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
