@@ -21,22 +21,34 @@ statement of #179.
 The objects of this file differ from the printed text in three points, numbered
 as in the Theorem 5.10 statement of #179, which adds the other four. Points 2
 and 5 make explicit what the paper assumes tacitly. Point 7 departs from the
-printed statement at a gap the paper itself records.
-`docs/DESIGN_ALTERNATIVES.md` records the decisions.
+printed statement at a gap the paper itself records. Part A6 of
+`docs/findings/FINDINGS_AND_LESSONS.md` records the decisions.
 
-### 2. The candidate `Z` is a function of the proof and the trace
+### 2. The candidates for `Z` are read from the proof and the trace
 
 **Printed.** "We are going to assume that the proof itself can provide a
 candidate instance `Z`, and that the instance can be check for correctness
 via the oracle Help" (p. 42). For Schnorr proofs the statement is recovered
 "by looking at the trace of random oracle queries".
 
-**Formalized.** `ZCandidate` is a function of the crs, the statement without
-`Z`, the proof `π_p` and the random-oracle table, returning an optional group
-element. `ZCandidateSound` is the assumption, that the function returns the
-verifier's `Z` whenever `π_p` verifies on it from that table. The Theorem 5.10
-statement of #179 takes both as hypotheses. The instance fact for the
+**Formalized.** `ZCandidates` is a function of the crs, the statement without
+`Z`, the proof `π_p` and the random-oracle table, returning a list of group
+elements. `ZCandidatesSound` is the assumption, that `Z` is in the list
+whenever `π_p` verifies on it from that table with no fresh query. The Theorem
+5.10 statement of #179 takes both as hypotheses. The instance fact for the
 Fiat–Shamir Σ-protocols belongs to issue #3.
+
+**Gap.** A run with a fresh query samples the challenge, so a fixed proof
+verifies with one `Z` per challenge, and no function of the table names it. A
+candidate that is a single group element, sound for every table, exists for no
+Fiat–Shamir proof system. A fresh-challenge proof is accepted with probability
+1/p per `Present` query, q_P/p over the run, and the reduction `B` then holds
+no candidate. The extractor of §9 opens such a proof from its representations,
+so Adv^ksnd of `ZKP_cmz.p` does not count the event and the term is additive.
+The printed bound (p. 42) carries no such term. The Theorem 5.10 statement of
+#179 records it. The all-zero presentation, every `Cᵢ = 0`, `Z = 0`, zero
+announcement and zero response, verifies under every challenge, so `B` tests
+`Z = 0` through Help on every `Present` query, its list always containing `0`.
 
 ### 5. The crs is sampled in the §3.3 views
 
@@ -64,9 +76,9 @@ proof lies outside `PQrs`, and its attributes lie outside `Qrs`.
 `SUEXTAdversary`, an adversary that never queries `NewUsr` or `PresentUsr`,
 embedded in `EXTGame` by `SUEXTAdversary.toEXTAdversary`. This weakens the
 printed statement. Definition 4.5 quantifies over all adversaries of Figure 8,
-`μCMZ_extractability` over those that never query `NewUsr` or `PresentUsr`
-(the second relation of #240). The multi-user extension is step 8 of item 13 of
-`docs/MICROCMZ_REMAINING.md`.
+`μCMZ_extractability` over those that never query `NewUsr` or `PresentUsr`, the
+second relation of #240, the formal class contained in the paper's. The
+multi-user extension is step 8 of item 13 of `docs/MICROCMZ_REMAINING.md`.
 
 -/
 
@@ -150,19 +162,21 @@ key, which the reduction `B` does not hold. The paper assumes "that the proof
 itself can provide a candidate instance `Z`" (p. 42), point 2 of the
 module docstring. -/
 
-/-- A candidate `Z` recovered from the crs, the statement of `R_cmz.p` without
+/-- The candidates for `Z` read from the crs, the statement of `R_cmz.p` without
 `Z`, the proof `π_p` and the random-oracle table. -/
-abbrev ZCandidate {n : ℕ} (π : RpProofSystem HS G F n) : Type :=
-  G → G × PublicBases G n × (Fin n → G) × Policy F n → π.Proof → HS.Cache → Option G
+abbrev ZCandidates {n : ℕ} (π : RpProofSystem HS G F n) : Type :=
+  G → G × PublicBases G n × (Fin n → G) × Policy F n → π.Proof → HS.Cache → List G
 
-/-- The assumption of §5.5 on a candidate `Z`. Whenever `π_p` verifies on the
-statement `(U', X⃗, C⃗, Z, φ)` from a table, the candidate recovered from that
-table is `Z`. -/
-def ZCandidateSound {n : ℕ} (π : RpProofSystem HS G F n) (zc : ZCandidate HS π) : Prop :=
+/-- The assumption of §5.5 on the candidates. Whenever `π_p` verifies on the
+statement `(U', X, C, Z, φ)` from a table with no fresh query, the table coming
+back unchanged, `Z` is among the candidates read from that table. A run with a
+fresh query samples the challenge, so every `Z` verifies under some challenge
+and no function of the table names it, point 2 of the module docstring. -/
+def ZCandidatesSound {n : ℕ} (π : RpProofSystem HS G F n) (zc : ZCandidates HS π) : Prop :=
   ∀ (H U' : G) (X : PublicBases G n) (C : Fin n → G) (Z : G) (φ : Policy F n)
-    (pr : π.Proof) (c c' : HS.Cache),
-    (true, c') ∈ support (runRO HS c (π.verify H (U', X, C, Z, φ) pr)) →
-    zc H (U', X, C, φ) pr c = some Z
+    (pr : π.Proof) (c : HS.Cache),
+    (true, c) ∈ support (runRO HS c (π.verify H (U', X, C, Z, φ) pr)) →
+    Z ∈ zc H (U', X, C, φ) pr c
 
 variable (πiu : ∀ n, RiuProofSystem HS G F n) (πis : RisProofSystem HS G F)
   (πp : ∀ n, RpProofSystem HS G F n)

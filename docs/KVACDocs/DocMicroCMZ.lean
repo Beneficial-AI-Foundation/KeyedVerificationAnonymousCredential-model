@@ -1061,14 +1061,17 @@ simulator of `ZKP_cmz.is`, the three objects from which the proof of O24
 Theorem 5.10 (§5.5, pp. 42 to 43) builds its extractor and its reduction.
 :::
 
-:::definition "mucmz_candidate_z" (lean := "KVAC.Schemes.MicroCMZ.ZCandidate, KVAC.Schemes.MicroCMZ.ZCandidateSound") (parent := "cmz_extract") (tags := "milestone")
+:::definition "mucmz_candidate_z" (lean := "KVAC.Schemes.MicroCMZ.ZCandidates, KVAC.Schemes.MicroCMZ.ZCandidatesSound") (parent := "cmz_extract") (tags := "milestone")
 The candidate `Z` of O24 §5.5 (p. 42). The server recomputes `Z = (x₀ + xᵣ)•U' +
 Σᵢ xᵢ•Cᵢ − C_V` from the secret key, which the reduction to unforgeability does
 not hold, so the paper assumes "that the proof itself can provide a candidate
-instance `Z`". A candidate is a function of the crs, the statement of {uses "rp_relation"}[] without `Z`, the proof `π_p` and the random-oracle table. The
-assumption is that it returns the verifier's `Z` whenever `π_p` verifies on it
-from that table. The instance fact for the Fiat–Shamir Σ-protocols belongs to
-issue #3.
+instance `Z`". The candidates are a list read from the crs, the statement of {uses "rp_relation"}[] without `Z`, the proof `π_p` and the random-oracle table. The
+assumption is that `Z` is in the list whenever `π_p` verifies on it from that
+table with no fresh query. A run with a fresh query samples the challenge, so a
+fixed proof verifies with one `Z` per challenge and no function of the table
+names it. Such a proof is accepted with probability 1/p per `Present` query, a
+term the printed bound (p. 42) lacks and the Theorem 5.10 statement records.
+The instance fact for the Fiat–Shamir Σ-protocols belongs to issue #3.
 :::
 
 :::definition "mucmz_single_user_adversary" (lean := "KVAC.Schemes.MicroCMZ.SUEXTQuery, KVAC.Schemes.MicroCMZ.SUEXTOracleSpec, KVAC.Schemes.MicroCMZ.SUEXTAdvSpec, KVAC.Schemes.MicroCMZ.SUEXTAdversary, KVAC.Schemes.MicroCMZ.suQueryImpl, KVAC.Schemes.MicroCMZ.SUEXTAdversary.toEXTAdversary") (parent := "cmz_extract") (tags := "milestone")
@@ -1117,17 +1120,19 @@ are one computation and the win bits agree.
 :::theorem "mucmz_extractability" (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
 *O24 Theorem 5.10.* If ZKP proves `R ⊇ R_cmz` ({uses "zk_arguments"}[]), then
 μCMZ is extractable ({uses "kvac_extractability"}[]) for the supported attribute
-family. The statement is over the proof systems at the sampled crs
-{uses "mucmz_proof_systems_sampled_crs"}[], a candidate `Z`
-{uses "mucmz_candidate_z"}[] and an adversary of the single-user setting
-{uses "mucmz_single_user_adversary"}[].
+family. The formal statement, `μCMZ_extractability` of the Theorem 5.10 PR, is
+over the proof systems at the sampled crs {uses "mucmz_proof_systems_sampled_crs"}[]
+and a candidate `Z` {uses "mucmz_candidate_z"}[], and it restricts the
+adversary to the single-user setting {uses "mucmz_single_user_adversary"}[],
+where the printed theorem quantifies over the full game of Figure 8.
 :::
 
 :::proof "mucmz_extractability"
-The credential extractors wrap the extractors of {uses "mucmz_extractors_simulator"}[],
-and the reduction simulates `π_is` with its simulator. The proof reduces to MAC
-unforgeability {uses "mucmz_mac_security"}[] in the game with Help
-{uses "mucmz_ufcmva_help_game"}[], which checks the candidate instance `Z`.
+The paper's proof (p. 43) builds the credential extractors from the extractors
+of {uses "mucmz_extractors_simulator"}[] and its reduction simulates `π_is` with
+the simulator of the same node. The reduction plays the UF-CMVA game with Help
+{uses "mucmz_ufcmva_help_game"}[], whose bound is {uses "mucmz_mac_security"}[],
+and Help checks the candidate instance `Z`.
 :::
 
 # One-more unforgeability (Section 5.6)
