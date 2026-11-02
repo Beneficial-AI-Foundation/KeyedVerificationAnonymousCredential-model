@@ -1,9 +1,11 @@
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KVAC Findings Deck</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <style>
+
 /* Layout: one 1280×720 slide scaled to the window, BAIF frame (near-black) around a white panel. Single dark look by choice. */
 :root {
   --frame: #121814; --panel: #ffffff; --ink: #1f2937; --muted: #4b5563; --rule: #e5e7eb;
@@ -94,328 +96,79 @@ sup { font-size: .72em; }
 #nav button:focus-visible { outline: 2px solid var(--green); }
 #nav span { color: #9ca3af; font: 12px var(--sans); align-self: center; min-width: 34px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { #nav { transition: none; } }
+
+/* Static layout: the slides stack vertically at 1280 × 720, no script needed. */
+html, body { height: auto; }
+body { overflow: auto; padding-block: 32px; background: #3a403c; }
+.deck { overflow-x: auto; }
+.slide { position: relative; inset: auto; display: block; width: 1280px; height: 720px; margin: 0 auto 32px; box-shadow: 0 2px 12px rgba(0,0,0,.5); }
+.v.first { cursor: help; }
 </style>
+</head>
+<body>
+<main class="deck">
+<section class="slide" id="s1"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs" style="left:96px;top:200px;width:1088px"><table class="parts" style="width:100%"><tr><th>Part</th><th>Class</th><th>Items</th></tr><tr><td>A1</td><td>Bounds without a derivation, with a missing term, or with the wrong relation</td><td>6</td></tr><tr><td>A2</td><td>Typos in the equations and the cross-references</td><td>11</td></tr><tr><td>A3</td><td>The scheme in the figure is not the scheme in the proof</td><td>6</td></tr><tr><td>A4</td><td>The overview statements disagree with the theorems the paper proves</td><td>3</td></tr><tr><td>A5</td><td>Proof steps missing as printed</td><td>2</td></tr><tr class="split"><td>A6</td><td>Decisions where the paper says less than a formalization needs</td><td>33</td></tr><tr><td>B</td><td>Lessons about formalizing the paper</td><td>19</td></tr><tr><td>C</td><td>Lessons about engineering and process</td><td>7</td></tr><tr><td>D</td><td>Lessons about the use of AI assistants</td><td>5</td></tr></table><p style="font-size:15px;margin:16px 0 4px">Part A holds 28 findings about the paper and 33 decisions of the formalization. Parts B to D hold 31 lessons.</p><p style="font-size:12.5px;color:#4b5563;margin:0">The report is <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/findings/FINDINGS_AND_LESSONS.md" target="_blank" rel="noopener" style="color:#1d4ed8">docs/findings/FINDINGS_AND_LESSONS.md</a> on main, PR 270, 31 October 2026.</p></div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">1</div></section>
 
-<div id="viewport"><div id="stage"></div></div>
-<div id="tip" hidden></div>
-<div id="nav"><button id="prev" type="button" aria-label="Previous slide">←</button><span id="count">1 / 4</span><button id="next" type="button" aria-label="Next slide">→</button><button id="fs" type="button">Full screen</button></div>
+<section class="slide" id="s2"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head" style="width:700px">Background. Security as a game</div><div class="abs" style="left:85px;top:232px;width:520px"><div class="ph" style="margin-bottom:6px">A security property is a game</div><table class="steps"><tr><th>Element</th><th>Role with respect to the property</th></tr><tr><td>Challenger</td><td>The honest parties the property protects. It also enforces the rules of the game.</td></tr><tr><td>Adversary</td><td>The attacker the property must withstand. The parties it controls and the oracles it queries fix the threat model.</td></tr><tr><td>Two worlds</td><td>The real world is the scheme as run. The simulated world meets the property by construction. Indistinguishable worlds carry the property over to the scheme.</td></tr><tr><td>Advantage</td><td>|Pr[1 in the real game] − Pr[1 in the simulated game]|.</td></tr><tr><td>Property</td><td>No efficient (polynomial time in λ, the security parameter that sets key and group size) adversary tells the two worlds apart, except with negligible advantage, i.e. advantage shrinks faster than the inverse of every polynomial in λ.</td></tr></table></div><div class="abs" style="left:640px;top:232px;width:550px"><div class="ph" style="margin-bottom:6px">What a proof by games establishes</div><table class="steps"><tr><th>Element</th><th>What it establishes</th></tr><tr><td>Statement</td><td>For every adversary, the advantage against the scheme is at most a sum of advantages against the underlying cryptographic primitives.</td></tr><tr><td>Reduction</td><td>Each term comes from an adversary that runs the scheme adversary as a subroutine against one underlying cryptographic primitive.</td></tr><tr><td>Validity</td><td>Each reduction must play the security game of its primitive exactly as defined. If a reduction needs more than that game offers, the security of the primitive does not imply the security of the scheme.</td></tr><tr><td>Conclusion</td><td>An attack on the scheme yields an attack on an underlying cryptographic primitive. Negligible advantages against the primitives give a negligible scheme advantage.</td></tr></table></div><div class="abs refs" style="left:85px;top:615px;width:1100px">Shoup, <a href="https://eprint.iacr.org/2004/332" target="_blank" rel="noopener" style="color:#1d4ed8">Sequences of games</a>, ePrint 2004/332. Bellare and Rogaway, <a href="https://eprint.iacr.org/2004/331" target="_blank" rel="noopener" style="color:#1d4ed8">Code-based game-playing proofs</a>, EUROCRYPT 2006, ePrint 2004/331.</div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">2</div></section>
 
-<script>
-// Glossary: type and reason of each variable, attached to its first occurrence in deck order.
-var V = '<span class="vec">', E = '</span>';
-var G = {
-  A: ['A p.p.t. adversary of Definition 4.4 (p. 30) with input (sk, pp, φ, ' + V + 'm' + E + '), run against the user at issuance.', 'It plays the issuer. Anonymity holds even for an issuer that knows sk and deviates from KVAC.I.Srv.'],
-  sk: ['(x₀, x<sub>r</sub>, x₁, …, x<sub>n</sub>), scalars in ℤ<sub>p</sub>, output of μCMZ.K (Figure 9, p. 34).', 'Definition 4.4 gives sk to A, so knowledge of the issuer key gives no advantage.'],
-  stA: ['The output state of A, an arbitrary string (Definition 4.4).', 'It carries to D what A saw at issuance.'],
-  pp: ['(X₀, X<sub>r</sub>, ' + V + 'X' + E + ') with X₀ = x₀H, X<sub>r</sub> = x<sub>r</sub>G and Xᵢ = xᵢG, elements of 𝔾 (Figure 9).', 'The user commits and proves relative to pp.'],
-  m: [V + 'm' + E + ' ∈ $\\mathbb{M}^n$, the n attributes (Definition 4.1, p. 28).'.replace('$\\mathbb{M}^n$', '𝕄<sup>n</sup>'), 'The secret input of the user. D must learn nothing about it beyond what the predicates state.'],
-  phi: ['A credential predicate φ ∈ Φ with φ(' + V + 'm' + E + ') = 1 (Definition 4.1).', 'The issuance predicate that π<sub>iu</sub> proves about the committed attributes.'],
-  IUsr: ['The user side of the issuance protocol, σ ← KVAC.I.Usr(pp, ' + V + 'm' + E + ', φ) (Definition 4.2, p. 28).', 'The first probability of Definition 4.4 runs the honest user.'],
-  SimI: ['An interactive procedure Sim.I(pp, φ) that returns st<sub>Sim</sub> (Definition 4.4).', 'The second probability of Definition 4.4 replaces the user by Sim.I, which does not know ' + V + 'm' + E + '.'],
-  C: ['The commitment of the user, an element of 𝔾, written C′ = Σᵢ mᵢXᵢ + sG with s ←$ ℤ<sub>p</sub> in Figure 9.', 'It commits to ' + V + 'm' + E + ', so the issuer does not see the attributes.'],
-  piiu: ['A proof of ZKP<sub>cmz.iu</sub> for R<sub>cmz.iu</sub> (equation (9), p. 33), statement (C′, ' + V + 'X' + E + ', φ), witness (' + V + 'm' + E + ', s).', 'The issuer checks that the committed attributes satisfy φ.'],
-  UV: ['U′ = uG and V′ = x₀U′ + uC″ in 𝔾, with u ←$ ℤ<sub>p</sub> and C″ = C′ + X<sub>r</sub> (Figure 9).', 'The MAC on the committed attributes, before the user unblinds it.'],
-  piis: ['A proof of ZKP<sub>cmz.is</sub> for R<sub>cmz.is</sub> (equation (10), p. 33), statement (X₀, C″, U′, V′), witness (x₀, u).', 'The issuer proves that (U′, V′) uses the key behind X₀. Sim.I extracts x₀ from it (p. 40).'],
-  sigma: ['The credential σ = (U, V) ∈ 𝔾², with U = rU′ and V = r(V′ − sU′) (Figure 9).', 'The output of issuance and the input of presentation for the real user.'],
-  stSim: ['The simulator state st<sub>Sim</sub> = (x₀, ' + V + 'X' + E + ') (proof of Theorem 5.8, p. 40).', 'Sim.P needs x₀ to compute Z without ' + V + 'm' + E + '.'],
-  PUsr: ['The user side of presentation, ρ ← KVAC.P.Usr(pp, ' + V + 'm' + E + ', σ, φ) (Definition 4.2, p. 29).', 'Present₀ answers with it.'],
-  phi2: ['A predicate φ′ ∈ Φ that D chooses at each query (Definition 4.4).', 'Present<sub>b</sub> answers only when φ′(' + V + 'm' + E + ') holds.'],
-  SimP: ['Sim.P(st<sub>Sim</sub>, φ), which returns a simulated presentation (Definition 4.4).', 'Present₁ answers with it.'],
-  pip: ['A proof of ZKP<sub>cmz.p</sub> for R<sub>cmz.p</sub> (equation (11), p. 33), statement (U′, ' + V + 'X' + E + ', ' + V + 'C' + E + ', Z, φ), witness (r′, ' + V + 'r' + E + ', ' + V + 'm' + E + '). The user sends it with U′, C<sub>V</sub> and ' + V + 'C' + E + ' (Figure 9).', 'The user proves possession of a valid credential on attributes that satisfy φ.'],
-  Present: ['The presentation oracle of Definition 4.4, with b ∈ {0, 1}.', 'For b = 0 it answers with KVAC.P.Usr, for b = 1 with Sim.P. D must tell the two apart.'],
-  D: ['A p.p.t. distinguisher with input st<sub>A</sub> and oracle Present<sub>b</sub>, output b′ (Definition 4.4).', 'Its success measures what presentations reveal about ' + V + 'm' + E + '.'],
-  b2: ['A bit, b′ ∈ {0, 1}.', 'Adv<sup>anon</sup> is the difference between the probabilities of b′ = 1 in the real and the simulated game.'],
-  H: ['The random oracle of the Fiat–Shamir proof systems. The paper writes H<sub>p</sub> for it (§3, p. 24) and writes H for a group generator in crs (Figure 9, p. 34).', 'The simulators of H1 and H2 program it. The extractor of H3 reads its table.'],
-  ZKP: ['A non-interactive proof system with the instances ZKP<sub>cmz.iu</sub>, ZKP<sub>cmz.is</sub> and ZKP<sub>cmz.p</sub>.', 'The only hypothesis of Theorem 5.8.'],
-  R: ['A relation R ⊇ R<sub>cmz</sub>.', 'Theorem 5.8 asks ZKP to prove some relation that contains R<sub>cmz</sub>.'],
-  Rcmz: ['R<sub>cmz</sub> = R<sub>cmz.iu</sub> ∪ R<sub>cmz.is</sub> ∪ R<sub>cmz.p</sub>, equations (9) to (11) (p. 33, p. 35).', 'The three statements that μCMZ proves.'],
-  muCMZ: ['The keyed-verification credential system of Figure 9 (p. 34).', 'The scheme that Theorem 5.8 states anonymous.'],
-  n: ['A natural number, n = poly(λ).', 'The number of attributes.'],
-  lambda: ['A natural number, the security parameter.', 'Every advantage is a function of λ.'],
-  Advanon: ['A function of λ and n, the difference of the two probabilities of Definition 4.4.', 'μCMZ is anonymous when it is negligible in λ.'],
-  Advzk: ['The advantage of an adversary in the zero-knowledge game of a proof system.', 'H1 and H2 each replace real proofs by simulated ones, and each adds one such term to the bound.'],
-  Advksnd: ['The advantage of an adversary in the knowledge-soundness game of §3.3 (p. 26), where the adversary has the random oracle only.', 'H3 extracts (x₀, u) from π<sub>is</sub> and fails with at most this probability.'],
-  A1: ['A p.p.t. adversary in the zero-knowledge game of ZKP<sub>cmz.iu</sub>, built in H1 (p. 41).', 'It distinguishes real from simulated π<sub>iu</sub> whenever H0 and H1 differ noticeably.'],
-  D1: ['A p.p.t. adversary in the zero-knowledge game of ZKP<sub>cmz.p</sub>, built in H2 (p. 41).', 'It distinguishes real from simulated π<sub>p</sub>. The H2 inequality prints ZKP<sub>cmz.iu</sub> for its index (p. 41), the theorem prints ZKP<sub>cmz.p</sub>.'],
-  A2: ['A p.p.t. adversary in the knowledge-soundness game of ZKP<sub>cmz.is</sub>, built in H3 (p. 41).', 'It runs A internally and returns the π<sub>is</sub> on which extraction fails.'],
-  H1: ['A hybrid game of the proof of Theorem 5.8 (p. 41).', 'It generates π<sub>iu</sub> with the zero-knowledge simulator on (C′, ' + V + 'X' + E + ', φ) instead of the witness.'],
-  H2: ['A hybrid game of the proof of Theorem 5.8 (p. 41).', 'It generates π<sub>p</sub> with the zero-knowledge simulator on (U′, X₀, ' + V + 'X' + E + ') instead of ' + V + 'm' + E + ' and σ.'],
-  phiding: ['A property of a commitment scheme.', 'Commitments to any two messages have the same distribution. Even an unbounded adversary learns nothing about the message.'],
-  H3: ['A hybrid game of the proof of Theorem 5.8 (p. 41).', 'It runs the extractor of π<sub>is</sub> on (X₀, U′, V′) and checks the witness (x₀, u).'],
-  Pis: ['Region HS, a set of inputs of the random oracle, argument of μCMZ_anonymity (KVAC/Schemes/MicroCMZ/Anonymity.lean, line 394).', 'Hypotheses his and hext confine ZKP<sub>cmz.is</sub> and its extractor to it.'],
-  Piu: ['Region HS, a set of inputs of the random oracle, argument of μCMZ_anonymity.', 'Hypotheses hiu and hiuSim confine ZKP<sub>cmz.iu</sub> and its simulator to it.'],
-  Pp: ['Region HS, a set of inputs of the random oracle, argument of μCMZ_anonymity.', 'Hypotheses hp and hpSim confine ZKP<sub>cmz.p</sub> and its simulator to it.'],
-  Sim: ['The pair Sim = (Sim.I, Sim.P) of Definition 4.4 (p. 30).', 'It plays the user without the attributes. A and D must not tell it from the honest user.'],
-  Up: ['U′ = rU ∈ 𝔾 with r ←$ ℤ<sub>p</sub> (Figure 9, p. 34). The paper reuses the name U′ of issuance.', 'It re-randomizes the credential, so presentations of one σ are unlinkable.'],
-  CV: ['C<sub>V</sub> = V′ + r′H ∈ 𝔾 with V′ = rV and r′ ←$ ℤ<sub>p</sub> (Figure 9).', 'It commits to V′, so the verifier never sees the MAC value.'],
-  Ci: ['Cᵢ = mᵢU′ + rᵢG ∈ 𝔾 with rᵢ ←$ ℤ<sub>p</sub>, one per attribute (Figure 9).', 'It commits to mᵢ. The proof π<sub>p</sub> shows that the committed attributes satisfy φ′.'],
-  x0: ['x₀ ∈ ℤ<sub>p</sub>, the component of sk behind X₀ = x₀H (Figure 9).', 'π<sub>is</sub> proves that the MAC uses it. Sim.I extracts it into st<sub>Sim</sub> (p. 40).'],
-  thm: ['A Lean theorem, KVAC/Schemes/MicroCMZ/Anonymity.lean, line 388.', 'The formal statement of Theorem 5.8, with the condition of Remark 5.9 as the hypotheses hiu to his_p.']
-};
+<section class="slide" id="s3"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head" style="width:700px">Theorem 5.8, anonymity of μCMZ</div><div class="abs" style="left:85px;top:228px;width:545px"><table class="steps compact"><tr class="grp"><td colspan="2">The property, Definition 4.4 (p. 30)</td></tr><tr><td>Real world</td><td>The honest user, with attributes <span class="v first" data-k="m" tabindex="0" title="Type. m ∈ 𝕄n, the n attributes (Definition 4.1, p. 28).
+Reason. The secret input of the user. D must learn nothing about it beyond what the predicates state.">m</span>.</td></tr><tr><td>Simulated world</td><td>The simulator <span class="v first" data-k="Sim" tabindex="0" title="Type. The pair Sim = (Sim.I, Sim.P) of Definition 4.4 (p. 30).
+Reason. It plays the user without the attributes. A and D must not tell it from the honest user.">Sim</span> = (<span class="v first" data-k="SimI" tabindex="0" title="Type. An interactive procedure Sim.I(pp, φ) that returns stSim (Definition 4.4).
+Reason. The second probability of Definition 4.4 replaces the user by Sim.I, which does not know m.">Sim.I</span>, <span class="v first" data-k="SimP" tabindex="0" title="Type. Sim.P(stSim, φ), which returns a simulated presentation (Definition 4.4).
+Reason. Present₁ answers with it.">Sim.P</span>). It knows no attributes.</td></tr><tr><td>Claim</td><td>No efficient adversaries A and D tell the two worlds apart beyond the bound of Theorem 5.8 (p. 40).</td></tr><tr><td>Meaning</td><td>The messages of the user reveal about m only what the credential predicates state (p. 29).</td></tr><tr class="grp"><td colspan="2">The part of the protocol, Figure 9 (p. 34)</td></tr><tr><td>Issuance</td><td>The user sends <span class="v first" data-k="C" tabindex="0" title="Type. The commitment of the user, an element of 𝔾, written C′ = Σᵢ mᵢXᵢ + sG with s ←$ ℤp in Figure 9.
+Reason. It commits to m, so the issuer does not see the attributes.">C</span>, <span class="v first" data-k="piiu" tabindex="0" title="Type. A proof of ZKPcmz.iu for Rcmz.iu (equation (9), p. 33), statement (C′, X, φ), witness (m, s).
+Reason. The issuer checks that the committed attributes satisfy φ.">π<sub>iu</sub></span>.</td></tr><tr><td>Presentation</td><td>The user sends <span class="v first" data-k="Up" tabindex="0" title="Type. U′ = rU ∈ 𝔾 with r ←$ ℤp (Figure 9, p. 34). The paper reuses the name U′ of issuance.
+Reason. It re-randomizes the credential, so presentations of one σ are unlinkable.">U′</span>, <span class="v first" data-k="CV" tabindex="0" title="Type. CV = V′ + r′H ∈ 𝔾 with V′ = rV and r′ ←$ ℤp (Figure 9).
+Reason. It commits to V′, so the verifier never sees the MAC value.">C<sub>V</sub></span>, <span class="v first" data-k="Ci" tabindex="0" title="Type. Cᵢ = mᵢU′ + rᵢG ∈ 𝔾 with rᵢ ←$ ℤp, one per attribute (Figure 9).
+Reason. It commits to mᵢ. The proof πp shows that the committed attributes satisfy φ′.">C<sub>1</sub>, …, C<sub>n</sub></span>, <span class="v first" data-k="pip" tabindex="0" title="Type. A proof of ZKPcmz.p for Rcmz.p (equation (11), p. 33), statement (U′, X, C, Z, φ), witness (r′, r, m). The user sends it with U′, CV and C (Figure 9).
+Reason. The user proves possession of a valid credential on attributes that satisfy φ.">π<sub>p</sub></span>.</td></tr><tr><td>Simulated</td><td>Sim.I and Sim.P produce these framed messages.</td></tr><tr class="grp"><td colspan="2">The adversaries</td></tr><tr><td><span class="v first" data-k="A" tabindex="0" title="Type. A p.p.t. adversary of Definition 4.4 (p. 30) with input (sk, pp, φ, m), run against the user at issuance.
+Reason. It plays the issuer. Anonymity holds even for an issuer that knows sk and deviates from KVAC.I.Srv.">A</span></td><td>The issuer. It holds <span class="v first" data-k="sk" tabindex="0" title="Type. (x₀, xr, x₁, …, xn), scalars in ℤp, output of μCMZ.K (Figure 9, p. 34).
+Reason. Definition 4.4 gives sk to A, so knowledge of the issuer key gives no advantage.">sk</span> and may deviate from the protocol.</td></tr><tr><td><span class="v first" data-k="D" tabindex="0" title="Type. A p.p.t. distinguisher with input stA and oracle Presentb, output b′ (Definition 4.4).
+Reason. Its success measures what presentations reveal about m.">D</span></td><td>The verifier of presentations. It holds the state of A and chooses the credential predicates.</td></tr><tr><td>Why sk</td><td>Anonymity must hold with respect to the holder of the key.</td></tr></table></div><svg class="wires" viewBox="0 0 1280 720" aria-hidden="true"><defs><marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2937"/></marker></defs><line x1="750" y1="262" x2="750" y2="555" stroke="#9ca3af" stroke-width="1.2"/><line x1="1080" y1="262" x2="1080" y2="555" stroke="#9ca3af" stroke-width="1.2"/><line x1="750" y1="345" x2="1078" y2="345" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arp)"/><line x1="1080" y1="395" x2="752" y2="395" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arp)"/><line x1="750" y1="515" x2="1078" y2="515" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arp)"/><rect x="760" y="322" width="190" height="30" fill="none" stroke="#1f2937" stroke-width="1.3" stroke-dasharray="5 3"/><rect x="760" y="492" width="250" height="30" fill="none" stroke="#1f2937" stroke-width="1.3" stroke-dasharray="5 3"/></svg><div class="abs ph" style="left:660px;top:222px">Figure 9 (p. 34)</div><div class="abs col" style="left:670px;top:240px;width:160px">User</div><div class="abs col" style="left:1000px;top:240px;width:160px">Issuer, holds sk</div><div class="abs ph" style="left:660px;top:300px">Issuance</div><div class="abs msg" style="left:768px;top:327px">C, π<sub>iu</sub></div><div class="abs msg" style="left:900px;top:375px"><span class="v first" data-k="UV" tabindex="0" title="Type. U′ = uG and V′ = x₀U′ + uC″ in 𝔾, with u ←$ ℤp and C″ = C′ + Xr (Figure 9).
+Reason. The MAC on the committed attributes, before the user unblinds it.">U′, V′</span>, <span class="v first" data-k="piis" tabindex="0" title="Type. A proof of ZKPcmz.is for Rcmz.is (equation (10), p. 33), statement (X₀, C″, U′, V′), witness (x₀, u).
+Reason. The issuer proves that (U′, V′) uses the key behind X₀. Sim.I extracts x₀ from it (p. 40).">π<sub>is</sub></span></div><div class="abs note" style="left:768px;top:353px">commitment to m, proof that <span class="v first" data-k="phi" tabindex="0" title="Type. A credential predicate φ ∈ Φ with φ(m) = 1 (Definition 4.1).
+Reason. The issuance predicate that πiu proves about the committed attributes.">φ</span>(m) = 1</div><div class="abs note" style="left:850px;top:400px;width:225px;text-align:right">blinded MAC, proof that it uses <span class="v first" data-k="x0" tabindex="0" title="Type. x₀ ∈ ℤp, the component of sk behind X₀ = x₀H (Figure 9).
+Reason. πis proves that the MAC uses it. Sim.I extracts it into stSim (p. 40).">x₀</span></div><div class="abs" style="left:745px;top:434px;width:10px;height:10px;border-radius:50%;background:#1f2937"></div><div class="abs note" style="left:762px;top:430px;width:300px">the user computes the credential <span class="v first" data-k="sigma" tabindex="0" title="Type. The credential σ = (U, V) ∈ 𝔾², with U = rU′ and V = r(V′ − sU′) (Figure 9).
+Reason. The output of issuance and the input of presentation for the real user.">σ</span> = (U, V)</div><div class="abs ph" style="left:660px;top:470px">Presentation</div><div class="abs msg" style="left:768px;top:497px">U′, C<sub>V</sub>, C<sub>1</sub>, …, C<sub>n</sub>, π<sub>p</sub></div><div class="abs note" style="left:768px;top:523px;width:300px">re-randomized MAC, commitments, proof that <span class="v first" data-k="phi2" tabindex="0" title="Type. A predicate φ′ ∈ Φ that D chooses at each query (Definition 4.4).
+Reason. Presentb answers only when φ′(m) holds.">φ′</span>(m) = 1 and the MAC verifies. φ′ is the credential predicate D asks for.</div><div class="abs note" style="left:1090px;top:508px;width:110px">accept or reject</div><div class="abs note" style="left:660px;top:590px;width:520px">Framed, the messages Sim.I and Sim.P replace. A plays the issuer. D receives the presentations.</div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">3</div></section>
 
-function v(k, html) { return '<span class="v" data-k="' + k + '">' + html + '</span>'; }
-var pi = function (s) { return 'π<sub>' + s + '</sub>'; };
-var vec = function (s) { return '<span class="vec">' + s + '</span>'; };
+<section class="slide" id="s4"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head">The anonymity game of Definition 4.4 (p. 30)</div><div class="abs oneliner">A plays the issuer, and D guesses whether the user runs the real protocol or the simulator.</div><svg class="wires" viewBox="0 0 1280 720" aria-hidden="true"><defs><marker id="argame" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2937"/></marker></defs><line x1="456" y1="259" x2="303" y2="259" stroke="#1f2937" stroke-width="1.6" marker-end="url(#argame)"/><line x1="301" y1="289" x2="454" y2="289" stroke="#1f2937" stroke-width="1.6" marker-end="url(#argame)"/><line x1="571" y1="305" x2="571" y2="368" stroke="#1f2937" stroke-width="1.6" marker-end="url(#argame)"/><line x1="705" y1="403" x2="856" y2="403" stroke="#1f2937" stroke-width="1.6" marker-end="url(#argame)"/><line x1="379" y1="300" x2="379" y2="484" stroke="#9ca3af" stroke-width="1.4" stroke-dasharray="5 4"/><line x1="782" y1="436" x2="782" y2="484" stroke="#9ca3af" stroke-width="1.4" stroke-dasharray="5 4"/></svg><div class="abs box" style="left:90px;top:240px;width:211px;height:65px"><b><span class="v" data-k="A">A</span>, the issuer</b>holds <span class="v" data-k="sk">sk</span>, outputs <span class="v first" data-k="stA" tabindex="0" title="Type. The output state of A, an arbitrary string (Definition 4.4).
+Reason. It carries to D what A saw at issuance.">st<sub>A</sub></span><br>plays the server</div><div class="abs box" style="left:456px;top:240px;width:230px;height:65px"><b>User at issuance</b>real, <span class="v first" data-k="IUsr" tabindex="0" title="Type. The user side of the issuance protocol, σ ← KVAC.I.Usr(pp, m, φ) (Definition 4.2, p. 28).
+Reason. The first probability of Definition 4.4 runs the honest user.">KVAC.I.Usr</span>(<span class="v first" data-k="pp" tabindex="0" title="Type. (X₀, Xr, X) with X₀ = x₀H, Xr = xrG and Xᵢ = xᵢG, elements of 𝔾 (Figure 9).
+Reason. The user commits and proves relative to pp.">pp</span>, <span class="v" data-k="m">m</span>, <span class="v" data-k="phi">φ</span>)<br>simulated, <span class="v" data-k="SimI">Sim.I</span>(pp, φ)</div><div class="abs box" style="left:456px;top:370px;width:249px;height:66px"><b>User at presentation</b>real, <span class="v first" data-k="PUsr" tabindex="0" title="Type. The user side of presentation, ρ ← KVAC.P.Usr(pp, m, σ, φ) (Definition 4.2, p. 29).
+Reason. Present₀ answers with it.">KVAC.P.Usr</span>(pp, m, σ, <span class="v" data-k="phi2">φ′</span>)<br>simulated, <span class="v" data-k="SimP">Sim.P</span>(st<sub>Sim</sub>, φ′)</div><div class="abs box" style="left:858px;top:370px;width:240px;height:66px"><b><span class="v" data-k="D">D</span>, the distinguisher</b>gets st<sub>A</sub>, queries Present<sub>b</sub><br>outputs a guess <span class="v first" data-k="b2" tabindex="0" title="Type. A bit, b′ ∈ {0, 1}.
+Reason. Advanon is the difference between the probabilities of b′ = 1 in the real and the simulated game.">b′</span></div><div class="abs lbl" style="left:350px;top:241px"><span class="v" data-k="C">C</span>, <span class="v" data-k="piiu">π<sub>iu</sub></span></div><div class="abs lbl" style="left:336px;top:293px"><span class="v" data-k="UV">U′, V′</span>, <span class="v" data-k="piis">π<sub>is</sub></span></div><div class="abs lbl small" style="left:580px;top:330px"><span class="v" data-k="sigma">σ</span>, or <span class="v first" data-k="stSim" tabindex="0" title="Type. The simulator state stSim = (x₀, X) (proof of Theorem 5.8, p. 40).
+Reason. Sim.P needs x₀ to compute Z without m.">st<sub>Sim</sub></span></div><div class="abs lbl" style="left:771px;top:385px"><span class="v" data-k="pip">π<sub>p</sub></span></div><div class="abs lbl small" style="left:741px;top:409px"><span class="v first" data-k="Present" tabindex="0" title="Type. The presentation oracle of Definition 4.4, with b ∈ {0, 1}.
+Reason. For b = 0 it answers with KVAC.P.Usr, for b = 1 with Sim.P. D must tell the two apart.">Present<sub>b</sub></span>(φ′)</div><div class="abs bar">the random oracle&nbsp;<span class="v first" data-k="H" tabindex="0" title="Type. The random oracle of the Fiat–Shamir proof systems. The paper writes Hp for it (§3, p. 24) and writes H for a group generator in crs (Figure 9, p. 34).
+Reason. The simulators of H1 and H2 program it. The extractor of H3 reads its table.">H</span>, one table shared by the three proof systems</div><div class="abs stmt"><p><b>Theorem 5.8 (p. 40).</b> If <span class="v first" data-k="ZKP" tabindex="0" title="Type. A non-interactive proof system with the instances ZKPcmz.iu, ZKPcmz.is and ZKPcmz.p.
+Reason. The only hypothesis of Theorem 5.8.">ZKP</span> is a proof system for the relation <span class="v first" data-k="R" tabindex="0" title="Type. A relation R ⊇ Rcmz.
+Reason. Theorem 5.8 asks ZKP to prove some relation that contains Rcmz.">R</span> ⊇ <span class="v first" data-k="Rcmz" tabindex="0" title="Type. Rcmz = Rcmz.iu ∪ Rcmz.is ∪ Rcmz.p, equations (9) to (11) (p. 33, p. 35).
+Reason. The three statements that μCMZ proves.">R<sub>cmz</sub></span>, then <span class="v first" data-k="muCMZ" tabindex="0" title="Type. The keyed-verification credential system of Figure 9 (p. 34).
+Reason. The scheme that Theorem 5.8 states anonymous.">μCMZ</span> is anonymous for <span class="v first" data-k="n" tabindex="0" title="Type. A natural number, n = poly(λ).
+Reason. The number of attributes.">n</span> = poly(λ) attributes with advantage <span class="v first" data-k="Advanon" tabindex="0" title="Type. A function of λ and n, the difference of the two probabilities of Definition 4.4.
+Reason. μCMZ is anonymous when it is negligible in λ.">Adv<sup>anon</sup><sub>μCMZ,A,D</sub></span>(<span class="v first" data-k="lambda" tabindex="0" title="Type. A natural number, the security parameter.
+Reason. Every advantage is a function of λ.">λ</span>, n) ≤ <span class="v first" data-k="Advzk" tabindex="0" title="Type. The advantage of an adversary in the zero-knowledge game of a proof system.
+Reason. H1 and H2 each replace real proofs by simulated ones, and each adds one such term to the bound.">Adv<sup>zk</sup></span><sub>ZKP<sub>cmz.iu</sub>,<span class="v first" data-k="A1" tabindex="0" title="Type. A p.p.t. adversary in the zero-knowledge game of ZKPcmz.iu, built in H1 (p. 41).
+Reason. It distinguishes real from simulated πiu whenever H0 and H1 differ noticeably.">A′</span></sub>(λ) + Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,<span class="v first" data-k="D1" tabindex="0" title="Type. A p.p.t. adversary in the zero-knowledge game of ZKPcmz.p, built in H2 (p. 41).
+Reason. It distinguishes real from simulated πp. The H2 inequality prints ZKPcmz.iu for its index (p. 41), the theorem prints ZKPcmz.p.">D′</span></sub>(λ) + <span class="v first" data-k="Advksnd" tabindex="0" title="Type. The advantage of an adversary in the knowledge-soundness game of §3.3 (p. 26), where the adversary has the random oracle only.
+Reason. H3 extracts (x₀, u) from πis and fails with at most this probability.">Adv<sup>ksnd</sup></span><sub>ZKP<sub>cmz.is</sub>,<span class="v first" data-k="A2" tabindex="0" title="Type. A p.p.t. adversary in the knowledge-soundness game of ZKPcmz.is, built in H3 (p. 41).
+Reason. It runs A internally and returns the πis on which extraction fails.">A″</span></sub>(λ), where A, D are adversaries in the anonymity game and A′, A″, D′ are described in the proof.</p></div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">4</div></section>
 
-function frame(n, inner) {
-  return '<section class="slide" id="s' + n + '">' +
-    '<div class="abs hdr">BENEFICIAL AI FOUNDATION</div>' +
-    '<div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div>' +
-    '<div class="abs title">Findings and lessons from KVAC so far</div>' +
-    '<div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div>' +
-    '<div class="abs hrule"></div><div class="abs panel"></div>' + inner +
-    '<div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div>' +
-    '<div class="abs pno">18</div></section>';
-}
+<section class="slide" id="s5"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head" style="width:900px">The proof of Theorem 5.8, step by step (pp. 40 to 41)</div><div class="abs" style="left:85px;top:222px;width:1110px"><ul style="font-size:13px;margin:0 0 8px;padding-left:20px;line-height:1.35"><li>A hybrid is a game of the proof. The real game is H0 and the simulated game is H5. Each hybrid changes one step of the previous one.</li><li>With p<sub>i</sub> = Pr[D outputs 1 in H<sub>i</sub>], the triangle inequality (|a − c| ≤ |a − b| + |b − c|) gives |p<sub>0</sub> − p<sub>5</sub>| ≤ Σ<sub>i</sub> |p<sub>i−1</sub> − p<sub>i</sub>|.</li><li>The left-hand side is the advantage of D (Definition 4.4). Each term |p<sub>i−1</sub> − p<sub>i</sub>| is at most the cost of H<sub>i</sub> in the table. The sum of these costs is the bound of Theorem 5.8.</li></ul><table class="steps compact"><tr><th>Hybrid</th><th style="width:34%">Change</th><th style="width:16%;white-space:nowrap">Cost in the bound</th><th>Status</th></tr><tr><td>H0</td><td>The real game.</td><td></td><td></td></tr><tr class="ok"><td>H1</td><td>π<sub>iu</sub> from the zero-knowledge simulator, not from the witness.</td><td>Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,A′</sub>(λ)</td><td>Holds. A′ plays the zero-knowledge game of ZKP<sub>cmz.iu</sub>.</td></tr><tr class="bad"><td>H2</td><td>π<sub>p</sub> from the zero-knowledge simulator.</td><td>Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,D′</sub>(λ)</td><td>Gap. D′ must also simulate π<sub>iu</sub>, which programs the oracle H. The game of ZKP<sub>cmz.p</sub> owns the oracle H.</td></tr><tr class="bad"><td>H3</td><td>(x₀, u) extracted from π<sub>is</sub>.</td><td>Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub>,A″</sub>(λ)</td><td>Gap. The extraction is from <b>π<sub>is</sub></b>, but A saw a simulated <b>π<sub>iu</sub></b> first. The knowledge-soundness game of ZKP<sub>cmz.is</sub> (§3.3, p. 26) has no simulated π<sub>iu</sub>.</td></tr><tr><td>H4</td><td>C random, MAC computed from the extracted witness.</td><td>0, identical distribution</td><td>As printed.</td></tr><tr class="bad"><td>H5</td><td>Presentation from x₀, with random U′, C<sub>V</sub>, C<sub>i</sub>. This is the simulated game.</td><td>0, <span class="v first" data-k="phiding" tabindex="0" title="Type. A property of a commitment scheme.
+Reason. Commitments to any two messages have the same distribution. Even an unbounded adversary learns nothing about the message.">perfect hiding</span></td><td>Error. Z lacks x<sub>r</sub>U′, and U′ must be nonzero (errata items 15 and 14).</td></tr></table><ul style="font-size:13px;margin:8px 0 0;padding-left:20px;line-height:1.35"><li>A nonzero cost is the advantage of a reduction in the security game of a primitive.</li><li>The reductions D′ of H2 and A″ of H3 need more than that game offers.</li></ul></div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">5</div></section>
 
-function diagram(mode) {
-  var fix = mode === 'fix';
-  var s = '';
-  s += '<svg class="wires" viewBox="0 0 1280 720" aria-hidden="true"><defs>' +
-    '<marker id="ar' + mode + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2937"/></marker></defs>' +
-    '<line x1="456" y1="259" x2="303" y2="259" stroke="#1f2937" stroke-width="1.6" marker-end="url(#ar' + mode + ')"/>' +
-    '<line x1="301" y1="289" x2="454" y2="289" stroke="#1f2937" stroke-width="1.6" marker-end="url(#ar' + mode + ')"/>' +
-    '<line x1="571" y1="305" x2="571" y2="368" stroke="#1f2937" stroke-width="1.6" marker-end="url(#ar' + mode + ')"/>' +
-    '<line x1="705" y1="403" x2="856" y2="403" stroke="#1f2937" stroke-width="1.6" marker-end="url(#ar' + mode + ')"/>' +
-    '<line x1="379" y1="300" x2="379" y2="484" stroke="' + (fix ? '#15803d' : '#9ca3af') + '" stroke-width="1.4" stroke-dasharray="5 4"/>' +
-    '<line x1="782" y1="436" x2="782" y2="484" stroke="' + (fix ? '#15803d' : '#9ca3af') + '" stroke-width="1.4" stroke-dasharray="5 4"/>';
-  if (mode === 'proof' || fix) {
-    var c1 = fix ? '#d1d5db' : '#1d4ed8', c2 = fix ? '#d1d5db' : '#b91c1c';
-    s += '<line x1="470" y1="216" x2="395" y2="246" stroke="' + c1 + '" stroke-width="1.4"/>' +
-      '<line x1="275" y1="336" x2="330" y2="300" stroke="' + c2 + '" stroke-width="1.4"/>' +
-      '<line x1="800" y1="366" x2="782" y2="384" stroke="' + c2 + '" stroke-width="1.4"/>';
-  }
-  if (fix) s += '<line x1="346" y1="446" x2="436" y2="494" stroke="#15803d" stroke-width="2" stroke-dasharray="5 4"/>';
-  s += '</svg>';
-  s += '<div class="abs box" style="left:90px;top:240px;width:211px;height:65px"><b>' + v('A', 'A') + ', the issuer</b>holds ' + v('sk', 'sk') + ', outputs ' + v('stA', 'st<sub>A</sub>') + '<br>plays the server</div>';
-  s += '<div class="abs box" style="left:456px;top:240px;width:230px;height:65px"><b>User at issuance</b>real, ' + v('IUsr', 'KVAC.I.Usr') + '(' + v('pp', 'pp') + ', ' + v('m', 'm') + ', ' + v('phi', 'φ') + ')<br>simulated, ' + v('SimI', 'Sim.I') + '(pp, φ)</div>';
-  s += '<div class="abs box" style="left:456px;top:370px;width:249px;height:66px"><b>User at presentation</b>real, ' + v('PUsr', 'KVAC.P.Usr') + '(pp, m, σ, ' + v('phi2', 'φ′') + ')<br>simulated, ' + v('SimP', 'Sim.P') + '(st<sub>Sim</sub>, φ′)</div>';
-  s += '<div class="abs box" style="left:858px;top:370px;width:240px;height:66px"><b>' + v('D', 'D') + ', the distinguisher</b>gets st<sub>A</sub>, queries Present<sub>b</sub><br>outputs a guess ' + v('b2', 'b′') + '</div>';
-  s += '<div class="abs lbl" style="left:350px;top:241px">' + v('C', 'C') + ', ' + v('piiu', pi('iu')) + '</div>';
-  s += '<div class="abs lbl" style="left:336px;top:293px">' + v('UV', 'U′, V′') + ', ' + v('piis', pi('is')) + '</div>';
-  s += '<div class="abs lbl small" style="left:580px;top:330px">' + v('sigma', 'σ') + ', or ' + v('stSim', 'st<sub>Sim</sub>') + '</div>';
-  s += '<div class="abs lbl" style="left:771px;top:385px">' + v('pip', pi('p')) + '</div>';
-  s += '<div class="abs lbl small" style="left:741px;top:409px">' + v('Present', 'Present<sub>b</sub>') + '(φ′)</div>';
-  if (!fix) {
-    s += '<div class="abs bar">the random oracle&nbsp;' + v('H', 'H') + ', one table shared by the three proof systems</div>';
-  } else {
-    s += '<div class="abs bar" style="justify-content:flex-start"></div>' +
-      '<div class="abs region" style="left:95px;top:487px;width:328px;background:#fde68a">region&nbsp;' + v('Pis', 'P<sub>is</sub>') + '&nbsp;of H</div>' +
-      '<div class="abs cap" style="left:428px;top:494px">∩=∅</div>' +
-      '<div class="abs region" style="left:456px;top:487px;width:326px;background:#dbeafe">region&nbsp;' + v('Piu', 'P<sub>iu</sub>') + '&nbsp;of H</div>' +
-      '<div class="abs cap" style="left:788px;top:494px">∩=∅</div>' +
-      '<div class="abs region" style="left:815px;top:487px;width:322px;background:#fbcfe8">region&nbsp;' + v('Pp', 'P<sub>p</sub>') + '&nbsp;of H</div>';
-  }
-  if (mode === 'proof' || fix) {
-    var t1 = fix ? 'gray' : 'blue', t2 = fix ? 'gray' : 'redb';
-    s += '<div class="abs tag ' + t1 + '" style="left:393px;top:193px;width:299px;text-align:center">' + v('H1', 'H1') + ', π<sub>iu</sub> simulated, a proof step that holds</div>';
-    s += '<div class="abs tag ' + t2 + '" style="left:93px;top:336px;width:279px"><b>' + v('H3', 'H3') + ', extract from π<sub>is</sub></b>A saw a simulated <span style="font-weight:700">π<sub>iu</sub></span> first. The knowledge-soundness game of ZKP<sub>cmz.is</sub> (§3.3, p. 26) has none.</div>';
-    s += '<div class="abs tag ' + t2 + '" style="left:729px;top:316px;width:250px"><b>' + v('H2', 'H2') + ', π<sub>p</sub> simulated</b>D′ runs the π<sub>iu</sub> simulator, which programs H.</div>';
-  }
-  if (fix) s += '<div class="abs" style="left:392px;top:441px;width:376px;font-size:10.7px;line-height:1.3;color:#15803d">The paper uses a single oracle H. A region is a set of inputs of H. They give each proof system (π<sub>iu</sub>, π<sub>is</sub>, π<sub>p</sub>) its own random oracle inside the one H of the game.</div>';
-  if (fix) s += '<div class="abs tag greenb" style="left:96px;top:417px;width:250px"><b>Remark 5.9 as hypotheses</b>One region of H per proof system, pairwise disjoint.</div>';
-  return s;
-}
+<section class="slide" id="s6"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head">The proof of Theorem 5.8, hybrids H1 to H3 (pp. 40 to 41)</div><div class="abs oneliner" style="width:420px">Hybrids H2 and H3 need more than the printed hypothesis.</div><svg class="wires" viewBox="0 0 1280 720" aria-hidden="true"><defs><marker id="arproof" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2937"/></marker></defs><line x1="456" y1="259" x2="303" y2="259" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arproof)"/><line x1="301" y1="289" x2="454" y2="289" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arproof)"/><line x1="571" y1="305" x2="571" y2="368" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arproof)"/><line x1="705" y1="403" x2="856" y2="403" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arproof)"/><line x1="379" y1="300" x2="379" y2="484" stroke="#9ca3af" stroke-width="1.4" stroke-dasharray="5 4"/><line x1="782" y1="436" x2="782" y2="484" stroke="#9ca3af" stroke-width="1.4" stroke-dasharray="5 4"/><line x1="470" y1="216" x2="395" y2="246" stroke="#1d4ed8" stroke-width="1.4"/><line x1="275" y1="336" x2="330" y2="300" stroke="#b91c1c" stroke-width="1.4"/><line x1="800" y1="366" x2="782" y2="384" stroke="#b91c1c" stroke-width="1.4"/></svg><div class="abs box" style="left:90px;top:240px;width:211px;height:65px"><b><span class="v" data-k="A">A</span>, the issuer</b>holds <span class="v" data-k="sk">sk</span>, outputs <span class="v" data-k="stA">st<sub>A</sub></span><br>plays the server</div><div class="abs box" style="left:456px;top:240px;width:230px;height:65px"><b>User at issuance</b>real, <span class="v" data-k="IUsr">KVAC.I.Usr</span>(<span class="v" data-k="pp">pp</span>, <span class="v" data-k="m">m</span>, <span class="v" data-k="phi">φ</span>)<br>simulated, <span class="v" data-k="SimI">Sim.I</span>(pp, φ)</div><div class="abs box" style="left:456px;top:370px;width:249px;height:66px"><b>User at presentation</b>real, <span class="v" data-k="PUsr">KVAC.P.Usr</span>(pp, m, σ, <span class="v" data-k="phi2">φ′</span>)<br>simulated, <span class="v" data-k="SimP">Sim.P</span>(st<sub>Sim</sub>, φ′)</div><div class="abs box" style="left:858px;top:370px;width:240px;height:66px"><b><span class="v" data-k="D">D</span>, the distinguisher</b>gets st<sub>A</sub>, queries Present<sub>b</sub><br>outputs a guess <span class="v" data-k="b2">b′</span></div><div class="abs lbl" style="left:350px;top:241px"><span class="v" data-k="C">C</span>, <span class="v" data-k="piiu">π<sub>iu</sub></span></div><div class="abs lbl" style="left:336px;top:293px"><span class="v" data-k="UV">U′, V′</span>, <span class="v" data-k="piis">π<sub>is</sub></span></div><div class="abs lbl small" style="left:580px;top:330px"><span class="v" data-k="sigma">σ</span>, or <span class="v" data-k="stSim">st<sub>Sim</sub></span></div><div class="abs lbl" style="left:771px;top:385px"><span class="v" data-k="pip">π<sub>p</sub></span></div><div class="abs lbl small" style="left:741px;top:409px"><span class="v" data-k="Present">Present<sub>b</sub></span>(φ′)</div><div class="abs bar">the random oracle&nbsp;<span class="v" data-k="H">H</span>, one table shared by the three proof systems</div><div class="abs tag blue" style="left:393px;top:193px;width:299px;text-align:center"><span class="v first" data-k="H1" tabindex="0" title="Type. A hybrid game of the proof of Theorem 5.8 (p. 41).
+Reason. It generates πiu with the zero-knowledge simulator on (C′, X, φ) instead of the witness.">H1</span>, π<sub>iu</sub> simulated, a proof step that holds</div><div class="abs tag redb" style="left:93px;top:336px;width:279px"><b><span class="v first" data-k="H3" tabindex="0" title="Type. A hybrid game of the proof of Theorem 5.8 (p. 41).
+Reason. It runs the extractor of πis on (X₀, U′, V′) and checks the witness (x₀, u).">H3</span>, extract from π<sub>is</sub></b>A saw a simulated <span style="font-weight:700">π<sub>iu</sub></span> first. The knowledge-soundness game of ZKP<sub>cmz.is</sub> (§3.3, p. 26) has none.</div><div class="abs tag redb" style="left:729px;top:316px;width:250px"><b><span class="v first" data-k="H2" tabindex="0" title="Type. A hybrid game of the proof of Theorem 5.8 (p. 41).
+Reason. It generates πp with the zero-knowledge simulator on (U′, X₀, X) instead of m and σ.">H2</span>, π<sub>p</sub> simulated</b>D′ runs the π<sub>iu</sub> simulator, which programs H.</div><div class="abs stmt"><p><b>Theorem 5.8 (p. 40).</b> If <span class="v" data-k="ZKP">ZKP</span> is a proof system for the relation R ⊇ R<sub>cmz</sub>, then μCMZ is anonymous for n = poly(λ) attributes with advantage Adv<sup>anon</sup><sub>μCMZ,A,D</sub>(λ, n) ≤ Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,A′</sub>(λ) + Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,D′</sub>(λ) + <span class="red">Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub>,A″</sub>(λ)</span>. The knowledge-soundness game of §3.3 behind the red term hands the prover no simulated proof, and H3 extracts after one. <span class="red">The proof does not establish the theorem from the printed hypothesis alone.</span></p></div><a class="abs link" href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/findings/FINDINGS_AND_LESSONS.md#a4-the-overview-statements-disagree-with-the-theorems-the-paper-proves" target="_blank" rel="noopener">Item A4.1 of the Findings and lessons report</a><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">6</div></section>
 
-var bound = v('Advanon', 'Adv<sup>anon</sup><sub>μCMZ,A,D</sub>') + '(' + v('lambda', 'λ') + ', n) ≤ ' +
-  v('Advzk', 'Adv<sup>zk</sup>') + '<sub>ZKP<sub>cmz.iu</sub>,' + v('A1', 'A′') + '</sub>(λ) + Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,' + v('D1', 'D′') + '</sub>(λ) + ';
-var thm = '<b>Theorem 5.8 (p. 40).</b> If ' + v('ZKP', 'ZKP') + ' is a proof system for the relation ';
+<section class="slide" id="s7"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head" style="width:900px">The fix</div><div class="abs" style="left:85px;top:232px;width:1110px"><table class="steps"><tr class="grp"><td colspan="2">What Remark 5.9 (p. 42) states</td></tr><tr><td>Requirement</td><td>Simulated proofs of one type cannot be turned into proofs of another type.</td></tr><tr><td>Case treated</td><td>Extraction from π<sub>iu</sub> after a simulated π<sub>is</sub>, the mirror of H3.</td></tr><tr><td>General route</td><td>Simulation-extractable proofs on different setup strings, or on <b style="color:#15803d">different random oracles</b>.</td></tr><tr><td>Schnorr proofs</td><td>Knowledge soundness suffices because the vector sizes of the Schnorr proofs of R<sub>cmz.iu</sub> and R<sub>cmz.is</sub> mismatch. No proof given.</td></tr><tr class="grp"><td colspan="2">What theorem <span style="text-transform:none;font-family:ui-monospace,Menlo,monospace">μCMZ_anonymity</span> adds</td></tr><tr class="fix"><td>Regions</td><td>P<sub>iu</sub>, P<sub>is</sub>, P<sub>p</sub>, sets of inputs of H. They implement the different random oracles of Remark 5.9 as regions of the one oracle H of the game of Theorem 5.8.</td></tr><tr class="fix"><td>Confinement</td><td>Each proof system with its simulator or extractor reads and writes H inside its region only.</td></tr><tr class="fix"><td>Disjointness</td><td>P<sub>iu</sub> ∩ P<sub>is</sub> = P<sub>iu</sub> ∩ P<sub>p</sub> = P<sub>is</sub> ∩ P<sub>p</sub> = ∅.</td></tr><tr class="grp"><td colspan="2">Why the gaps close</td></tr><tr><td>H3</td><td>A″ runs the π<sub>iu</sub> simulator on P<sub>iu</sub>. The extractor reads P<sub>is</sub> only, so the knowledge-soundness advantage applies.</td></tr><tr><td>H2</td><td>D′ programs H on P<sub>iu</sub> only, outside P<sub>p</sub>, so the zero-knowledge game of ZKP<sub>cmz.p</sub> applies.</td></tr><tr><td>Bound</td><td>Unchanged. The hypotheses remain to be discharged for Schnorr proofs.</td></tr></table></div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">7</div></section>
 
-var slides = [];
-slides.push(frame(1,
-  '<div class="abs" style="left:96px;top:200px;width:1088px"><table class="parts" style="width:100%">' +
-  '<tr><th>Part</th><th>Class</th><th>Items</th></tr>' +
-  '<tr><td>A1</td><td>Bounds without a derivation, with a missing term, or with the wrong relation</td><td>6</td></tr>' +
-  '<tr><td>A2</td><td>Typos in the equations and the cross-references</td><td>11</td></tr>' +
-  '<tr><td>A3</td><td>The scheme in the figure is not the scheme in the proof</td><td>6</td></tr>' +
-  '<tr><td>A4</td><td>The overview statements disagree with the theorems the paper proves</td><td>3</td></tr>' +
-  '<tr><td>A5</td><td>Proof steps missing as printed</td><td>2</td></tr>' +
-  '<tr class="split"><td>A6</td><td>Decisions where the paper says less than a formalization needs</td><td>33</td></tr>' +
-  '<tr><td>B</td><td>Lessons about formalizing the paper</td><td>19</td></tr>' +
-  '<tr><td>C</td><td>Lessons about engineering and process</td><td>7</td></tr>' +
-  '<tr><td>D</td><td>Lessons about the use of AI assistants</td><td>5</td></tr></table>' +
-  '<p style="font-size:15px;margin:16px 0 4px">Part A holds 28 findings about the paper and 33 decisions of the formalization. Parts B to D hold 31 lessons.</p>' +
-  '<p style="font-size:12.5px;color:#4b5563;margin:0">The report is <a href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/findings/FINDINGS_AND_LESSONS.md" target="_blank" rel="noopener" style="color:#1d4ed8">docs/findings/FINDINGS_AND_LESSONS.md</a> on main, PR 270, 31 October 2026.</p></div>'));
-
-slides.push(frame(10,
-  '<div class="abs head" style="width:700px">Background. Security as a game</div>' +
-  '<div class="abs" style="left:85px;top:232px;width:520px">' +
-  '<div class="ph" style="margin-bottom:6px">A security property is a game</div>' +
-  '<table class="steps"><tr><th>Element</th><th>Role with respect to the property</th></tr>' +
-  '<tr><td>Challenger</td><td>The honest parties the property protects. It also enforces the rules of the game.</td></tr>' +
-  '<tr><td>Adversary</td><td>The attacker the property must withstand. The parties it controls and the oracles it queries fix the threat model.</td></tr>' +
-  '<tr><td>Two worlds</td><td>The real world is the scheme as run. The simulated world meets the property by construction. Indistinguishable worlds carry the property over to the scheme.</td></tr>' +
-  '<tr><td>Advantage</td><td>|Pr[1 in the real game] − Pr[1 in the simulated game]|.</td></tr>' +
-  '<tr><td>Property</td><td>No efficient (polynomial time in λ, the security parameter that sets key and group size) adversary tells the two worlds apart, except with negligible advantage, i.e. advantage shrinks faster than the inverse of every polynomial in λ.</td></tr></table></div>' +
-  '<div class="abs" style="left:640px;top:232px;width:550px">' +
-  '<div class="ph" style="margin-bottom:6px">What a proof by games establishes</div>' +
-  '<table class="steps"><tr><th>Element</th><th>What it establishes</th></tr>' +
-  '<tr><td>Statement</td><td>For every adversary, the advantage against the scheme is at most a sum of advantages against the underlying cryptographic primitives.</td></tr>' +
-  '<tr><td>Reduction</td><td>Each term comes from an adversary that runs the scheme adversary as a subroutine against one underlying cryptographic primitive.</td></tr>' +
-  '<tr><td>Validity</td><td>Each reduction must play the security game of its primitive exactly as defined. If a reduction needs more than that game offers, the security of the primitive does not imply the security of the scheme.</td></tr>' +
-  '<tr><td>Conclusion</td><td>An attack on the scheme yields an attack on an underlying cryptographic primitive. Negligible advantages against the primitives give a negligible scheme advantage.</td></tr></table></div>' +
-  '<div class="abs refs" style="left:85px;top:615px;width:1100px">Shoup, <a href="https://eprint.iacr.org/2004/332" target="_blank" rel="noopener" style="color:#1d4ed8">Sequences of games</a>, ePrint 2004/332. Bellare and Rogaway, <a href="https://eprint.iacr.org/2004/331" target="_blank" rel="noopener" style="color:#1d4ed8">Code-based game-playing proofs</a>, EUROCRYPT 2006, ePrint 2004/331.</div>'));
-
-slides.push(frame(11,
-  '<div class="abs head" style="width:700px">Theorem 5.8, anonymity of μCMZ</div>' +
-  '<div class="abs" style="left:85px;top:228px;width:545px">' +
-  '<table class="steps compact">' +
-  '<tr class="grp"><td colspan="2">The property, Definition 4.4 (p. 30)</td></tr>' +
-  '<tr><td>Real world</td><td>The honest user, with attributes ' + v('m', 'm') + '.</td></tr>' +
-  '<tr><td>Simulated world</td><td>The simulator ' + v('Sim', 'Sim') + ' = (' + v('SimI', 'Sim.I') + ', ' + v('SimP', 'Sim.P') + '). It knows no attributes.</td></tr>' +
-  '<tr><td>Claim</td><td>No efficient adversaries A and D tell the two worlds apart beyond the bound of Theorem 5.8 (p. 40).</td></tr>' +
-  '<tr><td>Meaning</td><td>The messages of the user reveal about m only what the credential predicates state (p. 29).</td></tr>' +
-  '<tr class="grp"><td colspan="2">The part of the protocol, Figure 9 (p. 34)</td></tr>' +
-  '<tr><td>Issuance</td><td>The user sends ' + v('C', 'C') + ', ' + v('piiu', pi('iu')) + '.</td></tr>' +
-  '<tr><td>Presentation</td><td>The user sends ' + v('Up', 'U′') + ', ' + v('CV', 'C<sub>V</sub>') + ', ' + v('Ci', 'C<sub>1</sub>, …, C<sub>n</sub>') + ', ' + v('pip', pi('p')) + '.</td></tr>' +
-  '<tr><td>Simulated</td><td>Sim.I and Sim.P produce these framed messages.</td></tr>' +
-  '<tr class="grp"><td colspan="2">The adversaries</td></tr>' +
-  '<tr><td>' + v('A', 'A') + '</td><td>The issuer. It holds ' + v('sk', 'sk') + ' and may deviate from the protocol.</td></tr>' +
-  '<tr><td>' + v('D', 'D') + '</td><td>The verifier of presentations. It holds the state of A and chooses the credential predicates.</td></tr>' +
-  '<tr><td>Why sk</td><td>Anonymity must hold with respect to the holder of the key.</td></tr>' +
-  '</table></div>' +
-  '<svg class="wires" viewBox="0 0 1280 720" aria-hidden="true"><defs><marker id="arp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2937"/></marker></defs>' +
-  '<line x1="750" y1="262" x2="750" y2="555" stroke="#9ca3af" stroke-width="1.2"/>' +
-  '<line x1="1080" y1="262" x2="1080" y2="555" stroke="#9ca3af" stroke-width="1.2"/>' +
-  '<line x1="750" y1="345" x2="1078" y2="345" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arp)"/>' +
-  '<line x1="1080" y1="395" x2="752" y2="395" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arp)"/>' +
-  '<line x1="750" y1="515" x2="1078" y2="515" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arp)"/>' +
-  '<rect x="760" y="322" width="190" height="30" fill="none" stroke="#1f2937" stroke-width="1.3" stroke-dasharray="5 3"/>' +
-  '<rect x="760" y="492" width="250" height="30" fill="none" stroke="#1f2937" stroke-width="1.3" stroke-dasharray="5 3"/>' +
-  '</svg>' +
-  '<div class="abs ph" style="left:660px;top:222px">Figure 9 (p. 34)</div>' +
-  '<div class="abs col" style="left:670px;top:240px;width:160px">User</div>' +
-  '<div class="abs col" style="left:1000px;top:240px;width:160px">Issuer, holds sk</div>' +
-  '<div class="abs ph" style="left:660px;top:300px">Issuance</div>' +
-  '<div class="abs msg" style="left:768px;top:327px">C, ' + pi('iu') + '</div>' +
-  '<div class="abs msg" style="left:900px;top:375px">' + v('UV', 'U′, V′') + ', ' + v('piis', pi('is')) + '</div>' +
-  '<div class="abs note" style="left:768px;top:353px">commitment to m, proof that ' + v('phi', 'φ') + '(m) = 1</div>' +
-  '<div class="abs note" style="left:850px;top:400px;width:225px;text-align:right">blinded MAC, proof that it uses ' + v('x0', 'x₀') + '</div>' +
-  '<div class="abs" style="left:745px;top:434px;width:10px;height:10px;border-radius:50%;background:#1f2937"></div>' +
-  '<div class="abs note" style="left:762px;top:430px;width:300px">the user computes the credential ' + v('sigma', 'σ') + ' = (U, V)</div>' +
-  '<div class="abs ph" style="left:660px;top:470px">Presentation</div>' +
-  '<div class="abs msg" style="left:768px;top:497px">U′, C<sub>V</sub>, C<sub>1</sub>, …, C<sub>n</sub>, ' + pi('p') + '</div>' +
-  '<div class="abs note" style="left:768px;top:523px;width:300px">re-randomized MAC, commitments, proof that ' + v('phi2', 'φ′') + '(m) = 1 and the MAC verifies. φ′ is the credential predicate D asks for.</div>' +
-  '<div class="abs note" style="left:1090px;top:508px;width:110px">accept or reject</div>' +
-  '<div class="abs note" style="left:660px;top:590px;width:520px">Framed, the messages Sim.I and Sim.P replace. A plays the issuer. D receives the presentations.</div>'));
-
-slides.push(frame(2,
-  '<div class="abs head">The anonymity game of Definition 4.4 (p. 30)</div>' +
-  '<div class="abs oneliner">A plays the issuer, and D guesses whether the user runs the real protocol or the simulator.</div>' +
-  diagram('game') +
-  '<div class="abs stmt"><p>' + thm + v('R', 'R') + ' ⊇ ' + v('Rcmz', 'R<sub>cmz</sub>') + ', then ' + v('muCMZ', 'μCMZ') + ' is anonymous for ' + v('n', 'n') + ' = poly(λ) attributes with advantage ' + bound +
-  v('Advksnd', 'Adv<sup>ksnd</sup>') + '<sub>ZKP<sub>cmz.is</sub>,' + v('A2', 'A″') + '</sub>(λ), where A, D are adversaries in the anonymity game and A′, A″, D′ are described in the proof.</p></div>'));
-
-slides.push(frame(12,
-  '<div class="abs head" style="width:900px">The proof of Theorem 5.8, step by step (pp. 40 to 41)</div>' +
-  '<div class="abs" style="left:85px;top:222px;width:1110px">' +
-  '<ul style="font-size:13px;margin:0 0 8px;padding-left:20px;line-height:1.35"><li>A hybrid is a game of the proof. The real game is H0 and the simulated game is H5. Each hybrid changes one step of the previous one.</li><li>With p<sub>i</sub> = Pr[D outputs 1 in H<sub>i</sub>], the triangle inequality (|a − c| ≤ |a − b| + |b − c|) gives |p<sub>0</sub> − p<sub>5</sub>| ≤ Σ<sub>i</sub> |p<sub>i−1</sub> − p<sub>i</sub>|.</li><li>The left-hand side is the advantage of D (Definition 4.4). Each term |p<sub>i−1</sub> − p<sub>i</sub>| is at most the cost of H<sub>i</sub> in the table. The sum of these costs is the bound of Theorem 5.8.</li></ul>' +
-  '<table class="steps compact">' +
-  '<tr><th>Hybrid</th><th style="width:34%">Change</th><th style="width:16%;white-space:nowrap">Cost in the bound</th><th>Status</th></tr>' +
-  '<tr><td>H0</td><td>The real game.</td><td></td><td></td></tr>' +
-  '<tr class="ok"><td>H1</td><td>π<sub>iu</sub> from the zero-knowledge simulator, not from the witness.</td><td>Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,A′</sub>(λ)</td><td>Holds. A′ plays the zero-knowledge game of ZKP<sub>cmz.iu</sub>.</td></tr>' +
-  '<tr class="bad"><td>H2</td><td>π<sub>p</sub> from the zero-knowledge simulator.</td><td>Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,D′</sub>(λ)</td><td>Gap. D′ must also simulate π<sub>iu</sub>, which programs the oracle H. The game of ZKP<sub>cmz.p</sub> owns the oracle H.</td></tr>' +
-  '<tr class="bad"><td>H3</td><td>(x₀, u) extracted from π<sub>is</sub>.</td><td>Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub>,A″</sub>(λ)</td><td>Gap. The extraction is from <b>π<sub>is</sub></b>, but A saw a simulated <b>π<sub>iu</sub></b> first. The knowledge-soundness game of ZKP<sub>cmz.is</sub> (§3.3, p. 26) has no simulated π<sub>iu</sub>.</td></tr>' +
-  '<tr><td>H4</td><td>C random, MAC computed from the extracted witness.</td><td>0, identical distribution</td><td>As printed.</td></tr>' +
-  '<tr class="bad"><td>H5</td><td>Presentation from x₀, with random U′, C<sub>V</sub>, C<sub>i</sub>. This is the simulated game.</td><td>0, ' + v('phiding', 'perfect hiding') + '</td><td>Error. Z lacks x<sub>r</sub>U′, and U′ must be nonzero (errata items 15 and 14).</td></tr>' +
-  '</table>' +
-  '<ul style="font-size:13px;margin:8px 0 0;padding-left:20px;line-height:1.35"><li>A nonzero cost is the advantage of a reduction in the security game of a primitive.</li><li>The reductions D′ of H2 and A″ of H3 need more than that game offers.</li></ul></div>'));
-
-slides.push(frame(3,
-  '<div class="abs head">The proof of Theorem 5.8, hybrids H1 to H3 (pp. 40 to 41)</div>' +
-  '<div class="abs oneliner" style="width:420px">Hybrids H2 and H3 need more than the printed hypothesis.</div>' +
-  diagram('proof') +
-  '<div class="abs stmt"><p>' + thm + 'R ⊇ R<sub>cmz</sub>, then μCMZ is anonymous for n = poly(λ) attributes with advantage Adv<sup>anon</sup><sub>μCMZ,A,D</sub>(λ, n) ≤ Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,A′</sub>(λ) + Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,D′</sub>(λ) + <span class="red">Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub>,A″</sub>(λ)</span>. The knowledge-soundness game of §3.3 behind the red term hands the prover no simulated proof, and H3 extracts after one. <span class="red">The proof does not establish the theorem from the printed hypothesis alone.</span></p></div>' +
-  '<a class="abs link" href="https://github.com/Beneficial-AI-Foundation/KeyedVerificationAnonymousCredential-model/blob/main/docs/findings/FINDINGS_AND_LESSONS.md#a4-the-overview-statements-disagree-with-the-theorems-the-paper-proves" target="_blank" rel="noopener">Item A4.1 of the Findings and lessons report</a>'));
-
-slides.push(frame(13,
-  '<div class="abs head" style="width:900px">The fix</div>' +
-  '<div class="abs" style="left:85px;top:232px;width:1110px">' +
-  '<table class="steps">' +
-  '<tr class="grp"><td colspan="2">What Remark 5.9 (p. 42) states</td></tr>' +
-  '<tr><td>Requirement</td><td>Simulated proofs of one type cannot be turned into proofs of another type.</td></tr>' +
-  '<tr><td>Case treated</td><td>Extraction from π<sub>iu</sub> after a simulated π<sub>is</sub>, the mirror of H3.</td></tr>' +
-  '<tr><td>General route</td><td>Simulation-extractable proofs on different setup strings, or on <b style="color:#15803d">different random oracles</b>.</td></tr>' +
-  '<tr><td>Schnorr proofs</td><td>Knowledge soundness suffices because the vector sizes of the Schnorr proofs of R<sub>cmz.iu</sub> and R<sub>cmz.is</sub> mismatch. No proof given.</td></tr>' +
-  '<tr class="grp"><td colspan="2">What theorem <span style="text-transform:none;font-family:ui-monospace,Menlo,monospace">μCMZ_anonymity</span> adds</td></tr>' +
-  '<tr class="fix"><td>Regions</td><td>P<sub>iu</sub>, P<sub>is</sub>, P<sub>p</sub>, sets of inputs of H. They implement the different random oracles of Remark 5.9 as regions of the one oracle H of the game of Theorem 5.8.</td></tr>' +
-  '<tr class="fix"><td>Confinement</td><td>Each proof system with its simulator or extractor reads and writes H inside its region only.</td></tr>' +
-  '<tr class="fix"><td>Disjointness</td><td>P<sub>iu</sub> ∩ P<sub>is</sub> = P<sub>iu</sub> ∩ P<sub>p</sub> = P<sub>is</sub> ∩ P<sub>p</sub> = ∅.</td></tr>' +
-  '<tr class="grp"><td colspan="2">Why the gaps close</td></tr>' +
-  '<tr><td>H3</td><td>A″ runs the π<sub>iu</sub> simulator on P<sub>iu</sub>. The extractor reads P<sub>is</sub> only, so the knowledge-soundness advantage applies.</td></tr>' +
-  '<tr><td>H2</td><td>D′ programs H on P<sub>iu</sub> only, outside P<sub>p</sub>, so the zero-knowledge game of ZKP<sub>cmz.p</sub> applies.</td></tr>' +
-  '<tr><td>Bound</td><td>Unchanged. The hypotheses remain to be discharged for Schnorr proofs.</td></tr>' +
-  '</table></div>'));
-
-slides.push(frame(4,
-  '<div class="abs head">3. The formal statement, Schnorr proofs only</div>' +
-  '<div class="abs oneliner" style="width:440px">The formal statement keeps the printed bound under Remark 5.9.</div>' +
-  diagram('fix') +
-  '<div class="abs stmt"><p><b>' + v('thm', 'μCMZ_anonymity') + '.</b> If ZKP is a proof system for the relation R ⊇ R<sub>cmz</sub><span class="grn">, with ZKP<sub>cmz.iu</sub>, ZKP<sub>cmz.is</sub> and ZKP<sub>cmz.p</sub>, their simulators and the extractor confined to pairwise disjoint regions of the random-oracle domain</span>, then μCMZ is anonymous with advantage Adv<sup>anon</sup><sub>μCMZ,A,D</sub>(λ, n) ≤ Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,A′</sub>(λ) + Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,D′</sub>(λ) + <span class="grn">Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub>,A″</sub>(λ)</span>.</p>' +
-  '<p>The proof of Theorem 5.8 needs the condition of Remark 5.9 (p. 42).</p></div>'));
-
-var stage = document.getElementById('stage');
-stage.innerHTML = slides.join('');
-
-// first occurrence in deck order gets the hover text
-var seen = {};
-stage.querySelectorAll('.v').forEach(function (el) {
-  var k = el.getAttribute('data-k');
-  if (seen[k] || !G[k]) return;
-  seen[k] = 1;
-  el.classList.add('first');
-  el.tabIndex = 0;
-  el.setAttribute('aria-label', el.textContent + '. Type. ' + G[k][0].replace(/<[^>]+>/g, '') + ' Reason. ' + G[k][1].replace(/<[^>]+>/g, ''));
-});
-
-var tip = document.getElementById('tip');
-function show(el) {
-  var g = G[el.getAttribute('data-k')];
-  tip.innerHTML = '<p><span class="k">Type</span>' + g[0] + '</p><p><span class="k">Reason</span>' + g[1] + '</p>';
-  tip.hidden = false;
-  var r = el.getBoundingClientRect(), t = tip.getBoundingClientRect();
-  var x = Math.min(Math.max(8, r.left + r.width / 2 - t.width / 2), window.innerWidth - t.width - 8);
-  var y = r.bottom + 8;
-  if (y + t.height > window.innerHeight - 8) y = r.top - t.height - 8;
-  tip.style.left = x + 'px'; tip.style.top = Math.max(8, y) + 'px';
-}
-function hide() { tip.hidden = true; }
-stage.addEventListener('mouseover', function (e) { var el = e.target.closest('.v.first'); if (el) show(el); });
-stage.addEventListener('mouseout', function (e) { if (e.target.closest('.v.first')) hide(); });
-stage.addEventListener('focusin', function (e) { var el = e.target.closest('.v.first'); if (el) show(el); });
-stage.addEventListener('focusout', hide);
-
-// scaling and navigation
-var cur = 0, all = stage.querySelectorAll('.slide');
-all.forEach(function (el, i) { el.id = 's' + (i + 1); el.querySelector('.pno').textContent = i + 1; });
-function fit() {
-  var vp = document.getElementById('viewport');
-  var s = Math.min(vp.clientWidth / 1280, vp.clientHeight / 720);
-  stage.style.transform = 'translate(' + (vp.clientWidth - 1280 * s) / 2 + 'px,' + (vp.clientHeight - 720 * s) / 2 + 'px) scale(' + s + ')';
-}
-function go(i) {
-  cur = Math.max(0, Math.min(all.length - 1, i));
-  all.forEach(function (s, j) { s.classList.toggle('on', j === cur); });
-  document.getElementById('count').textContent = (cur + 1) + ' / ' + all.length;
-  hide();
-}
-window.addEventListener('resize', fit);
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { go(cur + 1); e.preventDefault(); }
-  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { go(cur - 1); e.preventDefault(); }
-  else if (e.key === 'Home') go(0);
-  else if (e.key === 'End') go(all.length - 1);
-});
-document.getElementById('viewport').addEventListener('click', function (e) {
-  if (e.target.closest('a, .v.first')) return;
-  go(cur + 1);
-});
-document.getElementById('prev').onclick = function () { go(cur - 1); };
-document.getElementById('next').onclick = function () { go(cur + 1); };
-document.getElementById('fs').onclick = function () {
-  var p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
-  if (p && p.catch) p.catch(function () {});
-};
-var h = /^#s([1-8])$/.exec(location.hash);
-fit(); go(h ? +h[1] - 1 : 0);
-</script>
+<section class="slide" id="s8"><div class="abs hdr">BENEFICIAL AI FOUNDATION</div><div class="abs links">LINKS [Linear] [GitHub] [VeriLib]</div><div class="abs title">Findings and lessons from KVAC so far</div><div class="abs names">Christiano · Jin · Semar · Marco · Oana · Callum</div><div class="abs hrule"></div><div class="abs panel"></div><div class="abs head">3. The formal statement, Schnorr proofs only</div><div class="abs oneliner" style="width:440px">The formal statement keeps the printed bound under Remark 5.9.</div><svg class="wires" viewBox="0 0 1280 720" aria-hidden="true"><defs><marker id="arfix" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1f2937"/></marker></defs><line x1="456" y1="259" x2="303" y2="259" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arfix)"/><line x1="301" y1="289" x2="454" y2="289" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arfix)"/><line x1="571" y1="305" x2="571" y2="368" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arfix)"/><line x1="705" y1="403" x2="856" y2="403" stroke="#1f2937" stroke-width="1.6" marker-end="url(#arfix)"/><line x1="379" y1="300" x2="379" y2="484" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/><line x1="782" y1="436" x2="782" y2="484" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/><line x1="470" y1="216" x2="395" y2="246" stroke="#d1d5db" stroke-width="1.4"/><line x1="275" y1="336" x2="330" y2="300" stroke="#d1d5db" stroke-width="1.4"/><line x1="800" y1="366" x2="782" y2="384" stroke="#d1d5db" stroke-width="1.4"/><line x1="346" y1="446" x2="436" y2="494" stroke="#15803d" stroke-width="2" stroke-dasharray="5 4"/></svg><div class="abs box" style="left:90px;top:240px;width:211px;height:65px"><b><span class="v" data-k="A">A</span>, the issuer</b>holds <span class="v" data-k="sk">sk</span>, outputs <span class="v" data-k="stA">st<sub>A</sub></span><br>plays the server</div><div class="abs box" style="left:456px;top:240px;width:230px;height:65px"><b>User at issuance</b>real, <span class="v" data-k="IUsr">KVAC.I.Usr</span>(<span class="v" data-k="pp">pp</span>, <span class="v" data-k="m">m</span>, <span class="v" data-k="phi">φ</span>)<br>simulated, <span class="v" data-k="SimI">Sim.I</span>(pp, φ)</div><div class="abs box" style="left:456px;top:370px;width:249px;height:66px"><b>User at presentation</b>real, <span class="v" data-k="PUsr">KVAC.P.Usr</span>(pp, m, σ, <span class="v" data-k="phi2">φ′</span>)<br>simulated, <span class="v" data-k="SimP">Sim.P</span>(st<sub>Sim</sub>, φ′)</div><div class="abs box" style="left:858px;top:370px;width:240px;height:66px"><b><span class="v" data-k="D">D</span>, the distinguisher</b>gets st<sub>A</sub>, queries Present<sub>b</sub><br>outputs a guess <span class="v" data-k="b2">b′</span></div><div class="abs lbl" style="left:350px;top:241px"><span class="v" data-k="C">C</span>, <span class="v" data-k="piiu">π<sub>iu</sub></span></div><div class="abs lbl" style="left:336px;top:293px"><span class="v" data-k="UV">U′, V′</span>, <span class="v" data-k="piis">π<sub>is</sub></span></div><div class="abs lbl small" style="left:580px;top:330px"><span class="v" data-k="sigma">σ</span>, or <span class="v" data-k="stSim">st<sub>Sim</sub></span></div><div class="abs lbl" style="left:771px;top:385px"><span class="v" data-k="pip">π<sub>p</sub></span></div><div class="abs lbl small" style="left:741px;top:409px"><span class="v" data-k="Present">Present<sub>b</sub></span>(φ′)</div><div class="abs bar" style="justify-content:flex-start"></div><div class="abs region" style="left:95px;top:487px;width:328px;background:#fde68a">region&nbsp;<span class="v first" data-k="Pis" tabindex="0" title="Type. Region HS, a set of inputs of the random oracle, argument of μCMZ_anonymity (KVAC/Schemes/MicroCMZ/Anonymity.lean, line 394).
+Reason. Hypotheses his and hext confine ZKPcmz.is and its extractor to it.">P<sub>is</sub></span>&nbsp;of H</div><div class="abs cap" style="left:428px;top:494px">∩=∅</div><div class="abs region" style="left:456px;top:487px;width:326px;background:#dbeafe">region&nbsp;<span class="v first" data-k="Piu" tabindex="0" title="Type. Region HS, a set of inputs of the random oracle, argument of μCMZ_anonymity.
+Reason. Hypotheses hiu and hiuSim confine ZKPcmz.iu and its simulator to it.">P<sub>iu</sub></span>&nbsp;of H</div><div class="abs cap" style="left:788px;top:494px">∩=∅</div><div class="abs region" style="left:815px;top:487px;width:322px;background:#fbcfe8">region&nbsp;<span class="v first" data-k="Pp" tabindex="0" title="Type. Region HS, a set of inputs of the random oracle, argument of μCMZ_anonymity.
+Reason. Hypotheses hp and hpSim confine ZKPcmz.p and its simulator to it.">P<sub>p</sub></span>&nbsp;of H</div><div class="abs tag gray" style="left:393px;top:193px;width:299px;text-align:center"><span class="v" data-k="H1">H1</span>, π<sub>iu</sub> simulated, a proof step that holds</div><div class="abs tag gray" style="left:93px;top:336px;width:279px"><b><span class="v" data-k="H3">H3</span>, extract from π<sub>is</sub></b>A saw a simulated <span style="font-weight:700">π<sub>iu</sub></span> first. The knowledge-soundness game of ZKP<sub>cmz.is</sub> (§3.3, p. 26) has none.</div><div class="abs tag gray" style="left:729px;top:316px;width:250px"><b><span class="v" data-k="H2">H2</span>, π<sub>p</sub> simulated</b>D′ runs the π<sub>iu</sub> simulator, which programs H.</div><div class="abs" style="left:392px;top:441px;width:376px;font-size:10.7px;line-height:1.3;color:#15803d">The paper uses a single oracle H. A region is a set of inputs of H. They give each proof system (π<sub>iu</sub>, π<sub>is</sub>, π<sub>p</sub>) its own random oracle inside the one H of the game.</div><div class="abs tag greenb" style="left:96px;top:417px;width:250px"><b>Remark 5.9 as hypotheses</b>One region of H per proof system, pairwise disjoint.</div><div class="abs stmt"><p><b><span class="v first" data-k="thm" tabindex="0" title="Type. A Lean theorem, KVAC/Schemes/MicroCMZ/Anonymity.lean, line 388.
+Reason. The formal statement of Theorem 5.8, with the condition of Remark 5.9 as the hypotheses hiu to his_p.">μCMZ_anonymity</span>.</b> If ZKP is a proof system for the relation R ⊇ R<sub>cmz</sub><span class="grn">, with ZKP<sub>cmz.iu</sub>, ZKP<sub>cmz.is</sub> and ZKP<sub>cmz.p</sub>, their simulators and the extractor confined to pairwise disjoint regions of the random-oracle domain</span>, then μCMZ is anonymous with advantage Adv<sup>anon</sup><sub>μCMZ,A,D</sub>(λ, n) ≤ Adv<sup>zk</sup><sub>ZKP<sub>cmz.iu</sub>,A′</sub>(λ) + Adv<sup>zk</sup><sub>ZKP<sub>cmz.p</sub>,D′</sub>(λ) + <span class="grn">Adv<sup>ksnd</sup><sub>ZKP<sub>cmz.is</sub>,A″</sub>(λ)</span>.</p><p>The proof of Theorem 5.8 needs the condition of Remark 5.9 (p. 42).</p></div><div class="abs ftr">SIGNAL SHOT / KEYED-VERIFICATION ANONYMOUS CREDENTIAL · 2 NOVEMBER 2026</div><div class="abs pno">8</div></section>
+</main>
+</body>
+</html>
