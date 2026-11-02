@@ -16,8 +16,8 @@ Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
 case the paper proves directly, for every `n` (the printed bound), and the
 Claims 5.12 to 5.14 of the `n = 1` proof over the case events of
-`CaseEvents.lean`. Step A3 of the Theorem 5.3 plan, part 17a of
-item 17 (issue #189). Stated first and `sorry`d on the pattern of
+`CaseEvents.lean`. It is part of issue #189. Stated first and `sorry`d on the
+pattern of
 `AGMReduction/SecurityN1.lean`, so that the reductions review against visible
 targets; the blueprint nodes `mucmz_at_agm_omuf_n1`, `mucmz_at_agm_omuf` and
 `omuf_case_i` to `omuf_case_iii` show "contains sorry" until the proofs are
@@ -144,8 +144,8 @@ budget in the game. Whether the Claims keep the paper's events, with a covering
 argument that assigns every winning polynomial to a reduction that extracts from
 it, or move to evaluated events, and whether a Verify budget and a
 per-Verify-query term join the statements, is an obligation of the proof phase
-beyond the check of the printed constants, and a decision of the Theorem 5.3 plan. The paper's
-own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
+beyond the check of the printed constants, and an open design decision. The
+paper's own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 

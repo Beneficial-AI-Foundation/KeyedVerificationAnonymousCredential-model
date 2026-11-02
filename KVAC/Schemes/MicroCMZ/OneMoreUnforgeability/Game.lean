@@ -14,7 +14,7 @@ The algebraic group model (AGM) one-more unforgeability game for the μCMZ_AT
 core scheme (`μCMZATCoreSyntax`), following Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the
 AGM UF-CMVA(+Help) game of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
-step A4 of #12 (issue #181), delivered in two parts: first the
+issue #181, delivered in two parts: first the
 representation gate, the query type, the oracle spec, the transcript log, and
 the instrumented oracles; then the algebraic adversary, the winning condition,
 the experiment `AGM_OMUFGame`, and its advantage `AGM_OMUFAdv`, together with

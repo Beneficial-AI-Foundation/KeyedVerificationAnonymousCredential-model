@@ -62,10 +62,10 @@ Files delivered under `KVAC/Schemes/MicroCMZ/`:
   `Statements.lean`) — Section 5.6, the AGM-instrumented OMUF game over the
   core, the Equations 17 to 22 polynomial layer, the game trace with its
   case events, and the Theorem 5.11 statements.
+- `Anonymity.lean` — Section 5.4, the Theorem 5.8 statement and its simulator.
 
-Two more are planned:
+One more is planned:
 
-- `Anonymity.lean` — Section 5.4.
 - `Extractability.lean` — Section 5.5.
 
 :::theorem "mucmz_is_kvac" (tags := "paper, O24 Thm 1") (effort := "small") (priority := "medium")
@@ -946,7 +946,7 @@ statistical-anonymity variant follows because μCMZ uses honest-verifier
 zero-knowledge presentations with statistically indistinguishable
 simulators.
 
-*TODO (Section 5.4).* State and prove Theorem 5.8. Use the
+*TODO (Section 5.4).* Prove Theorem 5.8, stated in `Anonymity.lean`. Use the
 `SampleableGroup` typeclass (the game-construction variant of the
 prime-order-group typeclass).
 
