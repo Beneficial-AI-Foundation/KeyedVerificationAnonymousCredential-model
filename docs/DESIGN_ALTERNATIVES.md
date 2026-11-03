@@ -794,9 +794,10 @@ Decided October 2026 (Track CMZ-M, #235).
 of `agm_ufcmva_le_n1_explicit`, the advantage of the forger bounded by a named
 expression of the advantages of *named* reduction adversaries. The reductions
 (`omufDLReduction`, `omufTwoDLReduction`, `omufGapDLReduction`) and the
-attribute-lifting transformation `omufToN1` are declared as definitions whose
+attribute-lifting transformation `omufToN1` were declared as definitions whose
 bodies are `sorry`, the first sorried definitions in the repository, with the
-`sorry` at the whole function type. The general `n` statement follows the
+`sorry` at the whole function type; `omufGapDLReduction` and `omufToN1` have
+since been built. The general `n` statement follows the
 paper's proof route, running the `n = 1` reductions on the transformed
 adversary and adding the gap-DL reduction for the collision case.
 
