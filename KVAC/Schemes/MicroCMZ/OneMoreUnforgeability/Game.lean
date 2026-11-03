@@ -328,6 +328,20 @@ noncomputable def agmOMUFOracleImpl (secParam : ℕ) (sk : Key F n) (H : G)
       pure (decide consistent &&
         (μCMZATCoreSyntax F gen).verify (secParam := secParam) H sk m σ, log)
 
+/-- The full oracle implementation of `AGM_OMUFGame`: coin queries lifted, the
+instrumented queries through `agmOMUFOracleImpl`. -/
+noncomputable def agmOMUFImpl (secParam : ℕ) (sk : Key F n) (H : G)
+    (pp : Params G n) :
+    QueryImpl (unifSpec + AGMOMUFOracleSpec F G n) (StateT (AGMOMUFLog F G n) ProbComp) :=
+  HAdd.hAdd
+    ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (AGMOMUFLog F G n) ProbComp))
+    (agmOMUFOracleImpl gen secParam sk H pp)
+
+/-- On the instrumented arms the full implementation is `agmOMUFOracleImpl`. -/
+lemma agmOMUFImpl_inr (secParam : ℕ) (sk : Key F n) (H : G)
+    (pp : Params G n) (q : AGMOMUFQuery F G n) :
+    agmOMUFImpl gen secParam sk H pp (.inr q) = agmOMUFOracleImpl gen secParam sk H pp q := rfl
+
 /-! ## The winning condition, the experiment and the advantage -/
 
 /--

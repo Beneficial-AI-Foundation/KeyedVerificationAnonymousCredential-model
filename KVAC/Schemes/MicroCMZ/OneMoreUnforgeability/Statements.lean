@@ -5,6 +5,7 @@ Authors: Jin Xing Lim
 -/
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Preliminaries.Assumptions
 import VCVio.OracleComp.QueryTracking.QueryBound
 
@@ -54,7 +55,7 @@ merged.
       εη = dlogAdv gen (omufDLReductionEta gen A)         Claim 5.13, challenge in the crs
     and the theorem's εdl is the mixture  q/(q + 1)·εU + 1/(q + 1)·εη,  so that
       q·(1/p + εU) + (1/p + εη) + 3·(1/p + ε2dl)  =  omufBoundN1 F q εdl ε2dl
-    once the win is covered by the three events (pigeonhole, proof phase).
+    once the win is covered by the three events (`omuf_cover`).
 
 Sign is Figure 6's name for the MAC code generation oracle in the token setting,
 and the name of the Lean constructor and of the budget predicate
