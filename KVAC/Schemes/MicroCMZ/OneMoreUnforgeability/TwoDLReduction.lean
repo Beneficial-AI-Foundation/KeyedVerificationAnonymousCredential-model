@@ -39,8 +39,8 @@ records: `(u_j, x·V_j)` per issued pair.
 With the key above the simulated oracles and the real ones agree query by query, the records
 being a function of the log (`twoDLAuxOf`), so the simulated run is the real run followed by that
 function (`twoDL_run`), an equality of computations, not of distributions. What remains for the
-Claim is the distribution of the key and of `H` (the slope times `x` is uniform given the slope,
-which is the perfect hiding by the offset of the paper) and the extraction.
+Claim is the distribution of the key and of `H` (the offset plus the slope times `x` is uniform
+for every slope, which is the perfect hiding by the offset of the paper) and the extraction.
 
 ## The extraction
 
