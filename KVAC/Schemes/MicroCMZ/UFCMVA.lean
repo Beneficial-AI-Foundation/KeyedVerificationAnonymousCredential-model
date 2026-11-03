@@ -43,7 +43,8 @@ most the 3-DL advantage of `microCMZN3DLReduction gen A` plus the gap-DL advanta
 `gapDlReduction gen A` plus `5/p`. A private coin oracle for `AGMUFAdversary`, as
 `AGMOMUFAdversary` has, is planned (issue #269).
 
-**Proof.** `UF_CMVAHelpAdv_forget` equates the advantage with the AGM advantage
+**Proof.** Theorem 5.1 rests on two theorems only, so it is proved exactly when both are:
+`UF_CMVAHelpAdv_forget` equates the advantage with the AGM advantage
 `AGM_UF_CMVAAdv gen A secParam`, which Lemma 5.5, `agm_ufcmva_le_explicit`, bounds by the
 same right-hand side. -/
 theorem microCMZ_ufcmvaHelp_le (secParam : ℕ) (A : AGMUFAdversary F G n) :
