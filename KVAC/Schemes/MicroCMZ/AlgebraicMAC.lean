@@ -359,11 +359,27 @@ theorem UF_CMVAHelpAdv_forget (secParam : ℕ) (A : AGMUFAdversary F G n) :
   refine congrArg (Pr[= true | ·]) ?_
   simp only [UF_CMVAHelpGame, AGM_UF_CMVAGame]
   refine bind_congr fun H => bind_congr fun ⟨sk, pp⟩ => ?_
-  have h := run_simulateQ_agmQueryToHelp gen secParam H sk pp (A.run H pp) []
-  simp only [List.map_nil, List.reverse_nil, QueryImpl.ofLift_eq_id'] at h
-  -- `-List.mem_map`: otherwise the two freshness checks normalize to `!decide (∃ …)` and
-  -- `decide (∀ …)`, which `simp` does not identify.
-  simp [AGMUFAdversary.forget, h, -List.mem_map]
+  -- `helpRun`: the run of `A`, forwarded by `agmQueryToHelp`, against the oracles of the
+  -- game with `Help`; `agmRun`: the run of `A` in the AGM game.
+  let helpRun := (simulateQ
+      ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp) +
+        ufHelpOracleImpl gen secParam H sk)
+      ((simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run [])).run []
+  let agmRun := (simulateQ (agmOracleImpl gen secParam sk H pp) (A.run H pp)).run []
+  have h : helpRun =
+      (fun z => ((z.1, z.2.map Prod.snd), (z.2.map Prod.fst).reverse)) <$> agmRun :=
+    run_simulateQ_agmQueryToHelp gen secParam H sk pp (A.run H pp) []
+  -- `A.forget gen` runs as `helpRun`, then evaluates its forgery representations over the
+  -- MAC codes issued.
+  have hForget : (simulateQ
+      ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp) +
+        ufHelpOracleImpl gen secParam H sk) ((A.forget gen).run H pp)).run [] =
+      (fun p => ((p.1.1.1, (p.1.1.2.1.evalParams gen H pp p.1.2,
+        p.1.1.2.2.evalParams gen H pp p.1.2)), p.2)) <$> helpRun := by
+    simp only [AGMUFAdversary.forget, helpRun, bind_pure_comp, simulateQ_map, StateT.run_map]
+  refine (congrArg (· >>= _) (hForget.trans (congrArg _ h))).trans
+    ((bind_map_left _ _ _).trans ((bind_map_left _ _ _).trans (bind_congr fun z => ?_)))
+  simp
 
 /-! ## Security statements (O24 §5.3)
 
