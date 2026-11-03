@@ -106,7 +106,9 @@ def twoDLxEval (ρ : AGMRepr F 1) (aux : List (F × G)) : G :=
   ρ.eval X (e.η • X) ((e.a₀ * e.η) • X + (e.b₀ * e.η) • X') (e.aᵣ • X + e.bᵣ • X')
     (fun _ => e.a₁ • X + e.b₁ • X') (twoDLXTags X aux)
 
-/-- The reduction's answers to the two oracle arms, without the key. -/
+/-- The reduction's answers to the two oracle arms, without the key. An issuance nonce `u_j` is
+drawn with `uniformUnits`, from the nonzero scalars, as in the game (DA *Nonzero issuance nonces*,
+item A3.2 of `docs/findings/FINDINGS_AND_LESSONS.md`). -/
 noncomputable def twoDLOracleImpl :
     QueryImpl (AGMOMUFOracleSpec F G 1) (StateT (TwoDLState F G) ProbComp)
   | .sign C' ρ => StateT.mk fun s =>
@@ -162,7 +164,13 @@ section Reduction
 
 /-- The 2-DL reduction of O24 Claim 5.14 built from an algebraic one-more forger `A`, for the
 slope pattern `w`: the key variable with weight `1` gets the slope `b`, the others slope `0`
-(module docstring). `(1, 0, 0)` is the `x₀` case of the paper. -/
+(module docstring). `(1, 0, 0)` is the `x₀` case of the paper.
+
+The paper samples `η` and the issuance nonces `u_j` from `ℤ_p` (p. 47). The reduction draws `η`
+here, and `u_j` in `twoDLOracleImpl`, with `uniformUnits`, from the nonzero scalars, as the game
+does: the crs `H = η • G` is nonzero (DA *Nonzero crs H*, item A3.3 of
+`docs/findings/FINDINGS_AND_LESSONS.md`) and so are the nonces (DA *Nonzero issuance nonces*,
+item A3.2 of the same file). -/
 noncomputable def omufTwoDLReductionAt (gen : G)
     [Fact (Function.Bijective (fun x : F => x • gen))]
     (A : AGMOMUFAdversary F G 1) (w : F × F × F) : QDLogAdversary 2 F G :=
