@@ -207,10 +207,9 @@ the game it simulates for `A` and extracts the logarithm from a forgery
 polynomial `φ_i` (Equation 22) at a `u_ι` monomial for a chosen issuance index
 `ι ∈ [q]` (Claim 5.12) or at an `η` monomial (Claim 5.13). The
 paper's factor `(q + 1)` is the union of these cases. Each Claim has its own
-reduction below, `omufDLReductionU` and `omufDLReductionEta` (decision A11 of
-the Theorem 5.3 plan), and this one is defined in the proof phase as their
-mixture, running the first with probability `q/(q + 1)` and the second with
-`1/(q + 1)`, so that `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)` and the
+reduction below, `omufDLReductionU` and `omufDLReductionEta`, and this one is
+defined in the proof phase as their mixture, running the first with probability
+`q/(q + 1)` and the second with `1/(q + 1)`, so that `(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)` and the
 Claims add up to the theorem's `(q + 1)·εdl` term. The budget argument is the
 selector's. Declared with a `sorry` body until the proof PRs build it; the
 generator fact is what the construction's logarithm bookkeeping (`glog`) will
@@ -225,9 +224,8 @@ noncomputable def omufDLReduction :
 The discrete-log reduction of O24 Claim 5.12 (item (i), a `u_ι` monomial), for the
 Sign budget `q`, built from an algebraic one-more forger `A`. It samples a
 position `ι ∈ [q]` uniformly, the selector whose guess costs the Claim's factor
-`q` and needs the budget as an argument (decision A11 of the Theorem 5.3 plan,
-one reduction per Claim), answers the `ι`-th issued Sign query, refused queries
-issuing nothing as in the game, with the challenge embedded in
+`q` and needs the budget as an argument (one reduction per Claim), answers the
+`ι`-th issued Sign query, refused queries issuing nothing as in the game, with the challenge embedded in
 `U_ι = a·G + b·X` (p. 46, "Fix ι ∈ [q]"), fails if fewer than `ι` pairs are
 issued, and solves for the logarithm the equation that the unsupported
 forgery's polynomial `φ_i` (Equation 22) gives at `u_ι`. Two adaptations are the
@@ -378,6 +376,10 @@ lemma omufToN1_isQueryBoundP {n : ℕ} (gen : G)
       · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun h => h.elim)
 
 
+/-- The collapse preserves three of the four conditions of a win: if `out` has `q + 1`
+forgeries, their messages collapse to pairwise distinct scalars along `r`, and they verify at the
+scaled key `xᵢ = rᵢ · x₁`, then the collapsed forgeries have the count `q + 1`, distinct messages,
+and verify at the key `x₁` at `n = 1`. The representation gate is `agmOMUFWins_collapse`. -/
 lemma omufWins_collapse {n : ℕ} (r : Fin n → F) (x₀ xᵣ x₁ : F) (q : ℕ)
     (out : List (AGMOMUFForgery F G n))
     (hlen : out.length = q + 1)
@@ -407,6 +409,9 @@ def CollapseCollision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F 
 
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- Distinct messages collapse to distinct scalars, or two distinct messages collide along `r`:
+the dichotomy that splits the winning event of the `n`-attribute game into the main case and the
+collision case. -/
 lemma collapse_nodup_or_collision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F G n))
     (hnodup : (out.map fun e => e.msg).Nodup) :
     (out.map fun e => collapseMsg r e.msg).Nodup ∨ CollapseCollision r out := by
@@ -430,23 +435,29 @@ def collapseLog {n : ℕ} (r : Fin n → F) (log : AGMOMUFLog F G n) : AGMOMUFLo
   log.map fun e => (e.1, AGMRepr.collapseRepr r e.2.1, e.2.2)
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- The collapse leaves the issued pairs of the log unchanged. -/
 lemma tags_collapseLog {n : ℕ} (r : Fin n → F) (log : AGMOMUFLog F G n) :
     AGMOMUFLog.tags (collapseLog r log) = AGMOMUFLog.tags log := by
     simp only [collapseLog,  AGMOMUFLog.tags]
     rw [List.filterMap_map]
     congr 1
 
+/-- A functor map commutes with `if`: `f <$> (if p then c else c')` is
+`if p then f <$> c else f <$> c'`. -/
 lemma map_if {a b : Type} {m : Type -> Type} (f : a -> b) (p : Prop) (c c' : m a )
      [Decidable p] [Functor m]:
     (f <$> (if p then c else c')) = (if p then f <$> c else f <$> c') := by
     exact apply_ite (Functor.map f) p c c'
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- Collapsing the log commutes with appending entries. -/
 lemma collapseLog_append {n : ℕ} (r : Fin n → F) (l₁ l₂ : AGMOMUFLog F G n) :
     collapseLog r (l₁ ++ l₂) = collapseLog r l₁ ++ collapseLog r l₂ := by
   simp only [collapseLog, List.map_append]
 
 
+/-- The representation gate at `n = 1` on the collapsed representation is the gate at the scaled
+parameters `Xᵢ = rᵢ • X₁` on the original one, by `AGMRepr.eval_collapseRepr`. -/
 lemma reprMatches_collapseRepr {n : ℕ} (r : Fin n → F) (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ X₁ : G)
     (tags : List (G × G)) (y : G) :
     reprMatches (AGMRepr.collapseRepr r ρ) g₀ H X₀ Xᵣ (fun _ => X₁) tags y
@@ -490,6 +501,8 @@ lemma agmOMUFWins_collapse {n : ℕ} (gen : G) (secParam : ℕ) (r : Fin n → F
     exact ⟨h1, h2⟩
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- A Sign query of the collapsed game, simulated by `impl`, is the Sign query of the collapsed
+representation. -/
 lemma simulateQ_omufCollapseImpl_sign {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
     (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
     (C : G) (ρ : AGMRepr F n) :
@@ -500,6 +513,8 @@ lemma simulateQ_omufCollapseImpl_sign {n : ℕ} {m : Type → Type} [Monad m] [L
 
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
+/-- A Verify query of the collapsed game, simulated by `impl`, is the Verify query of the
+collapsed message and representations. -/
 lemma simulateQ_omufCollapseImpl_verify {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
     (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
     (msg : Fin n → F) (σ : Code G) (ρU ρV : AGMRepr F n) :
@@ -510,6 +525,8 @@ lemma simulateQ_omufCollapseImpl_verify {n : ℕ} {m : Type → Type} [Monad m] 
   exact simulateQ_spec_query _ _
 
 
+/-- One Sign step: the game at `n = 1` with the collapsed log, running the collapsed query, is the
+collapse of the `n`-attribute game's step at the scaled key `xᵢ = rᵢ · x₁`. -/
 lemma collapse_step_sign {n : ℕ} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
     (log : AGMOMUFLog F G n) (C : G) (ρ : AGMRepr F n) :
@@ -535,6 +552,8 @@ lemma collapse_step_sign {n : ℕ} (gen : G) (secParam : ℕ)
   · simp only [Prod.map_apply, id, collapseLog_append]
     rfl
 
+/-- One Verify step: the game at `n = 1` with the collapsed log, running the collapsed query, is
+the collapse of the `n`-attribute game's step at the scaled key `xᵢ = rᵢ · x₁`. -/
 lemma collapse_step_verify {n : ℕ} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
     (log : AGMOMUFLog F G n) (m : Fin n → F) (σ : Code G) (ρU ρV : AGMRepr F n) :
@@ -555,6 +574,8 @@ lemma collapse_step_verify {n : ℕ} (gen : G) (secParam : ℕ)
   rfl
 
 
+/-- One coin step: the game at `n = 1` with the collapsed log, running the collapsed query, is the
+collapse of the `n`-attribute game's step at the scaled key `xᵢ = rᵢ · x₁`. -/
 lemma collapse_step_coin {n : ℕ} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
     (log : AGMOMUFLog F G n) (t : ℕ) :
@@ -568,6 +589,10 @@ lemma collapse_step_coin {n : ℕ} (gen : G) (secParam : ℕ)
   simp only [agmOMUFImpl, QueryImpl.add_apply_inl, QueryImpl.liftTarget_apply]
   simp [liftM, monadLift, MonadLift.monadLift, Functor.map_map]
 
+/-- The `n = 1` game, run on the collapsed oracle `omufCollapseImpl r` from the collapsed log, is
+the collapse of the `n`-attribute game's run at the scaled key `xᵢ = rᵢ · x₁` and the parameters
+`Xᵢ = rᵢ • X₁`, for any adversary computation `oa`: the three steps `collapse_step_coin`,
+`collapse_step_sign` and `collapse_step_verify` lifted over the run. -/
 lemma collapse_run {n : ℕ} {α : Type} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
     (oa : OracleComp (unifSpec + AGMOMUFOracleSpec F G n) α) (log : AGMOMUFLog F G n) :
