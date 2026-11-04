@@ -51,15 +51,16 @@ identically in `xᵣ` and in `x₁`, and it does not involve `x₀`. On a non-ab
 forgery equation is false at the actual challenge, so the challenge is not a root.
 
 In all three branches of `omufTwoDLReduction` the extraction therefore finds no root `r` with
-`r • G = X` and returns its fallback `0` (`twoDLExtract`). That is the challenge with probability `1/p`, since the 2-DL
-challenge is uniform in `F` (`qdlogExp`), so `twoDlogAdv gen (omufTwoDLReduction gen A) = 1/p`
-against this forger. The bound `3(1/p + Adv^{2-dl})` at the named reduction is then `6/p`, against
-`(Q + 1)/p`, and it fails from `Q = 6` for a prime `p > 7`. If a failed extraction counted as a
-loss, the right-hand side would be `3/p` and the bound would fail from `Q = 3`, but that is not
-what `twoDLExtract` does. The forger does not need Verify: it can test a guess `c` of `η` by
-computing `c • G` and comparing it with the public `H = η • G`. Its polynomial also has an `η`
-monomial, and the Claim 5.13 reduction does extract from it, so the forger does not by itself
-refute Theorem 5.11. This is a hand argument, not checked in Lean.
+`r • G = X` and returns its fallback `0` (`twoDLExtract`). That is the challenge with
+probability `1/p`, since the 2-DL challenge is uniform in `F` (`qdlogExp`), so
+`twoDlogAdv gen (omufTwoDLReduction gen A) = 1/p` against this forger. The bound
+`3(1/p + Adv^{2-dl})` at the named reduction is then `6/p`, against `(Q + 1)/p`, and it fails
+from `Q = 6` for a prime `p > 7`. If a failed extraction counted as a loss, the right-hand side
+would be `3/p` and the bound would fail from `Q = 3`, but that is not what `twoDLExtract` does.
+The forger does not need Verify: it can test a guess `c` of `η` by computing `c • G` and
+comparing it with the public `H = η • G`. Its polynomial also has an `η` monomial, and the
+Claim 5.13 reduction does extract from it, so the forger does not by itself refute
+Theorem 5.11. This is a hand argument, not checked in Lean.
 
 Which advantage `Adv^{2-dl}` denotes is not fixed by the paper. O24 §3.1 defines
 `Adv^{q-dl}_{GrGen,A}` for a named adversary `A`, and Claim 5.14 drops the subscript while its
