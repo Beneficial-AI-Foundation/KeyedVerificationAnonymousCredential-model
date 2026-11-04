@@ -70,19 +70,22 @@ it (p. 46): the winning event splits by whether the forgeries' attribute
 combinations `Σᵢ mᵢ·Xᵢ` are pairwise distinct, the distinct case reduces to
 `n = 1` on a transformed adversary, and the colliding case to gap-DL by an
 argument in the style of Lemma 5.5 (which the paper's text cites as Theorem
-5.5). The six named constructions, the theorem's two reductions, the two
-per-Claim discrete-log reductions, the attribute-lifting transformation
-`omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and the gap-DL
-reduction `omufGapDLReduction`: the gap-DL reduction is built in `GapDLReduction.lean` and
-the transformation `omufToN1` is built below, sampling the scaling scalars through the
-private coin oracle and collapsing queries and forgeries along them. The other four are
-declared with `sorry` bodies, the first sorried definitions in the repository, and are built
-with the proofs of the Claims over the polynomial layer of Equations 17 to 22
-(`Polynomial.lean`, `CaseEvents.lean`). Whether the transformation reuses the Lemma 5.5
-embedding of the MAC track is not settled. The
-adversary has a private coin oracle (`Game.lean`, *The adversary has a private coin oracle*),
-so a transformation that needs randomness samples through it. Extra Sign queries are
-not a source of randomness, they break the budget and the one-more count.
+5.5). Six constructions are named: the theorem's two reductions, `omufDLReduction` and
+`omufTwoDLReduction`, the two per-Claim discrete-log reductions `omufDLReductionU` and
+`omufDLReductionEta`, the attribute-lifting transformation
+`omufToN1 : AGMOMUFAdversary F G n → AGMOMUFAdversary F G 1`, and the gap-DL reduction
+`omufGapDLReduction`. The gap-DL reduction is built in `GapDLReduction.lean`, the
+transformation `omufToN1` is built below, sampling the scaling scalars through the private coin
+oracle and collapsing queries and forgeries along them, and the two theorem reductions are built
+from the Claim reductions (`dlogMix` for `omufDLReduction`, the 2-DL mixture of
+`TwoDLReduction.lean` for `omufTwoDLReduction`). Only `omufDLReductionU` and
+`omufDLReductionEta` are declared with `sorry` bodies, the first sorried definitions in the
+repository, and they are built with the proofs of the Claims over the polynomial layer of
+Equations 17 to 22 (`Polynomial.lean`, `CaseEvents.lean`). Whether the transformation reuses
+the Lemma 5.5 embedding of the MAC track is not settled. The adversary has a private coin
+oracle (`Game.lean`, *The adversary has a private coin oracle*), so a transformation that needs
+randomness samples through it. Extra Sign queries are not a source of randomness, they break the
+budget and the one-more count.
 
 ## Why named reductions
 
@@ -745,16 +748,16 @@ theorem omuf_claim_5_14 (A : AGMOMUFAdversary F G 1) :
       3 * ((Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReduction gen A)) := by
   sorry
 
+/-! ## The union bound over the cases -/
+
 omit hgen in
 /-- The AGM advantage is the trace probability of the win. -/
 theorem AGM_OMUFAdv_eq_probEvent_wins (A : AGMOMUFAdversary F G 1) :
     AGM_OMUFAdv gen A secParam =
       Pr[ fun t => t.Wins gen secParam | agmOMUFTrace gen secParam A ] := by
-  unfold AGM_OMUFAdv
-  rw [AGM_OMUFGame_eq_trace, bind_pure_comp, ← probEvent_eq_eq_probOutput, probEvent_map]
-  congr 1
-  funext t
-  exact propext decide_eq_true_iff
+  rw [AGM_OMUFAdv, AGM_OMUFGame_eq_trace, bind_pure_comp, ← probEvent_eq_eq_probOutput,
+    probEvent_map]
+  simp only [Function.comp_def, decide_eq_true_eq, OMUFTrace.Wins]
 
 /-- The advantage is at most the sum of the probabilities of the three case events: the events
 cover a win (`omuf_cover`), and a union bound. -/
