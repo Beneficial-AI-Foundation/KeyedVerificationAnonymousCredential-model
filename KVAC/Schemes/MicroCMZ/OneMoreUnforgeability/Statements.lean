@@ -150,14 +150,14 @@ arguments and not checked in Lean:
 
 - Claim 5.12. With one Sign query, `q = 1`, a forger signs `C = 0` with the zero representation,
   receives `(U₁, V₁)` with `V₁ = (x₀ + xᵣ)·U₁`, a valid MAC for `m = 0`, and compares `c • G` with
-  the public `X₁` for `Q + 1` distinct constants `c`. Calling a match `g`, and `g = 0` if there is
-  none, it outputs `(0, (U₁, V₁))` and `(1, (U₁, V₁ + g·U₁))`, both over the representations on
-  `U₁` and `V₁`. The second verifies exactly when `g = x₁`, so the forger wins with probability
-  `(Q + 1)/p`. The polynomials are `0` and `u₁·(x₁ − g)`, so `CaseU` holds on every win, yet
-  once `x₁` is set to the run's value the second is `(x₁ − g)·u₁ = 0` on every win, so the run is
-  degenerate in `u₁`, the only variable, and the Claim 5.12 reduction, which embeds
-  `u_ι = a + b·χ`, has nothing to extract. The run is also in item (iii) through the `x₁`
-  monomial, where the `x₁` embedding of Claim 5.14 extracts from it.
+  the public `X₁` for `Q + 1` distinct constants `c`, one of them `0`. Calling a match `g`, and
+  `g = 0` if there is none, it outputs `(0, (U₁, V₁))` and `(1, (U₁, V₁ + g·U₁))`, both over
+  the representations on `U₁` and `V₁`. The second verifies exactly when `g = x₁`, so the forger
+  wins with probability `(Q + 1)/p`. The polynomials are `0` and `u₁·(x₁ − g)`, so `CaseU`
+  holds on every win, yet once `x₁` is set to the run's value the second is `(x₁ − g)·u₁ = 0` on
+  every win, so the run is degenerate in `u₁`, the only variable, and the Claim 5.12 reduction,
+  which embeds `u_ι = a + b·χ`, has nothing to extract. The run is also in item (iii) through the
+  `x₁` monomial, where the `x₁` embedding of Claim 5.14 extracts from it.
 - Claim 5.13. With no Sign query, `Q < p` Verify queries `(0, (G, c·G))` over
   distinct `c` and a final guess among the untested values, a forger learns
   `k = x₀ + xᵣ` with probability `(Q + 1)/p` and outputs `(0, (H, k·H))`

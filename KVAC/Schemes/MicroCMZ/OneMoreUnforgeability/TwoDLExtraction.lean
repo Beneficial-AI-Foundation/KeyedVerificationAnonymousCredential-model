@@ -129,16 +129,20 @@ has nothing to extract. The paper does not mention it: it writes that the polyno
 with high probability" (p. 46).
 
 Why this is the failure event. The reduction guesses `ι` uniformly in `[q]`, independently of the
-challenge, and embeds the challenge as `u_ι = a + b·χ` with `a`, `b` uniform. For `b ≠ 0` the view
-of the adversary is the real one, `a` hiding `b·χ` (p. 46), so `ι` is independent of the view. On a
-run of item (i) some `u_j` occurs in a forgery polynomial. For `b ≠ 0` the substitution is a
-degree-one polynomial in `χ`, so the forgery polynomial, with the other variables at the run's
-values, is nonzero in `χ` exactly when it is nonzero in `u_j`, that is, when the run is not
-degenerate in `u_j`. The reduction extracts from a nonzero one, and its guess `ι` falls on a
-suitable `j` with probability at least `1/q`, which is the factor `q` of the Claim. It has nothing
-to extract when every `u_j` that occurs is degenerate, whatever `ι` is, which is the event below.
-The case `b = 0`, of probability `1/p`, is the `1/p` of the Claim. The reduction is still a `sorry`
-body (`omufDLReductionU`), so this is the argument that the event is defined to match. -/
+challenge, and embeds the challenge as `u_ι = a + b·χ` with `a`, `b` uniform. For `b ≠ 0` the
+paper's view of the adversary is the real one, `a` hiding `b·χ` (p. 46), so `ι` is independent of
+the view. The core issues nonzero nonces while `a + b·χ` can vanish, so the formalized view is the
+real one only up to that zero case, which the proof has to account for (`omufDLReductionU`,
+*Constants and the extraction obligation* in `Statements.lean`). On a run of item (i) some `u_j`
+occurs in a forgery polynomial. For `b ≠ 0` the substitution is a degree-one polynomial in `χ`,
+so the forgery polynomial, with the other variables at the run's values, is nonzero in `χ`
+exactly when it is nonzero in `u_j`, that is, when the run is not degenerate in `u_j`. The
+reduction extracts from a nonzero one, and its guess `ι` falls on a suitable `j` with probability
+at least `1/q`, which is the factor `q` of the Claim. It has nothing to extract when every `u_j`
+that occurs is degenerate, whatever `ι` is, which is the event below. The case `b = 0`, of
+probability `1/p`, is the `1/p` of the Claim. The reduction is still a `sorry` body
+(`omufDLReductionU`), so this is the argument that the event is defined to match, not a
+proved coupling. -/
 noncomputable def omufDegenerateProbU (A : AGMOMUFAdversary F G 1) : ℝ≥0∞ :=
   Pr[ fun t => t.CaseU gen secParam ∧ ∀ j : Fin t.arity,
       (∃ φ ∈ t.forgeryPolys, AGMPoly.Var.u j ∈ φ.vars) →
