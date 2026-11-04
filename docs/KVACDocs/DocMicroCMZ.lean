@@ -1554,6 +1554,39 @@ representation. The run-level statement is the state-projection transport of
 these steps.
 :::
 
+:::definition "omuf_two_dl_reduction" (lean := "KVAC.Schemes.MicroCMZ.twoDLParams, KVAC.Schemes.MicroCMZ.TwoDLState, KVAC.Schemes.MicroCMZ.twoDLXTags, KVAC.Schemes.MicroCMZ.twoDLxEval, KVAC.Schemes.MicroCMZ.twoDLOracleImpl, KVAC.Schemes.MicroCMZ.twoDLImpl, KVAC.Schemes.MicroCMZ.twoDLExtract, KVAC.Schemes.MicroCMZ.TwoDLEmbed, KVAC.Schemes.MicroCMZ.TwoDLEmbed.key, KVAC.Schemes.MicroCMZ.omufTwoDLReductionAt, KVAC.Schemes.MicroCMZ.uniformMix, KVAC.Schemes.MicroCMZ.twoDLMix, KVAC.Schemes.MicroCMZ.probOutput_uniformMix, KVAC.Schemes.MicroCMZ.qdlogAdv_twoDLMix") (parent := "cmz_omuf") (tags := "milestone")
+The 2-DL reduction of {bpref "omuf_case_iii"}[] (O24 p. 47), built from an
+algebraic one-more forger and run against the game of {uses "agm_omuf_game"}[]. The paper writes the `x₀`
+case and calls `xᵣ` and `x₁` "almost identical"; all three are one construction with a key that is
+affine in the challenge in every component, `(a₀ + b₀·x, aᵣ + bᵣ·x, a₁ + b₁·x)`, the case being
+which slope is the drawn `b` and which are `0`. It samples the offsets, the slope and `η`, hands the forger `H = η·G`,
+`X₀ = a₀·H + b₀·η·X`, `Xᵣ = aᵣ·G + bᵣ·X`, `X₁ = a₁·G + b₁·X`, and answers Sign as the paper prescribes,
+`V = a₀·U + b₀·u·X + u·(C + Xᵣ)`, without the key. Verify tests `V = (x₀ + xᵣ + m·x₁)·U` as
+`V = (a₀ + aᵣ + m·a₁)·U + (b₀ + bᵣ + m·b₁)·(x·U)`, the multiple `x·U` being computed from the
+representation of `U`: each basis element has a known multiple by `x`, the quadratic terms using the
+second challenge element, and the reduction records the multiples of the pairs it issues. At the end it
+substitutes the key variables by their affine functions of `χ` into the forgery polynomials of
+{uses "omuf_case_events"}[] and outputs the root `r` of the first nonzero one with `r·G = X`. The
+theorem's 2-DL reduction mixes the three cases uniformly, so that three times its
+advantage is the sum of the three. The coupling of its run with the real game is
+{bpref "omuf_two_dl_run_coupling"}[], the law of the key and of `H` it presents is
+{bpref "omuf_two_dl_key_law"}[], and that the substituted polynomial is nonzero is the
+extraction obligation of {bpref "omuf_case_iii"}[].
+:::
+
+:::theorem "omuf_two_dl_run_coupling" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "medium")
+The run of the 2-DL reduction of {uses "omuf_two_dl_reduction"}[] is the run of the game of
+{uses "agm_omuf_game"}[] at the key `(a₀ + b₀·x, aᵣ + bᵣ·x, a₁ + b₁·x)`, the crs `η·G` and the
+parameters the reduction presents, followed by the multiples it records, as an equality of
+computations (O24 p. 47).
+:::
+
+:::theorem "omuf_two_dl_key_law" (parent := "cmz_omuf") (tags := "milestone") (effort := "medium") (priority := "medium")
+At every slope pattern, challenge and slope, the crs `η·G` and the key that the 2-DL reduction of
+{uses "omuf_two_dl_reduction"}[] presents have the law of the crs and key of
+{uses "agm_omuf_game"}[], and the slope is independent of them, since the uniform offset absorbs
+the slope times the challenge (O24 p. 47, "b is uniformly distributed and perfectly hidden by a").
+:::
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
 *O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
 item (i) of the case split, the adversary wins and some forgery polynomial
@@ -1624,4 +1657,7 @@ solves the equation that a forgery polynomial with that monomial, of
 {uses "omuf_forgery_polynomial"}[], gives at `x₀`, the paper's `1/p` being
 the degenerate mask. The `xᵣ` and `x₁` cases are "almost identical" (p. 47).
 The same obligation as for item (i) applies.
+The reduction is {uses "omuf_two_dl_reduction"}[], its run is the game's run by
+{uses "omuf_two_dl_run_coupling"}[], and the crs and key it presents have the game's law by
+{uses "omuf_two_dl_key_law"}[].
 :::
