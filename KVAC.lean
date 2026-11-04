@@ -14,6 +14,8 @@ import KVAC.Schemes.MicroCMZ.Credential
 import KVAC.Schemes.MicroCMZ.CredentialCorrectness
 import KVAC.Schemes.MicroCMZ.CredentialGames
 import KVAC.Schemes.MicroCMZ.Anonymity
+import KVAC.Schemes.MicroCMZ.Extractability
+
 import KVAC.Schemes.MicroCMZ.Construction
 import KVAC.Schemes.MicroCMZ.AlgebraicMAC
 import KVAC.Schemes.MicroCMZ.SignMask
