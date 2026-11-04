@@ -50,8 +50,8 @@ monomials, so the run is in item (iii). On a winning run `g = η`, so the polyno
 identically in `xᵣ` and in `x₁`, and it does not involve `x₀`. On a non-aborting losing run the
 forgery equation is false at the actual challenge, so the challenge is not a root.
 
-In all three branches of `omufTwoDLReduction` the extraction therefore finds no root and returns
-its fallback `0` (`twoDLExtract`). That is the challenge with probability `1/p`, since the 2-DL
+In all three branches of `omufTwoDLReduction` the extraction therefore finds no root `r` with
+`r • G = X` and returns its fallback `0` (`twoDLExtract`). That is the challenge with probability `1/p`, since the 2-DL
 challenge is uniform in `F` (`qdlogExp`), so `twoDlogAdv gen (omufTwoDLReduction gen A) = 1/p`
 against this forger. The bound `3(1/p + Adv^{2-dl})` at the named reduction is then `6/p`, against
 `(Q + 1)/p`, and it fails from `Q = 6` for a prime `p > 7`. If a failed extraction counted as a
