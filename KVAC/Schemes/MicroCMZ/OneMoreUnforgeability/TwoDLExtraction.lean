@@ -38,14 +38,36 @@ that guesses `h` and forges `(m, (gen, h·X₀ + Xᵣ + m·X₁))` has the polyn
 wins and vanishes identically in `x₀` when `h·η = 1`. So the degenerate event has probability
 about `1/(p − 1)` for each variable.
 
-With `Q` Verify queries the first forger does better: each query tests one guess `g` of `η`, so it
-learns `η` with probability about `(Q + 1)/(p − 1)` and forges with it. Its polynomial is in item
-(iii) and degenerate in `xᵣ` and `x₁`, so the Claim 5.14 reduction has nothing to extract, while
-the Claim 5.13 reduction does extract from it. The paper's proofs bound each Claim by the advantage
-of the reduction they build, with the `1/p` of the hiding step as a separate term, so the printed
-bound `3(1/p + Adv^{2-dl})` at the named reduction fails from `Q ≥ 3` if the reduction earns only
-what it extracts on nondegenerate runs, and from `Q ≥ 6` if its blind success `1/p` on the
-degenerate ones, the default output `0`, is counted. This is a hand argument, not checked in Lean.
+With `Q` tests the first forger does better, and the probability can be stated exactly. Take
+`m = 1` and `S = Xᵣ + X₁`. The forger aborts if `S = 0`, which has probability `1/p`. Otherwise it
+tests `Q` distinct nonzero guesses `c` of `η` with the Verify queries `(1, (H, X₀ + c·S))`, each
+accepted exactly when `c = η` since `S ≠ 0`. It then takes the accepted `c` as its guess `g`, or,
+if none was accepted, one further untested nonzero guess, and forges `(1, (H, X₀ + g·S))`. This
+verifies exactly when `g = η`. The `Q` tests and the final guess cover `Q + 1` of the `p - 1`
+possible values of `η`, so for `Q + 1 ≤ p - 1` the forger wins with probability
+`(p - 1)/p · (Q + 1)/(p - 1) = (Q + 1)/p`. Its polynomial `(η - g)(xᵣ + x₁)` has `xᵣ` and `x₁`
+monomials, so the run is in item (iii). On a winning run `g = η`, so the polynomial vanishes
+identically in `xᵣ` and in `x₁`, and it does not involve `x₀`. On a non-aborting losing run the
+forgery equation is false at the actual challenge, so the challenge is not a root.
+
+In all three branches of `omufTwoDLReduction` the extraction therefore finds no root and returns
+its fallback `0` (`twoDLExtract`). That is the challenge with probability `1/p`, since the 2-DL
+challenge is uniform in `F` (`qdlogExp`), so `twoDlogAdv gen (omufTwoDLReduction gen A) = 1/p`
+against this forger. The bound `3(1/p + Adv^{2-dl})` at the named reduction is then `6/p`, against
+`(Q + 1)/p`, and it fails from `Q = 6` for a prime `p > 7`. If a failed extraction counted as a
+loss, the right-hand side would be `3/p` and the bound would fail from `Q = 3`, but that is not
+what `twoDLExtract` does. The forger does not need Verify: it can test a guess `c` of `η` by
+computing `c • G` and comparing it with the public `H = η • G`. Its polynomial also has an `η`
+monomial, and the Claim 5.13 reduction does extract from it, so the forger does not by itself
+refute Theorem 5.11. This is a hand argument, not checked in Lean.
+
+Which advantage `Adv^{2-dl}` denotes is not fixed by the paper. O24 §3.1 defines
+`Adv^{q-dl}_{GrGen,A}` for a named adversary `A`, and Claim 5.14 drops the subscript while its
+proof builds a reduction `B`. The Claims here use the named reduction. Read as the best 2-DL
+adversary of resources comparable to the reduction's, the bound is not contradicted by this
+forger, since an adversary that tests `Q + 1` candidate logarithms against `X` has advantage at
+least `(Q + 1)/p`, but the paper's proof does not establish it. Without a resource bound the
+maximum is vacuous, since an exhaustive solver has advantage `1`.
 
 The Claims here therefore carry the degenerate probability as an explicit term, which is a true
 bound. It is not the paper's: removing the term is the repair of the paper's argument, by bounding
