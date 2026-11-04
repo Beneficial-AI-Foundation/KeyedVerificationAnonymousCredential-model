@@ -70,6 +70,12 @@ forger, since an adversary that tests `Q + 1` candidate logarithms against `X` h
 least `(Q + 1)/p`, but the paper's proof does not establish it. Without a resource bound the
 maximum is vacuous, since an exhaustive solver has advantage `1`.
 
+The discrepancy concerns the concrete constants only. With probabilistic polynomial-time
+adversaries and a group order `p` exponential in the security parameter, `Q` is polynomial, so
+`(Q + 1)/p` and the advantage of the reduction are both negligible, and the asymptotic statement
+is unaffected. This file has no running time and no security parameter (one fixed group), so it
+cannot state the resource-bounded reading and uses the named reduction.
+
 The Claims here therefore carry the degenerate probability as an explicit term, which is a true
 bound. It is not the paper's: removing the term is the repair of the paper's argument, by bounding
 `omufDegenerateProb` or changing the events. They are statements about the real game alone, with no
