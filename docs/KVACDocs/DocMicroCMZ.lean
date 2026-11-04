@@ -1364,7 +1364,7 @@ bound and the colliding case to discrete log by an argument in the style
 of Lemma 5.5 ({uses "attribute_lifting"}[]), which adds `2/p + Adv^gapdl` to Equation 23.
 :::
 
-:::theorem "mucmz_at_agm_omuf_n1" (lean := "KVAC.Schemes.MicroCMZ.omufBoundN1, KVAC.Schemes.MicroCMZ.omufDLReduction, KVAC.Schemes.MicroCMZ.omufTwoDLReduction, KVAC.Schemes.MicroCMZ.agm_omuf_le_n1") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "mucmz_at_agm_omuf_n1" (lean := "KVAC.Schemes.MicroCMZ.omufBoundN1, KVAC.Schemes.MicroCMZ.omufDLReduction, KVAC.Schemes.MicroCMZ.omufTwoDLReduction, KVAC.Schemes.MicroCMZ.dlogMix, KVAC.Schemes.MicroCMZ.dlogAdv_dlogMix, KVAC.Schemes.MicroCMZ.omufBoundN1_eq_of_mix, KVAC.Schemes.MicroCMZ.AGM_OMUFAdv_eq_probEvent_wins, KVAC.Schemes.MicroCMZ.AGM_OMUFAdv_le_cases, KVAC.Schemes.MicroCMZ.agm_omuf_le_n1") (parent := "cmz_omuf") (tags := "milestone")
 Theorem 5.11 at `n = 1`, the case the paper proves directly. For every
 algebraic adversary against the core {uses "mucmz_at_core"}[] in the
 AGM-instrumented game {uses "agm_omuf_game"}[] whose program makes at
@@ -1372,8 +1372,13 @@ most `q` Sign queries for every crs and public parameters, a static
 hypothesis on the adversary, the advantage is at most Equation 23's
 `(q + 4)/p + (q + 1)·Adv^dl + 3·Adv^2-dl` ({uses "hardness_assumptions"}[]),
 the two advantages being those of the named reductions `omufDLReduction`
-and `omufTwoDLReduction` built from the adversary. The reductions are
-declared with `sorry` bodies until the proofs build them, since at
+and `omufTwoDLReduction` built from the adversary. `omufDLReduction` is built,
+the mixture of the two Claim reductions that extract a discrete logarithm, so that
+`(q + 1)·Adv(mixture) = q·Adv(B_U) + Adv(B_η)`; the Claim reductions `omufDLReductionU` and
+`omufDLReductionEta` are declared with `sorry` bodies until the proofs build them.
+`omufTwoDLReduction` is built too, the uniform mixture of the three cases of the 2-DL reduction
+({uses "omuf_two_dl_reduction"}[]). The theorem and the three Claims are stated and `sorry`d,
+and the reductions are named and built, not quantified over, since at
 fixed parameters an existential quantification over unrestricted
 reduction adversaries is vacuous and a bound below one on every
 discrete-log adversary is false. The printed constants are provisional until the proofs
@@ -1390,7 +1395,10 @@ polynomial of Equation 22, {uses "omuf_forgery_polynomial"}[], read off
 the run by {uses "omuf_case_events"}[], then has a nonzero monomial in one
 of three variable groups, `u⃗`, `η`, or `x₀, xᵣ, x₁`
 ({uses "omuf_case_cover"}[]), and the three cases are bounded by {uses "omuf_case_i"}[], {uses "omuf_case_ii"}[], and
-{uses "omuf_case_iii"}[].
+{uses "omuf_case_iii"}[]. The advantage is the trace probability of the win, which the
+three events cover, so it is at most the sum of their probabilities by a union bound; the
+Claims' constants add up to Equation 23 once the discrete-log advantage is the
+mixture's.
 :::
 
 :::definition "omuf_commitment_polynomials" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPolyAt, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_nil, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_append_singleton, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_length, KVAC.Schemes.MicroCMZ.AGMPoly.omufCommitPolys_getElem") (parent := "cmz_omuf") (tags := "milestone")
@@ -1463,7 +1471,7 @@ that an item happens, made an object, on the pattern of the MAC track's
 reduction trace.
 :::
 
-:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedRepr, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedCoeffs, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX") (parent := "cmz_omuf") (tags := "milestone")
+:::definition "omuf_case_events" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs, KVAC.Schemes.MicroCMZ.OMUFTrace.arity, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedRepr, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedCoeffs, KVAC.Schemes.MicroCMZ.OMUFTrace.issuedReprs_length, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.commitPolys_length, KVAC.Schemes.MicroCMZ.OMUFTrace.cs, KVAC.Schemes.MicroCMZ.OMUFTrace.cs_eq_getElem, KVAC.Schemes.MicroCMZ.OMUFTrace.forgeryPolys, KVAC.Schemes.MicroCMZ.OMUFTrace.Wins, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseU, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseEta, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX0, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseXr, KVAC.Schemes.MicroCMZ.OMUFTrace.CaseX1, KVAC.Schemes.MicroCMZ.OMUFTrace.caseX_imp") (parent := "cmz_omuf") (tags := "milestone")
 The polynomials of a run and its case events, for the Theorem 5.11 proof
 at `n = 1`: the issued representations of a trace of
 {uses "omuf_transcript"}[], converted by {uses "agm_eval_bridge"}[] and
@@ -1646,6 +1654,7 @@ At every slope pattern, challenge and slope, the crs `η·G` and the key that th
 {uses "agm_omuf_game"}[], and the slope is independent of them, since the uniform offset absorbs
 the slope times the challenge (O24 p. 47, "b is uniformly distributed and perfectly hidden by a").
 :::
+
 :::theorem "omuf_case_i" (lean := "KVAC.Schemes.MicroCMZ.omufDLReductionU, KVAC.Schemes.MicroCMZ.omuf_claim_5_12") (parent := "cmz_omuf") (tags := "paper, O24 Claim 5.12")
 *O24 Claim 5.12.* In the `μCMZ_AT` one-more unforgeability proof at `n = 1`,
 item (i) of the case split, the adversary wins and some forgery polynomial
