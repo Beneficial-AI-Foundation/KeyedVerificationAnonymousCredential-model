@@ -65,8 +65,8 @@ merged.
     (`TwoDLExtraction.lean`): εdegU = omufDegenerateProbU, εdegη = omufDegenerateProbEta and
     εdeg = omufDegenerateProb, for Claims 5.12, 5.13 and 5.14. The paper does not mention them,
     writing "non-zero with high probability" (p. 46) and "can be found with high probability"
-    (p. 47). The terms of Claims 5.13 and 5.14 are not `0` for some adversaries, by the forgers
-    below, and no forger is given for Claim 5.12's. `agm_omuf_le_n1` carries their sum
+    (p. 47). The three terms are not `0` for some adversaries, by the forgers below.
+    `agm_omuf_le_n1` carries their sum
     `omufDegenerateProbAll`, and `agm_omuf_le` carries it at the transformed adversary.
 
 Sign is Figure 6's name for the MAC code generation oracle in the token setting,
@@ -145,9 +145,19 @@ every other variable at the run's values, and the monomial's coefficient, a
 nonzero polynomial in those other variables, can vanish there
 (issue #251; errata item 12 of
 `docs/presentations/rolf-status/errata.md` offers the disjunction of a term of
-about `Q/p` and a route to the `x₀` embedding). Two forgers, both by hand
+about `Q/p` and a route to the `x₀` embedding). Three forgers, all by hand
 arguments and not checked in Lean:
 
+- Claim 5.12. With one Sign query, `q = 1`, a forger signs `C = 0` with the zero representation,
+  receives `(U₁, V₁)` with `V₁ = (x₀ + xᵣ)·U₁`, a valid MAC for `m = 0`, and compares `c • G` with
+  the public `X₁` for `Q + 1` distinct constants `c`. Calling a match `g`, and `g = 0` if there is
+  none, it outputs `(0, (U₁, V₁))` and `(1, (U₁, V₁ + g·U₁))`, both over the representations on
+  `U₁` and `V₁`. The second verifies exactly when `g = x₁`, so the forger wins with probability
+  `(Q + 1)/p`. The polynomials are `0` and `u₁·(x₁ − g)`, so `CaseU` holds on every win, yet
+  once `x₁` is set to the run's value the second is `(x₁ − g)·u₁ = 0` on every win, so the run is
+  degenerate in `u₁`, the only variable, and the Claim 5.12 reduction, which embeds
+  `u_ι = a + b·χ`, has nothing to extract. The run is also in item (iii) through the `x₁`
+  monomial, where the `x₁` embedding of Claim 5.14 extracts from it.
 - Claim 5.13. With no Sign query, `Q < p` Verify queries `(0, (G, c·G))` over
   distinct `c` and a final guess among the untested values, a forger learns
   `k = x₀ + xᵣ` with probability `(Q + 1)/p` and outputs `(0, (H, k·H))`
@@ -166,7 +176,9 @@ arguments and not checked in Lean:
   `(m, (gen, h·X₀ + Xᵣ + m·X₁))`, with polynomial `(1 − h·η)·x₀`, which wins and vanishes
   identically in `x₀` when `h·η = 1`. So the probability of vanishing, which the paper does not
   mention (it writes "non-zero with high probability", p. 46), is positive for some adversaries in
-  each of the three cases.
+  each of the three cases. With `Q` Verify tests of `η` the first forger wins with probability
+  exactly `(Q + 1)/p`, and the printed bound fails at the named reduction from `Q = 6`
+  (`TwoDLExtraction.lean`).
 
 Schwartz–Zippel bounds such a vanishing by `d/p` only for a polynomial
 independent of the run's values, and honest Verify answers break that
