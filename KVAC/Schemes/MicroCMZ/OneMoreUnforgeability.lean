@@ -41,7 +41,8 @@ docstring:
 - `Bridge` — the pigeonhole step, the evaluation bridge of a run and the case cover, the facts
   about a winning run that the case analysis rests on;
 - `TwoDLExtraction` — the extraction half of Claim 5.14 for the three cases: soundness of the
-  reduction's extraction, with the degenerate probability as an explicit term;
+  reduction's extraction, and the union bound that turns it into the Claim, with the
+  degenerate probability as an explicit term;
 - `Statements` — the Theorem 5.11 target statements, `sorry`d: the named bounds
   `omufBoundN1` and `omufBound`, the named reductions (the theorem's, and
   one each for Claims 5.12 and 5.13), `agm_omuf_le_n1` at `n = 1` (Equation

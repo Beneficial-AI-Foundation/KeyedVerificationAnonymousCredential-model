@@ -5,9 +5,10 @@ Authors: Jin Xing Lim
 -/
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.CaseEvents
-import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
 import KVAC.Preliminaries.Assumptions
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.GapDLReduction
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Bridge
+import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.TwoDLExtraction
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.TwoDLReduction
 import VCVio.OracleComp.QueryTracking.QueryBound
 import KVAC.Schemes.MicroCMZ.AGMReduction.AttributeCollapse
@@ -50,7 +51,8 @@ merged.
 
   omuf_claim_5_12 :  Pr[ CaseU   | agmOMUFTrace gen secParam A ]  ≤  q·(1/p + εU)     item (i)
   omuf_claim_5_13 :  Pr[ CaseEta | agmOMUFTrace gen secParam A ]  ≤  1/p + εη         item (ii)
-  omuf_claim_5_14 :  Pr[ CaseX   | agmOMUFTrace gen secParam A ]  ≤  3·(1/p + ε2dl)   item (iii)
+  omuf_claim_5_14 :  Pr[ CaseX   | agmOMUFTrace gen secParam A ]  ≤  3·(1/p + ε2dl) + εdeg
+                                                                                      item (iii)
     for every  A : AGMOMUFAdversary F G 1,  over the case events of CaseEvents.lean,
     the first under the budget hypothesis, the other two without
     where
@@ -58,7 +60,12 @@ merged.
       εη = dlogAdv gen (omufDLReductionEta gen A)         Claim 5.13, challenge in the crs
     and the theorem's εdl is the mixture  q/(q + 1)·εU + 1/(q + 1)·εη,  so that
       q·(1/p + εU) + (1/p + εη) + 3·(1/p + ε2dl)  =  omufBoundN1 F q εdl ε2dl
-    once the win is covered by the three events (`omuf_cover`).
+    once the win is covered by the three events (`omuf_cover`). The extra term of
+    Claim 5.14, εdeg = omufDegenerateProb gen secParam A, is the probability that the extraction
+    of the 2-DL reduction has nothing to extract (`TwoDLExtraction.lean`). The paper does not
+    mention it, writing "non-zero with high probability" (p. 46) and "can be found with high
+    probability" (p. 47). It is not `0` for some adversaries, so `agm_omuf_le_n1`, stated below
+    with the printed bound, has to carry it when it is proved.
 
 Sign is Figure 6's name for the MAC code generation oracle in the token setting,
 and the name of the Lean constructor and of the budget predicate
@@ -136,25 +143,45 @@ event sits between the case events and the extraction. The events are the
 paper's items, a nonzero monomial in the variable of a formal polynomial, while
 the reduction extracts from the univariate polynomial left after evaluating
 every other variable at the run's values, and the monomial's coefficient, a
-nonzero polynomial in those other variables, can vanish there. An example: with
-no Sign query, `Q < p` Verify queries `(0, (G, c·G))` over distinct `c` and a
-final guess among the untested values, a forger learns `k = x₀ + xᵣ` with
-probability `(Q + 1)/p` and outputs the forgery `(0, (H, k·H))` represented
-over `H`, which wins whenever `k` is right and `H ≠ 0`. Its polynomial
-`η·(x₀ + xᵣ − k)` has an `η` monomial, so `CaseEta` holds with probability
-`(Q + 1)(p − 1)/p²`, yet at the run's key nothing in `η` remains for the Claim
-5.13 reduction, while the `x₀` embedding of Claim 5.14 extracts from it, so the
-bound of Claim 5.13 needs a term of about `Q/p` (a candidate erratum of the
-Claim, item 12 of `docs/presentations/rolf-status/errata.md`). Schwartz–Zippel
-bounds such a vanishing by `d/p`
-only for a polynomial independent of the run's values, and honest Verify
-answers break that independence, each being a test of the key, with no Verify
-budget in the game. Whether the Claims keep the paper's events, with a covering
-argument that assigns every winning polynomial to a reduction that extracts from
-it, or move to evaluated events, and whether a Verify budget and a
-per-Verify-query term join the statements, is an obligation of the proof phase
-beyond the check of the printed constants, and an open design decision. The
-paper's own item list (p. 45) cites the three Claims as Theorems 5.12 to 5.14.
+nonzero polynomial in those other variables, can vanish there
+(issue #251; errata item 12 of
+`docs/presentations/rolf-status/errata.md` offers the disjunction of a term of
+about `Q/p` and a route to the `x₀` embedding). Two forgers, both by hand
+arguments and not checked in Lean:
+
+- Claim 5.13. With no Sign query, `Q < p` Verify queries `(0, (G, c·G))` over
+  distinct `c` and a final guess among the untested values, a forger learns
+  `k = x₀ + xᵣ` with probability `(Q + 1)/p` and outputs `(0, (H, k·H))`
+  represented over `H`, which wins whenever `k` is right and `H ≠ 0`. Its
+  polynomial `η·(x₀ + xᵣ − k)` has an `η` monomial, so `CaseEta` holds, yet on
+  every win it vanishes identically once `η` is replaced by `a + b·χ`, so the
+  Claim 5.13 reduction has nothing to extract. (`(Q + 1)/p` is for `H` drawn
+  from the nonzero elements, as here; for `H` uniform in `G` it is
+  `(Q + 1)(p − 1)/p²`.) This refutes the extraction step, not the displayed
+  bound of Claim 5.13, which would need a bound on the vanishing event.
+- Claim 5.14. With no query at all, a forger guesses `g` and outputs
+  `(m, (H, X₀ + g·(Xᵣ + m·X₁)))` with `m ≠ 0`. Since `X₀ = x₀·H` has logarithm
+  `η·x₀`, its polynomial `u·key − v` is `(η − g)(xᵣ + m·x₁)`, with monomials in `xᵣ` and `x₁`. It
+  wins when `g = η`, with probability about `1/(p − 1)`, where the polynomial
+  vanishes identically in `xᵣ` and in `x₁`. For `x₀`, a forger guesses `h` and outputs
+  `(m, (gen, h·X₀ + Xᵣ + m·X₁))`, with polynomial `(1 − h·η)·x₀`, which wins and vanishes
+  identically in `x₀` when `h·η = 1`. So the probability of vanishing, which the paper does not
+  mention (it writes "non-zero with high probability", p. 46), is positive for some adversaries in
+  each of the three cases.
+
+Schwartz–Zippel bounds such a vanishing by `d/p` only for a polynomial
+independent of the run's values, and honest Verify answers break that
+independence, each being a test of the key, with no Verify budget in the game.
+The Claim 5.14 bounds therefore carry the vanishing probability as an explicit
+term (`omufDegenerateProb`, `TwoDLExtraction.lean`), and `agm_omuf_le_n1` has to when it is
+proved. Claims 5.12 and 5.13 are `sorry`d and face the same step. Whether the
+Claims keep the paper's events, with a covering argument that assigns every
+winning polynomial to a reduction that extracts from it, or move to evaluated
+events, and whether a Verify budget and a per-Verify-query term join the
+statements, is an obligation of the proof phase beyond the constant audit, and
+an open design decision. None of this shows the paper's displayed
+bounds or Theorem 5.11 false. The paper's own item list (p. 45) cites the
+three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 
@@ -693,7 +720,9 @@ cannot know before running the forger. Claims 5.13 and 5.14 embed the challenge
 in the crs or the public parameters and hold for every forger. The theorem
 invokes the three under its hypothesis and they add up to Equation 23 (module
 docstring). The docstrings state the paper's arguments, which the extraction
-obligation of the module docstring qualifies. Stated first and `sorry`d. -/
+obligation of the module docstring qualifies. Claims 5.12 and 5.13 are stated first and
+`sorry`d. Claim 5.14 is proved (`TwoDLExtraction.lean`), with the degenerate probability of its
+extraction as an explicit term. -/
 
 /--
 **O24 Claim 5.12**, item (i), the adversary wins and some forgery polynomial has
@@ -740,13 +769,32 @@ embeddings (p. 47, the `x₀` case written out, `X₀ = a·H + b·η·X`, the `x
 challenge in the public parameters. Its crs `H` is drawn from the nonzero
 elements as `AGM_OMUFGame` does, so that the two games agree on the crs
 (*Conditioned η masks*, `docs/DESIGN_ALTERNATIVES.md`). The extraction
-obligation of the module docstring applies. Printed constant, provisional
-(module docstring, *Constants and the extraction obligation*).
+obligation of the module docstring applies: the bound carries the degenerate probability
+`omufDegenerateProb` of the extraction as an extra term. The paper does not mention it (it writes
+"can be found with high probability", p. 47), and it is not `0` for some adversaries. Printed
+constant, provisional (module docstring, *Constants and the extraction obligation*).
 -/
 theorem omuf_claim_5_14 (A : AGMOMUFAdversary F G 1) :
     Pr[ OMUFTrace.CaseX gen secParam | agmOMUFTrace gen secParam A ] ≤
-      3 * ((Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReduction gen A)) := by
-  sorry
+      3 * ((Fintype.card F : ℝ≥0∞)⁻¹ + twoDlogAdv gen (omufTwoDLReduction gen A)) +
+        omufDegenerateProb gen secParam A := by
+  refine (probEvent_mono fun t ht hx => OMUFTrace.caseX_imp gen secParam t hx).trans ?_
+  have h1 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseX0 gen secParam)
+    (fun t => t.CaseXr gen secParam ∨ t.CaseX1 gen secParam)
+  have h2 := probEvent_or_le (agmOMUFTrace gen secParam A) (OMUFTrace.CaseXr gen secParam)
+    (OMUFTrace.CaseX1 gen secParam)
+  have hmix := qdlogAdv_twoDLMix gen (omufTwoDLReductionAt gen A (1, 0, 0))
+    (omufTwoDLReductionAt gen A (0, 1, 0)) (omufTwoDLReductionAt gen A (0, 0, 1))
+  have hsum := add_le_add (omuf_claim_5_14_x0 gen secParam A)
+    (add_le_add (omuf_claim_5_14_xr gen secParam A) (omuf_claim_5_14_x1 gen secParam A))
+  refine (h1.trans (add_le_add_right h2 _)).trans (hsum.trans (le_of_eq ?_))
+  unfold omufDegenerateProb
+  have hmix' : 3 * twoDlogAdv gen (omufTwoDLReduction gen A) =
+      twoDlogAdv gen (omufTwoDLReductionAt gen A (1, 0, 0)) +
+        twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 1, 0)) +
+          twoDlogAdv gen (omufTwoDLReductionAt gen A (0, 0, 1)) := hmix
+  rw [mul_add, hmix']
+  ring
 
 /-! ## The union bound over the cases -/
 
