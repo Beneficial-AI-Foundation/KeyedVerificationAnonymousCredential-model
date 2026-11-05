@@ -112,8 +112,6 @@ theorem OMUFTrace.exists_forgeryPoly_ne_zero (t : OMUFTrace F G)
   have hmem : ∀ e ∈ t.out, ∃ j, e.msg 0 = f j := by
     intro e he
     have hU : e.reprU.evalParams gen t.H t.pp (AGMOMUFLog.tags t.log) ≠ 0 := by
-      -- `(F := F)`: without it, elaboration fails to synthesize
-      -- `Field ((μCMZATCoreSyntax F gen).Msg t.H)`.
       have := hver (AGMOMUFForgery.plain (F := F) gen t.H t.pp (AGMOMUFLog.tags t.log) e)
         (List.mem_map_of_mem he)
       simp only [μCMZATCoreSyntax, verify, Bool.and_eq_true, decide_eq_true_eq] at this
@@ -156,8 +154,7 @@ def OMUFTrace.ServerConsistent (t : OMUFTrace F G) : Prop :=
   t.pp = (t.sk.1 • t.H, t.sk.2.1 • gen, fun i => t.sk.2.2 i • gen) ∧
     ∀ k : Fin t.arity, ∃ C' : G,
       ((t.issuedRepr k).uv.length = ((AGMOMUFLog.tags t.log).take k).length ∧
-        (t.issuedRepr k).eval gen t.H t.pp.1 t.pp.2.1 t.pp.2.2
-          ((AGMOMUFLog.tags t.log).take k) = C') ∧
+        (t.issuedRepr k).evalParams gen t.H t.pp ((AGMOMUFLog.tags t.log).take k) = C') ∧
       ∃ u : F, ((AGMOMUFLog.tags t.log).get k).1 = u • gen ∧
         ((AGMOMUFLog.tags t.log).get k).2 =
           t.sk.1 • ((AGMOMUFLog.tags t.log).get k).1 + u • (C' + t.sk.2.1 • gen)
@@ -272,7 +269,7 @@ def AGMOMUFLog.Consistent {n : ℕ} (sk : Key F n) (H : G) (pp : Params G n)
   ∀ (i : ℕ) (C' : G) (ρ : AGMRepr F n) (U' V' : G),
     log[i]? = some (C', ρ, some (U', V')) →
       (ρ.uv.length = (AGMOMUFLog.tags (log.take i)).length ∧
-        ρ.eval gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags (log.take i)) = C') ∧
+        ρ.evalParams gen H pp (AGMOMUFLog.tags (log.take i)) = C') ∧
         ∃ u : F, U' = u • gen ∧ V' = sk.1 • U' + u • (C' + sk.2.1 • gen)
 
 omit hgen in
@@ -290,7 +287,7 @@ theorem AGMOMUFLog.consistent_append {n : ℕ} {sk : Key F n} {H : G} {pp : Para
     (e : G × AGMRepr F n × Option (G × G))
     (he : ∀ U' V', e.2.2 = some (U', V') →
       (e.2.1.uv.length = (AGMOMUFLog.tags log).length ∧
-        e.2.1.eval gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags log) = e.1) ∧
+        e.2.1.evalParams gen H pp (AGMOMUFLog.tags log) = e.1) ∧
         ∃ u : F, U' = u • gen ∧ V' = sk.1 • U' + u • (e.1 + sk.2.1 • gen)) :
     AGMOMUFLog.Consistent gen sk H pp (log ++ [e]) := by
   intro i C' ρ U' V' h
@@ -415,11 +412,11 @@ theorem OMUFTrace.eval_eq_smul_eval_toPolyAt (t : OMUFTrace F G)
       ((AGMOMUFLog.tags t.log).get j).2 =
         (t.sk.1 + t.sk.2.1 + MvPolynomial.eval (t.point gen) (cs' j)) •
           ((AGMOMUFLog.tags t.log).get j).1) :
-    ρ.eval gen t.H t.pp.1 t.pp.2.1 t.pp.2.2 (AGMOMUFLog.tags t.log) =
+    ρ.evalParams gen t.H t.pp (AGMOMUFLog.tags t.log) =
       MvPolynomial.eval (t.point gen) ((ρ.toReprCoeffs t.arity).toPolyAt cs') • gen := by
   have hH := glog_smul (F := F) gen t.H
   simp only [OMUFTrace.point] at htag
-  rw [hpp, AGMRepr.eval, AGMPoly.ReprCoeffs.eval_toPolyAt,
+  rw [hpp, AGMRepr.evalParams, AGMRepr.eval, AGMPoly.ReprCoeffs.eval_toPolyAt,
     sum_zipWith_eq_fin_sum_getD (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
       ((0, 0) : F × F) ((0, 0) : G × G) (by intro t; simp only [zero_smul, add_zero]) ρ.uv]
   simp only [AGMRepr.toReprCoeffs, OMUFTrace.point, gamePoint, Fin.sum_univ_one]
@@ -445,7 +442,7 @@ representation (`eval_point_cs` at `j`). The tag identity `eval_eq_smul_eval_toP
 theorem OMUFTrace.tag_eq_of_eval (t : OMUFTrace F G) (ht : t.ServerConsistent gen)
     (j : Fin t.arity)
     (hj : MvPolynomial.eval (t.point gen) (t.cs j) • gen =
-      (t.issuedRepr j).eval gen t.H t.pp.1 t.pp.2.1 t.pp.2.2 (AGMOMUFLog.tags t.log)) :
+      (t.issuedRepr j).evalParams gen t.H t.pp (AGMOMUFLog.tags t.log)) :
     ((AGMOMUFLog.tags t.log).get j).2 =
       (t.sk.1 + t.sk.2.1 + MvPolynomial.eval (t.point gen) (t.cs j)) •
         ((AGMOMUFLog.tags t.log).get j).1 := by
@@ -455,7 +452,7 @@ theorem OMUFTrace.tag_eq_of_eval (t : OMUFTrace F G) (ht : t.ServerConsistent ge
     have h := (AGMRepr.eval_append_of_length_eq _ _ _ _ _ _ _
       ((AGMOMUFLog.tags t.log).drop j) hmatchj.1).trans hmatchj.2
     rw [List.take_append_drop] at h
-    rw [hj, h]
+    rw [hj, AGMRepr.evalParams, h]
   rw [hV, hU, hCj]
   module
 
@@ -467,7 +464,7 @@ on `k` through `eval_toPolyAt`, the earlier slots entering through the server's 
 theorem OMUFTrace.eval_point_cs (t : OMUFTrace F G) (ht : t.ServerConsistent gen)
     (k : Fin t.arity) :
     MvPolynomial.eval (t.point gen) (t.cs k) • gen =
-      (t.issuedRepr k).eval gen t.H t.pp.1 t.pp.2.1 t.pp.2.2 (AGMOMUFLog.tags t.log) := by
+      (t.issuedRepr k).evalParams gen t.H t.pp (AGMOMUFLog.tags t.log) := by
   induction k using WellFoundedLT.induction with
   | ind k ih =>
     obtain ⟨hpp, hk⟩ := ht
@@ -513,7 +510,6 @@ theorem OMUFTrace.eval_point_forgeryPoly (t : OMUFTrace F G) (ht : t.ServerConsi
     fun _ j _ => t.tag_eq_of_eval gen ht j (t.eval_point_cs gen ht j)
   have hα := t.eval_eq_smul_eval_toPolyAt gen hpp e.reprU t.cs (htag e.reprU)
   have hβ := t.eval_eq_smul_eval_toPolyAt gen hpp e.reprV t.cs (htag e.reprV)
-  unfold AGMRepr.evalParams at hver
   have key : MvPolynomial.eval (t.point gen)
       ((e.reprV.toReprCoeffs t.arity).toPolyAt t.cs) =
       (t.sk.1 + t.sk.2.1 + e.msg 0 * t.sk.2.2 0) *
@@ -535,8 +531,6 @@ theorem OMUFTrace.eval_point_of_wins (t : OMUFTrace F G) (ht : t.ServerConsisten
   intro φ hφ
   obtain ⟨e, he, hφe⟩ := List.mem_map.1 hφ
   obtain ⟨-, -, hver⟩ := hw
-  -- `(F := F)`: without it, elaboration fails to synthesize
-  -- `Field ((μCMZATCoreSyntax F gen).Msg t.H)`.
   have hv := hver (AGMOMUFForgery.plain (F := F) gen t.H t.pp (AGMOMUFLog.tags t.log) e)
     (List.mem_map_of_mem he)
   simp only [μCMZATCoreSyntax, verify, Bool.and_eq_true, decide_eq_true_eq] at hv

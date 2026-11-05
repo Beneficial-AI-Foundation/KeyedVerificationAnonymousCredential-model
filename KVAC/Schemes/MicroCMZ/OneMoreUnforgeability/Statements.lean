@@ -515,13 +515,6 @@ lemma tags_collapseLog {n : ℕ} (r : Fin n → F) (log : AGMOMUFLog F G n) :
     rw [List.filterMap_map]
     congr 1
 
-/-- A functor map commutes with `if`: `f <$> (if p then c else c')` is
-`if p then f <$> c else f <$> c'`. -/
-lemma map_if {a b : Type} {m : Type -> Type} (f : a -> b) (p : Prop) (c c' : m a )
-     [Decidable p] [Functor m]:
-    (f <$> (if p then c else c')) = (if p then f <$> c else f <$> c') := by
-    exact apply_ite (Functor.map f) p c c'
-
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
 /-- Collapsing the log commutes with appending entries. -/
 lemma collapseLog_append {n : ℕ} (r : Fin n → F) (l₁ l₂ : AGMOMUFLog F G n) :
@@ -598,10 +591,9 @@ lemma collapse_step_sign {n : ℕ} (gen : G) (secParam : ℕ)
   simp only [agmOMUFOracleImpl]
   simp only [StateT.run, StateT.mk]
   simp only [map_bind, map_pure]
-  simp only [tags_collapseLog, AGMRepr.evalParams, AGMRepr.eval_collapseRepr]
-  simp only [Prod.map_apply, id, μCMZATCoreSyntax, atIssueSrv]
-  simp only [add_apply_inr, smul_add, bind_pure_comp, Functor.map_map]
-  simp only [collapseLog_append]
+  simp only [tags_collapseLog, AGMRepr.evalParams, AGMRepr.eval_collapseRepr, Prod.map_apply, id,
+    μCMZATCoreSyntax, atIssueSrv, add_apply_inr, smul_add, bind_pure_comp, Functor.map_map,
+    collapseLog_append]
   rfl
 
 /-- One Verify step: the game at `n = 1` with the collapsed log, running the collapsed query, is

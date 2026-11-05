@@ -279,10 +279,9 @@ lemma twoDLParams_eq (x : F) (e : TwoDLEmbed F) :
 the records of a log. -/
 lemma twoDLxEval_eq (x : F) (e : TwoDLEmbed F) (ρ : AGMRepr F 1) (tags : List (G × G)) :
     twoDLxEval (x • gen) (x • (x • gen)) e ρ (twoDLAuxOf gen x tags) =
-      x • ρ.eval gen (e.η • gen) (twoDLParams gen (x • gen) e).1
-        (twoDLParams gen (x • gen) e).2.1 (twoDLParams gen (x • gen) e).2.2 tags := by
-  simp only [twoDLxEval, AGMRepr.eval, twoDLXTags_auxOf, twoDLParams, smul_add,
-    Finset.smul_sum, smul_zipWith_sum_tags]
+      x • ρ.evalParams gen (e.η • gen) (twoDLParams gen (x • gen) e) tags := by
+  simp only [twoDLxEval, AGMRepr.evalParams, AGMRepr.eval, twoDLXTags_auxOf, twoDLParams,
+    smul_add, Finset.smul_sum, smul_zipWith_sum_tags]
   congr 1
   · congr 1
     · congr 1
@@ -302,14 +301,6 @@ lemma twoDLAuxOf_tags_append_some (x : F) (log : AGMOMUFLog F G 1) (C : G)
       twoDLAuxOf gen x (AGMOMUFLog.tags log) ++ [(glog gen p.1, x • p.2)] := by
   simp only [AGMOMUFLog.tags_append_some, twoDLAuxOf, List.map_append, List.map_cons,
     List.map_nil]
-
-omit hgen in
-/-- A refused query leaves the records unchanged. -/
-lemma twoDLAuxOf_tags_append_none (x : F) (log : AGMOMUFLog F G 1) (C : G)
-    (ρ : AGMRepr F 1) :
-    twoDLAuxOf gen x (AGMOMUFLog.tags (log ++ [(C, ρ, none)])) =
-      twoDLAuxOf gen x (AGMOMUFLog.tags log) := by
-  simp only [AGMOMUFLog.tags_append_none]
 
 /-- The simulated `sign` answer, from the records of the log, is the real one, followed by the
 records of the new log. -/
