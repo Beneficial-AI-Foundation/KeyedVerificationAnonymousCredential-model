@@ -819,9 +819,10 @@ of the three variable groups (`omuf_cover`), the union bound adds the three Clai
 probabilities (`AGM_OMUFAdv_le_cases`), and their constants add up to Equation 23 since
 the theorem's discrete-log reduction is the mixture of the two Claim reductions
 (`dlogAdv_dlogMix`, `omufBoundN1_eq_of_mix`). The bound is Equation 23 plus
-`omufDegenerateProbAll`, the probability that the extraction of one of the Claims has nothing to
-extract, which the paper does not mention and which is not `0` for some adversaries (module
-docstring); the bound is not Equation 23 alone, and Claims 5.12 and 5.13 are `sorry`d.
+`omufDegenerateProbAll`, the sum of the three degenerate probabilities, one for each Claim (the
+probability that the extraction of that Claim's reduction has nothing to extract). The paper does
+not mention them, and the sum is not `0` for some adversaries (module docstring). The bound is not
+Equation 23 alone, and Claims 5.12 and 5.13 are `sorry`d.
 -/
 theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
     (hq : ∀ (H : G) (pp : Params G 1), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :

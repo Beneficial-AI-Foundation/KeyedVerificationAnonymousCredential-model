@@ -1726,11 +1726,13 @@ guesses `g` and forges `(m, (H, X₀ + g·(Xᵣ + m·X₁)))` has the polynomial
 degenerate in `xᵣ` and `x₁` exactly when it wins by `g = η`; for `x₀`, guessing `h` and forging
 `(m, (gen, h·X₀ + Xᵣ + m·X₁))` gives `(1 − h·η)·x₀`, degenerate when it wins by `h·η = 1`. Each wins
 with probability about `1/(p − 1)`.
-The Claims therefore carry their degenerate probability as an explicit term, which is a true
-bound: `omufDegenerateProbU` for Claim 5.12 (no `u_j` that occurs leaves a nonzero polynomial),
-`omufDegenerateProbEta` for Claim 5.13 (the run is degenerate in `η`) and `omufDegenerateProb` for
-Claim 5.14, summed over the three variables. `omufDegenerateProbAll` is their sum, which the
-bounds of Theorem 5.11 carry. A repair of the paper's argument bounds it or
+The Claims therefore carry their degenerate probability as an explicit term. Each bound is the
+paper's plus a term that the paper's argument does not control. The terms are `omufDegenerateProbU`
+for Claim 5.12 (no `u_j` that occurs leaves a nonzero polynomial), `omufDegenerateProbEta` for
+Claim 5.13 (the run is degenerate in `η`) and `omufDegenerateProb` for Claim 5.14 (summed over the
+three variables), and `omufDegenerateProbAll` is their sum, which the bounds of Theorem 5.11 carry.
+Claim 5.14 is proved with its term. Claims 5.12 and 5.13 are admitted (`sorry`), so their bounds
+are statements, not established results. A repair of the paper's argument bounds the terms or
 changes the events, and the rest of {uses "omuf_two_dl_extraction"}[] is unaffected.
 :::
 
