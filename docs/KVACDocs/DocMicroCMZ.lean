@@ -1308,9 +1308,8 @@ queries made, on the tokens the representations name over the final
 transcript; the experiment as a `ProbComp Bool` with setup and key
 generation delegated to {uses "mucmz_at_core"}[]; its advantage; and the
 decidable Sign predicate the static query-budget hypotheses of
-Theorem 5.11 count. The proof singles out the unsupported forgery by
+Theorem 5.11 count. The proof singles out an unsupported forgery by
 pigeonhole.
-The correspondence with the plain game is a deferred bridge.
 :::
 
 :::theorem "mucmz_at_omuf" (parent := "cmz_omuf") (tags := "paper, O24 Thm 5.3") (effort := "large") (priority := "low")
@@ -1330,8 +1329,7 @@ Reduces to the AGM one-more unforgeability bound {uses "mucmz_at_agm_omuf"}[].
 one-more unforgeable anonymous token ({uses "omuf_game"}[]) for `n`
 attributes. Stated as `agm_omuf_le` over the merged core scheme
 {uses "mucmz_at_core"}[] in the AGM game
-{uses "agm_omuf_game"}[] for every `n > 0`, the plain game following by a
-deferred bridge, with the printed bound
+{uses "agm_omuf_game"}[] for every `n > 0`, with the printed bound
 `(q + 6)/p + (q + 1)·Adv^dl + 3·Adv^2-dl + Adv^gapdl` behind the named
 definition `omufBound` ({uses "hardness_assumptions"}[]). The discrete-log
 and 2-DL advantages are those of the `n = 1` reductions run on the
@@ -1495,7 +1493,7 @@ the token its representations evaluate to, is
 {bpref "omuf_server_consistency"}[].
 :::
 
-:::theorem "omuf_attribute_collapse" (lean := "KVAC.Schemes.MicroCMZ.agmOMUFImpl, KVAC.Schemes.MicroCMZ.agmOMUFImpl_inr, KVAC.Schemes.MicroCMZ.instFintypeAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instInhabitedAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instIsUniformSpecAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.omufCollapseImpl, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.collapse, KVAC.Schemes.MicroCMZ.omufToN1_isQueryBoundP, KVAC.Schemes.MicroCMZ.omufWins_collapse, KVAC.Schemes.MicroCMZ.agmOMUFWins_collapse, KVAC.Schemes.MicroCMZ.CollapseCollision, KVAC.Schemes.MicroCMZ.collapse_nodup_or_collision, KVAC.Schemes.MicroCMZ.collapseLog, KVAC.Schemes.MicroCMZ.tags_collapseLog, KVAC.Schemes.MicroCMZ.collapseLog_append, KVAC.Schemes.MicroCMZ.map_if, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_sign, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_verify, KVAC.Schemes.MicroCMZ.collapse_step_sign, KVAC.Schemes.MicroCMZ.collapse_step_verify, KVAC.Schemes.MicroCMZ.collapse_step_coin, KVAC.Schemes.MicroCMZ.collapse_run") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_attribute_collapse" (lean := "KVAC.Schemes.MicroCMZ.agmOMUFImpl, KVAC.Schemes.MicroCMZ.agmOMUFImpl_inr, KVAC.Schemes.MicroCMZ.instFintypeAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instInhabitedAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.instIsUniformSpecAGMOMUFQueryAGMOMUFOracleSpec, KVAC.Schemes.MicroCMZ.omufCollapseImpl, KVAC.Schemes.MicroCMZ.AGMOMUFForgery.collapse, KVAC.Schemes.MicroCMZ.omufToN1_isQueryBoundP, KVAC.Schemes.MicroCMZ.omufWins_collapse, KVAC.Schemes.MicroCMZ.agmOMUFWins_collapse, KVAC.Schemes.MicroCMZ.CollapseCollision, KVAC.Schemes.MicroCMZ.collapse_nodup_or_collision, KVAC.Schemes.MicroCMZ.collapseLog, KVAC.Schemes.MicroCMZ.tags_collapseLog, KVAC.Schemes.MicroCMZ.collapseLog_append, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_sign, KVAC.Schemes.MicroCMZ.simulateQ_omufCollapseImpl_verify, KVAC.Schemes.MicroCMZ.collapse_step_sign, KVAC.Schemes.MicroCMZ.collapse_step_verify, KVAC.Schemes.MicroCMZ.collapse_step_coin, KVAC.Schemes.MicroCMZ.collapse_run") (parent := "cmz_omuf") (tags := "milestone")
 The attribute collapse of the general-`n` Theorem 5.11 proof in the
 AGM game of {uses "agm_omuf_game"}[], the facts about the
 transformed adversary `omufToN1` of {bpref "mucmz_at_agm_omuf"}[]. The query
@@ -1524,9 +1522,9 @@ three together. The Sign and Verify steps are the oracle's two arms unfolded on
 both sides: the collapsed representation evaluates to the element the original
 does at the scaled parameters (`AGMRepr.eval_collapseRepr`), the issued pairs
 are those of the original log (`tags_collapseLog`), and the core's answer does
-not depend on the representation. The run-level statement is the state-projection transport of
-`OracleComp.map_run_simulateQ_eq_of_query_map_eq` along `collapseLog`, applied to
-these steps.
+not depend on the representation. The run-level statement is the
+state-projection transport of `OracleComp.map_run_simulateQ_eq_of_query_map_eq`
+along `collapseLog`, applied to these steps.
 :::
 
 :::theorem "omuf_pigeonhole" (lean := "KVAC.Schemes.MicroCMZ.length_le_of_nodup_of_forall_mem_range, KVAC.Schemes.MicroCMZ.OMUFTrace.ev0_cs, KVAC.Schemes.MicroCMZ.OMUFTrace.msg_mem_of_forgeryPoly_eq_zero, KVAC.Schemes.MicroCMZ.OMUFTrace.exists_forgeryPoly_ne_zero") (parent := "cmz_omuf") (tags := "milestone")
@@ -1569,8 +1567,9 @@ index of the `k`-th kept element of a `filterMap`.
 :::proof "omuf_server_consistency"
 Coin queries and Verify leave the log alone, and Sign appends the commitment its
 representation evaluates to, the representation normalized to the pairs issued
-so far, and the support of the core's issuance. Positions are converted by pairing each issued representation with
-its pair, so that the pairs and the representations share one index.
+so far, and the support of the core's issuance. Positions are converted by
+pairing each issued representation with its pair, so that the pairs and the
+representations share one index.
 :::
 
 :::theorem "omuf_evaluation_bridge" (lean := "KVAC.Schemes.MicroCMZ.OMUFTrace.point, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_eq_smul_eval_toPolyAt, KVAC.Schemes.MicroCMZ.OMUFTrace.tag_eq_of_eval, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_point_cs, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_point_forgeryPoly, KVAC.Schemes.MicroCMZ.OMUFTrace.eval_point_of_wins") (parent := "cmz_omuf") (tags := "milestone")
@@ -1592,9 +1591,10 @@ verification equation vanishes.
 The commitment polynomial is read by strong induction on the issuance
 position: the fold of Equation 18 gives the earlier polynomials in the slots
 below `k` and `0` from `k` on, the latter slots carrying a `0` coefficient since
-the issued representations are normalized, and the honest answers turn the earlier tags into the
-exponents the polynomial evaluates to. The forgery polynomial is then the
-difference of the two representations' values, scaled by the key.
+the issued representations are normalized, and the honest answers turn the
+earlier issued pairs into the exponents the polynomial evaluates to. The forgery
+polynomial is then the difference of the two representations' values, scaled by
+the key.
 :::
 
 :::theorem "omuf_case_cover" (lean := "KVAC.Schemes.MicroCMZ.omuf_cover") (parent := "cmz_omuf") (tags := "milestone")
@@ -1634,7 +1634,7 @@ polynomial need not be nonzero, which the degenerate probability of
 {bpref "omuf_extraction_obligation"}[] accounts for.
 :::
 
-:::theorem "omuf_two_dl_run_coupling" (lean := "KVAC.Schemes.MicroCMZ.twoDLAuxOf, KVAC.Schemes.MicroCMZ.twoDLXTags_auxOf, KVAC.Schemes.MicroCMZ.smul_zipWith_sum_tags, KVAC.Schemes.MicroCMZ.twoDLParams_eq, KVAC.Schemes.MicroCMZ.twoDLxEval_eq, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_some, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_none, KVAC.Schemes.MicroCMZ.twoDL_step_sign, KVAC.Schemes.MicroCMZ.twoDL_step_verify, KVAC.Schemes.MicroCMZ.twoDL_step_coin, KVAC.Schemes.MicroCMZ.twoDL_run") (parent := "cmz_omuf") (tags := "milestone")
+:::theorem "omuf_two_dl_run_coupling" (lean := "KVAC.Schemes.MicroCMZ.twoDLAuxOf, KVAC.Schemes.MicroCMZ.twoDLXTags_auxOf, KVAC.Schemes.MicroCMZ.smul_zipWith_sum_tags, KVAC.Schemes.MicroCMZ.twoDLParams_eq, KVAC.Schemes.MicroCMZ.twoDLxEval_eq, KVAC.Schemes.MicroCMZ.twoDLAuxOf_tags_append_some, KVAC.Schemes.MicroCMZ.twoDL_step_sign, KVAC.Schemes.MicroCMZ.twoDL_step_verify, KVAC.Schemes.MicroCMZ.twoDL_step_coin, KVAC.Schemes.MicroCMZ.twoDL_run") (parent := "cmz_omuf") (tags := "milestone")
 The run of the 2-DL reduction of {uses "omuf_two_dl_reduction"}[] is the run of the game of
 {uses "agm_omuf_game"}[] at the key `(a₀ + b₀·x, aᵣ + bᵣ·x, a₁ + b₁·x)`, the crs `η·G` and the
 parameters the reduction presents, followed by the multiples it records, as an equality of
@@ -1646,9 +1646,9 @@ The Sign and Verify steps are the oracle's arms unfolded on both sides. The redu
 answer is the real one by module algebra over `x₀ = a + b·x`, and the record `x·V` it stores is
 `x` times the real `V` once `x·C` is the multiple of the commitment's representation
 (`twoDLxEval_eq`, with `C` that representation's evaluation). The Verify test is the real one,
-since `x·U` is the multiple computed from the representation. The run-level statement is the state-projection transport of the simulation
-along the log, through these steps, with the records a function of the log
-(`twoDLAuxOf`).
+since `x·U` is the multiple computed from the representation. The run-level statement is the
+state-projection transport of the simulation along the log, through these steps, with the
+records a function of the log (`twoDLAuxOf`).
 :::
 
 :::theorem "omuf_two_dl_key_law" (lean := "KVAC.Schemes.MicroCMZ.evalDist_map_uniformNonzero, KVAC.Schemes.MicroCMZ.evalDist_uniformUnits_smul_gen, KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_const, KVAC.Schemes.MicroCMZ.evalDist_bind_congr', KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_add_right, KVAC.Schemes.MicroCMZ.evalDist_bind_uniform_fin_one, KVAC.Schemes.MicroCMZ.omufCrsKey, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_key, KVAC.Schemes.MicroCMZ.twoDLEmbedAt_indep, KVAC.Schemes.MicroCMZ.twoDLSampleEmbed_key") (parent := "cmz_omuf") (tags := "milestone")

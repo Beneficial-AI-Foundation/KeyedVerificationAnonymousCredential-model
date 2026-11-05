@@ -56,14 +56,13 @@ Equation 22, the forgery polynomial with the case split of the proof.
 The game-level evaluation bridge, the Equation 18 bridge announced in the
 module docstring of `OneMoreUnforgeability/Game.lean`: at the discrete-log
 point of an honest run, `c_k` evaluates to the logarithm of the `k`-th issued
-commitment and `toPolyAt γ cs` to the
-logarithm of the element `γ` represents, by induction over the transcript
-through the logged representations and the server's honest answers, so that
-`φ` vanishes at that point exactly when the verification equation
-`V* = (x₀ + xᵣ + m*·x₁)·U*` holds
-(acceptance also needs `U* ≠ 0`, so a verifying forgery has vanishing `φ`, not
-conversely). `eval_toPolyAt` is its algebraic half; the induction over the run
-is `OMUFTrace.eval_point_cs` in `Bridge.lean`. The coefficient identities of
+commitment and `toPolyAt γ cs` to the logarithm of the element `γ` represents,
+by induction over the transcript through the logged representations and the
+server's honest answers, so that `φ` vanishes at that point exactly when the
+verification equation `V* = (x₀ + xᵣ + m*·x₁)·U*` holds (acceptance also needs
+`U* ≠ 0`, so a verifying forgery has vanishing `φ`, not conversely).
+`eval_toPolyAt` is its algebraic half; the induction over the run is
+`OMUFTrace.eval_point_cs` in `Bridge.lean`. The coefficient identities of
 Equations 20 and 21 are `forgeryPoly_eq_zero_coeffs` in this file. The degree
 bounds and the constant audit belong to the proofs of the Claims.
 
@@ -76,7 +75,8 @@ issued contributes `γ_{u,k}·u_k + γ_{v,k}·u_k·(x₀ + xᵣ)` rather than no
 for a representation the game's Sign oracle normalized, the conversion
 `toReprCoeffs` pads both coefficients of every not-yet-issued pair with `0`, so
 the contribution is `0`. The layer itself accepts any coefficient lists, so
-this triangularity is a property of normalized inputs, the `hlen` of `OMUFTrace.eval_point_cs`.
+this triangularity is a property of normalized inputs, the `hlen` of
+`OMUFTrace.eval_point_cs`.
 -/
 
 set_option autoImplicit false

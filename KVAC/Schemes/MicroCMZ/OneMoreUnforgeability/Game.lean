@@ -14,11 +14,11 @@ The algebraic group model (AGM) one-more unforgeability game for the μCMZ_AT
 core scheme (`μCMZATCoreSyntax`), following Orrù, *Revisiting Keyed-Verification
 Anonymous Credentials*, IACR ePrint 2024/1552, §5.6, and closely mirroring the
 AGM UF-CMVA(+Help) game of `KVAC.Schemes.MicroCMZ.AlgebraicMAC`. This is
-issue #181: the query type, the oracle spec,
-the transcript log, the oracles and `agmOMUFImpl`, which adds the
-coin oracle, the algebraic adversary, the winning condition, the experiment
-`AGM_OMUFGame` and its advantage `AGM_OMUFAdv`, together with the decidable
-Sign predicate the static query-budget hypotheses of Theorem 5.11 count.
+issue #181: the query type, the oracle spec, the transcript log, the oracles
+and `agmOMUFImpl` (which adds the coin oracle), the algebraic adversary, the
+winning condition, the experiment `AGM_OMUFGame` and its advantage
+`AGM_OMUFAdv`, together with the decidable Sign predicate the static
+query-budget hypotheses of Theorem 5.11 count.
 
 The algebraic group model restricts the adversary's type and nothing else.
 Every group element the adversary submits, a commitment or a token, is
@@ -64,9 +64,9 @@ entries and reads missing ones as zero. It buys one guarantee: a logged
 representation names the same commitment under any later extension of the
 transcript (`AGMRepr.eval_append_of_length_eq`), so the Theorem 5.11 reduction
 can read the finished log against one final list of pairs instead of carrying a
-per-query prefix. Verify and forgery representations are
-evaluated once, against the transcript at the moment they are submitted, and
-are not normalized. The comparison with the alternatives is in
+per-query prefix. Verify and forgery representations are evaluated once,
+against the transcript at the moment they are submitted, and are not
+normalized. The comparison with the alternatives is in
 `DESIGN_ALTERNATIVES.md`, *Normalized representations in the AGM OMUF game*.
 
 **The log keeps the representations.** Every Sign query is logged in issuance
@@ -339,7 +339,9 @@ lemma agmOMUFImpl_inr (secParam : ℕ) (sk : Key F n) (H : G)
 
 /-- The plain `(m⃗, (U, V))` of a forgery, the token evaluated from its
 representations over the issued pairs `tags`: the part the Figure 6 winning
-condition `OMUFWins` reads. -/
+condition `OMUFWins` reads. Where the core scheme's message type
+`(μCMZATCoreSyntax F gen).Msg H` is expected, elaboration can fail to synthesize
+`Field ((μCMZATCoreSyntax F gen).Msg H)`, so those call sites pass `(F := F)`. -/
 def AGMOMUFForgery.plain (H : G) (pp : Params G n) (tags : List (G × G))
     (e : AGMOMUFForgery F n) : (Fin n → F) × Code G :=
   (e.msg, (e.reprU.evalParams gen H pp tags, e.reprV.evalParams gen H pp tags))
@@ -350,15 +352,13 @@ and the adversary's output `out`: the plain Figure 6 condition `OMUFWins` of
 `KVAC.Preliminaries.AnonymousTokens.Security` over the core scheme, with the
 query count `q = log.length` (every Sign query counts) and the forgeries
 projected to their `(m⃗, (U, V))` over the final issued pairs
-`AGMOMUFLog.tags log`. The Theorem 5.11 proof singles out the forgery not
+`AGMOMUFLog.tags log`. The Theorem 5.11 proof singles out a forgery not
 supported by an issued pair by pigeonhole (O24 p. 45). An `abbrev`, like
 `OMUFWins`, so the game can `decide` it.
 -/
 abbrev AGMOMUFWins (secParam : ℕ) (sk : Key F n) (H : G) (pp : Params G n)
     (log : AGMOMUFLog F G n) (out : List (AGMOMUFForgery F n)) : Prop :=
   OMUFWins (μCMZATCoreSyntax F gen) (secParam := secParam) H sk log.length
-    -- `(F := F)`: without it, elaboration fails to synthesize
-    -- `Field ((μCMZATCoreSyntax F gen).Msg H)`.
     (out.map (AGMOMUFForgery.plain (F := F) gen H pp (AGMOMUFLog.tags log)))
 
 /--
