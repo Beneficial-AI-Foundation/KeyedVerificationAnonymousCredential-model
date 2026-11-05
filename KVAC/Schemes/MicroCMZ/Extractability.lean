@@ -40,10 +40,12 @@ in the honest game of Figure 5 with the oracle `Help` answered by the key. The
 paper ties `Help` to no model. The algebraic group model is a hypothesis of
 Theorem 5.1 and Lemma 5.4 (pp. 35, 36) and of nothing in §5.5, so the theorem
 puts no algebraic restriction on the single-user adversary of point 7.
-`microCMZ_ufcmva_le_of_wellBehaved` of `UFCMVA.lean` bounds the plain game
-for well-behaved algebraic adversaries, whose translation (`AGMBridge.lean`)
-answers `help` by `false`. A bound for the game with `Help` is open, issue
-#235. That is where the model enters when the two theorems are chained.
+`microCMZ_ufcmvaHelp_le` of `UFCMVA.lean` states Theorem 5.1 at this game for
+the adversaries `A.forget gen` of an algebraic `A`, over the admitted Lemma 5.5
+(`agm_ufcmva_le_explicit`). The reduction `B` of the theorem below is an
+arbitrary `UFHelpAdversary`, and nothing shows that it has that form, so the
+chaining of the two theorems is open, issue #235. That is where the model
+enters.
 
 ### 2. The candidates for `Z` are read from the proof and the trace
 

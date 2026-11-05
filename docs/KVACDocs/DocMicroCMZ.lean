@@ -1182,8 +1182,11 @@ every `π_is` by a simulated one. Remark 5.9 states this case, and the lemma
 is at most the sum of `Adv^ufcmva_{μCMZ,B}`, `Adv^zk_{ZKP_cmz.is,A'}`,
 `Adv^ksnd_{ZKP_cmz.iu,A''}` and `Adv^ksnd_{ZKP_cmz.p,A'''}`, for existential
 reductions `B`, `A'`, `A''` and `A'''` without a cost bound, as in {uses "mucmz_anonymity"}[]. The first term is the advantage in the UF-CMVA game with
-`Help` of {uses "mucmz_ufcmva_help_game"}[], the game Theorem 5.1 is proved for
-({uses "mucmz_mac_security"}[]). The others are the zero-knowledge advantage of
+`Help` of {uses "mucmz_ufcmva_help_game"}[], the game at which the paper proves
+Theorem 5.1 (p. 35) and at which {uses "mucmz_mac_security"}[] states it for the
+adversaries `A.forget gen` of an algebraic `A`, over the admitted Lemma 5.5. The
+reduction `B` is an arbitrary adversary of that game, so the chaining of the two
+theorems is open, issue #235. The others are the zero-knowledge advantage of
 {uses "zk_game"}[] and the knowledge-soundness advantages of {uses "extraction_game"}[], as printed. The hypotheses are the condition of Remark
 5.9, {uses "remark_59"}[]. Each proof system is confined to its own region of
 the random-oracle domain, with the simulator of `ZKP_cmz.is` and the extractors
