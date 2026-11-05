@@ -25,7 +25,8 @@ theorem.
 The statement differs from the printed text in seven points. Five make
 explicit what the paper assumes or uses tacitly, points 1, 2, 3, 5 and 6.
 Two depart from the printed statement, points 4 and 7, each at a gap the
-paper itself records. `docs/DESIGN_ALTERNATIVES.md` records the decisions.
+paper itself records. Part A6 of `docs/findings/FINDINGS_AND_LESSONS.md`
+records the decisions.
 
 ### 1. The unforgeability term is the advantage in the game with Help
 
