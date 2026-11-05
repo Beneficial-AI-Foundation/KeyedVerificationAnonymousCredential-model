@@ -29,21 +29,21 @@ Claims 5.12 to 5.14 bound in `Statements.lean`.
                                the events Claims 5.12 to 5.14 bound
 
 `AGMRepr.toReprCoeffs` of `AGMReduction/Core.lean` converts a game
-representation to polynomial-layer coefficients at a given arity, reading
-absent issued-pair slots as `0`, which under the exact-length gate is the right value.
-The arity is the number of issued pairs, not the Sign budget, since a refused
-Sign query issues no pair and gets no variable, while the winning condition
-counts every Sign query.
+representation to polynomial-layer coefficients at a given arity, reading absent
+issued-pair slots as `0`, which for the normalized representations of the log is
+the right value. The arity is the number of issued pairs, not the Sign budget,
+since a Sign query the server refuses issues no pair and gets no variable, while
+the winning condition counts every Sign query.
 
 ## The evaluation bridge
 
 The game-level evaluation bridge: at the discrete-log point of a run (`OMUFTrace.point` in
 `Bridge.lean`), `t.cs k` evaluates to the logarithm of the `k`-th issued commitment and,
-for a forgery whose representations match its token and whose token verifies, its polynomial
-vanishes (`eval_point_cs`, `eval_point_forgeryPoly`), by induction over the transcript through
-the gate and the server's answers. Its algebraic half is `eval_toPolyAt` in `Polynomial.lean`;
-the induction needs the invariants of a run, recovered from membership in the support of
-`agmOMUFTrace` (`serverConsistent_of_mem_support`).
+for a forgery, its polynomial vanishes when the verification equation holds of the token its
+representations evaluate to (`eval_point_cs`, `eval_point_forgeryPoly`), by induction over the
+transcript through the server's answers. Its algebraic half is `eval_toPolyAt` in
+`Polynomial.lean`; the induction needs the invariants of a run, recovered from membership in the
+support of `agmOMUFTrace` (`serverConsistent_of_mem_support`).
 -/
 
 set_option autoImplicit false

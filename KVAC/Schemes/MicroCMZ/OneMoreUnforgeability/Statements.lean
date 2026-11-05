@@ -17,7 +17,7 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.AttributeCollapse
 # μCMZ_AT one-more unforgeability — the Theorem 5.11 target statements (O24 §5.6)
 
 Theorem 5.11 of Orrù, *Revisiting Keyed-Verification Anonymous Credentials*
-(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM-instrumented game of
+(IACR ePrint 2024/1552), for the μCMZ_AT core in the AGM game of
 `OneMoreUnforgeability/Game.lean`: at `n = 1` (Equation 23), the
 case the paper proves directly, for every `n` (the printed bound), and the
 Claims 5.12 to 5.14 of the `n = 1` proof over the case events of
@@ -35,8 +35,7 @@ merged.
   agm_omuf_le    :  AGM_OMUFAdv gen A secParam  ≤  omufBound F q εdl' ε2dl' εgap
                     for every  0 < n  and  A : AGMOMUFAdversary F G n
     both under the budget hypothesis
-      ∀ H pp, IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q     at most q Sign queries,
-                                                                    refused ones included
+      ∀ H pp, IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q     at most q Sign queries
     where
       omufBoundN1 F q εdl ε2dl    = (q + 4)/p + (q + 1)·εdl + 3·ε2dl         Equation 23
       omufBound F q εdl ε2dl εgap = (q + 6)/p + (q + 1)·εdl + 3·ε2dl + εgap  printed bound
@@ -262,7 +261,7 @@ The discrete-log reduction of O24 Claim 5.12 (item (i), a `u_ι` monomial), for 
 Sign budget `q`, built from an algebraic one-more forger `A`. It samples a
 position `ι ∈ [q]` uniformly, the selector whose guess costs the Claim's factor
 `q` and needs the budget as an argument (one reduction per Claim), answers the
-`ι`-th issued Sign query, refused queries issuing nothing as in the game, with the challenge
+`ι`-th issued Sign query with the challenge
 embedded in `U_ι = a·G + b·X` (p. 46, "Fix ι ∈ [q]"), fails if fewer than `ι` pairs are
 issued, and solves for the logarithm the equation that the unsupported
 forgery's polynomial `φ_i` (Equation 22) gives at `u_ι`. Two adaptations are the
@@ -370,18 +369,18 @@ noncomputable def omufCollapseImpl {n : ℕ} (r : Fin n → F) :
     QueryImpl (unifSpec + AGMOMUFOracleSpec F G n)
       (OracleComp (unifSpec + AGMOMUFOracleSpec F G 1))
   | .inl t => query (spec := unifSpec + AGMOMUFOracleSpec F G 1) (.inl t)
-  | .inr (.sign C ρ) =>
+  | .inr (.sign ρ) =>
       query (spec := unifSpec + AGMOMUFOracleSpec F G 1)
-        (.inr (.sign C (KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr r ρ)))
-  | .inr (.verify m σ ρU ρV) =>
+        (.inr (.sign (KVAC.Schemes.MicroCMZ.AGMRepr.collapseRepr r ρ)))
+  | .inr (.verify m ρU ρV) =>
       query (spec := unifSpec + AGMOMUFOracleSpec F G 1)
-        (.inr (.verify (collapseMsg r m) σ
+        (.inr (.verify (collapseMsg r m)
           (AGMRepr.collapseRepr r ρU) (AGMRepr.collapseRepr r ρV)))
 
 /-- The `n → 1` collapse of a forgery along `r`. -/
-def AGMOMUFForgery.collapse {n : ℕ} (r : Fin n → F) (e : AGMOMUFForgery F G n) :
-    AGMOMUFForgery F G 1 :=
-  { msg := collapseMsg r e.msg, token := e.token
+def AGMOMUFForgery.collapse {n : ℕ} (r : Fin n → F) (e : AGMOMUFForgery F n) :
+    AGMOMUFForgery F 1 :=
+  { msg := collapseMsg r e.msg
     reprU := AGMRepr.collapseRepr r e.reprU, reprV := AGMRepr.collapseRepr r e.reprV }
 
 /--
@@ -435,29 +434,33 @@ lemma omufToN1_isQueryBoundP {n : ℕ} (gen : G)
   · intro x h
     rw [OracleComp.isQueryBoundP_map_iff]
     refine OracleComp.IsQueryBoundP.simulateQ_of_step (hq H _) ?_ ?_
-    · rintro (t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)) h
+    · rintro (t | (ρ | ⟨m, ρU, ρV⟩)) h
       · exact h.elim
       · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun _ => Nat.one_pos)
       · exact h.elim
-    · rintro (t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)) h
+    · rintro (t | (ρ | ⟨m, ρU, ρV⟩)) h
       · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun h => h.elim)
       · exact absurd trivial h
       · exact (OracleComp.isQueryBoundP_query_iff _ _ _).2 (fun h => h.elim)
 
 
-/-- The collapse preserves three of the four conditions of a win: if `out` has `q + 1`
-forgeries, their messages collapse to pairwise distinct scalars along `r`, and they verify at the
-scaled key `xᵢ = rᵢ · x₁`, then the collapsed forgeries have the count `q + 1`, distinct messages,
-and verify at the key `x₁` at `n = 1`. The representation gate is `agmOMUFWins_collapse`. -/
-lemma omufWins_collapse {n : ℕ} (r : Fin n → F) (x₀ xᵣ x₁ : F) (q : ℕ)
-    (out : List (AGMOMUFForgery F G n))
+/-- The collapse preserves the three conditions of a win: if `out` has `q + 1` forgeries, their
+messages collapse to pairwise distinct scalars along `r`, and their tokens, evaluated over the
+parameters `Xᵢ = rᵢ • X₁`, verify at the scaled key `xᵢ = rᵢ · x₁`, then the collapsed forgeries
+have the count `q + 1`, distinct messages, and tokens that, evaluated over `X₁`, verify at the key
+`x₁` at `n = 1`. The two evaluations agree by `AGMRepr.eval_collapseRepr`. -/
+lemma omufWins_collapse {n : ℕ} (gen : G) (r : Fin n → F) (x₀ xᵣ x₁ : F) (q : ℕ)
+    (H X₀ Xᵣ X₁ : G) (tags : List (G × G))
+    (out : List (AGMOMUFForgery F n))
     (hlen : out.length = q + 1)
     (hdistinct : (out.map fun e => collapseMsg r e.msg).Nodup)
-    (hver : ∀ e ∈ out, verify (x₀, xᵣ, fun i => r i * x₁) e.msg e.token = true) :
+    (hver : ∀ e ∈ out, verify (x₀, xᵣ, fun i => r i * x₁) e.msg
+      (AGMOMUFForgery.plain (F := F) gen H (X₀, Xᵣ, fun i => r i • X₁) tags e).2 = true) :
     (out.map (AGMOMUFForgery.collapse r)).length = q + 1 ∧
       ((out.map (AGMOMUFForgery.collapse r)).map fun e => e.msg).Nodup ∧
       ∀ e ∈ out.map (AGMOMUFForgery.collapse r),
-        verify (x₀, xᵣ, fun _ : Fin 1 => x₁) e.msg e.token = true := by
+        verify (x₀, xᵣ, fun _ : Fin 1 => x₁) e.msg
+          (AGMOMUFForgery.plain (F := F) gen H (X₀, Xᵣ, fun _ => X₁) tags e).2 = true := by
   constructor
   · rw [List.length_map]
     exact hlen
@@ -467,13 +470,14 @@ lemma omufWins_collapse {n : ℕ} (r : Fin n → F) (x₀ xᵣ x₁ : F) (q : �
   intro e h
   obtain ⟨e', he', rfl⟩ := List.mem_map.1 h
   obtain hver := hver e' he'
-  simp only [AGMOMUFForgery.collapse]
+  simp only [AGMOMUFForgery.collapse, AGMOMUFForgery.plain, AGMRepr.evalParams,
+    AGMRepr.eval_collapseRepr] at hver ⊢
   rw [<- verify_collapse]
   exact hver
 
 
 /-- Two distinct forgeries whose messages collapse to the same scalar along `r`. -/
-def CollapseCollision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F G n)) : Prop :=
+def CollapseCollision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F n)) : Prop :=
   ∃ e ∈ out, ∃ e' ∈ out, e.msg ≠ e'.msg ∧ collapseMsg r e.msg = collapseMsg r e'.msg
 
 
@@ -481,7 +485,7 @@ omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableG
 /-- Distinct messages collapse to distinct scalars, or two distinct messages collide along `r`:
 the dichotomy that splits the winning event of the `n`-attribute game into the main case and the
 collision case. -/
-lemma collapse_nodup_or_collision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F G n))
+lemma collapse_nodup_or_collision {n : ℕ} (r : Fin n → F) (out : List (AGMOMUFForgery F n))
     (hnodup : (out.map fun e => e.msg).Nodup) :
     (out.map fun e => collapseMsg r e.msg).Nodup ∨ CollapseCollision r out := by
     by_contra h
@@ -525,58 +529,42 @@ lemma collapseLog_append {n : ℕ} (r : Fin n → F) (l₁ l₂ : AGMOMUFLog F G
   simp only [collapseLog, List.map_append]
 
 
-/-- The representation gate at `n = 1` on the collapsed representation is the gate at the scaled
-parameters `Xᵢ = rᵢ • X₁` on the original one, by `AGMRepr.eval_collapseRepr`. -/
-lemma reprMatches_collapseRepr {n : ℕ} (r : Fin n → F) (ρ : AGMRepr F n) (g₀ H X₀ Xᵣ X₁ : G)
-    (tags : List (G × G)) (y : G) :
-    reprMatches (AGMRepr.collapseRepr r ρ) g₀ H X₀ Xᵣ (fun _ => X₁) tags y
-      ↔ reprMatches ρ g₀ H X₀ Xᵣ (fun i => r i • X₁) tags y := by
-  simp only [reprMatches, AGMRepr.eval_collapseRepr]
-  rfl
-
 /-- A win of the `n`-attribute adversary at the scaled key `xᵢ = rᵢ · x₁`, with the parameters
 `Xᵢ = rᵢ • X₁`, whose collapsed messages are pairwise distinct, collapses to a win of the
 game at `n = 1`, at the key `x₁`, the parameters `X₁` and the collapsed log. The count, the
-distinct messages and the verification are `omufWins_collapse`; the representation gate is
-`reprMatches_collapseRepr`, over the issued pairs the collapse leaves unchanged
-(`tags_collapseLog`). -/
+distinct messages and the verification are `omufWins_collapse`, over the issued pairs the
+collapse leaves unchanged (`tags_collapseLog`). -/
 lemma agmOMUFWins_collapse {n : ℕ} (gen : G) (secParam : ℕ) (r : Fin n → F) (x₀ xᵣ x₁ : F)
-    (H X₀ Xᵣ X₁ : G) (log : AGMOMUFLog F G n) (out : List (AGMOMUFForgery F G n))
+    (H X₀ Xᵣ X₁ : G) (log : AGMOMUFLog F G n) (out : List (AGMOMUFForgery F n))
     (hwin : AGMOMUFWins gen secParam (x₀, xᵣ, fun i => r i * x₁) H
       (X₀, Xᵣ, fun i => r i • X₁) log out)
     (hdistinct : (out.map fun e => collapseMsg r e.msg).Nodup) :
     AGMOMUFWins gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁)
       (collapseLog r log) (out.map (AGMOMUFForgery.collapse r)) := by
-  obtain ⟨⟨hlen, -, hver⟩, hgate⟩ := hwin
+  obtain ⟨hlen, -, hver⟩ := hwin
   have hlen' : out.length = log.length + 1 := by simpa using hlen
-  have hv : ∀ e ∈ out, verify (x₀, xᵣ, fun i => r i * x₁) e.msg e.token = true := by
+  have hv : ∀ e ∈ out, verify (x₀, xᵣ, fun i => r i * x₁) e.msg
+      (AGMOMUFForgery.plain (F := F) gen H (X₀, Xᵣ, fun i => r i • X₁)
+        (AGMOMUFLog.tags log) e).2 = true := by
     intro e he
     simpa [AGMOMUFForgery.plain, μCMZATCoreSyntax] using hver _ (List.mem_map_of_mem he)
-  obtain ⟨-, hnd, hvc⟩ := omufWins_collapse r x₀ xᵣ x₁ log.length out hlen' hdistinct hv
-  have hl : ((out.map (AGMOMUFForgery.collapse r)).map AGMOMUFForgery.plain).length
-      = (collapseLog r log).length + 1 := by
-    simpa [collapseLog] using hlen'
-  have hn : (((out.map (AGMOMUFForgery.collapse r)).map AGMOMUFForgery.plain).map
-      Prod.fst).Nodup := by
-    simpa [List.map_map, Function.comp_def, AGMOMUFForgery.plain] using hnd
-  refine ⟨⟨hl, hn, ?_⟩, ?_⟩
+  obtain ⟨-, hnd, hvc⟩ := omufWins_collapse gen r x₀ xᵣ x₁ log.length H X₀ Xᵣ X₁
+    (AGMOMUFLog.tags log) out hlen' hdistinct hv
+  refine ⟨?_, ?_, ?_⟩
+  · simpa [collapseLog] using hlen'
+  · simpa [List.map_map, Function.comp_def, AGMOMUFForgery.plain] using hnd
   · intro p hp
     obtain ⟨e, he, rfl⟩ := List.mem_map.1 hp
-    simpa [AGMOMUFForgery.plain, μCMZATCoreSyntax] using hvc e he
-  · intro e he
-    obtain ⟨e', he', rfl⟩ := List.mem_map.1 he
-    obtain ⟨h1, h2⟩ := hgate e' he'
-    simp only [AGMOMUFForgery.collapse, tags_collapseLog, reprMatches_collapseRepr]
-    exact ⟨h1, h2⟩
+    simpa [AGMOMUFForgery.plain, tags_collapseLog, μCMZATCoreSyntax] using hvc e he
 
 omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableGroup F G] in
 /-- A Sign query of the collapsed game, simulated by `impl`, is the Sign query of the collapsed
 representation. -/
 lemma simulateQ_omufCollapseImpl_sign {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
     (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
-    (C : G) (ρ : AGMRepr F n) :
-    simulateQ impl (omufCollapseImpl r (.inr (.sign C ρ)))
-      = impl (.inr (.sign C (AGMRepr.collapseRepr r ρ))) := by
+    (ρ : AGMRepr F n) :
+    simulateQ impl (omufCollapseImpl r (.inr (.sign ρ)))
+      = impl (.inr (.sign (AGMRepr.collapseRepr r ρ))) := by
   simp only [omufCollapseImpl]
   exact simulateQ_spec_query _ _
 
@@ -586,9 +574,9 @@ omit [Fintype F] [DecidableEq F] [SampleableType F] [DecidableEq G] [SampleableG
 collapsed message and representations. -/
 lemma simulateQ_omufCollapseImpl_verify {n : ℕ} {m : Type → Type} [Monad m] [LawfulMonad m]
     (r : Fin n → F) (impl : QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) m)
-    (msg : Fin n → F) (σ : Code G) (ρU ρV : AGMRepr F n) :
-    simulateQ impl (omufCollapseImpl r (.inr (.verify msg σ ρU ρV)))
-      = impl (.inr (.verify (collapseMsg r msg) σ (AGMRepr.collapseRepr r ρU)
+    (msg : Fin n → F) (ρU ρV : AGMRepr F n) :
+    simulateQ impl (omufCollapseImpl r (.inr (.verify msg ρU ρV)))
+      = impl (.inr (.verify (collapseMsg r msg) (AGMRepr.collapseRepr r ρU)
           (AGMRepr.collapseRepr r ρV))) := by
   simp only [omufCollapseImpl]
   exact simulateQ_spec_query _ _
@@ -598,39 +586,34 @@ lemma simulateQ_omufCollapseImpl_verify {n : ℕ} {m : Type → Type} [Monad m] 
 collapse of the `n`-attribute game's step at the scaled key `xᵢ = rᵢ · x₁`. -/
 lemma collapse_step_sign {n : ℕ} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
-    (log : AGMOMUFLog F G n) (C : G) (ρ : AGMRepr F n) :
+    (log : AGMOMUFLog F G n) (ρ : AGMRepr F n) :
     (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁))
-        (omufCollapseImpl r (.inr (.sign C ρ)))).run (collapseLog r log)
+        (omufCollapseImpl r (.inr (.sign ρ)))).run (collapseLog r log)
       = Prod.map id (collapseLog r) <$>
         (agmOMUFOracleImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
-          (X₀, Xᵣ, fun i => r i • X₁) (.sign C ρ)).run log := by
+          (X₀, Xᵣ, fun i => r i • X₁) (.sign ρ)).run log := by
   rw [simulateQ_omufCollapseImpl_sign]
   simp only [agmOMUFImpl]
   rw [QueryImpl.add_apply_inr]
   simp only [agmOMUFOracleImpl]
   simp only [StateT.run, StateT.mk]
-  rw [map_if]
   simp only [map_bind, map_pure]
-  simp only [tags_collapseLog]
-  simp only [reprMatches_collapseRepr]
-  split_ifs
-  · simp only [Prod.map_apply, id, μCMZATCoreSyntax, atIssueSrv]
-    simp only [add_apply_inr, smul_add, bind_pure_comp, Functor.map_map]
-    simp only [collapseLog_append]
-    rfl
-  · simp only [Prod.map_apply, id, collapseLog_append]
-    rfl
+  simp only [tags_collapseLog, AGMRepr.evalParams, AGMRepr.eval_collapseRepr]
+  simp only [Prod.map_apply, id, μCMZATCoreSyntax, atIssueSrv]
+  simp only [add_apply_inr, smul_add, bind_pure_comp, Functor.map_map]
+  simp only [collapseLog_append]
+  rfl
 
 /-- One Verify step: the game at `n = 1` with the collapsed log, running the collapsed query, is
 the collapse of the `n`-attribute game's step at the scaled key `xᵢ = rᵢ · x₁`. -/
 lemma collapse_step_verify {n : ℕ} (gen : G) (secParam : ℕ)
     (r : Fin n → F) (x₀ xᵣ x₁ : F) (H X₀ Xᵣ X₁ : G)
-    (log : AGMOMUFLog F G n) (m : Fin n → F) (σ : Code G) (ρU ρV : AGMRepr F n) :
+    (log : AGMOMUFLog F G n) (m : Fin n → F) (ρU ρV : AGMRepr F n) :
     (simulateQ (agmOMUFImpl gen secParam (x₀, xᵣ, fun _ : Fin 1 => x₁) H (X₀, Xᵣ, fun _ => X₁))
-        (omufCollapseImpl r (.inr (.verify m σ ρU ρV)))).run (collapseLog r log)
+        (omufCollapseImpl r (.inr (.verify m ρU ρV)))).run (collapseLog r log)
       = Prod.map id (collapseLog r) <$>
         (agmOMUFOracleImpl gen secParam (x₀, xᵣ, fun i => r i * x₁) H
-          (X₀, Xᵣ, fun i => r i • X₁) (.verify m σ ρU ρV)).run log := by
+          (X₀, Xᵣ, fun i => r i • X₁) (.verify m ρU ρV)).run log := by
   simp only [omufCollapseImpl]
   erw [simulateQ_spec_query]
   simp only [agmOMUFImpl]
@@ -638,8 +621,8 @@ lemma collapse_step_verify {n : ℕ} (gen : G) (secParam : ℕ)
   simp only [agmOMUFOracleImpl]
   simp only [StateT.run, StateT.mk]
   simp only [map_pure]
-  simp only [reprMatches_collapseRepr]
-  simp only [Prod.map_apply, id, tags_collapseLog, μCMZATCoreSyntax, atIssueSrv, verify_collapse]
+  simp only [Prod.map_apply, id, tags_collapseLog, AGMRepr.evalParams, AGMRepr.eval_collapseRepr,
+    μCMZATCoreSyntax, atIssueSrv, verify_collapse]
   rfl
 
 
@@ -676,10 +659,10 @@ lemma collapse_run {n : ℕ} {α : Type} (gen : G) (secParam : ℕ)
       omufCollapseImpl r)
     (collapseLog r)
     (fun t s => by
-      rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
+      rcases t with t | (ρ | ⟨m, ρU, ρV⟩)
       · exact (collapse_step_coin gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s t).symm
-      · exact (collapse_step_sign gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s C ρ).symm
-      · exact (collapse_step_verify gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s m σ ρU ρV).symm)
+      · exact (collapse_step_sign gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s ρ).symm
+      · exact (collapse_step_verify gen secParam r x₀ xᵣ x₁ H X₀ Xᵣ X₁ s m ρU ρV).symm)
     oa log
   rw [QueryImpl.simulateQ_compose] at h
   exact h.symm

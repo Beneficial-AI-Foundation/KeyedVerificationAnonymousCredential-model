@@ -119,27 +119,25 @@ drawn with `uniformUnits`, from the nonzero scalars, as in the game (DA *Nonzero
 item A3.2 of `docs/findings/FINDINGS_AND_LESSONS.md`). -/
 noncomputable def twoDLOracleImpl :
     QueryImpl (AGMOMUFOracleSpec F G 1) (StateT (TwoDLState F G) ProbComp)
-  | .sign C' ρ => StateT.mk fun s =>
-      if reprMatches ρ g (e.η • g) (twoDLParams g X e).1 (twoDLParams g X e).2.1
-          (twoDLParams g X e).2.2 (AGMOMUFLog.tags s.1) C' then do
-        let u ← uniformUnits F
-        let U := u • g
-        let V := e.a₀ • U + (e.b₀ * u) • X + u • (C' + (e.aᵣ • g + e.bᵣ • X))
-        let xV := e.a₀ • (u • X) + (e.b₀ * u) • X' +
-          u • (twoDLxEval X X' e ρ s.2 + (e.aᵣ • X + e.bᵣ • X'))
-        pure (some (U, V), (s.1 ++ [(C', ρ, some (U, V))], s.2 ++ [(u, xV)]))
-      else pure (none, (s.1 ++ [(C', ρ, none)], s.2))
-  | .verify m σ ρU ρV => StateT.mk fun s =>
+  | .sign ρ => StateT.mk fun s => do
+      let tags := AGMOMUFLog.tags s.1
+      let C' := ρ.evalParams g (e.η • g) (twoDLParams g X e) tags
+      let u ← uniformUnits F
+      let U := u • g
+      let V := e.a₀ • U + (e.b₀ * u) • X + u • (C' + (e.aᵣ • g + e.bᵣ • X))
+      let xV := e.a₀ • (u • X) + (e.b₀ * u) • X' +
+        u • (twoDLxEval X X' e ρ s.2 + (e.aᵣ • X + e.bᵣ • X'))
+      pure (some (U, V),
+        (s.1 ++ [(C', ρ.normalize tags.length, some (U, V))], s.2 ++ [(u, xV)]))
+  | .verify m ρU ρV => StateT.mk fun s =>
       let pp := twoDLParams g X e
       let tags := AGMOMUFLog.tags s.1
-      let consistent :=
-        reprMatches ρU g (e.η • g) pp.1 pp.2.1 pp.2.2 tags σ.1 ∧
-        reprMatches ρV g (e.η • g) pp.1 pp.2.1 pp.2.2 tags σ.2
-      pure (decide consistent && (decide (σ.1 ≠ 0) &&
+      let σ : Code G := (ρU.evalParams g (e.η • g) pp tags, ρV.evalParams g (e.η • g) pp tags)
+      pure ((decide (σ.1 ≠ 0) &&
         decide (σ.2 = (e.a₀ + e.aᵣ + e.a₁ * m 0) • σ.1 +
           (e.b₀ + e.bᵣ + e.b₁ * m 0) • twoDLxEval X X' e ρU s.2)), s)
 
-/-- The full implementation: coin queries lifted, the instrumented queries through
+/-- The full implementation: coin queries lifted, the AGM queries through
 `twoDLOracleImpl`. -/
 noncomputable def twoDLImpl :
     QueryImpl (unifSpec + AGMOMUFOracleSpec F G 1) (StateT (TwoDLState F G) ProbComp) :=
@@ -316,64 +314,56 @@ lemma twoDLAuxOf_tags_append_none (x : F) (log : AGMOMUFLog F G 1) (C : G)
 /-- The simulated `sign` answer, from the records of the log, is the real one, followed by the
 records of the new log. -/
 lemma twoDL_step_sign (secParam : ℕ) (x : F) (e : TwoDLEmbed F) (log : AGMOMUFLog F G 1)
-    (C : G) (ρ : AGMRepr F 1) :
-    (twoDLImpl gen (x • gen) (x • (x • gen)) e (.inr (.sign C ρ))).run
+    (ρ : AGMRepr F 1) :
+    (twoDLImpl gen (x • gen) (x • (x • gen)) e (.inr (.sign ρ))).run
         (log, twoDLAuxOf gen x (AGMOMUFLog.tags log)) =
       (fun p : Option (G × G) × AGMOMUFLog F G 1 =>
           (p.1, (p.2, twoDLAuxOf gen x (AGMOMUFLog.tags p.2)))) <$>
         (agmOMUFImpl gen secParam (e.key x) (e.η • gen)
-          (twoDLParams gen (x • gen) e) (.inr (.sign C ρ))).run log := by
+          (twoDLParams gen (x • gen) e) (.inr (.sign ρ))).run log := by
   simp only [twoDLImpl, agmOMUFImpl, QueryImpl.add_apply_inr]
   simp only [twoDLOracleImpl, agmOMUFOracleImpl]
   simp only [StateT.run, StateT.mk]
-  split_ifs with h
-  · simp only [μCMZATCoreSyntax, atIssueSrv, bind_pure_comp, Functor.map_map, TwoDLEmbed.key]
-    refine Eq.trans ?_ (Functor.map_map _ _ _).symm
-    congr 1
-    funext u
-    have hV : e.a₀ • u • gen + (e.b₀ * u) • x • gen + u • (C + (e.aᵣ • gen + e.bᵣ • x • gen)) =
-        (e.a₀ + e.b₀ * x) • u • gen + u • (C + (e.aᵣ + e.bᵣ * x) • gen) := by module
-    have hxV : e.a₀ • u • x • gen + (e.b₀ * u) • x • x • gen +
-          u • (x • C + (e.aᵣ • x • gen + e.bᵣ • x • x • gen)) =
-        x • ((e.a₀ + e.b₀ * x) • u • gen + u • (C + (e.aᵣ + e.bᵣ * x) • gen)) := by module
-    simp only [twoDLAuxOf_tags_append_some, glog_smul_self, twoDLxEval_eq, h.2, hV, hxV]
-    rfl
-  · change _ = pure _
-    simp only [twoDLAuxOf_tags_append_none]
-    rfl
+  simp only [μCMZATCoreSyntax, atIssueSrv, bind_pure_comp, Functor.map_map, TwoDLEmbed.key]
+  refine Eq.trans ?_ (Functor.map_map _ _ _).symm
+  congr 1
+  funext u
+  have hV : ∀ C : G,
+      e.a₀ • u • gen + (e.b₀ * u) • x • gen + u • (C + (e.aᵣ • gen + e.bᵣ • x • gen)) =
+        (e.a₀ + e.b₀ * x) • u • gen + u • (C + (e.aᵣ + e.bᵣ * x) • gen) := fun C => by module
+  have hxV : ∀ C : G, e.a₀ • u • x • gen + (e.b₀ * u) • x • x • gen +
+        u • (x • C + (e.aᵣ • x • gen + e.bᵣ • x • x • gen)) =
+      x • ((e.a₀ + e.b₀ * x) • u • gen + u • (C + (e.aᵣ + e.bᵣ * x) • gen)) := fun C => by
+    module
+  simp only [twoDLAuxOf_tags_append_some, glog_smul_self, twoDLxEval_eq, AGMRepr.evalParams, hV,
+    hxV]
+  rfl
 
 /-- The simulated `verify` answer, from the records of the log, is the real one at the key
-`e.key x`: on consistent representations `x·U` is the combination of the multiples by `x` of the
-basis, so `V = (x₀ + xᵣ + m·x₁)·U` is `V = (a₀ + aᵣ + m·a₁)·U + (b₀ + bᵣ + m·b₁)·(x·U)`. -/
+`e.key x`: for `U` the evaluation of `ρU`, `x·U` is the combination of the multiples by `x` of
+the basis, so `V = (x₀ + xᵣ + m·x₁)·U` is `V = (a₀ + aᵣ + m·a₁)·U + (b₀ + bᵣ + m·b₁)·(x·U)`. -/
 lemma twoDL_step_verify (secParam : ℕ) (x : F) (e : TwoDLEmbed F) (log : AGMOMUFLog F G 1)
-    (m : Fin 1 → F) (σ : Code G) (ρU ρV : AGMRepr F 1) :
-    (twoDLImpl gen (x • gen) (x • (x • gen)) e (.inr (.verify m σ ρU ρV))).run
+    (m : Fin 1 → F) (ρU ρV : AGMRepr F 1) :
+    (twoDLImpl gen (x • gen) (x • (x • gen)) e (.inr (.verify m ρU ρV))).run
         (log, twoDLAuxOf gen x (AGMOMUFLog.tags log)) =
       (fun p : Bool × AGMOMUFLog F G 1 =>
           (p.1, (p.2, twoDLAuxOf gen x (AGMOMUFLog.tags p.2)))) <$>
         (agmOMUFImpl gen secParam (e.key x) (e.η • gen)
-          (twoDLParams gen (x • gen) e) (.inr (.verify m σ ρU ρV))).run log := by
+          (twoDLParams gen (x • gen) e) (.inr (.verify m ρU ρV))).run log := by
   simp only [twoDLImpl, agmOMUFImpl, QueryImpl.add_apply_inr]
   simp only [twoDLOracleImpl, agmOMUFOracleImpl]
   simp only [StateT.run, StateT.mk]
   change _ = pure _
-  rcases σ with ⟨U, V⟩
-  by_cases hc : reprMatches ρU gen (e.η • gen) (twoDLParams gen (x • gen) e).1
-        (twoDLParams gen (x • gen) e).2.1 (twoDLParams gen (x • gen) e).2.2
-        (AGMOMUFLog.tags log) (U, V).1 ∧
-      reprMatches ρV gen (e.η • gen) (twoDLParams gen (x • gen) e).1
-        (twoDLParams gen (x • gen) e).2.1 (twoDLParams gen (x • gen) e).2.2
-        (AGMOMUFLog.tags log) (U, V).2
-  · have hx : twoDLxEval (x • gen) (x • (x • gen)) e ρU
-        (twoDLAuxOf gen x (AGMOMUFLog.tags log)) = x • U := by
-      rw [twoDLxEval_eq, hc.1.2]
-    have hs : ((e.a₀ + e.b₀ * x) + (e.aᵣ + e.bᵣ * x) + (e.a₁ + e.b₁ * x) * m 0) • U =
-        (e.a₀ + e.aᵣ + e.a₁ * m 0) • U + (e.b₀ + e.bᵣ + e.b₁ * m 0) • (x • U) := by
-      module
-    simp only [hx, μCMZATCoreSyntax, verify, macScalar, TwoDLEmbed.key, Fin.sum_univ_one, hs]
-    rfl
-  · simp only [hc, decide_false, Bool.false_and]
-    rfl
+  have hx : twoDLxEval (x • gen) (x • (x • gen)) e ρU
+      (twoDLAuxOf gen x (AGMOMUFLog.tags log)) =
+      x • ρU.evalParams gen (e.η • gen) (twoDLParams gen (x • gen) e) (AGMOMUFLog.tags log) :=
+    twoDLxEval_eq gen x e ρU _
+  have hs : ∀ U : G,
+      ((e.a₀ + e.b₀ * x) + (e.aᵣ + e.bᵣ * x) + (e.a₁ + e.b₁ * x) * m 0) • U =
+        (e.a₀ + e.aᵣ + e.a₁ * m 0) • U + (e.b₀ + e.bᵣ + e.b₁ * m 0) • (x • U) := fun U => by
+    module
+  simp only [hx, μCMZATCoreSyntax, verify, macScalar, TwoDLEmbed.key, Fin.sum_univ_one, hs]
+  rfl
 
 omit hgen in
 /-- A coin query leaves the log and the records unchanged, in the simulation and in the real
@@ -405,10 +395,10 @@ theorem twoDL_run {α : Type} (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
     (twoDLImpl gen (x • gen) (x • (x • gen)) e)
     (fun l => (l, twoDLAuxOf gen x (AGMOMUFLog.tags l)))
     (fun t s => by
-      rcases t with t | (⟨C, ρ⟩ | ⟨m, σ, ρU, ρV⟩)
+      rcases t with t | (ρ | ⟨m, ρU, ρV⟩)
       · exact (twoDL_step_coin gen secParam x e s t).symm
-      · exact (twoDL_step_sign gen secParam x e s C ρ).symm
-      · exact (twoDL_step_verify gen secParam x e s m σ ρU ρV).symm)
+      · exact (twoDL_step_sign gen secParam x e s ρ).symm
+      · exact (twoDL_step_verify gen secParam x e s m ρU ρV).symm)
     oa log).symm
 
 end Coupling
@@ -621,7 +611,7 @@ theorem agmOMUFTrace_eq (secParam : ℕ) (A : AGMOMUFAdversary F G 1) :
 output and the final state, simulating the forger from the empty log. `omufTwoDLReductionAt` is
 this run followed by the extraction `twoDLExtract`, whose soundness is in `TwoDLExtraction.lean`. -/
 noncomputable def twoDLRunAt (A : AGMOMUFAdversary F G 1) (w : F × F × F) (x : F) :
-    ProbComp (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G) := do
+    ProbComp (TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G) := do
   let e ← twoDLSampleEmbed w
   let (out, s) ← (simulateQ (twoDLImpl gen (x • gen) (x • (x • gen)) e)
     (A.run (e.η • gen) (twoDLParams gen (x • gen) e))).run ([], [])
@@ -629,7 +619,7 @@ noncomputable def twoDLRunAt (A : AGMOMUFAdversary F G 1) (w : F × F × F) (x :
 
 /-- The trace of a run of the reduction: the key at the challenge, the crs and the public parameters
 the reduction presented, the log, and the forger's output. -/
-def twoDLTraceOf (x : F) (r : TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G) :
+def twoDLTraceOf (x : F) (r : TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G) :
     OMUFTrace F G :=
   ⟨r.1.key x, r.1.η • gen, twoDLParams gen (x • gen) r.1, r.2.2.1, r.2.1⟩
 

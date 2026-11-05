@@ -65,9 +65,8 @@ coefficient of some issued representation: the coefficient reading of Equations 
 (`forgeryPoly_eq_zero_coeffs`) leaves `U` a combination of the issued `U'_j` alone, so a
 nonzero `U` has a nonzero `cu j`, and that slot fixes `m`. -/
 theorem OMUFTrace.msg_mem_of_forgeryPoly_eq_zero (t : OMUFTrace F G)
-    (e : AGMOMUFForgery F G 1) (hU : e.token.1 ≠ 0)
-    (hm : reprMatches e.reprU gen t.H t.pp.1 t.pp.2.1 t.pp.2.2 (AGMOMUFLog.tags t.log)
-      e.token.1)
+    (e : AGMOMUFForgery F 1)
+    (hU : e.reprU.evalParams gen t.H t.pp (AGMOMUFLog.tags t.log) ≠ 0)
     (hφ : AGMPoly.omufForgeryPoly t.cs (e.msg 0) (e.reprU.toReprCoeffs t.arity)
       (e.reprV.toReprCoeffs t.arity) = 0) :
     ∃ j : Fin t.arity, e.msg 0 = (t.issuedCoeffs j).c1 := by
@@ -81,8 +80,7 @@ theorem OMUFTrace.msg_mem_of_forgeryPoly_eq_zero (t : OMUFTrace F G)
     · exact h
     · exact absurd (sub_eq_zero.1 h) (hno j)
   apply hU
-  rw [← hm.2]
-  unfold AGMRepr.eval
+  unfold AGMRepr.evalParams AGMRepr.eval
   have hsum : (List.zipWith (fun (c : F × F) (t : G × G) => c.1 • t.1 + c.2 • t.2)
       e.reprU.uv (AGMOMUFLog.tags t.log)).sum = 0 := by
     rw [sum_zipWith_eq_fin_sum_getD
@@ -108,17 +106,19 @@ theorem OMUFTrace.exists_forgeryPoly_ne_zero (t : OMUFTrace F G)
     (hw : t.Wins gen secParam) : ∃ φ ∈ t.forgeryPolys, φ ≠ 0 := by
   by_contra h
   simp only [ne_eq, not_exists, not_and, Decidable.not_not] at h
-  obtain ⟨⟨hlen, hnodup, hver⟩, hrepr⟩ := hw
+  obtain ⟨hlen, hnodup, hver⟩ := hw
   simp only [List.length_map] at hlen
   let f : Fin t.arity → F := fun j => (t.issuedCoeffs j).c1
   have hmem : ∀ e ∈ t.out, ∃ j, e.msg 0 = f j := by
     intro e he
-    have hU : e.token.1 ≠ 0 := by
-      have := hver (e.plain) (List.mem_map_of_mem he)
+    have hU : e.reprU.evalParams gen t.H t.pp (AGMOMUFLog.tags t.log) ≠ 0 := by
+      -- `(F := F)`: without it, elaboration fails to synthesize
+      -- `Field ((μCMZATCoreSyntax F gen).Msg t.H)`.
+      have := hver (AGMOMUFForgery.plain (F := F) gen t.H t.pp (AGMOMUFLog.tags t.log) e)
+        (List.mem_map_of_mem he)
       simp only [μCMZATCoreSyntax, verify, Bool.and_eq_true, decide_eq_true_eq] at this
       exact this.1
-    exact t.msg_mem_of_forgeryPoly_eq_zero gen e hU (hrepr e he).1
-      (h _ (List.mem_map_of_mem he))
+    exact t.msg_mem_of_forgeryPoly_eq_zero gen e hU (h _ (List.mem_map_of_mem he))
   have hinj : Function.Injective fun m : Fin 1 → F => m 0 := by
     intro a b hab
     funext i
@@ -126,7 +126,8 @@ theorem OMUFTrace.exists_forgeryPoly_ne_zero (t : OMUFTrace F G)
     exact hab
   have hnd : (t.out.map fun e => e.msg 0).Nodup := by
     have e1 : t.out.map (fun e => e.msg 0) = List.map (fun m : Fin 1 → F => m 0)
-        (List.map Prod.fst (List.map AGMOMUFForgery.plain t.out)) := by
+        (List.map Prod.fst
+          (List.map (AGMOMUFForgery.plain gen t.H t.pp (AGMOMUFLog.tags t.log)) t.out)) := by
       simp [List.map_map, Function.comp_def, AGMOMUFForgery.plain]
     rw [e1]
     exact hnodup.map hinj
@@ -148,14 +149,15 @@ sampled and the trace does not store but `U'_j = u_j • gen` determines. -/
 
 omit hgen in
 /-- What the support of `agmOMUFTrace` guarantees about a run: the public parameters are the
-key's, and the `k`-th issued pair answers a commitment `C'` whose representation `issuedRepr k`
-passed the gate at the pairs before it, with the server's answer `U' = u • gen`,
-`V' = x₀ • U' + u • (C' + xᵣ • gen)` (`atIssueSrv`). -/
+key's, and the `k`-th issued pair answers a commitment `C'` that the representation
+`issuedRepr k` evaluates to over the pairs before it, one coefficient per pair, with the server's
+answer `U' = u • gen`, `V' = x₀ • U' + u • (C' + xᵣ • gen)` (`atIssueSrv`). -/
 def OMUFTrace.ServerConsistent (t : OMUFTrace F G) : Prop :=
   t.pp = (t.sk.1 • t.H, t.sk.2.1 • gen, fun i => t.sk.2.2 i • gen) ∧
     ∀ k : Fin t.arity, ∃ C' : G,
-      reprMatches (t.issuedRepr k) gen t.H t.pp.1 t.pp.2.1 t.pp.2.2
-        ((AGMOMUFLog.tags t.log).take k) C' ∧
+      ((t.issuedRepr k).uv.length = ((AGMOMUFLog.tags t.log).take k).length ∧
+        (t.issuedRepr k).eval gen t.H t.pp.1 t.pp.2.1 t.pp.2.2
+          ((AGMOMUFLog.tags t.log).take k) = C') ∧
       ∃ u : F, ((AGMOMUFLog.tags t.log).get k).1 = u • gen ∧
         ((AGMOMUFLog.tags t.log).get k).2 =
           t.sk.1 • ((AGMOMUFLog.tags t.log).get k).1 + u • (C' + t.sk.2.1 • gen)
@@ -262,13 +264,15 @@ What every issued entry of a reachable log satisfies, stated at the entry's own 
 that appending an entry leaves the earlier ones alone. -/
 
 omit hgen in
-/-- Every issued entry of `log` passed the gate at the pairs issued before it and carries the
-server's answer: `U' = u • gen` and `V' = x₀ • U' + u • (C' + xᵣ • gen)` (`atIssueSrv`). -/
+/-- Every issued entry of `log` has a representation with one coefficient per pair issued
+before it that evaluates to its commitment over those pairs, and carries the server's answer:
+`U' = u • gen` and `V' = x₀ • U' + u • (C' + xᵣ • gen)` (`atIssueSrv`). -/
 def AGMOMUFLog.Consistent {n : ℕ} (sk : Key F n) (H : G) (pp : Params G n)
     (log : AGMOMUFLog F G n) : Prop :=
   ∀ (i : ℕ) (C' : G) (ρ : AGMRepr F n) (U' V' : G),
     log[i]? = some (C', ρ, some (U', V')) →
-      reprMatches ρ gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags (log.take i)) C' ∧
+      (ρ.uv.length = (AGMOMUFLog.tags (log.take i)).length ∧
+        ρ.eval gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags (log.take i)) = C') ∧
         ∃ u : F, U' = u • gen ∧ V' = sk.1 • U' + u • (C' + sk.2.1 • gen)
 
 omit hgen in
@@ -285,7 +289,8 @@ theorem AGMOMUFLog.consistent_append {n : ℕ} {sk : Key F n} {H : G} {pp : Para
     {log : AGMOMUFLog F G n} (hlog : AGMOMUFLog.Consistent gen sk H pp log)
     (e : G × AGMRepr F n × Option (G × G))
     (he : ∀ U' V', e.2.2 = some (U', V') →
-      reprMatches e.2.1 gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags log) e.1 ∧
+      (e.2.1.uv.length = (AGMOMUFLog.tags log).length ∧
+        e.2.1.eval gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags log) = e.1) ∧
         ∃ u : F, U' = u • gen ∧ V' = sk.1 • U' + u • (e.1 + sk.2.1 • gen)) :
     AGMOMUFLog.Consistent gen sk H pp (log ++ [e]) := by
   intro i C' ρ U' V' h
@@ -303,9 +308,9 @@ theorem AGMOMUFLog.consistent_append {n : ℕ} {sk : Key F n} {H : G} {pp : Para
     cases h
 
 omit hgen in
-/-- One query of the instrumented oracle keeps the log consistent: coin queries and `verify`
-leave it alone, a refused `sign` appends an unissued entry, and an accepted one appends the
-answer of `atIssueSrv`. -/
+/-- One query of the AGM oracle keeps the log consistent: coin queries and `verify` leave it
+alone, and `sign` appends the commitment its representation evaluates to, the representation
+normalized to the pairs issued so far, and the answer of `atIssueSrv`. -/
 theorem agmOMUFImpl_preservesInv {n : ℕ} (secParam : ℕ) (sk : Key F n) (H : G)
     (pp : Params G n) :
     QueryImpl.PreservesInv (agmOMUFImpl gen secParam sk H pp)
@@ -320,24 +325,17 @@ theorem agmOMUFImpl_preservesInv {n : ℕ} (secParam : ℕ) (sk : Key F n) (H : 
     subst ha
     exact hlog
   · rw [agmOMUFImpl_inr] at hz
-    rcases q with ⟨C', ρ⟩ | ⟨m, σ, ρU, ρV⟩
+    rcases q with ρ | ⟨m, ρU, ρV⟩
     · simp only [agmOMUFOracleImpl, StateT.run, StateT.mk] at hz
-      split_ifs at hz with hg
-      · obtain ⟨resp?, hresp, hz⟩ := (mem_support_bind_iff _ _ _).1 hz
-        change _ ∈ support (pure _ : ProbComp _) at hz
-        rw [mem_support_pure_iff] at hz
-        subst hz
-        obtain ⟨u, -, rfl⟩ := (mem_support_atIssueSrv gen sk C' resp?).1 hresp
-        refine AGMOMUFLog.consistent_append gen hlog _ ?_
-        intro U' V' h
-        obtain ⟨rfl, rfl⟩ := Prod.mk.inj (Option.some.inj h)
-        exact ⟨hg, u, rfl, rfl⟩
-      · change _ ∈ support (pure _ : ProbComp _) at hz
-        rw [mem_support_pure_iff] at hz
-        subst hz
-        refine AGMOMUFLog.consistent_append gen hlog _ ?_
-        intro U' V' h
-        cases h
+      obtain ⟨resp?, hresp, hz⟩ := (mem_support_bind_iff _ _ _).1 hz
+      change _ ∈ support (pure _ : ProbComp _) at hz
+      rw [mem_support_pure_iff] at hz
+      subst hz
+      obtain ⟨u, -, rfl⟩ := (mem_support_atIssueSrv gen sk _ resp?).1 hresp
+      refine AGMOMUFLog.consistent_append gen hlog _ ?_
+      intro U' V' h
+      obtain ⟨rfl, rfl⟩ := Prod.mk.inj (Option.some.inj h)
+      exact ⟨⟨AGMRepr.normalize_uv_length _ _, AGMRepr.eval_normalize _ _ _ _ _ _ _⟩, u, rfl, rfl⟩
     · simp only [agmOMUFOracleImpl, StateT.run, StateT.mk] at hz
       change _ ∈ support (pure _ : ProbComp _) at hz
       rw [mem_support_pure_iff] at hz
@@ -454,7 +452,8 @@ theorem OMUFTrace.tag_eq_of_eval (t : OMUFTrace F G) (ht : t.ServerConsistent ge
   obtain ⟨-, hk⟩ := ht
   obtain ⟨Cj, hmatchj, u, hU, hV⟩ := hk j
   have hCj : Cj = MvPolynomial.eval (t.point gen) (t.cs j) • gen := by
-    have h := reprMatches_eval_append hmatchj ((AGMOMUFLog.tags t.log).drop j)
+    have h := (AGMRepr.eval_append_of_length_eq _ _ _ _ _ _ _
+      ((AGMOMUFLog.tags t.log).drop j) hmatchj.1).trans hmatchj.2
     rw [List.take_append_drop] at h
     rw [hj, h]
   rw [hV, hU, hCj]
@@ -494,16 +493,15 @@ theorem OMUFTrace.eval_point_cs (t : OMUFTrace F G) (ht : t.ServerConsistent gen
     rw [if_pos hj]
     exact t.tag_eq_of_eval gen ⟨hpp, hk⟩ j (ih j hjk)
 
-/-- **Bridge, step 3.** A forgery with matching representations whose token satisfies the
-verification equation has a forgery polynomial vanishing at the point of a server-consistent run
-(O24 Equation 22): both representations are evaluated by `eval_toPolyAt` and step 2. -/
+/-- **Bridge, step 3.** A forgery whose token, the evaluation of its representations, satisfies
+the verification equation has a forgery polynomial vanishing at the point of a
+server-consistent run (O24 Equation 22): both representations are evaluated by `eval_toPolyAt`
+and step 2. -/
 theorem OMUFTrace.eval_point_forgeryPoly (t : OMUFTrace F G) (ht : t.ServerConsistent gen)
-    (e : AGMOMUFForgery F G 1)
-    (hU : reprMatches e.reprU gen t.H t.pp.1 t.pp.2.1 t.pp.2.2 (AGMOMUFLog.tags t.log)
-      e.token.1)
-    (hV : reprMatches e.reprV gen t.H t.pp.1 t.pp.2.1 t.pp.2.2 (AGMOMUFLog.tags t.log)
-      e.token.2)
-    (hver : e.token.2 = (t.sk.1 + t.sk.2.1 + e.msg 0 * t.sk.2.2 0) • e.token.1) :
+    (e : AGMOMUFForgery F 1)
+    (hver : e.reprV.evalParams gen t.H t.pp (AGMOMUFLog.tags t.log) =
+      (t.sk.1 + t.sk.2.1 + e.msg 0 * t.sk.2.2 0) •
+        e.reprU.evalParams gen t.H t.pp (AGMOMUFLog.tags t.log)) :
     MvPolynomial.eval (t.point gen)
       (AGMPoly.omufForgeryPoly t.cs (e.msg 0) (e.reprU.toReprCoeffs t.arity)
         (e.reprV.toReprCoeffs t.arity)) = 0 := by
@@ -515,8 +513,7 @@ theorem OMUFTrace.eval_point_forgeryPoly (t : OMUFTrace F G) (ht : t.ServerConsi
     fun _ j _ => t.tag_eq_of_eval gen ht j (t.eval_point_cs gen ht j)
   have hα := t.eval_eq_smul_eval_toPolyAt gen hpp e.reprU t.cs (htag e.reprU)
   have hβ := t.eval_eq_smul_eval_toPolyAt gen hpp e.reprV t.cs (htag e.reprV)
-  rw [hU.2] at hα
-  rw [hV.2] at hβ
+  unfold AGMRepr.evalParams at hver
   have key : MvPolynomial.eval (t.point gen)
       ((e.reprV.toReprCoeffs t.arity).toPolyAt t.cs) =
       (t.sk.1 + t.sk.2.1 + e.msg 0 * t.sk.2.2 0) *
@@ -531,20 +528,22 @@ theorem OMUFTrace.eval_point_forgeryPoly (t : OMUFTrace F G) (ht : t.ServerConsi
   ring
 
 /-- **At the discrete-log point of a winning run, every forgery polynomial vanishes.** The
-forgeries verify and their representations match, so the bridge gives the polynomial of each the
-value `0` (`OMUFTrace.eval_point_forgeryPoly`). -/
+forgeries' tokens, the evaluations of their representations, verify, so the bridge gives the
+polynomial of each the value `0` (`OMUFTrace.eval_point_forgeryPoly`). -/
 theorem OMUFTrace.eval_point_of_wins (t : OMUFTrace F G) (ht : t.ServerConsistent gen)
     (hw : t.Wins gen secParam) : ∀ φ ∈ t.forgeryPolys, MvPolynomial.eval (t.point gen) φ = 0 := by
   intro φ hφ
   obtain ⟨e, he, hφe⟩ := List.mem_map.1 hφ
-  obtain ⟨⟨-, -, hver⟩, hrepr⟩ := hw
-  have hv := hver e.plain (List.mem_map_of_mem he)
+  obtain ⟨-, -, hver⟩ := hw
+  -- `(F := F)`: without it, elaboration fails to synthesize
+  -- `Field ((μCMZATCoreSyntax F gen).Msg t.H)`.
+  have hv := hver (AGMOMUFForgery.plain (F := F) gen t.H t.pp (AGMOMUFLog.tags t.log) e)
+    (List.mem_map_of_mem he)
   simp only [μCMZATCoreSyntax, verify, Bool.and_eq_true, decide_eq_true_eq] at hv
   have hscalar : macScalar t.sk e.msg = t.sk.1 + t.sk.2.1 + e.msg 0 * t.sk.2.2 0 := by
     simp [macScalar, mul_comm]
   rw [← hφe]
-  exact t.eval_point_forgeryPoly gen ht e (hrepr e he).1 (hrepr e he).2
-    (by rw [← hscalar]; exact hv.2)
+  exact t.eval_point_forgeryPoly gen ht e (by rw [← hscalar]; exact hv.2)
 
 /-- The three cases cover a win: some forgery polynomial is nonzero
 (`exists_forgeryPoly_ne_zero`) and vanishes at the run's discrete-log point, so it is not a
