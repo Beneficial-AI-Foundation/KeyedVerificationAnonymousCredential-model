@@ -13,8 +13,7 @@ import KVAC.Schemes.MicroCMZ.AGMReduction.Core
 The polynomials of Equations 18 and 22 (`Polynomial.lean`) read off the game
 transcript (`Transcript.lean`), and the win and the three case events of the
 Theorem 5.11 proof's case split at `n = 1`, items (i) to (iii) of p. 45, that
-Claims 5.12 to 5.14 bound in `Statements.lean`. Track CMZ-OMUF, step A3 of the
-Theorem 5.3 plan, part 17a of item 17 (issue #189).
+Claims 5.12 to 5.14 bound in `Statements.lean`.
 
 ## What is defined, and what uses it
 
@@ -31,21 +30,20 @@ Theorem 5.3 plan, part 17a of item 17 (issue #189).
 
 `AGMRepr.toReprCoeffs` of `AGMReduction/Core.lean` converts a game
 representation to polynomial-layer coefficients at a given arity, reading
-absent tag slots as `0`, which under the exact-length gate is the right value.
+absent issued-pair slots as `0`, which under the exact-length gate is the right value.
 The arity is the number of issued pairs, not the Sign budget, since a refused
 Sign query issues no pair and gets no variable, while the winning condition
 counts every Sign query.
 
-## The lemma the proof phase proves
+## The evaluation bridge
 
-The game-level evaluation bridge: at the discrete-log point of an honest run,
-`t.cs k` evaluates to the logarithm of the `k`-th issued commitment and, for a
-forgery whose representations match its token, which `Wins` supplies, its
-polynomial vanishes exactly when the verification equation holds, by induction
-over the transcript through the gate and the server's honest answers. Its
-algebraic half is `eval_toPolyAt` in `Polynomial.lean`; the induction needs the
-run's honesty invariants, recovered from membership in the support of
-`agmOMUFTrace`, and belongs to the proof of Theorem 5.11.
+The game-level evaluation bridge: at the discrete-log point of a run (`OMUFTrace.point` in
+`Bridge.lean`), `t.cs k` evaluates to the logarithm of the `k`-th issued commitment and,
+for a forgery whose representations match its token and whose token verifies, its polynomial
+vanishes (`eval_point_cs`, `eval_point_forgeryPoly`), by induction over the transcript through
+the gate and the server's answers. Its algebraic half is `eval_toPolyAt` in `Polynomial.lean`;
+the induction needs the invariants of a run, recovered from membership in the support of
+`agmOMUFTrace` (`serverConsistent_of_mem_support`).
 -/
 
 set_option autoImplicit false
@@ -107,6 +105,16 @@ theorem OMUFTrace.cs_eq_getElem (t : OMUFTrace F G) (j : Fin t.arity) :
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem]
   rfl
 
+/-- The `j`-th issued representation, the `γ⃗^(j)` of O24 Equation 17. -/
+def OMUFTrace.issuedRepr (t : OMUFTrace F G) (j : Fin t.arity) : AGMRepr F 1 :=
+  t.issuedReprs[j.1]'(by rw [t.issuedReprs_length]; exact j.2)
+
+/-- The coefficients of the `j`-th issued representation, the `γ^(j)` of O24 Equation 17 over
+the ring of the run. -/
+noncomputable def OMUFTrace.issuedCoeffs (t : OMUFTrace F G) (j : Fin t.arity) :
+    AGMPoly.ReprCoeffs F t.arity :=
+  (t.issuedRepr j).toReprCoeffs t.arity
+
 /-- The forgery polynomials `φ_i` of the run (O24 Equation 22), one per forgery,
 at the run's commitment polynomials. -/
 noncomputable def OMUFTrace.forgeryPolys (t : OMUFTrace F G) : List (AGMPoly.P F t.arity) :=
@@ -132,6 +140,27 @@ def OMUFTrace.CaseEta (t : OMUFTrace F G) : Prop :=
 monomial in `x₀`, `xᵣ` or `x₁`. The event Claim 5.14 bounds. -/
 def OMUFTrace.CaseX (t : OMUFTrace F G) : Prop :=
   t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.HasXMonomial φ
+
+/-- Item (iii), `x₀` case (p. 47): the adversary wins and some forgery polynomial has a nonzero
+monomial in `x₀`. The event the `x₀` reduction of Claim 5.14 bounds. -/
+def OMUFTrace.CaseX0 (t : OMUFTrace F G) : Prop :=
+  t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.Var.x0 ∈ φ.vars
+
+/-- Item (iii), `xᵣ` case: as `CaseX0` for `xᵣ`. -/
+def OMUFTrace.CaseXr (t : OMUFTrace F G) : Prop :=
+  t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.Var.xr ∈ φ.vars
+
+/-- Item (iii), `x₁` case: as `CaseX0` for `x₁`. -/
+def OMUFTrace.CaseX1 (t : OMUFTrace F G) : Prop :=
+  t.Wins gen secParam ∧ ∃ φ ∈ t.forgeryPolys, AGMPoly.Var.x1 ∈ φ.vars
+
+/-- Item (iii) is the union of its three cases. -/
+theorem OMUFTrace.caseX_imp (t : OMUFTrace F G) (h : t.CaseX gen secParam) :
+    t.CaseX0 gen secParam ∨ t.CaseXr gen secParam ∨ t.CaseX1 gen secParam := by
+  obtain ⟨hw, φ, hφ, h0 | hr | h1⟩ := h
+  · exact Or.inl ⟨hw, φ, hφ, h0⟩
+  · exact Or.inr (Or.inl ⟨hw, φ, hφ, hr⟩)
+  · exact Or.inr (Or.inr ⟨hw, φ, hφ, h1⟩)
 
 end Events
 

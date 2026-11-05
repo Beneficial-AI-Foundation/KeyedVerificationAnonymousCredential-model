@@ -28,11 +28,11 @@ proofs, because the π_is-less scheme is the one the Theorem 5.11 proof
 actually analyzes: its Sign oracle answers with the bare `(U', V')` and
 its one-more unforgeability bound carries no zero-knowledge term (a
 reduction holding no secret key cannot produce real `π_is` proofs). The
-name `μCMZATCore` records this. The π_is-carrying variant and
-the lifting lemma — schematically
+name `μCMZATCore` records this. The π_is-carrying variant is
+`μCMZATSyntax` of `ATVariantPiIs.lean`. A lifting lemma — schematically
 `OMUF(π_is scheme) ≤ OMUF(core) + Adv^zk_cmz.is`, with the precise
 adversary transformation and query dependence part of that future
-statement — are follow-up work, pending the upstream erratum; the
+statement — is follow-up work, pending the upstream erratum; the
 printed Theorem 5.3 blueprint node stays unanchored either way.
 
 ## The issuance protocol (Figure 9, boxes removed)
@@ -56,7 +56,7 @@ verification equation of the base MAC holds by construction, so
 The printed Figure 9 samples *both* issuance nonces from the full field
 (`u ←$ ℤ_p` and `r ←$ ℤ_p`). We sample both from the nonzero scalars
 `F× = F ∖ {0}` (via `uniformUnits`, definitionally `uniformNonzero F`),
-the same convention as the base MAC's tag base `U ←$ G×`
+the same convention as the base MAC's nonzero `U ←$ G×`
 (`Construction.lean`, *Nonzero `U` and perfect correctness*):
 
 - `u = 0` would make the honest run abort at the user's `U' ≠ 0` check;
@@ -68,7 +68,7 @@ Under the literal samplers an honest issuance thus fails with
 probability `2/p − 1/p²` — mass that the repo's support-based
 (probability-one) `ATSyntax.Correct` cannot account for. Reductions
 replaying the server or the user must account for these per-nonce `1/p`
-distribution differences, exactly as they do for the base MAC's tag base.
+distribution differences, exactly as they do for the base MAC's `U`.
 
 Correctness additionally needs the generator to be nonzero
 (`hgen : gen ≠ 0`): the honest token base is `(r·u)·gen`, which the
@@ -81,9 +81,9 @@ the AGM layer, which is only needed once discrete logs are taken.
 
 - The one-more unforgeability analysis (O24 Theorem 5.11, Claims
   5.12–5.14) — the AGM-instrumented game and the polynomial layer are
-  planned for the Track CMZ-OMUF files under #12.
+  in the `OneMoreUnforgeability/` files (#12).
 - The anonymity clause of Theorem 5.3 — blocked on the Definition 4.4
-  game and Theorem 5.8 (Track CMZ-A), and stated only for the
+  game and Theorem 5.8, and stated only for the
   `π_is`-carrying variant: the anonymity simulator extracts from `π_is`
   and the Theorem 5.3 bound carries its knowledge-soundness term, so the
   core defined here cannot carry that clause.
@@ -163,7 +163,7 @@ The issuance carriers are
 - `UsrState _ := F` — the blinding scalar `s`;
 - `IssueMsg _ := G` — the Pedersen commitment `C'`;
 - `BlindToken _ := G × G` — the server's blinded pair `(U', V')`;
-- `Token _ := Code G` — the unblinded MAC tag `(U, V)`.
+- `Token _ := Code G` — the unblinded MAC code `(U, V)`.
 
 The generator `gen : G` (O24's `G₀ ∈ Γ`) is an explicit scheme
 parameter, exactly as for `μCMZBaseMACSyntax`. Noncomputable for the
@@ -212,7 +212,7 @@ theorem μCMZATCore_correct (gen : G) (hgen : gen ≠ 0) :
   simp only [atIssueUsr₂, if_neg hU', support_bind, mem_support_uniformUnits,
     support_pure, Set.mem_iUnion, Set.mem_singleton_iff, exists_prop] at hσ?
   obtain ⟨r, hr, rfl⟩ := hσ?
-  -- The unblinded pair is a valid MAC tag.
+  -- The unblinded pair is a valid MAC code.
   refine ⟨_, rfl, ?_⟩
   simp only [μCMZATCoreSyntax, verify, macScalar, Bool.and_eq_true,
     decide_eq_true_eq]
@@ -238,12 +238,14 @@ makes that explicit).
 
 Per the `AnonymousToken` layering, the bundle certifies *only* syntax
 and correctness. One-more unforgeability stays the standalone game of
-`KVAC.Preliminaries.AnonymousTokens.Security` (Track CMZ-OMUF states
-Theorem 5.11 over it), and no unlinkability or anonymity claim is
-carried — in particular, O24's anonymity argument for `μCMZ_AT`
+`KVAC.Preliminaries.AnonymousTokens.Security` (the Theorem 5.11
+statements of `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements` rest on
+its AGM-instrumented form, `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`),
+and the bundle carries no unlinkability or anonymity
+claim — in particular, O24's anonymity argument for `μCMZ_AT`
 verifies and extracts `π_is`, so it does not even apply to this
-`π_is`-less core (the `π_is`-carrying variant is Phase B follow-up
-work). Noncomputable (via `μCMZATCoreSyntax`).
+`π_is`-less core (the `π_is`-carrying variant is `μCMZATSyntax` of
+`ATVariantPiIs.lean`). Noncomputable (via `μCMZATCoreSyntax`).
 -/
 noncomputable def μCMZATCore (gen : G) (hgen : gen ≠ 0) : AnonymousToken :=
   ⟨μCMZATCoreSyntax F gen, μCMZATCore_correct F gen hgen⟩

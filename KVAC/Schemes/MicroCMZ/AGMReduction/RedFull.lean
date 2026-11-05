@@ -32,9 +32,9 @@ variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 /-- The bits an analysis run of the reduction returns, for the forgery's verification
 polynomial `φ` and its masked univariate `ψ` (`RedTrace.verifPoly`, `RedTrace.psi`). -/
 structure RedBits where
-  /-- The `AGM_UF_CMVAGame` predicate (consistency ∧ freshness ∧ `verify`) with the embedded
-  points `ep` and the reduction's `log` in place of the honest `pp` and log, on the key the
-  masks embed at the challenge exponent. -/
+  /-- The `AGM_UF_CMVAGame` predicate (freshness ∧ `verify`) with the embedded points `ep` and
+  the reduction's `log` in place of the honest `pp` and log, on the key the masks embed at the
+  challenge exponent. -/
   winBit : Bool
   /-- The reduction's extraction success `recoverDlog gen X ψ = x`. -/
   recBit : Bool
@@ -48,7 +48,8 @@ structure RedBits where
 /-- **Reduction analysis experiment.** Samples the challenge exponent `x`, runs `redTrace`
 at the genuine powers `X = x·gen`, `X' = x²·gen`, `X'' = x³·gen`, and returns the `RedBits`:
 - `winBit` reconstructs `sk = (a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)` from the masks and `x` and applies the
-  *real* μCMZ win predicate (consistency ∧ freshness ∧ `verify`);
+  *real* μCMZ win predicate (freshness ∧ `verify`) to the forged MAC code the forgery
+  representations evaluate to;
 - `recBit` is the reduction's extraction success `recoverDlog gen X ψ = x` on the trace's `ψ`;
 - `badBit = decide (φ ≠ 0 ∧ ψ = 0)` is the Schwartz–Zippel bad event;
 - `szBit = decide (φ ≠ 0 ∧ eval (t.shiftPoint x) φ = 0)` is the shift event at the trace's
@@ -61,10 +62,9 @@ noncomputable def redFull (A : AGMUFAdversary F G 1) : ProbComp RedBits := do
   let t ← redTrace gen X (x ^ 2 • gen) (x ^ 3 • gen) A
   -- the key the masks embed at the challenge exponent, and the real win predicate on it
   let sk := maskedKey x t.aM t.bM
-  let consistent := t.ρU.evalAt gen t.ep t.log.tags = t.σStar.1 ∧
-    t.ρV.evalAt gen t.ep t.log.tags = t.σStar.2
+  let σStar := (t.ρU.evalAt gen t.ep t.log.tags, t.ρV.evalAt gen t.ep t.log.tags)
   let fresh := t.mStar ∉ t.log.map (·.msg)
-  pure ⟨decide consistent && decide fresh && verify sk t.mStar t.σStar,
+  pure ⟨decide fresh && verify sk t.mStar σStar,
         decide (recoverDlog gen X t.psi = x),
         decide (t.verifPoly ≠ 0 ∧ t.psi = 0),
         decide (t.verifPoly ≠ 0 ∧ MvPolynomial.eval (t.shiftPoint x) t.verifPoly = 0)⟩

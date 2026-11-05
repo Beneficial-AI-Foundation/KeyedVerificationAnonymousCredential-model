@@ -93,7 +93,7 @@ def EXTState.empty (kvac : KVACSyntax M) {secParam n : Nat}
     (crs : kvac.Crs secParam n) : EXTState kvac crs :=
   ⟨[], [], []⟩
 
-/-! ## The oracle monad and its plumbing -/
+/-! ## The oracle monad, the lifting into it and its state threading -/
 
 /-- The monad the O24 Figure 8 oracles run in: the shared random-oracle cache and
 the game state `EXTState` carried in one `StateT`, over `ExceptT Unit` (the
@@ -105,7 +105,7 @@ abbrev EXTComp (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
 /-- Lift a credential computation into the oracle monad: run it against the shared
 random-oracle table via `runRO`, write the table back, leave the game state alone.
 
-IMPORTANT. This is the single site of the cache plumbing the whole game depends
+IMPORTANT. This is the single site of the cache threading the whole game depends
 on. It projects the cache out of the state, runs the credential algorithm at the
 `ProbComp` layer, and threads the updated cache back, so all four Figure 8 oracles
 share one random-oracle table and a Fiat–Shamir credential's proofs stay
@@ -138,12 +138,12 @@ Fiat–Shamir credential's proofs share one random oracle. The `Issue` abort of
 Figure 8 is `throw ()` in the `ExceptT Unit` layer, short-circuiting the run; the
 game reads a thrown abort as an adversary win.
 
-The `newUsr` arm keeps a `none` branch for honest-issuance failure. That branch
+The `NewUsr` oracle keeps a `none` branch for honest-issuance failure. That branch
 is never taken on the happy trace: `newUsr_mac_isSome` shows it is unreachable
 under `CorrectRO`. The obligation is not discharged here — a definition carries no
 proof — nor by `newUsr_mac_isSome` alone, which only states the fact given
 `CorrectRO`. It is discharged at the game-reasoning site, the μCMZ extractability
-proof (O24 Thm 5.2/5.10, Track CMZ-E, issue #11), once the concrete μCMZ scheme
+proof (O24 Thm 5.2/5.10, issue #11), once the concrete μCMZ scheme
 supplies `CorrectRO`. -/
 def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (ext : Extractor H kvac) {secParam n : Nat} (crs : kvac.Crs secParam n)
@@ -153,7 +153,7 @@ def extOracleImpl (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
   -- return (ctr := ctr + 1). Runs the honest MAC `kvac.mac`; on a credential it
   -- appends (m, σ) to `usrs` and answers with the pre-append length (the new
   -- user's index).
-  -- The `none` arm below is the honest-issuance failure. For a correct scheme
+  -- The `none` branch below is the honest-issuance failure. For a correct scheme
   -- it never fires. Issuance under the exact-attribute predicate `φ_m` always
   -- yields `some` (`CorrectRO` specialised at `φ = φ_m` via `holds_exactPred`),
   -- so `usrs` always grows and the counter matches the paper's unconditional
@@ -332,13 +332,24 @@ def PolyBounded (n : ℕ → ℕ) : Prop :=
 obligation. Here the attribute count `n(λ)` is a function of the security parameter;
 for every polynomially-bounded `n` there is an extractor making the extraction game,
 run at attribute count `n secParam` for each `secParam`, secure against the efficient
-adversaries. The `PolyBounded n →` hypothesis is the generated obligation: any proof
-of `ExtractablePoly`, or instantiation of it, must exhibit `n`'s polynomial bound
-rather than silently assume a constant attribute count. `Extractable` above is the
-fixed-`n` slice; this ties `n` to `λ` as the paper does.
+adversaries. A proof of `ExtractablePoly` takes an arbitrary `n` and assumes
+`PolyBounded n`. Applying it to a particular attribute-count family requires a proof
+of that family's polynomial bound. `Extractable` above is the fixed-`n` slice; this
+ties `n` to `λ` as the paper does.
 
-The full discharge (a concrete `PolyBounded` witness and the negligibility proof)
-belongs to the μCMZ extractability proof, Track CMZ-E (issue #11). -/
+No declaration asserts `ExtractablePoly` for an abstract scheme. A theorem stating
+it for every `kvac` and every `isPPT` with no premises (the former
+`extractablePoly_obligation`, removed under issue #177) is false, since a scheme whose
+server check accepts every presentation lets an adversary with no oracle query win
+with probability one for every extractor. The clause "μCMZ is extractable" of O24
+Theorem 5.10 is `ExtractablePoly` at the μCMZ instance under the negligibility of the
+terms of its bound. Its unforgeability term is bounded by Theorem 5.1, whose bound
+carries the constant `3/p` (p. 35). At the fixed group of the instance `p` does not
+grow with `λ`, so that constant stays positive, the bound cannot establish
+negligibility, and the paper's asymptotic argument needs the λ-indexed group family
+of issue #148.
+Theorem 5.10's inequality is stated at fixed parameters (`docs/DESIGN_ALTERNATIVES.md`,
+*No obligation theorem for `ExtractablePoly`*). -/
 def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
     (isPPT : EXTAdversary H kvac → Prop) : Prop :=
   ∀ n : ℕ → ℕ, PolyBounded n →
@@ -346,33 +357,16 @@ def ExtractablePoly (H : HashSpec) (kvac : KVACSyntax (OracleComp (ZKRO H)))
       (SecurityGame.mk (fun A secParam => EXTAdv H kvac ext A secParam (n secParam))
         : SecurityGame (EXTAdversary H kvac)).secureAgainst isPPT
 
-/-- Obligation generator for O24 Theorem 5.10 (extractability with the `n ≤ poly(λ)`
-side condition). Stated over an abstract scheme `kvac` and adversary-efficiency
-predicate `isPPT`; the premises the paper uses — scheme correctness and a
-knowledge-sound ZKP supplying straight-line extractors (O24 §5.5) — are not yet
-formalized, so they are elided here and this stands as a deferred obligation.
-
-The `sorry` is the point: it turns `ExtractablePoly` from a latent definition into a
-real open goal, so `PolyBounded n` and the negligibility of `EXTAdv` become subgoals
-that the μCMZ extractability proof must discharge. Full proof (and the missing
-premises) belong to Track CMZ-E (issue #11), where the concrete μCMZ `KVACSyntax`
-instantiates `kvac`. -/
-theorem extractablePoly_obligation (H : HashSpec)
-    (kvac : KVACSyntax (OracleComp (ZKRO H)))
-    (isPPT : EXTAdversary H kvac → Prop) :
-    ExtractablePoly H kvac isPPT := by
-  sorry
-
 /-! ## Cache transport for `runRO`
 
-`runRO H c k` interprets `k` through `zkROImpl H`, whose uniform arm never touches the
-cache and whose hash arm is VCV-io's lazy `randomOracle`. The lemmas below expose the
-support of one step of each arm and combine them into the cache transport
+`runRO H c k` interprets `k` through `zkROImpl H`, whose uniform-sampling oracle never
+touches the cache and whose hash oracle is VCV-io's lazy `randomOracle`. The lemmas below expose the
+support of one step of each oracle and combine them into the cache transport
 `runRO_support_of_le`: a run from a cache `c` replays, query by query, from any smaller
 cache `c₁ ≤ c`. -/
 
-/-- The uniform arm of `zkROImpl` answers with a uniform sample and leaves the cache as it
-found it: one step from `c` is a pair `(u, c)`, for every `u`. -/
+/-- The uniform-sampling oracle of `zkROImpl` answers with a uniform sample and leaves the cache
+as it found it: one step from `c` is a pair `(u, c)`, for every `u`. -/
 lemma support_zkROImpl_inl_run (H : HashSpec) (n : ℕ) (c : H.spec.QueryCache) :
     support ((zkROImpl H (Sum.inl n)).run c) = Set.range (fun u => (u, c)) := by
   simp only [add_apply_inl, zkROImpl, QueryImpl.ofLift_eq_id', QueryImpl.add_apply_inl,
@@ -441,21 +435,21 @@ lemma roImpl_step_of_le (H : HashSpec) (d : H.Dom) {c₁ c : H.spec.QueryCache} 
 
 /-- **One-step cache transport for `zkROImpl`.** A step of the random-oracle handler from
 `c` that answers `u` and ends at `c'` can be replayed from any `c₁ ≤ c`, answering the same
-`u` and ending at some `c₁' ≤ c'`. The uniform arm ignores the cache; the hash arm is
-`roImpl_step_of_le`. -/
+`u` and ending at some `c₁' ≤ c'`. The uniform-sampling oracle ignores the cache; the hash-oracle
+case is `roImpl_step_of_le`. -/
 lemma zkROImpl_step_of_le (H : HashSpec) (t : ℕ ⊕ H.Dom) {c₁ c : H.spec.QueryCache}
     (h : c₁ ≤ c) {u : (ZKRO H).Range t} {c' : H.spec.QueryCache}
     (hu : (u, c') ∈ support ((zkROImpl H t).run c)) :
     ∃ c₁', c₁' ≤ c' ∧ (u, c₁') ∈ support ((zkROImpl H t).run c₁) := by
   rcases t with n | d
-  · -- Uniform arm: the cache is untouched on both sides.
+  · -- Uniform-sampling oracle: the cache is untouched on both sides.
     rw [support_zkROImpl_inl_run] at hu
     obtain ⟨v, hv⟩ := hu
     obtain ⟨rfl, rfl⟩ := Prod.mk.inj hv
     refine ⟨c₁, h, ?_⟩
     rw [support_zkROImpl_inl_run]
     exact ⟨v, rfl⟩
-  · -- Hash arm: `zkROImpl H (Sum.inr d)` is `H.roImpl d` by definition.
+  · -- Hash oracle: `zkROImpl H (Sum.inr d)` is `H.roImpl d` by definition.
     exact roImpl_step_of_le H d h hu
 
 /-- **Cache transport for `runRO`.** Any result a computation can produce when run
@@ -499,10 +493,10 @@ theorem runRO_support_of_le {α : Type} (H : HashSpec) {c₁ c : H.spec.QueryCac
 
 /-- Under `CorrectRO`, honest issuance for the `NewUsr` oracle never fails. Every
 result of `kvac.mac` run from any cache `c` at least as large as the keygen cache
-`c₁` is `some`. The game's `NewUsr` arm runs `kvac.mac` through `liftRO` from the
+`c₁` is `some`. The game's `NewUsr` oracle runs `kvac.mac` through `liftRO` from the
 cache the game state holds, which the adversary may have enlarged through direct
 oracle queries and the other three oracles, so `c₁ ≤ c` is exactly the situation
-at the call site. Hence the `none` arm of `extOracleImpl`'s `newUsr` is
+at the call site. Hence the `none` branch of `extOracleImpl`'s `newUsr` is
 unreachable and the counter always advances, as in O24 Figure 8's unconditional
 `ctr := ctr + 1`.
 

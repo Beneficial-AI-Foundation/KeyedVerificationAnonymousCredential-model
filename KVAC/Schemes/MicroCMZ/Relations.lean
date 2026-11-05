@@ -215,7 +215,7 @@ def riuSigma (gen : G) :
     pure (fun i => (z₁.1 i - z₂.1 i) * (c₁ - c₂)⁻¹, (z₁.2 - z₂.2) * (c₁ - c₂)⁻¹)
 
 /-- Completeness (O24 Fig 9): an honest prover always convinces the verifier.
-Holds for any `φ` — `verify` ignores the `φ` arm. -/
+Holds for any `φ` — `verify` ignores the `φ` conjunct. -/
 theorem riuSigma_complete (gen : G) :
     PerfectlyComplete (riuSigma (F := F) (n := n) gen) := by
   rintro ⟨Cp, X, φ⟩ ⟨m, s⟩ h
@@ -542,7 +542,7 @@ abbrev RpWitness (F : Type) (n : ℕ) : Type := F × (Fin n → F) × (Fin n →
 /-- The R_p relation (O24 Fig 9, presentation proof): the statement
 `(U', X⃗, C⃗, Z, φ)` is satisfied by the witness `(r', r⃗, m⃗)` iff
 `(∀ i, Cᵢ = mᵢ • U' + rᵢ • gen) ∧ Z = Σᵢ rᵢ • Xᵢ − r' • H ∧ φ m⃗`. Mirrors
-`riuRel`: `verify` checks only the linear arm, `φ`-enforcement on extracted
+`riuRel`: `verify` checks only the linear conjuncts, `φ`-enforcement on extracted
 witnesses is the `Enforces` hypothesis (see `rpSigma_speciallySoundAt`). Use
 `trivialPolicy` for the no-policy case. -/
 def rpRel (gen H : G) : RpStmt G F n → RpWitness F n → Bool :=
@@ -581,7 +581,7 @@ def rpSigma (gen H : G) :
       fun i => (z₁.2.2 i - z₂.2.2 i) * (c₁ - c₂)⁻¹)
 
 /-- Completeness of the R_p Σ-protocol. Holds for any `φ` — `verify` ignores the
-`φ` arm. -/
+`φ` conjunct. -/
 theorem rpSigma_complete (gen H : G) :
     PerfectlyComplete (rpSigma (F := F) (n := n) gen H) := by
   intro s w h
