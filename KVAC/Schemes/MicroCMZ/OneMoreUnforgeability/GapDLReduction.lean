@@ -23,14 +23,14 @@ samples masks `aaᵢ, bbᵢ`, `z`, `xᵣ` and the crs `H ←$ G×`, and runs the
 `(H, (z•H, xᵣ•g, aaᵢ•g + bbᵢ•X))`, so that the implicit key is `xᵢ = aaᵢ + bbᵢ·x`,
 `x₀ = z`, with `xᵣ` known. `omufGapDlOracleImpl` answers the forger's oracles:
 
-- `sign C' ρ` runs the gate on known group elements. On a match it answers with
+- `sign ρ` evaluates `ρ` over the issued pairs to the commitment `C'` and answers with
   `U' = u•g`, `V' = z•U' + u•(C' + xᵣ•g)` for a nonzero `u`, which needs no
   secret beyond `z` and `xᵣ`: in this game the blind issuance never touches the
-  attribute keys `xᵢ`, only the commitment `C'` the forger supplies. A mismatch
-  is refused and logged, as in `agmOMUFOracleImpl`.
-- `verify m⃗ σ ρU ρV` checks both gates and `σ.1 ≠ 0` on known elements, and
-  decides `σ.2 = (c + x·d)•σ.1` with the one DDH query `Ddh(d•σ.1, σ.2 − c•σ.1)`
-  (`(c, d) = gapDlKeyParts`).
+  attribute keys `xᵢ`, only the commitment `C'`. It logs `C'`, `ρ` normalized to
+  the issued pairs, and the answer, as `agmOMUFOracleImpl` does.
+- `verify m⃗ ρU ρV` evaluates both representations to the token `σ`, checks
+  `σ.1 ≠ 0`, and decides `σ.2 = (c + x·d)•σ.1` with the one DDH query
+  `Ddh(d•σ.1, σ.2 − c•σ.1)` (`(c, d) = gapDlKeyParts`).
 - a coin query is forwarded to the reduction's own `unifSpec`, leaving the log
   untouched.
 
@@ -68,30 +68,27 @@ the log of `agmOMUFOracleImpl`. See the module docstring for the arms. -/
 noncomputable def omufGapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
     QueryImpl (AGMOMUFOracleSpec F G n)
       (StateT (AGMOMUFLog F G n) (OracleComp (unifSpec + GapDLogOracleSpec G)))
-  | .sign C' ρ => StateT.mk fun log => do
+  | .sign ρ => StateT.mk fun log => do
       let pp := gapDlEmbedParams gen aa bb z xr X H
-      if reprMatches ρ gen H pp.1 pp.2.1 pp.2.2 (AGMOMUFLog.tags log) C' then do
-        let u ← (gapSignScalarSample : OracleComp (unifSpec + GapDLogOracleSpec G) F)
-        let U := u • gen
-        let V := z • U + u • (C' + xr • gen)
-        pure (some (U, V), log ++ [(C', ρ, some (U, V))])
-      else
-        pure (none, log ++ [(C', ρ, none)])
-  | .verify m σ ρU ρV => StateT.mk fun log => do
+      let tags := AGMOMUFLog.tags log
+      let C' := ρ.evalParams gen H pp tags
+      let u ← (gapSignScalarSample : OracleComp (unifSpec + GapDLogOracleSpec G) F)
+      let U := u • gen
+      let V := z • U + u • (C' + xr • gen)
+      pure (some (U, V), log ++ [(C', ρ.normalize tags.length, some (U, V))])
+  | .verify m ρU ρV => StateT.mk fun log => do
       let tags := AGMOMUFLog.tags log
       let pp := gapDlEmbedParams gen aa bb z xr X H
-      let consistent :=
-        reprMatches ρU gen H pp.1 pp.2.1 pp.2.2 tags σ.1 ∧
-        reprMatches ρV gen H pp.1 pp.2.1 pp.2.2 tags σ.2
+      let σ : Code G := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
       let (c, d) := gapDlKeyParts aa bb z xr m
       let bit ← query (spec := unifSpec + GapDLogOracleSpec G)
         (Sum.inr (d • σ.1, σ.2 - c • σ.1))
-      pure (decide consistent && decide (σ.1 ≠ 0) && bit, log)
+      pure (decide (σ.1 ≠ 0) && bit, log)
 
 /-- The first pair of forgeries with different attribute vectors and equal
 attribute combination `Σᵢ mᵢ•Xᵢ` over the bases `Xv`, if any. -/
-def collidingForgeries (Xv : Fin n → G) (out : List (AGMOMUFForgery F G n)) :
-    Option (AGMOMUFForgery F G n × AGMOMUFForgery F G n) :=
+def collidingForgeries (Xv : Fin n → G) (out : List (AGMOMUFForgery F n)) :
+    Option (AGMOMUFForgery F n × AGMOMUFForgery F n) :=
   (out.flatMap fun e => out.map fun e' => (e, e')).find? fun p =>
     decide (p.1.msg ≠ p.2.msg ∧ (∑ i, p.1.msg i • Xv i) = ∑ i, p.2.msg i • Xv i)
 

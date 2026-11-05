@@ -187,7 +187,7 @@ variable (gen : G) [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 /-- A run in the support of the reduction draws its randomness from the sampler, and its records
 are those of its log. -/
 lemma twoDLRunAt_support (A : AGMOMUFAdversary F G 1) (w : F × F × F) (x : F)
-    (r : TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G)
+    (r : TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G)
     (hr : r ∈ support (twoDLRunAt gen A w x)) :
     r.1 ∈ support (twoDLSampleEmbed w) ∧
       r.2.2.2 = twoDLAuxOf gen x (AGMOMUFLog.tags r.2.2.1) := by
@@ -226,7 +226,7 @@ lemma eval_aeval_polynomial {σ : Type} (pt : σ → Polynomial F) (φ : MvPolyn
 
 /-- The substitution of the extraction, evaluated at the challenge, is the discrete-log point of
 the run: the values the reduction sampled or recorded are the logarithms the bridge speaks of. -/
-lemma twoDLSubst_eval (x : F) (e : TwoDLEmbed F) (out : List (AGMOMUFForgery F G 1))
+lemma twoDLSubst_eval (x : F) (e : TwoDLEmbed F) (out : List (AGMOMUFForgery F 1))
     (s : TwoDLState F G) (hs : s.2 = twoDLAuxOf gen x (AGMOMUFLog.tags s.1))
     (u : AGMPoly.Var (twoDLTraceOf gen x (e, out, s)).arity) :
     Polynomial.eval x (twoDLSubst e (s.2.map Prod.fst) _ u) =
@@ -245,7 +245,7 @@ lemma twoDLSubst_eval (x : F) (e : TwoDLEmbed F) (out : List (AGMOMUFForgery F G
 variable `v`, whose substituted value is the non-constant polynomial `lin` and every other
 variable's a constant. -/
 lemma twoDLExtract_eq_aux (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
-    (out : List (AGMOMUFForgery F G 1)) (s : TwoDLState F G)
+    (out : List (AGMOMUFForgery F 1)) (s : TwoDLState F G)
     (hs : s.2 = twoDLAuxOf gen x (AGMOMUFLog.tags s.1))
     (t : OMUFTrace F G) (ht : t = twoDLTraceOf gen x (e, out, s))
     (hcons : t.ServerConsistent gen) (hw : t.Wins gen secParam)
@@ -320,7 +320,7 @@ lemma twoDLExtract_eq_aux (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
 embedded variable, the reduction returns the challenge. The embedded variable carries the nonzero
 slope, the other two key variables slope `0`. -/
 theorem twoDLExtract_eq (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
-    (out : List (AGMOMUFForgery F G 1)) (s : TwoDLState F G)
+    (out : List (AGMOMUFForgery F 1)) (s : TwoDLState F G)
     (hs : s.2 = twoDLAuxOf gen x (AGMOMUFLog.tags s.1))
     (t : OMUFTrace F G) (ht : t = twoDLTraceOf gen x (e, out, s))
     (hcons : t.ServerConsistent gen) (hw : t.Wins gen secParam) (v : AGMPoly.Var t.arity)
@@ -334,7 +334,8 @@ theorem twoDLExtract_eq (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
       (Polynomial.C e.a₀ + Polynomial.C e.b₀ * Polynomial.X) rfl ?_ ?_ hnd
     · intro c h
       have := congrArg (fun p => Polynomial.coeff p 1) h
-      simp at this
+      simp only [Polynomial.coeff_add, Polynomial.coeff_C_succ, Polynomial.coeff_mul_X,
+        Polynomial.coeff_C_zero, zero_add] at this
       exact hb0 this
     · intro u hu
       rcases u with _ | _ | _ | _ | j
@@ -347,7 +348,8 @@ theorem twoDLExtract_eq (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
       (Polynomial.C e.aᵣ + Polynomial.C e.bᵣ * Polynomial.X) rfl ?_ ?_ hnd
     · intro c h
       have := congrArg (fun p => Polynomial.coeff p 1) h
-      simp at this
+      simp only [Polynomial.coeff_add, Polynomial.coeff_C_succ, Polynomial.coeff_mul_X,
+        Polynomial.coeff_C_zero, zero_add] at this
       exact hbr this
     · intro u hu
       rcases u with _ | _ | _ | _ | j
@@ -360,7 +362,8 @@ theorem twoDLExtract_eq (secParam : ℕ) (x : F) (e : TwoDLEmbed F)
       (Polynomial.C e.a₁ + Polynomial.C e.b₁ * Polynomial.X) rfl ?_ ?_ hnd
     · intro c h
       have := congrArg (fun p => Polynomial.coeff p 1) h
-      simp at this
+      simp only [Polynomial.coeff_add, Polynomial.coeff_C_succ, Polynomial.coeff_mul_X,
+        Polynomial.coeff_C_zero, zero_add] at this
       exact hb1 this
     · intro u hu
       rcases u with _ | _ | _ | _ | j
@@ -378,14 +381,14 @@ variable (gen : G) [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
 /-- The reduction's experiment, unfolded: the challenge, then the run of the reduction at it. -/
 noncomputable def twoDLExp (A : AGMOMUFAdversary F G 1) (w : F × F × F) :
-    ProbComp (F × (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G)) := do
+    ProbComp (F × (TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G)) := do
   let x ← ($ᵗ F : ProbComp F)
   let r ← twoDLRunAt gen A w x
   pure (x, r)
 
 /-- What the reduction outputs at a run of its experiment. -/
 noncomputable def twoDLOutput (x : F)
-    (r : TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G) : F :=
+    (r : TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G) : F :=
   twoDLExtract (twoDLTraceOf gen x r) gen (x • gen) r.1 (r.2.2.2.map Prod.fst)
 
 /-- The 2-DL experiment of the reduction is its run at a uniform challenge, followed by the
@@ -435,7 +438,7 @@ lemma evalDist_twoDLExp_trace (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w :
 
 /-- A run of the experiment gives a trace in the support of the game's. -/
 lemma twoDLTraceOf_mem_support (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
-    (p : F × (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G))
+    (p : F × (TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G))
     (hp : p ∈ support (twoDLExp gen A w)) :
     twoDLTraceOf gen p.1 p.2 ∈ support (agmOMUFTrace gen secParam A) := by
   have hmem : twoDLTraceOf gen p.1 p.2 ∈
@@ -515,7 +518,7 @@ that `P` holds on a run that is degenerate: off the degeneracy, away from the ma
 reduction's extraction returns the challenge (`hsound`). -/
 theorem twoDL_claim_of_sound (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
     (P Deg : OMUFTrace F G → Prop) (Z : TwoDLEmbed F → Prop)
-    (hZ : Pr[Z | twoDLSampleEmbed w] ≤ (Fintype.card F : ℝ≥0∞)⁻¹)
+    (hZ : Pr[ Z | twoDLSampleEmbed w] ≤ (Fintype.card F : ℝ≥0∞)⁻¹)
     (hsound : ∀ p ∈ support (twoDLExp gen A w), P (twoDLTraceOf gen p.1 p.2) →
       ¬ Deg (twoDLTraceOf gen p.1 p.2) → ¬ Z p.2.1 → twoDLOutput gen p.1 p.2 = p.1) :
     Pr[P | agmOMUFTrace gen secParam A] ≤
@@ -564,7 +567,7 @@ lemma twoDLSampleEmbed_support (w : F × F × F) (e : TwoDLEmbed F)
 /-- What a run of the reduction's experiment guarantees: its trace is consistent, its records are
 those of its log, and its embedding has the slopes the sampler draws. -/
 lemma twoDLExp_facts (secParam : ℕ) (A : AGMOMUFAdversary F G 1) (w : F × F × F)
-    (p : F × (TwoDLEmbed F × List (AGMOMUFForgery F G 1) × TwoDLState F G))
+    (p : F × (TwoDLEmbed F × List (AGMOMUFForgery F 1) × TwoDLState F G))
     (hp : p ∈ support (twoDLExp gen A w)) :
     (twoDLTraceOf gen p.1 p.2).ServerConsistent gen ∧
       p.2.2.2.2 = twoDLAuxOf gen p.1 (AGMOMUFLog.tags p.2.2.2.1) ∧

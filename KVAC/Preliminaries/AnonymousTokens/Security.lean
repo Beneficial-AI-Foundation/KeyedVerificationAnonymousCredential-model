@@ -37,7 +37,7 @@ valid message/token pairs with pairwise-distinct messages.
 **Query count `q` is dynamic.** Figure 6 reads `q` off the run (`q := q + 1`
 in the Sign oracle); here `q` is the length of the `SignLog` at the end of
 the game, so the win condition `q + 1` moves with the adversary's behaviour.
-Security *theorems* over the AGM-instrumented form of this game (Theorem 5.11,
+Security *theorems* over the AGM form of this game (Theorem 5.11,
 `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements`) add a static
 query-budget hypothesis so their `q`-dependent bounds are well-formed; the game
 itself, like the merged UF-CMVA and AGM
@@ -144,7 +144,7 @@ The Figure 6 winning condition, for `q` Sign queries and output list
 (`List.Nodup`, Figure 6's `∀ i ≠ j : m⃗ᵢ ≠ m⃗ⱼ`), and every pair verifying
 (`∀ i ∈ [q+1] : AT.V(sk, m⃗ᵢ, σᵢ) = 1`). A named `Prop` (decidable, so the
 game can `decide` it) so that the security theorems and the
-AGM-instrumented OMUF game (`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`)
+AGM OMUF game (`KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`)
 can reuse it verbatim.
 -/
 abbrev OMUFWins (tok : ATSyntax M) (crs : tok.Crs secParam n)
