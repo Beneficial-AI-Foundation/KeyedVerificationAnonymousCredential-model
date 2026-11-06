@@ -73,12 +73,14 @@ mask-uniformity lemma. The reconstructed secret
 `sk = (a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)` plays the role of the real key, and the simulated
 oracle reproduces the honest oracle's observable behaviour.
 
-Route: couple `reductionOracleImpl` (`Core.lean`) against `agmOracleImpl`
+Route: couple `reductionOracleImpl` (`Core.lean`) against `agmUFImpl`
 (`AlgebraicMAC.lean`) under the state invariant `redLogHonestInv` (`Coupling.lean`),
 after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle's case
 through `sign_masked_tag_dist_eq` (`SignMask.lean`, whose module doc records why the
 mask sample is kept opaque there), the Verify and Help oracles' cases through
-`represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). -/
+`represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). A coin query is answered in
+both runs by the same uniform draw, coupled identically; neither run changes its log, so the
+logs stay related by `redLogHonestInv`. -/
 lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
     evalDist (AGM_UF_CMVAGame gen secParam A)
       = evalDist ((fun t : RedBits => t.winBit) <$> redFull gen A) := by
@@ -165,8 +167,9 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
 2. **The adaptive Schwartz–Zippel bound over the shear.** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
    a uniform-preserving bijection on `F²` per variable for `x₀, xᵣ, x₁`, and for the η and
    per-query `(auⱼ, buⱼ)` pairs, conditioned on a nonzero group element, a bijection onto
-   `{a ≠ 0} × F` (`sign_U_bu_dist_eq`) — A's view and hence `φ` depend only on the sheared
-   masks while the `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform
+   `{a ≠ 0} × F` (`sign_U_bu_dist_eq`) — A's view, read through the projected log of messages
+   and MAC codes, and hence `φ` depend only on the sheared masks and A's coin answers, while
+   the `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform
    over `Var t.log.length → F` independent of `φ`, and `probEvent_eval_shift_eq_zero_le`
    (total degree `≤ 3`) gives `Pr[szBit] ≤ 3/p`. -/
 

@@ -160,37 +160,44 @@ end SignStepCoupling
 /-- **(log-honesty invariant), preservation.** The reduction's simulated oracle, run with the
 genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`, preserves `redLogInv`: the Sign oracle
 appends only honest entries (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`; the `U`-form is
-definitional), and `verify`/`help` leave the log unchanged. -/
+definitional), and `verify`, `help` and coin queries leave the log unchanged. -/
 lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) :
     QueryImpl.PreservesInv
       (reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen) aM bM ep)
       (redLogInv gen x aM bM) := by
   intro t σ0 hσ0 z hz
-  cases t with
-  | sign m =>
-      simp only [reductionOracleImpl, reductionSignStep] at hz
-      -- `rw`/`simp` keyed on `?mx >>= ?my` does not match the do-desugared bind here, so
-      -- apply the iff as a term: `_` placeholders unify up to defeq and see through
-      -- `StateT.mk`/`StateT.run` as well.
-      obtain ⟨aubu, -, hz⟩ := (mem_support_bind_iff _ _ _).1 hz
-      subst hz
-      simp only [redLogInv, List.forall_mem_append, List.forall_mem_singleton] at hσ0 ⊢
-      refine ⟨hσ0, trivial, ?_⟩
-      rw [macScalar_maskedKey_eq]
-      exact embedTag_eq gen aM bM x (m 0) aubu.val.1 aubu.val.2
-  | verify m ρU ρV | help ρ₀ ρA ρZ =>
-      simp only [reductionOracleImpl, reductionVerifyStep, reductionHelpStep] at hz
-      subst hz; exact hσ0
+  rcases t with t | m | ⟨m, ρU, ρV⟩ | ⟨ρ₀, ρA, ρZ⟩
+  · simp only [reductionOracleImpl, QueryImpl.liftTarget_apply] at hz
+    -- `(liftM …).run σ0` is not a syntactic bind; restate it as one
+    change z ∈ support ((QueryImpl.ofLift unifSpec ProbComp t : ProbComp _) >>=
+      fun a => pure (a, σ0)) at hz
+    obtain ⟨u, -, hz⟩ := (mem_support_bind_iff _ _ _).1 hz
+    obtain rfl := (mem_support_pure_iff _ _).1 hz
+    exact hσ0
+  · simp only [reductionOracleImpl, reductionSignStep] at hz
+    -- `rw`/`simp` keyed on `?mx >>= ?my` does not match the do-desugared bind here, so
+    -- apply the iff as a term: `_` placeholders unify up to defeq and see through
+    -- `StateT.mk`/`StateT.run` as well.
+    obtain ⟨aubu, -, hz⟩ := (mem_support_bind_iff _ _ _).1 hz
+    subst hz
+    simp only [redLogInv, List.forall_mem_append, List.forall_mem_singleton] at hσ0 ⊢
+    refine ⟨hσ0, trivial, ?_⟩
+    rw [macScalar_maskedKey_eq]
+    exact embedTag_eq gen aM bM x (m 0) aubu.val.1 aubu.val.2
+  · simp only [reductionOracleImpl, reductionVerifyStep] at hz
+    subst hz; exact hσ0
+  · simp only [reductionOracleImpl, reductionHelpStep] at hz
+    subst hz; exact hσ0
 
 /-- **(log-honesty invariant).** With the genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
 every MAC code the reduction's simulated oracle logs is honest —
 `Vⱼ = macScalar (maskedKey …) mⱼ · Uⱼ`, the same `macScalar` form `redLogHonestInv` states the
 relation in, so a caller can move between the two without a conversion. The `sign` branch appends
-only honest MAC codes (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`); `verify`/`help` leave
-the log unchanged. Restated from `reductionOracleImpl_preservesInv` by
+only honest MAC codes (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`); `verify`/`help` and
+coin queries leave the log unchanged. Restated from `reductionOracleImpl_preservesInv` by
 `simulateQ_run_preservesInv`. -/
 lemma redLog_honest (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
-    {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
+    {β : Type} (oa : OracleComp (unifSpec + AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
       (reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen)
         aM bM ep) oa).run [])) :
@@ -204,7 +211,7 @@ the coefficients of `gamePoint_eq_embed_affine`'s `htag` in membership form; tha
 indexed by `Fin tags.length`, and the conversion is the pending `transcript_index_transport` step,
 delivered by the next PR of the stack. -/
 lemma redLog_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
-    {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
+    {β : Type} (oa : OracleComp (unifSpec + AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
       (reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen)
         aM bM ep) oa).run [])) :
