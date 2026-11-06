@@ -136,9 +136,9 @@ message/token pairs with pairwise-distinct messages. Mirrors the UF-CMVA game
 honest oracle implementation (the log's length is Figure 6's dynamic
 counter `q`), the experiment `omufExp` with the three-clause win condition
 `OMUFWins`, the game `OMUFGame` at `ProbComp`, and the advantage `OMUFAdv`.
-Unlike the UF-CMVA game, the experiment runs over any carrier `OracleComp spec`,
-and the adversary also has a private coin oracle, as VCV-io's PRF, IND-CPA and
-Fischlin adversaries do. Static query-budget hypotheses belong to the security
+Unlike the UF-CMVA game, the experiment runs over any carrier `OracleComp spec`.
+The adversary has a private coin oracle, as the UF-CMVA adversary and VCV-io's
+PRF, IND-CPA and Fischlin adversaries do. Static query-budget hypotheses belong to the security
 theorems over this game, not to the game itself.
 :::
 

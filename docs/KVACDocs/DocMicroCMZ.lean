@@ -240,9 +240,10 @@ adversary's own polynomial, which depends on its view.
 *TODO (Section 5.3).* Finish the reduction's success-probability bound
 from these pieces, then assemble Lemma 5.4, and prove Lemma 5.5.
 
-:::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMRepr.evalParams, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
+:::definition "agm_model" (lean := "KVAC.Schemes.MicroCMZ.AGMRepr, KVAC.Schemes.MicroCMZ.AGMRepr.eval, KVAC.Schemes.MicroCMZ.AGMRepr.evalParams, KVAC.Schemes.MicroCMZ.AGMQuery, KVAC.Schemes.MicroCMZ.AGMOracleSpec, KVAC.Schemes.MicroCMZ.AGMLog, KVAC.Schemes.MicroCMZ.agmOracleImpl, KVAC.Schemes.MicroCMZ.agmUFImpl, KVAC.Schemes.MicroCMZ.agmUFImpl_inr, KVAC.Schemes.MicroCMZ.AGMUFAdversary, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAGame, KVAC.Schemes.MicroCMZ.AGM_UF_CMVAAdv, KVAC.Schemes.MicroCMZ.glog, KVAC.Schemes.MicroCMZ.glog_smul, KVAC.Schemes.MicroCMZ.glog_smul_self, KVAC.Schemes.MicroCMZ.glog_add, KVAC.Schemes.MicroCMZ.glog_smul_scalar, KVAC.Schemes.MicroCMZ.gen_ne_zero") (parent := "cmz_amac") (tags := "milestone")
 The UF-CMVA game of {uses "ufcmva_game"}[] specialised to algebraic
-adversaries against the `n`-attribute base MAC
+adversaries, with a private coin oracle beside the oracles, against the
+`n`-attribute base MAC
 ({uses "mucmz_base_mac"}[]): adversaries give every group element they submit
 by its AGM representation alone, the challenger evaluates the representations
 and answers honestly on the evaluated elements, and the discrete-log
@@ -745,12 +746,11 @@ exactly when it is in the other.
 *O24 Theorem 5.1.* μCMZ is an `n`-attribute algebraic MAC
 ({uses "algebraic_mac"}[]), UF-CMVA secure against algebraic adversaries in the
 game with `Help` of {uses "mucmz_ufcmva_help_game"}[]: the advantage of an
-algebraic adversary that draws no random coins is at most the 3-DL advantage
+algebraic adversary is at most the 3-DL advantage
 ({uses "hardness_assumptions"}[]) of the reduction to `n = 1`
 ({bpref "attribute_collapse_reduction"}[]) plus the gap discrete-log advantage
 of the collision reduction ({bpref "collision_gap_dl_reduction"}[]) plus `5/p`;
-this is the bound of Lemma 5.5. A private coin oracle for the adversary type is
-planned (issue #269). O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
+this is the bound of Lemma 5.5. O24 prints `Adv^{3-dl} + Adv^{dl} + 3/p`.
 :::
 
 :::proof "mucmz_mac_security"
@@ -814,15 +814,16 @@ against the embedded basis `Xᵢ = rᵢ•X₁`: that of the first translation i
 :::
 
 :::definition "attribute_collapse_reduction" (lean := "KVAC.Schemes.MicroCMZ.collapseMsg, KVAC.Schemes.MicroCMZ.collapseOracleImpl, KVAC.Schemes.MicroCMZ.nTo1Adversary, KVAC.Schemes.MicroCMZ.microCMZN3DLReduction, KVAC.Schemes.MicroCMZ.microCMZN3DLReductionExp, KVAC.Schemes.MicroCMZ.microCMZN3DLReductionAdv") (parent := "cmz_amac") (tags := "milestone")
-The reduction adversaries of {bpref "forgery_case_mac"}[]. At fixed
-scalars `r⃗`, the paper's `zᵢ` of Claim 5.7, the wrapper runs the `n`-attribute adversary of
+The reduction adversaries of {bpref "forgery_case_mac"}[]. The wrapper draws
+scalars `r⃗`, the paper's `zᵢ` of Claim 5.7, through its private coin oracle and runs
+the `n`-attribute adversary of
 {uses "agm_model"}[] with public parameters `Xᵢ = rᵢ•X₁` and answers its queries
 through a translation oracle that forwards each query to the 1-attribute game
 with the message `Σᵢ mᵢrᵢ` and representations through
 {uses "attribute_collapse_dictionary"}[], with a `help` query's vector of
 representations translated to the representation of the weighted sum
 `Σᵢ rᵢ•Aᵢ`. The general-`n` 3-DL reduction
-samples `r⃗` and runs the `n = 1` reduction of {uses "challenge_embedding"}[] on
+runs the `n = 1` reduction of {uses "challenge_embedding"}[] on
 the wrapped adversary; its experiment and advantage fix the base to `gen`.
 :::
 
@@ -864,15 +865,17 @@ form in `r⃗` vanishing at the sampled scalars, which the collision-free
 hypothesis excludes; the wrapper's forgery is then fresh by definition.
 :::
 
-:::theorem "collapse_direction_averaging" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
-Off the event `x₁ = 0`, the marginal of `x⃗ = r⃗·x₁` for uniform `(r⃗, x₁)` is the
-uniform `n`-attribute key, so the average over `r⃗` of the bound at fixed `r⃗` costs
-`1/p`.
+:::theorem "collapse_embedded_key_uniform" (parent := "cmz_amac") (tags := "milestone") (effort := "medium") (priority := "medium")
+Off the event `x₁ = 0`, the embedded key `x⃗ = r⃗·x₁`, for the scalars `r⃗` the
+wrapper draws and a uniform `x₁`, is the uniform `n`-attribute key, so the
+`n`-attribute game run inside the wrapper is the honest one except with
+probability `1/p`.
 :::
 
-:::proof "collapse_direction_averaging"
-For `x₁ ≠ 0` the map `r⃗ ↦ r⃗·x₁` is a bijection of `Fⁿ`, so the conditional law
-of `x⃗` is uniform; the excluded event `x₁ = 0` has mass `1/p`.
+:::proof "collapse_embedded_key_uniform"
+The scalars `r⃗` are a fresh draw of the wrapper, independent of `x₁`. For
+`x₁ ≠ 0` the map `r⃗ ↦ r⃗·x₁` is a bijection of `Fⁿ`, so the conditional law of
+`x⃗` is uniform; the excluded event `x₁ = 0` has mass `1/p`.
 :::
 
 :::definition "collision_gap_dl_simulator" (lean := "KVAC.Schemes.MicroCMZ.gapSignScalarSample, KVAC.Schemes.MicroCMZ.gapDlEmbedParams, KVAC.Schemes.MicroCMZ.gapDlKeyParts, KVAC.Schemes.MicroCMZ.gapDlOracleImpl") (parent := "cmz_amac") (tags := "milestone")
@@ -912,7 +915,7 @@ Split the win event on whether the forgery's attribute combination collides
 with that of a message queried to the MAC oracle. The colliding case is {uses "forgery_case_gap_dl"}[];
 the other is {uses "forgery_case_mac"}[], which ends in
 {uses "single_attribute_mac"}[] on the wrapper of the reduction to `n = 1`,
-averaged over the scalars `r⃗`. The additive constant `5/p` is `3/p` from the single-attribute
+which draws its scalars `r⃗` itself. The additive constant `5/p` is `3/p` from the single-attribute
 bound, `1/p` from the keygen shear `x₁ = 0` and `1/p` from the vanishing
 denominator.
 :::
@@ -948,7 +951,7 @@ answers agree with the honest `n`-attribute oracle under the embedded key
 forgery message `Σᵢ m*ᵢrᵢ` is then fresh among the translated signed messages, so
 a win transfers to the wrapped adversary ({uses "collapse_freshness_transfer"}[])
 and {uses "single_attribute_mac"}[] bounds it. The marginal of `x⃗ = r⃗·x₁` is
-uniform off `x₁ = 0`, which costs `1/p` ({uses "collapse_direction_averaging"}[]).
+uniform off `x₁ = 0`, which costs `1/p` ({uses "collapse_embedded_key_uniform"}[]).
 :::
 
 :::definition "agm_verification_polynomial" (lean := "KVAC.Schemes.MicroCMZ.AGMPoly.Var, KVAC.Schemes.MicroCMZ.AGMPoly.instDecidableEqVar, KVAC.Schemes.MicroCMZ.AGMPoly.instFintypeVar, KVAC.Schemes.MicroCMZ.AGMPoly.P, KVAC.Schemes.MicroCMZ.AGMPoly.η, KVAC.Schemes.MicroCMZ.AGMPoly.x₀, KVAC.Schemes.MicroCMZ.AGMPoly.x₁, KVAC.Schemes.MicroCMZ.AGMPoly.xᵣ, KVAC.Schemes.MicroCMZ.AGMPoly.u, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.ReprCoeffs.eval_toPoly, KVAC.Schemes.MicroCMZ.AGMPoly.eval_eq_zero_of_toPoly_eq_zero, KVAC.Schemes.MicroCMZ.AGMPoly.keyPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eval, KVAC.Schemes.MicroCMZ.AGMPoly.verifPoly_eq_zero_iff, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_keyPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_toPoly_le, KVAC.Schemes.MicroCMZ.AGMPoly.totalDegree_verifPoly_le") (parent := "cmz_amac") (tags := "paper, O24 Eq 12")
