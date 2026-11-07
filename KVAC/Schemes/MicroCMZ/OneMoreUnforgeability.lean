@@ -22,10 +22,10 @@ the pattern of `AGMReduction/`. It is the one-more unforgeability analysis of
 O24 Section 5.6 (p. 43). Each part documents its own contents in its module
 docstring:
 
-- `Game` — the AGM-instrumented one-more unforgeability game: the representation
-  gate, the query type and log, the gated Sign and Verify oracles, the algebraic
-  adversary and its forgeries, the winning condition, the experiment
-  `AGM_OMUFGame` and its advantage;
+- `Game` — the AGM one-more unforgeability game: the query type and log, the
+  Sign and Verify oracles that evaluate the submitted representations, their
+  normalization, the algebraic adversary and its forgeries, the winning
+  condition, the experiment `AGM_OMUFGame` and its advantage;
 - `Polynomial` — the pure-algebra layer of Equations 17 to 22 over the ring of
   `AGMPolynomial.lean`: the exponent of a representation given the commitment
   polynomials, the commitment polynomials `c_1, …, c_r` (Equations 17 and 18),

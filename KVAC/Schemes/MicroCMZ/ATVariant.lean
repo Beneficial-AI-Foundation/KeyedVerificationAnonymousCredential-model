@@ -80,7 +80,7 @@ the AGM layer, which is only needed once discrete logs are taken.
 ## Out of scope
 
 - The one-more unforgeability analysis (O24 Theorem 5.11, Claims
-  5.12–5.14) — the AGM-instrumented game and the polynomial layer are
+  5.12–5.14) — the AGM game and the polynomial layer are
   in the `OneMoreUnforgeability/` files (#12).
 - The anonymity clause of Theorem 5.3 — blocked on the Definition 4.4
   game and Theorem 5.8, and stated only for the
@@ -240,7 +240,7 @@ Per the `AnonymousToken` layering, the bundle certifies *only* syntax
 and correctness. One-more unforgeability stays the standalone game of
 `KVAC.Preliminaries.AnonymousTokens.Security` (the Theorem 5.11
 statements of `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Statements` rest on
-its AGM-instrumented form, `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`),
+its AGM form, `KVAC.Schemes.MicroCMZ.OneMoreUnforgeability.Game`),
 and the bundle carries no unlinkability or anonymity
 claim — in particular, O24's anonymity argument for `μCMZ_AT`
 verifies and extracts `π_is`, so it does not even apply to this
