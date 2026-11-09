@@ -1089,11 +1089,12 @@ Definition 4.5 samples the crs inside the game, so every advantage of the
 Theorem 5.10 bound uses the same distribution of the crs. The views of {bpref "mucmz_proof_systems_fixed_crs"}[] fix it for the pointwise Definition 4.4.
 :::
 
-:::definition "mucmz_extractors_simulator" (lean := "KVAC.Schemes.MicroCMZ.RiuExtractor, KVAC.Schemes.MicroCMZ.RpExtractor, KVAC.Schemes.MicroCMZ.RisSimulator") (parent := "cmz_extract") (tags := "milestone")
-The trace extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`, functions of the crs, the
-statement, the proof and the random-oracle table, and the zero-knowledge
-simulator of `ZKP_cmz.is`, the three objects from which the proof of O24
-Theorem 5.10 (§5.5, pp. 42 to 43) builds its extractor and its reduction.
+:::definition "mucmz_extractors_simulator" (lean := "KVAC.Schemes.MicroCMZ.RiuExtractor, KVAC.Schemes.MicroCMZ.RpExtractor, KVAC.Schemes.MicroCMZ.RisSimulator, KVAC.Schemes.MicroCMZ.riuExtToTrace, KVAC.Schemes.MicroCMZ.rpExtToTrace, KVAC.Schemes.MicroCMZ.risSimToZK") (parent := "cmz_extract") (tags := "milestone")
+The trace extractors of `ZKP_cmz.iu` and `ZKP_cmz.p`
+({uses "trace_extractor"}[]) and the zero-knowledge simulator of `ZKP_cmz.is`,
+the three objects from which the proof of O24 Theorem 5.10 (§5.5, pp. 42 to 43)
+builds its extractor and its reduction, with their conversions to the §3.3
+views of {uses "mucmz_proof_systems_sampled_crs"}[].
 :::
 
 :::definition "mucmz_candidate_z" (lean := "KVAC.Schemes.MicroCMZ.ZCandidates, KVAC.Schemes.MicroCMZ.ZCandidatesSound") (parent := "cmz_extract") (tags := "milestone")
@@ -1154,22 +1155,50 @@ oracles of the plain game query by query, so the two runs of the adversary
 are one computation and the win bits agree.
 :::
 
-:::theorem "mucmz_extractability" (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
-*O24 Theorem 5.10.* If ZKP proves `R ⊇ R_cmz` ({uses "zk_arguments"}[]), then
-μCMZ is extractable ({uses "kvac_extractability"}[]) for the supported attribute
-family. The formal statement, `μCMZ_extractability` of the Theorem 5.10 PR, is
-over the proof systems at the sampled crs {uses "mucmz_proof_systems_sampled_crs"}[]
-and a candidate `Z` {uses "mucmz_candidate_z"}[], and it restricts the
-adversary to the single-user setting {uses "mucmz_single_user_adversary"}[],
-where the printed theorem quantifies over the full game of Figure 8.
+:::definition "mucmz_credential_extractor" (lean := "KVAC.Schemes.MicroCMZ.μCMZExtractor") (parent := "cmz_extract") (tags := "milestone")
+The extractor `Ext = (Ext.I, Ext.P)` of the proof of O24 Theorem 5.10 (§5.5,
+pp. 42 to 43) for the credential {uses "mucmz_construction"}[], a parameter of
+{uses "extractability_game"}[], over the extractors of
+{uses "mucmz_extractors_simulator"}[]. `Ext.I` runs the extractor of
+`ZKP_cmz.iu` on `(C', X⃗, φ)` and returns the attributes of a witness of
+{uses "riu_relation"}[]. `Ext.P` recomputes `Z` from the secret key as the
+server does, runs the extractor of `ZKP_cmz.p` on `(U', X⃗, C⃗, Z, φ*)` and
+returns the attributes of a witness of {uses "rp_relation"}[]. Both return
+`none` otherwise, the paper's abort.
 :::
 
-:::proof "mucmz_extractability"
-The paper's proof (p. 43) builds the credential extractors from the extractors
-of {uses "mucmz_extractors_simulator"}[] and its reduction simulates `π_is` with
-the simulator of the same node. The reduction plays the UF-CMVA game with Help
-{uses "mucmz_ufcmva_help_game"}[], whose bound is {uses "mucmz_mac_security"}[],
-and Help checks the candidate instance `Z`.
+:::definition "mucmz_remark_59_oracle_extraction" (lean := "KVAC.Schemes.MicroCMZ.risSimulationOracleIu, KVAC.Schemes.MicroCMZ.risSimulationOracleP") (parent := "cmz_extract") (tags := "milestone")
+The simulator of `ZKP_cmz.is` ({uses "mucmz_extractors_simulator"}[]) as the
+simulation oracle of {uses "ksnd_simulation_oracle"}[] with respect to
+`ZKP_cmz.iu` and to `ZKP_cmz.p`, the oracle the credential adversary holds
+when it produces `π_iu` and `π_p` after the reduction of Theorem 5.10 replaced
+every `π_is` by a simulated one. Remark 5.9 states this case, and the lemma
+{uses "remark_59"}[] discharges each extraction with it.
+:::
+
+:::theorem "mucmz_extractability" (lean := "KVAC.Schemes.MicroCMZ.μCMZ_extractability") (parent := "cmz_extract") (tags := "paper, O24 Thm 5.10") (effort := "large") (priority := "medium")
+*O24 Theorem 5.10.* Fix a generator `gen ≠ 0`, a candidate `Z` satisfying {uses "mucmz_candidate_z"}[], and an extraction adversary of the single-user setting,
+{uses "mucmz_single_user_adversary"}[]. Its advantage in {uses "extractability_game"}[] with respect to {uses "mucmz_credential_extractor"}[]
+is at most the sum of `Adv^ufcmva_{μCMZ,B}`, `Adv^zk_{ZKP_cmz.is,A'}`,
+`Adv^ksnd_{ZKP_cmz.iu,A''}` and `Adv^ksnd_{ZKP_cmz.p,A'''}`, for existential
+reductions `B`, `A'`, `A''` and `A'''` without a cost bound, as in {uses "mucmz_anonymity"}[]. The first term is the advantage in the UF-CMVA game with
+`Help` of {uses "mucmz_ufcmva_help_game"}[], the game at which the paper proves
+Theorem 5.1 (p. 35) and at which {uses "mucmz_mac_security"}[] states it for the
+adversaries `A.forget gen` of an algebraic `A`, over the admitted Lemma 5.5. The
+reduction `B` is an arbitrary adversary of that game, so the chaining of the two
+theorems is open, issue #235. The others are the zero-knowledge advantage of
+{uses "zk_game"}[] and the knowledge-soundness advantages of {uses "extraction_game"}[], as printed. The hypotheses are the condition of Remark
+5.9, {uses "remark_59"}[]. Each proof system is confined to its own region of
+the random-oracle domain, with the simulator of `ZKP_cmz.is` and the extractors
+of `ZKP_cmz.iu` and `ZKP_cmz.p`, and the three regions are pairwise disjoint.
+Stated with `sorry`. The proof is the one of §5.5, pp. 42 to 43. One hybrid
+replaces every `π_is` by a simulated one, charged to zero knowledge of
+`ZKP_cmz.is`. A win by an `Issue` abort or by a presentation the extractor
+cannot open is charged to {uses "ksnd_simulation_oracle"}[] for `ZKP_cmz.iu` or
+`ZKP_cmz.p`, reduced to the printed terms by {uses "remark_59"}[] with {uses "mucmz_remark_59_oracle_extraction"}[]. A win by a fresh extracted attribute
+vector is a forgery of the reduction `B`. The reduction answers `Issue` through
+the MAC code generation oracle and `Present` through the candidate `Z`, `Help`
+and `Verify`, and outputs `(U', C_V − r'•H)`.
 :::
 
 # One-more unforgeability (Section 5.6)
