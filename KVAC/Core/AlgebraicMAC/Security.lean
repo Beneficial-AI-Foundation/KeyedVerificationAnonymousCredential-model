@@ -76,8 +76,7 @@ def UFOracleSpec (mac : AlgebraicMACSyntax ProbComp)
 A UF-CMVA adversary: a program that, given the CRS and the public
 parameters, queries a private coin oracle and the Sign / Verify oracles
 and outputs a candidate forgery `(m*, σ*)`. The coin oracle is `unifSpec`,
-as for the one-more forgers (`DESIGN_ALTERNATIVES.md`, *One-more forgers
-have a private coin oracle*).
+as for the one-more forgers.
 -/
 structure UFAdversary (mac : AlgebraicMACSyntax ProbComp) where
   run : {secParam n : Nat} → (crs : mac.Crs secParam n) → mac.Pp crs →

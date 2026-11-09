@@ -92,7 +92,12 @@ with `collapseMsg` sending the empty message to `0`, whose 1-attribute key
 `x₀ + xᵣ` is the 0-attribute key.
 
 Summing: `Adv(n) ≤ Adv^{3-dl} + Adv^{gap-dl} + 5/p`; the departures from O24's
-printed bound are in the module docstring. -/
+printed bound are in the module docstring.
+
+Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
+contains the paper's p.p.t. algebraic adversaries. O24's negligibility clause is not stated: it
+needs the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t.
+adversaries and reductions, and hardness assumptions over them. -/
 theorem agm_ufcmva_le_explicit (A : AGMUFAdversary F G n) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZN3DLReductionAdv gen A + gapDlogAdv (gen) (gapDlReduction gen A) +

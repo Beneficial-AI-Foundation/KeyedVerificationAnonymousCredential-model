@@ -44,8 +44,7 @@ Coefficients on the issued MAC codes are stored as a *list* (one `(αᵤ, αᵥ)
 Sign query, `zipWith`-evaluated against the issued MAC codes), keeping the type
 independent of the dynamic query count. The adversary has a private coin oracle
 `unifSpec` beside the oracles of the game, as the forgers of the game with `Help` and
-the one-more forgers do (`DESIGN_ALTERNATIVES.md`, *One-more forgers have a private
-coin oracle*).
+the one-more forgers do.
 
 The `Help(A₀, A⃗, Z)` oracle (O24 §5.2/§5.3) answers whether
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` through `helpEq` (`Construction.lean`), as the game

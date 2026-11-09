@@ -238,6 +238,11 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
    the identity branch `φ = 0` is absorbed there, since `U* = 0` contradicts `verify`'s
    `σ.1 ≠ 0`), `Pr[badBit] ≤ Pr[szBit]` (`redFull_badBit_le_szBit`), and
    `Pr[szBit] ≤ 3/p` (`redFull_szBit_le`) — *The bad-event bound* above.
+
+Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
+contains the paper's p.p.t. algebraic adversaries. O24's negligibility clause is not stated: it
+needs the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t.
+adversaries and reductions, and hardness assumptions over them.
 -/
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤

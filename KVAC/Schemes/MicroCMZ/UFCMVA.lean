@@ -45,7 +45,12 @@ most the 3-DL advantage of `microCMZN3DLReduction gen A` plus the gap-DL advanta
 **Proof.** Theorem 5.1 rests on two theorems only, so it is proved exactly when both are:
 `UF_CMVAHelpAdv_forget` equates the advantage with the AGM advantage
 `AGM_UF_CMVAAdv gen A secParam`, which Lemma 5.5, `agm_ufcmva_le_explicit`, bounds by the
-same right-hand side. -/
+same right-hand side.
+
+Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
+contains the paper's p.p.t. algebraic adversaries. O24's negligibility clause is not stated: it
+needs the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t.
+adversaries and reductions, and hardness assumptions over them. -/
 theorem microCMZ_ufcmvaHelp_le (secParam : ℕ) (A : AGMUFAdversary F G n) :
     UF_CMVAHelpAdv gen (A.forget gen) secParam ≤
       microCMZN3DLReductionAdv gen A + gapDlogAdv gen (gapDlReduction gen A) +
