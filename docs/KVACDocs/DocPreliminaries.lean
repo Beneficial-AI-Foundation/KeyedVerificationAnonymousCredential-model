@@ -6,6 +6,7 @@ Released under MIT license as described in the file LICENSE.
 import VersoManual
 import VersoBlueprint
 import KVAC.Preliminaries.Assumptions
+import KVAC.Preliminaries.CoinTape
 import KVAC.Preliminaries.AnonymousTokens
 import KVAC.Preliminaries.AnonymousTokens.Security
 import KVAC.Preliminaries.AnonymousTokens.OracleCarrier
@@ -68,6 +69,25 @@ except q-DDHI,
 which O24 needs only for the §8.2 rate-limiting extension's HashDY PRF
 and is deferred with that extension; DDH itself is consumed from VCV-io
 upstream.
+:::
+
+:::theorem "coin_tape_not_uniform" (lean := "KVAC.Preliminaries.not_forall_card_fiber_mul_eq, KVAC.Preliminaries.map_uniform_bits_ne_uniform") (parent := "pre_assumptions") (tags := "milestone")
+A finite tape of coin bits gives no exact draw from `ℤ_p`. O24 Section 3
+(p. 24) writes the length of the random coins of a p.p.t. algorithm as
+`A.rl(λ)`, and the extractability clause of Definition 7.1 (p. 58) samples the
+coins as bits. Figure 9 (p. 34) draws `s ←$ ℤ_p`. For an odd prime `p` and any
+function `f` of `k` coin bits, the image of the uniform distribution on the
+tapes under `f` is not the uniform distribution on `ZMod p`
+(`map_uniform_bits_ne_uniform`). The function `f` is an algorithm with its
+inputs and its oracle answers fixed, with no bound on its running time. The
+finding is in Part A6.6 of `docs/findings/FINDINGS_AND_LESSONS.md`.
+:::
+
+:::proof "coin_tape_not_uniform"
+Each tape has probability `2 ^ (-k)`, so a value `y` has probability
+`m / 2 ^ k`, where `m` counts the tapes that `f` sends to `y`. Uniformity gives
+`m * p = 2 ^ k` (`not_forall_card_fiber_mul_eq`). Then `p` divides `2 ^ k`,
+hence `2`, which no odd prime does.
 :::
 
 # Zero-knowledge arguments

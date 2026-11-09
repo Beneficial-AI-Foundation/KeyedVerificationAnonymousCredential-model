@@ -26,6 +26,7 @@ import KVAC.Schemes.MicroCMZ.ATVariant
 import KVAC.Schemes.MicroCMZ.ATVariantPiIs
 import KVAC.Schemes.MicroCMZ.OneMoreUnforgeability
 import KVAC.Preliminaries.Assumptions
+import KVAC.Preliminaries.CoinTape
 import KVAC.Preliminaries.AnonymousTokens
 import KVAC.Preliminaries.AnonymousTokens.Security
 import KVAC.Preliminaries.AnonymousTokens.OracleCarrier
