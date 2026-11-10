@@ -3,7 +3,9 @@ Copyright (c) 2026 The Beneficial AI Foundation. All rights reserved.
 Released under MIT license as described in the file LICENSE.
 Authors: Christiano Braga
 -/
-import KVAC.Core.Group
+import Mathlib.Algebra.Field.Defs
+import Mathlib.Algebra.Module.Defs
+import VCVio.OracleComp.Constructions.SampleableType
 import VCVio.OracleComp.QueryTracking.QueryBound
 import VCVio.OracleComp.Coercions.Add
 
@@ -149,12 +151,12 @@ def Expr.eval : {Γ : Ctx} → {τ : Ty} → Expr Γ τ → Env F G Γ → τ.in
   | _, _, .nat n, _ => (n : F)
   | _, _, .addF a b, ρ => (a.eval ρ : F) + b.eval ρ
   | _, _, .mulF a b, ρ => (a.eval ρ : F) * b.eval ρ
-  | _, _, .negF a, ρ => (0 : F) - a.eval ρ
+  | _, _, .negF a, ρ => -a.eval ρ
   | _, _, .invF a, ρ => (a.eval ρ : F)⁻¹
   | _, _, .eqF a b, ρ => decide ((a.eval ρ : F) = b.eval ρ)
   | _, _, .zeroG, _ => (0 : G)
   | _, _, .addG a b, ρ => (a.eval ρ : G) + b.eval ρ
-  | _, _, .negG a, ρ => Neg.neg (α := G) (a.eval ρ)
+  | _, _, .negG a, ρ => -a.eval ρ
   | _, _, .smul a b, ρ => (a.eval ρ : F) • (b.eval ρ : G)
   | _, _, .eqG a b, ρ => decide ((a.eval ρ : G) = b.eval ρ)
   | _, _, .pair a b, ρ => (a.eval ρ, b.eval ρ)
