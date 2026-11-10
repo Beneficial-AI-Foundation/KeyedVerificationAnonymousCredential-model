@@ -38,7 +38,6 @@ Figure 6 game through `OMUFAdv_forget`.
   microCMZAT_omuf_le :
                     OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n
                       ≤  omufBound F q εdl' ε2dl' εgap
-                           + omufDegenerateProbAll gen secParam (omufToN1 gen A)
                     for every  0 < n  and  A : AGMOMUFAdversary F G n,
                     in the plain Figure 6 game, by OMUFAdv_forget
     all three under the budget hypothesis

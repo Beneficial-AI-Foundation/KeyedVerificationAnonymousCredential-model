@@ -49,7 +49,6 @@ docstring:
 - `Statements` — the Theorem 5.11 statements: the named bounds `omufBoundN1`
   and `omufBound`, the named reductions (the theorem's, and one each for
   Claims 5.12 and 5.13), `agm_omuf_le_n1` at `n = 1` (Equation 23),
-  `agm_omuf_le` for every `n`, `microCMZAT_omuf_le`, its bound in the plain
-  Figure 6 game, and the Claims 5.12 to 5.14 over the case events of
-  `CaseEvents`.
+  `agm_omuf_le` for every `n`, `microCMZAT_omuf_le` for the plain Figure 6
+  game, and the Claims 5.12 to 5.14 over the case events of `CaseEvents`.
 -/

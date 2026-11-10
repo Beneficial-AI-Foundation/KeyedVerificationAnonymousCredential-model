@@ -1319,10 +1319,9 @@ into an adversary of the plain one-more unforgeability game of
 {uses "omuf_game"}[] over the core scheme {uses "mucmz_at_core"}[]. At the
 algebraic adversary's number of attributes, it keeps the pairs the server
 issues and submits the elements that the algebraic adversary's
-representations evaluate to. At any other number of attributes, it outputs no
-forgery. At the algebraic adversary's number of attributes, the advantage of
-the forgetful adversary in the plain game equals the advantage of the
-algebraic adversary in the AGM game, with no condition on the adversary.
+representations evaluate to, and its advantage in the plain game equals the
+advantage of the algebraic adversary in the AGM game, with no condition on the
+adversary. At any other number of attributes, it outputs no forgery.
 :::
 
 :::proof "agm_omuf_forget_transfer"
