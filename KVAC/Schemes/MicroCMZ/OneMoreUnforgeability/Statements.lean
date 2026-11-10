@@ -26,7 +26,8 @@ pattern of
 `AGMReduction/SecurityN1.lean`, so that the reductions review against visible
 targets; the blueprint nodes `mucmz_at_agm_omuf_n1`, `mucmz_at_agm_omuf` and
 `omuf_case_i` to `omuf_case_iii` show "contains sorry" until the proofs are
-merged.
+merged. `microCMZAT_omuf_le` carries the bound for every `n` to the plain
+Figure 6 game through `OMUFAdv_forget`.
 
 ## The statements and their parts
 
@@ -34,7 +35,12 @@ merged.
                     for every  A : AGMOMUFAdversary F G 1
   agm_omuf_le    :  AGM_OMUFAdv gen A secParam  ≤  omufBound F q εdl' ε2dl' εgap
                     for every  0 < n  and  A : AGMOMUFAdversary F G n
-    both under the budget hypothesis
+  microCMZAT_omuf_le :
+                    OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n
+                      ≤  omufBound F q εdl' ε2dl' εgap
+                    for every  0 < n  and  A : AGMOMUFAdversary F G n,
+                    in the plain Figure 6 game, by OMUFAdv_forget
+    all three under the budget hypothesis
       ∀ H pp, IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q     at most q Sign queries
     where
       omufBoundN1 F q εdl ε2dl    = (q + 4)/p + (q + 1)·εdl + 3·ε2dl         Equation 23
@@ -66,7 +72,8 @@ merged.
     writing "non-zero with high probability" (p. 46) and "can be found with high probability"
     (p. 47). The three terms are not `0` for some adversaries, by the forgers below.
     `agm_omuf_le_n1` carries their sum
-    `omufDegenerateProbAll`, and `agm_omuf_le` carries it at the transformed adversary.
+    `omufDegenerateProbAll`, and `agm_omuf_le` and `microCMZAT_omuf_le` carry it at the
+    transformed adversary.
 
 Sign is Figure 6's name for the MAC code generation oracle in the token setting,
 and the name of the Lean constructor and of the budget predicate
@@ -199,8 +206,7 @@ three Claims as Theorems 5.12 to 5.14.
 
 ## Out of scope
 
-The plain Figure 6 game, the `π_is`-carrying variant and its lifting lemma
-(items 18 and 17b), and any proof.
+The `π_is`-carrying variant and its lifting lemma (items 18 and 17b).
 -/
 
 set_option autoImplicit false
@@ -820,7 +826,7 @@ theorem agm_omuf_le_n1 (A : AGMOMUFAdversary F G 1) (q : ℕ)
   ring
 
 /--
-**O24 Theorem 5.11, every `n`**, in the shape drawn in the module docstring,
+**O24 Theorem 5.11 in the AGM game, every `n`**, in the shape drawn in the module docstring,
 stated first and `sorry`d, with the paper's printed bound. The proof splits the
 winning event by whether the forgeries' attribute combinations are pairwise
 distinct: the distinct case runs the `n = 1` statement `agm_omuf_le_n1` on the
@@ -837,5 +843,25 @@ theorem agm_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ
         (gapDlogAdv gen (omufGapDLReduction gen A)) +
       omufDegenerateProbAll gen secParam (omufToN1 gen A) := by
   sorry
+
+/--
+**O24 Theorem 5.11** in the plain Figure 6 game. For an algebraic adversary `A`
+with `n > 0` attributes and at most `q` Sign queries, the one-more unforgeability
+advantage of `A.forget gen` against the core scheme, `OMUFAdv` of
+`KVAC.Preliminaries.AnonymousTokens.Security`, is at most the bound of
+`agm_omuf_le`, the printed bound plus the degenerate probabilities of the
+transformed adversary.
+
+**Proof.** `OMUFAdv_forget` rewrites the advantage to `AGM_OMUFAdv gen A secParam`,
+which `agm_omuf_le` bounds.
+-/
+theorem microCMZAT_omuf_le {n : ℕ} (hn : 0 < n) (A : AGMOMUFAdversary F G n) (q : ℕ)
+    (hq : ∀ (H : G) (pp : Params G n), IsQueryBoundP (A.run H pp) AGMOMUFQuery.isSign q) :
+    OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n ≤
+      omufBound F q (dlogAdv gen (omufDLReduction gen q (omufToN1 gen A)))
+        (twoDlogAdv gen (omufTwoDLReduction gen (omufToN1 gen A)))
+        (gapDlogAdv gen (omufGapDLReduction gen A)) +
+      omufDegenerateProbAll gen secParam (omufToN1 gen A) :=
+  (OMUFAdv_forget gen secParam A).trans_le (agm_omuf_le gen secParam hn A q hq)
 
 end KVAC.Schemes.MicroCMZ
