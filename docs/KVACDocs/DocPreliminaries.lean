@@ -7,6 +7,7 @@ import VersoManual
 import VersoBlueprint
 import KVAC.Preliminaries.Assumptions
 import KVAC.Preliminaries.CoinTape
+import KVAC.Complexity.Prog
 import KVAC.Preliminaries.AnonymousTokens
 import KVAC.Preliminaries.AnonymousTokens.Security
 import KVAC.Preliminaries.AnonymousTokens.OracleCarrier
@@ -88,6 +89,63 @@ Each tape has probability `2 ^ (-k)`, so a value `y` has probability
 `m / 2 ^ k`, where `m` counts the tapes that `f` sends to `y`. Uniformity gives
 `m * p = 2 ^ k` (`not_forall_card_fiber_mul_eq`). Then `p` divides `2 ^ k`,
 hence `2`, which no odd prime does.
+:::
+
+# P.p.t. algorithms as programs
+
+:::group "pre_ppt"
+P.p.t. algorithms as programs
+:::
+
+O24 states its security properties for p.p.t. adversaries. An `OracleComp`
+computation has no running time, so the repository had no predicate for the
+class (issue #240). The file `KVAC/Complexity/Prog.lean` defines a language
+whose terms are programs, with a running time polynomial computed from the
+syntax.
+
+:::definition "prog_language" (lean := "KVAC.Complexity.Ty, KVAC.Complexity.instDecidableEqTy, KVAC.Complexity.Ty.interp, KVAC.Complexity.Ctx, KVAC.Complexity.Var, KVAC.Complexity.Env, KVAC.Complexity.Env.get, KVAC.Complexity.Sig, KVAC.Complexity.Sig.spec, KVAC.Complexity.Expr, KVAC.Complexity.Expr.size, KVAC.Complexity.Expr.eval, KVAC.Complexity.Prog") (parent := "pre_ppt") (tags := "milestone")
+The language of programs. The sorts `Ty` are abstract, so a term mentions no
+field and no group, and one term runs at the group of every security
+parameter. Variables are de Bruijn indices, so a continuation is a term and
+not a Lean function. An expression `Expr` is pure. A program `Prog` returns an
+expression, binds a program, queries an oracle of its signature `Sig`, draws a
+fair coin, draws an exactly uniform scalar, branches, or iterates a body a
+number of times that is a polynomial in the security parameter. A group value
+arises only as a variable, as an oracle answer, as zero or as the result of a
+group operation. The exact draw follows Figure 9 (p. 34), and
+{bpref "coin_tape_not_uniform"}[] is the reason why a fair coin alone does not
+give it.
+:::
+
+:::definition "prog_cost" (lean := "KVAC.Complexity.Prog.timePoly, KVAC.Complexity.Prog.coinPoly, KVAC.Complexity.Prog.CoinOnly") (parent := "pre_ppt") (tags := "milestone")
+The resource bounds of a program of {uses "prog_language"}[], computed from
+the syntax. The running time polynomial `timePoly` charges one unit per field
+operation, group operation, query and draw, and a loop multiplies the bound of
+its body by its iteration polynomial. The polynomial `coinPoly` bounds the fair
+coins. The predicate `CoinOnly` holds for a program with no exact draw, the
+programs whose randomness is the coin tape of O24 Section 3 (p. 24).
+:::
+
+:::definition "prog_interp" (lean := "KVAC.Complexity.iterM, KVAC.Complexity.Prog.interp") (parent := "pre_ppt") (tags := "milestone")
+The interpretation of a program of {uses "prog_language"}[] at a security
+parameter, a field and a group. It is an `OracleComp` computation over
+`unifSpec + S.spec F G`, the carrier of the adversaries of the repository, so
+the games and the concrete inequalities apply to it unchanged.
+:::
+
+:::theorem "prog_query_bound" (lean := "KVAC.Complexity.IsOracleQuery, KVAC.Complexity.instDecidablePredSumNatSigmaInterpDomIsOracleQuery, KVAC.Complexity.isQueryBoundP_liftComp_probComp, KVAC.Complexity.isQueryBoundP_iterM, KVAC.Complexity.Prog.isQueryBoundP_interp") (parent := "pre_ppt") (tags := "milestone")
+The interpretation of {uses "prog_interp"}[] at the security parameter `λ`
+makes at most `timePoly.eval λ` queries to the oracles of its signature, for
+the polynomial of {uses "prog_cost"}[]. The number of queries of a program
+is therefore bounded by a polynomial in `λ`.
+:::
+
+:::proof "prog_query_bound"
+By induction on the program. A coin and an exact draw query the coin oracle
+alone (`isQueryBoundP_liftComp_probComp`). A bind adds the bounds of its two
+parts. A branch runs one arm, and the polynomial counts both. A loop of `k`
+steps makes at most `k` times the queries of its body
+(`isQueryBoundP_iterM`).
 :::
 
 # Zero-knowledge arguments
