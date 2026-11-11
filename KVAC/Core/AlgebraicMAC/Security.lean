@@ -25,8 +25,8 @@ such that `m*` was never signed and `verify(sk, m*, σ*) = true`.
 
 - `UFQuery` — an inductive type enumerating the two oracles.
 - `UFOracleSpec` — the `OracleSpec` parametrised by `UFQuery`.
-- `UFAdversary` — adversaries: `OracleComp`-valued programs that take
-  `(crs, pp)` and return a forgery `(m*, σ*)`.
+- `UFAdversary` — adversaries: `OracleComp`-valued programs with a private
+  coin oracle that take `(crs, pp)` and return a forgery `(m*, σ*)`.
 - `SignedLog` — list of message vectors signed during the game.
 - `ufOracleImpl` — `QueryImpl` that honestly implements Sign and Verify
   for a fixed secret key, threading the `SignedLog` via `StateT`.
@@ -74,12 +74,13 @@ def UFOracleSpec (mac : AlgebraicMACSyntax ProbComp)
 
 /--
 A UF-CMVA adversary: a program that, given the CRS and the public
-parameters, queries the Sign / Verify oracles and outputs a candidate
-forgery `(m*, σ*)`.
+parameters, queries a private coin oracle and the Sign / Verify oracles
+and outputs a candidate forgery `(m*, σ*)`. The coin oracle is `unifSpec`,
+as for the one-more forgers.
 -/
 structure UFAdversary (mac : AlgebraicMACSyntax ProbComp) where
   run : {secParam n : Nat} → (crs : mac.Crs secParam n) → mac.Pp crs →
-    OracleComp (UFOracleSpec mac crs) (mac.MsgVec crs × mac.Tag crs)
+    OracleComp (unifSpec + UFOracleSpec mac crs) (mac.MsgVec crs × mac.Tag crs)
 
 /--
 The list of message vectors the adversary has had MAC'd so far during a
@@ -107,7 +108,8 @@ def ufOracleImpl (mac : AlgebraicMACSyntax ProbComp)
 
 /--
 The UF-CMVA experiment (O24 Figure 5) as a `ProbComp Bool`. Runs the
-adversary with oracle access via `ufOracleImpl`, recovers the forgery
+adversary with its private coin oracle answered in `ProbComp` and the
+Sign / Verify oracles by `ufOracleImpl`, recovers the forgery
 `(m*, σ*)` and the resulting `SignedLog`, and returns `true` iff `m*`
 is fresh and `verify(sk, m*, σ*) = true`.
 -/
@@ -115,8 +117,10 @@ def UF_CMVAGame (mac : AlgebraicMACSyntax ProbComp) (A : UFAdversary mac)
     (secParam n : Nat) : ProbComp Bool := do
   let crs ← mac.setup secParam n
   let (sk, pp) ← mac.keygen crs
+  let impl := (QueryImpl.ofLift unifSpec ProbComp).liftTarget
+    (StateT (SignedLog mac crs) ProbComp) + ufOracleImpl mac crs sk
   let ((mStar, sigStar), signed) ←
-    ((simulateQ (ufOracleImpl mac crs sk) (A.run crs pp)).run [])
+    ((simulateQ impl (A.run crs pp)).run [])
   let fresh := decide (mStar ∉ signed)
   pure (fresh && mac.verify crs sk mStar sigStar)
 

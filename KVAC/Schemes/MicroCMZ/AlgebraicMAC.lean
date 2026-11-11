@@ -22,7 +22,7 @@ Sign-oracle distribution lemmas (those live in the sibling module `SignMask`).
 
 Contents: `glog` discrete-log machinery over `gen`; the algebraic representation
 `AGMRepr` / `AGMRepr.eval`; the AGM game (`AGMQuery`, `AGMOracleSpec`,
-`agmOracleImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`); and the
+`agmOracleImpl`, `agmUFImpl`, `AGMUFAdversary`, `AGM_UF_CMVAGame`, `AGM_UF_CMVAAdv`); and the
 forgetful map to the game with `Help` (`agmQueryToHelp`, `AGMUFAdversary.forget`,
 `UF_CMVAHelpAdv_forget`).
 
@@ -42,7 +42,9 @@ next to their representations and oracles gated on their consistency, is in
 `DESIGN_ALTERNATIVES.md`, *Algebraic adversaries submit coefficients only*.
 Coefficients on the issued MAC codes are stored as a *list* (one `(αᵤ, αᵥ)` per
 Sign query, `zipWith`-evaluated against the issued MAC codes), keeping the type
-independent of the dynamic query count.
+independent of the dynamic query count. The adversary has a private coin oracle
+`unifSpec` beside the oracles of the game, as the forgers of the game with `Help` and
+the one-more forgers do.
 
 The `Help(A₀, A⃗, Z)` oracle (O24 §5.2/§5.3) answers whether
 `Z = (x₀+xᵣ)·A₀ + Σᵢ xᵢ·Aᵢ` through `helpEq` (`Construction.lean`), as the game
@@ -239,25 +241,43 @@ noncomputable def agmOracleImpl (secParam : ℕ) (sk : F × F × (Fin n → F)) 
         (fun i => (ρA i).evalParams gen H pp tags)
         (ρZ.evalParams gen H pp tags), log)
 
+/-- The full oracle implementation of `AGM_UF_CMVAGame`: coin queries lifted, the AGM
+queries through `agmOracleImpl`. -/
+noncomputable def agmUFImpl (secParam : ℕ) (sk : Key F n) (H : G) (pp : Params G n) :
+    QueryImpl (unifSpec + AGMOracleSpec F G n) (StateT (AGMLog F G n) ProbComp) :=
+  -- `HAdd.hAdd` rather than `+`, since the instance search for `+` times out in the
+  -- instance context of this file.
+  HAdd.hAdd
+    ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (AGMLog F G n) ProbComp))
+    (agmOracleImpl (gen := gen) secParam sk H pp)
+
+omit hgen in
+/-- On the AGM arms the full implementation is `agmOracleImpl`. -/
+lemma agmUFImpl_inr (secParam : ℕ) (sk : Key F n) (H : G) (pp : Params G n)
+    (q : AGMQuery F n) :
+    agmUFImpl gen secParam sk H pp (.inr q) = agmOracleImpl gen secParam sk H pp q := rfl
+
 /-! ## The game -/
 
 /--
 An algebraic UF-CMVA adversary against μCMZ for `n` attributes (O24 §5.3): given
-crs `H` and public parameters `(X₀, Xᵣ, X⃗)`, it queries the oracles and outputs a
-forged message `m⃗*` with the representations of `U*` and `V*` over the final
-transcript.
+crs `H` and public parameters `(X₀, Xᵣ, X⃗)`, it queries a private coin oracle and the
+oracles of the game, and outputs a forged message `m⃗*` with the representations of
+`U*` and `V*` over the final transcript.
 -/
 structure AGMUFAdversary (F G : Type) (n : ℕ) where
   run : G → G × G × (Fin n → G) →
-    OracleComp (AGMOracleSpec F G n) ((Fin n → F) × AGMRepr F n × AGMRepr F n)
+    OracleComp (unifSpec + AGMOracleSpec F G n) ((Fin n → F) × AGMRepr F n × AGMRepr F n)
 
 /--
 The AGM UF-CMVA(+Help) experiment for μCMZ (O24 Figure 5 with the §5.2 Help
 oracle, for algebraic adversaries). Setup and keygen delegate to
-`μCMZBaseMACSyntax F gen`; the adversary runs against `agmOracleImpl`; the forged
-MAC code `(U*, V*)` is the evaluation of the forgery representations over the
-final transcript; returns `true` iff the forged message is fresh and the forgery
-verifies.
+`μCMZBaseMACSyntax F gen`; the adversary runs against `agmUFImpl`: its private coin
+oracle is answered in `ProbComp` and leaves the log untouched, since sampled scalars
+are not group elements and do not extend the representation basis, and the oracles of
+the game are `agmOracleImpl`; the forged MAC code `(U*, V*)` is the evaluation of the
+forgery representations over the final transcript; returns `true` iff the forged
+message is fresh and the forgery verifies.
 -/
 noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
     ProbComp Bool := do
@@ -266,7 +286,7 @@ noncomputable def AGM_UF_CMVAGame (secParam : ℕ) (A : AGMUFAdversary F G n) :
   let (sk, pp) ← (mac.keygen (secParam := secParam) (n := n) H :
       ProbComp (Key F n × Params G n))
   let ((mStar, ρU, ρV), log) ←
-    (simulateQ (agmOracleImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
+    (simulateQ (agmUFImpl (gen := gen) secParam sk H pp) (A.run H pp)).run []
   let tags := log.map Prod.snd
   let σStar := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
   let fresh := mStar ∉ log.map Prod.fst
@@ -286,24 +306,25 @@ elements that `A`'s representations evaluate to. The two games then answer every
 alike, so the advantages are equal, with no condition on the adversary. -/
 
 /-- The queries of the AGM game as queries of the game with `Help`, for the crs `H` and
-the public parameters `pp`, on the game's side of the coin oracle. The state is the list
-of MAC codes issued so far, in issuance order: `sign` forwards and appends the MAC code
-it receives, and `verify` and `help` forward the elements their representations evaluate
-to. -/
+the public parameters `pp`. A coin query goes to the coin oracle of `UFHelpAdversary`.
+The state is the list of MAC codes issued so far, in issuance order: `sign` forwards and
+appends the MAC code it receives, and `verify` and `help` forward the elements their
+representations evaluate to. -/
 def agmQueryToHelp (H : G) (pp : Params G n) :
-    QueryImpl (AGMOracleSpec F G n)
+    QueryImpl (unifSpec + AGMOracleSpec F G n)
       (StateT (List (G × G)) (OracleComp (unifSpec + UFHelpOracleSpec F G n)))
-  | .sign m => StateT.mk fun tags => do
+  | .inl t => query (spec := unifSpec) t
+  | .inr (.sign m) => StateT.mk fun tags => do
       -- `σ : G × G`: unascribed, `σ` has type
       -- `(unifSpec + UFHelpOracleSpec F G n).Range (.inr (.sign m))`, so `tags ++ [σ]`
       -- finds no `HAppend` with `List (G × G)`.
       let σ : G × G ← query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
       pure (σ, tags ++ [σ])
-  | .verify m ρU ρV => StateT.mk fun tags => do
+  | .inr (.verify m ρU ρV) => StateT.mk fun tags => do
       let b ← query (spec := unifSpec + UFHelpOracleSpec F G n)
         (.inr (.verify m (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)))
       pure (b, tags)
-  | .help ρ₀ ρA ρZ => StateT.mk fun tags => do
+  | .inr (.help ρ₀ ρA ρZ) => StateT.mk fun tags => do
       let b ← query (spec := unifSpec + UFHelpOracleSpec F G n)
         (.inr (.help (ρ₀.evalParams gen H pp tags)
           (fun i => (ρA i).evalParams gen H pp tags)
@@ -312,18 +333,50 @@ def agmQueryToHelp (H : G) (pp : Params G n) :
 
 /-- An algebraic adversary as an adversary of the game with `Help`: it runs `A` through
 `agmQueryToHelp` from no MAC codes, and its forgery is the evaluation of `A`'s forgery
-representations over the MAC codes issued. It never draws a coin. -/
+representations over the MAC codes issued. Its coin queries go to the coin oracle. -/
 def AGMUFAdversary.forget (A : AGMUFAdversary F G n) : UFHelpAdversary F G n where
   run H pp := do
     let ((mStar, ρU, ρV), tags) ← (simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run []
     pure (mStar, (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags))
 
 omit hgen in
+/-- One query: the oracles of the game with `Help`, run on the queries `agmQueryToHelp`
+forwards for `t` from the MAC codes and the reversed messages of an AGM log `log`, compute
+what the AGM game's oracles compute for `t` from `log`, read through the same two projections
+of the new log. -/
+private theorem run_simulateQ_agmQueryToHelp_step (secParam : ℕ) (H : G) (sk : Key F n)
+    (pp : Params G n) (t : (unifSpec + AGMOracleSpec F G n).Domain) (log : AGMLog F G n) :
+    (simulateQ
+        ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp) +
+          ufHelpOracleImpl gen secParam H sk)
+        ((agmQueryToHelp gen H pp t).run (log.map Prod.snd))).run (log.map Prod.fst).reverse =
+      (fun z => ((z.1, z.2.map Prod.snd), (z.2.map Prod.fst).reverse)) <$>
+        (agmUFImpl gen secParam sk H pp t).run log := by
+  rcases t with t | m | ⟨m, ρU, ρV⟩ | ⟨ρ₀, ρA, ρZ⟩
+  · rfl
+  · simp only [agmQueryToHelp, agmUFImpl_inr, QueryImpl.add_apply_inr, StateT.run_mk,
+      simulateQ_bind, simulateQ_query, simulateQ_pure, OracleQuery.input_query,
+      OracleQuery.cont_query, HasQuery.instOfMonadLift_query, id_map, StateT.run_bind,
+      StateT.run_pure, ufHelpOracleImpl, ufOracleImpl, agmOracleImpl]
+    -- the remaining binds are do-desugared, so `bind_assoc`/`map_bind` apply as terms
+    refine (bind_assoc (m := ProbComp) _ _ _).trans
+      (Eq.trans ?_ (map_bind (m := ProbComp) _ _ _).symm)
+    refine bind_congr (m := ProbComp) fun σ => ?_
+    -- the two tuples differ only in a `MsgVec H` / `Fin n → F` ascription
+    exact congrArg (pure : _ → ProbComp _) (by
+      simp only [List.map_append, List.map_cons, List.map_nil, List.reverse_append,
+        List.reverse_cons, List.reverse_nil, List.nil_append, List.cons_append]
+      rfl)
+  · rfl
+  · rfl
+
+omit hgen in
 /-- The oracles of the game with `Help`, run on the queries `agmQueryToHelp` forwards and
 started from the MAC codes and the reversed messages of an AGM log `log`, compute what the
-AGM oracles compute from `log`, read through the same two projections of the final log. -/
+AGM game's oracles compute from `log`, read through the same two projections of the final
+log. -/
 private theorem run_simulateQ_agmQueryToHelp {α : Type} (secParam : ℕ) (H : G)
-    (sk : Key F n) (pp : Params G n) (oa : OracleComp (AGMOracleSpec F G n) α)
+    (sk : Key F n) (pp : Params G n) (oa : OracleComp (unifSpec + AGMOracleSpec F G n) α)
     (log : AGMLog F G n) :
     (simulateQ
         ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp) +
@@ -331,29 +384,24 @@ private theorem run_simulateQ_agmQueryToHelp {α : Type} (secParam : ℕ) (H : G
         ((simulateQ (agmQueryToHelp gen H pp) oa).run (log.map Prod.snd))).run
           (log.map Prod.fst).reverse =
       (fun z => ((z.1, z.2.map Prod.snd), (z.2.map Prod.fst).reverse)) <$>
-        (simulateQ (agmOracleImpl gen secParam sk H pp) oa).run log := by
+        (simulateQ (agmUFImpl gen secParam sk H pp) oa).run log := by
   induction oa using OracleComp.inductionOn generalizing log with
   | pure x => simp
   | query_bind t oa ih =>
-      cases t with
-      | sign m =>
-          simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
-            OracleQuery.cont_query, agmQueryToHelp, HasQuery.instOfMonadLift_query, id_map,
-            StateT.run_bind, StateT.run_mk, bind_assoc, pure_bind, QueryImpl.add_apply_inr,
-            ufHelpOracleImpl, ufOracleImpl, agmOracleImpl, map_bind]
-          exact (bind_assoc _ _ _).trans (bind_congr fun σ => by
-            simpa using ih σ (log.concat (m, σ)))
-      | verify m ρU ρV => exact ih _ log
-      | help ρ₀ ρA ρZ => exact ih _ log
+      simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
+        OracleQuery.cont_query, id_map, StateT.run_bind, map_bind]
+      rw [run_simulateQ_agmQueryToHelp_step]
+      refine (bind_map_left _ _ _).trans (bind_congr fun z => ?_)
+      exact ih z.1 z.2
 
 omit hgen in
 /-- Forgetting the representations preserves the advantage: the advantage of
 `A.forget gen` in the game with `Help` is the advantage of `A` in the AGM game.
 
 **Proof.** Induction on `A.run`: the MAC codes `agmQueryToHelp` keeps are those of the
-AGM log, so both games answer each query on the same elements, `A.forget gen` draws no
-coin, and the game with `Help` records the log's messages in reverse order, which
-freshness does not see. -/
+AGM log, so both games answer each query on the same elements, a coin query is answered
+by the same uniform draw in both games, and the game with `Help` records the log's
+messages in reverse order, which freshness does not see. -/
 theorem UF_CMVAHelpAdv_forget (secParam : ℕ) (A : AGMUFAdversary F G n) :
     UF_CMVAHelpAdv gen (A.forget gen) secParam = AGM_UF_CMVAAdv gen A secParam := by
   refine congrArg (Pr[= true | ·]) ?_
@@ -365,7 +413,7 @@ theorem UF_CMVAHelpAdv_forget (secParam : ℕ) (A : AGMUFAdversary F G n) :
       ((QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (List (Fin n → F)) ProbComp) +
         ufHelpOracleImpl gen secParam H sk)
       ((simulateQ (agmQueryToHelp gen H pp) (A.run H pp)).run [])).run []
-  let agmRun := (simulateQ (agmOracleImpl gen secParam sk H pp) (A.run H pp)).run []
+  let agmRun := (simulateQ (agmUFImpl gen secParam sk H pp) (A.run H pp)).run []
   have h : helpRun =
       (fun z => ((z.1, z.2.map Prod.snd), (z.2.map Prod.fst).reverse)) <$> agmRun :=
     run_simulateQ_agmQueryToHelp gen secParam H sk pp (A.run H pp) []

@@ -118,16 +118,19 @@ An adversary of the generic `UF_CMVAGame` at μCMZ never queries `Help`. It is
 an adversary of this game with the same advantage, so a bound on this game over
 all adversaries covers the plain game of Figure 5. -/
 
-/-- The queries of the plain game as queries of the game with `Help`, on the
-game's side of the coin oracle. -/
+/-- The queries of the plain game as queries of the game with `Help`: a coin query goes to
+the coin oracle of `UFHelpAdversary`, and a Sign or Verify query to the oracle of the same
+name. -/
 def ufQueryToHelp {secParam : ℕ} (H : G) :
-    QueryImpl (UFOracleSpec (μCMZBaseMACSyntax F gen) (secParam := secParam) (n := n) H)
+    QueryImpl (unifSpec + UFOracleSpec (μCMZBaseMACSyntax F gen) (secParam := secParam) (n := n) H)
       (OracleComp (unifSpec + UFHelpOracleSpec F G n))
-  | .sign m => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
-  | .verify m σ => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.verify m σ))
+  | .inl t => query (spec := unifSpec) t
+  | .inr (.sign m) => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
+  | .inr (.verify m σ) => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.verify m σ))
 
 /-- An adversary of the plain game at μCMZ as an adversary of the game with
-`Help`, which never queries `Help` and never draws a coin. -/
+`Help`, which never queries `Help`. Its coin queries go to the coin oracle of
+`UFHelpAdversary`. -/
 def ufAdversaryToHelp (secParam : ℕ)
     (A : UFAdversary (μCMZBaseMACSyntax F gen)) : UFHelpAdversary F G n where
   run H pp :=
@@ -136,7 +139,7 @@ def ufAdversaryToHelp (secParam : ℕ)
 
 /-- The embedding preserves the advantage. Setup and key generation are shared, and
 the oracles of the game with `Help`, composed with `ufQueryToHelp`, are those of the
-plain game query by query. -/
+plain game query by query, coin queries included. -/
 theorem UF_CMVAHelpAdv_ufAdversaryToHelp (secParam : ℕ)
     (A : UFAdversary (μCMZBaseMACSyntax F gen)) :
     UF_CMVAHelpAdv gen (ufAdversaryToHelp gen secParam A (n := n)) secParam =
@@ -146,6 +149,6 @@ theorem UF_CMVAHelpAdv_ufAdversaryToHelp (secParam : ℕ)
   refine bind_congr fun H => bind_congr fun keys => ?_
   congr 3
   funext q
-  cases q <;> exact simulateQ_spec_query ..
+  rcases q with t | (m | ⟨m, σ⟩) <;> exact simulateQ_spec_query ..
 
 end KVAC.Schemes.MicroCMZ

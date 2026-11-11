@@ -9,13 +9,16 @@ import VCVio.OracleComp.SimSemantics.StateT.PreservesInv
 /-!
 # μCMZ AGM unforgeability — the deterministic core
 
-The *deterministic* half of the reduction ↔ honest-game coupling: the coupling
-for the `sign` oracle, the transcript invariants it establishes, and the lemmas at
-abstract arity the couplings for the Verify and Help oracles consume:
+The *deterministic* half of the reduction ↔ honest-game coupling: the couplings
+for the `sign` oracle and for coin queries, the transcript invariants the `sign` coupling
+establishes, and the lemmas at abstract arity the couplings for the Verify and Help oracles
+consume:
 
 - **O24 Eq. 14's fidelity sentence** `reductionSignStep_relTriple` —
   the reduction's `sign` step and the honest one are coupled and preserve
   `Coupling`'s `redLogHonestInv`;
+- `reductionCoinStep_relTriple` — a coin query is answered alike by the reduction and by
+  the game and preserves `redLogHonestInv`;
 - `reductionOracleImpl_preservesInv` — the simulated oracle preserves
   `Coupling`'s `redLogInv`; `redLog_honest` / `redLog_U_form` restate its two
   conjuncts at any reachable log, supplying hypotheses to the evaluation bridge;
@@ -42,7 +45,8 @@ The couplings for the `verify` and `help` oracles are deferred; the run-level co
 `AGM_UF_CMVAGame_evalDist_eq` in `SecurityN1.lean`.
 
 Everything here is deterministic algebra plus one distributional equality lifted
-to a relational triple; no probability *bounds* — the counting layer sits above it.
+to a relational triple and the identity coupling of a coin draw; no probability *bounds* —
+the counting layer sits above it.
 -/
 
 set_option autoImplicit false
@@ -153,6 +157,23 @@ lemma reductionSignStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedP
   simp only [reductionSignStep, agmOracleImpl, StateT.run_mk]
   exact relTriple_map hFirst'
 
+/-- **Coin-step coupling.** A coin query is answered by the reduction's simulated oracle
+(`reductionOracleImpl`) and by the game's (`agmUFImpl` at `Coupling`'s `maskedKey x aM bM`) with
+the same uniform draw: under the identity coupling of that draw the two answers are equal and
+neither log changes, so `redLogHonestInv` is preserved. -/
+lemma reductionCoinStep_relTriple (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
+    (t : ℕ) (L : RedLog F G) (log : AGMLog F G 1)
+    (hR : redLogHonestInv gen x aM bM L log) :
+    RelTriple
+      ((reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen) aM bM ep (.inl t)).run L)
+      ((agmUFImpl gen secParam (maskedKey x aM bM) ep.h (ep.x0, ep.xr, fun _ => ep.x1)
+          (.inl t)).run log)
+      (fun p₁ p₂ => p₁.1 = p₂.1 ∧ redLogHonestInv gen x aM bM p₁.2 p₂.2) := by
+  -- both runs are the coin draw paired with their own log
+  change RelTriple ((fun a => (a, L)) <$> (QueryImpl.ofLift unifSpec ProbComp t : ProbComp _))
+    ((fun a => (a, log)) <$> (QueryImpl.ofLift unifSpec ProbComp t : ProbComp _)) _
+  exact relTriple_map (relTriple_post_mono (relTriple_refl _) fun _ _ h => ⟨h, hR⟩)
+
 end SignStepCoupling
 
 /-! ## Log invariants -/
@@ -160,12 +181,16 @@ end SignStepCoupling
 /-- **(log-honesty invariant), preservation.** The reduction's simulated oracle, run with the
 genuine powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`, preserves `redLogInv`: the Sign oracle
 appends only honest entries (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`; the `U`-form is
-definitional), and `verify`/`help` leave the log unchanged. -/
+definitional), and `verify`, `help` and coin queries leave the log unchanged. -/
 lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G) :
     QueryImpl.PreservesInv
       (reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen) aM bM ep)
       (redLogInv gen x aM bM) := by
   intro t σ0 hσ0 z hz
+  rcases t with t | t
+  · obtain ⟨u, -, hz⟩ := (mem_support_bind_iff (m := ProbComp) _ _ _).1 hz
+    obtain rfl := (mem_support_pure_iff _ _).1 hz
+    exact hσ0
   cases t with
   | sign m =>
       simp only [reductionOracleImpl, reductionSignStep] at hz
@@ -186,11 +211,11 @@ lemma reductionOracleImpl_preservesInv (x : F) (aM bM : FixedMasks F) (ep : Embe
 every MAC code the reduction's simulated oracle logs is honest —
 `Vⱼ = macScalar (maskedKey …) mⱼ · Uⱼ`, the same `macScalar` form `redLogHonestInv` states the
 relation in, so a caller can move between the two without a conversion. The `sign` branch appends
-only honest MAC codes (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`); `verify`/`help` leave
-the log unchanged. Restated from `reductionOracleImpl_preservesInv` by
+only honest MAC codes (`embedTag_eq`, retyped by `macScalar_maskedKey_eq`); `verify`/`help` and
+coin queries leave the log unchanged. Restated from `reductionOracleImpl_preservesInv` by
 `simulateQ_run_preservesInv`. -/
 lemma redLog_honest (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
-    {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
+    {β : Type} (oa : OracleComp (unifSpec + AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
       (reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen)
         aM bM ep) oa).run [])) :
@@ -204,7 +229,7 @@ the coefficients of `gamePoint_eq_embed_affine`'s `htag` in membership form; tha
 indexed by `Fin tags.length`, and the conversion is the pending `transcript_index_transport` step,
 delivered by the next PR of the stack. -/
 lemma redLog_U_form (x : F) (aM bM : FixedMasks F) (ep : EmbeddedParams G)
-    {β : Type} (oa : OracleComp (AGMOracleSpec F G 1) β) (out : β × RedLog F G)
+    {β : Type} (oa : OracleComp (unifSpec + AGMOracleSpec F G 1) β) (out : β × RedLog F G)
     (hout : out ∈ support ((simulateQ
       (reductionOracleImpl gen (x • gen) (x ^ 2 • gen) (x ^ 3 • gen)
         aM bM ep) oa).run [])) :

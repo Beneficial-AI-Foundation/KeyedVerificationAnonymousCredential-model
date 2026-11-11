@@ -73,12 +73,14 @@ mask-uniformity lemma. The reconstructed secret
 `sk = (a₀+x·b₀, aᵣ+x·bᵣ, a₁+x·b₁)` plays the role of the real key, and the simulated
 oracle reproduces the honest oracle's observable behaviour.
 
-Route: couple `reductionOracleImpl` (`Core.lean`) against `agmOracleImpl`
+Route: couple `reductionOracleImpl` (`Core.lean`) against `agmUFImpl`
 (`AlgebraicMAC.lean`) under the state invariant `redLogHonestInv` (`Coupling.lean`),
 after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle's case
 through `sign_masked_tag_dist_eq` (`SignMask.lean`, whose module doc records why the
 mask sample is kept opaque there), the Verify and Help oracles' cases through
-`represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). -/
+`represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). A coin query goes through
+`reductionCoinStep_relTriple` (`SignCoupling.lean`): both runs answer it with the same
+uniform draw and neither changes its log. -/
 lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
     evalDist (AGM_UF_CMVAGame gen secParam A)
       = evalDist ((fun t : RedBits => t.winBit) <$> redFull gen A) := by
@@ -165,8 +167,9 @@ lemma redFull_badBit_of_winBit_of_not_recBit (A : AGMUFAdversary F G 1) (t : Red
 2. **The adaptive Schwartz–Zippel bound over the shear.** Under `(a v, b v) ↦ (a v + x·b v, b v)` —
    a uniform-preserving bijection on `F²` per variable for `x₀, xᵣ, x₁`, and for the η and
    per-query `(auⱼ, buⱼ)` pairs, conditioned on a nonzero group element, a bijection onto
-   `{a ≠ 0} × F` (`sign_U_bu_dist_eq`) — A's view and hence `φ` depend only on the sheared
-   masks while the `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform
+   `{a ≠ 0} × F` (`sign_U_bu_dist_eq`) — A's view, read through the projected log of messages
+   and MAC codes, and hence `φ` depend only on the sheared masks and A's coin answers, while
+   the `b`-masks stay uniform and independent; `t.shiftPoint x` is then uniform
    over `Var t.log.length → F` independent of `φ`, and `probEvent_eval_shift_eq_zero_le`
    (total degree `≤ 3`) gives `Pr[szBit] ≤ 3/p`. -/
 
@@ -235,6 +238,12 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
    the identity branch `φ = 0` is absorbed there, since `U* = 0` contradicts `verify`'s
    `σ.1 ≠ 0`), `Pr[badBit] ≤ Pr[szBit]` (`redFull_badBit_le_szBit`), and
    `Pr[szBit] ≤ 3/p` (`redFull_szBit_le`) — *The bad-event bound* above.
+
+Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
+contains the paper's p.p.t. algebraic adversaries. O24's conclusion that μCMZ is an algebraic
+MAC, one for which "it is hard to forge MACs" (Definition 3.1, p. 25), is not stated: it needs
+the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t. adversaries
+and reductions, and hardness assumptions over them.
 -/
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤

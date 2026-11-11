@@ -38,18 +38,16 @@ built on it.
   represented element (submitted to the Verify and Help oracles, and the forgery) and
   `AGMRepr.linCombCollapse` for the weighted sum `Σᵢ rᵢ • Aᵢ` of represented
   elements (submitted to the Help oracle).
-- The wrapper `nTo1Adversary A r`, a 1-attribute adversary that runs the
-  `n`-attribute adversary `A` at fixed scalars `r⃗`. It builds the
-  `n`-attribute public parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` from the
-  1-attribute ones, answers `A`'s queries through `collapseOracleImpl`, which
+- The wrapper `nTo1Adversary A`, a 1-attribute adversary that draws the
+  scalars `r⃗` through its coin oracle and runs the `n`-attribute adversary `A`.
+  It builds the `n`-attribute public parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` from
+  the 1-attribute ones, answers `A`'s queries through `collapseOracleImpl`, which
   forwards each `n`-attribute query to the 1-attribute game's oracle (messages
   through `collapseMsg`, representations through the two translations),
   and translates the forgery back.
-- The 3-DL reduction `microCMZN3DLReduction gen A` for general `n`, with its
-  experiment and advantage at base `gen`. The scalars `r⃗` are a parameter of
-  the wrapper (the adversary's `OracleComp (AGMOracleSpec F G 1)` has no
-  sampling oracle), so the reduction samples `r⃗` in `ProbComp` and then runs
-  the `n = 1` reduction `microCMZ3DLReduction` on the wrapped adversary.
+- The 3-DL reduction `microCMZN3DLReduction gen A` for general `n`, Lemma 5.4's
+  reduction run on `nTo1Adversary A`, with its experiment and advantage at base
+  `gen`.
 -/
 
 set_option autoImplicit false
@@ -118,8 +116,9 @@ def AGMRepr.linCombCollapse (r : Fin n → F) (ρA : Fin n → AGMRepr F n) :
 the paper's `m₁ + Σᵢ zᵢ mᵢ` of Claim 5.7 at `r₁ = 1`. -/
 def collapseMsg (r m : Fin n → F) : Fin 1 → F := fun _ => ∑ i, m i * r i
 
-/-- Query-translation oracle of the reduction to `n = 1` (Claim 5.7). Each `n`-attribute query
-becomes one 1-attribute `query` in `OracleComp (AGMOracleSpec F G 1)`: messages
+/-- Query-translation oracle of the reduction to `n = 1` (Claim 5.7). A coin query goes to the
+coin oracle of the 1-attribute adversary; each other `n`-attribute query becomes one 1-attribute
+`query` in `OracleComp (unifSpec + AGMOracleSpec F G 1)`: messages
 through `collapseMsg`, representations through `AGMRepr.collapseRepr` /
 `AGMRepr.linCombCollapse`. Response types (`G × G` / `Bool`) agree in both specs,
 so responses pass through.
@@ -130,14 +129,16 @@ The oracle sends a `help` query's vector `ρ⃗` to the single representation
 `Xᵢ = rᵢ • X₁`. Its `help` answer `Z = (x₀+xᵣ)•A₀ + x₁•Σᵢ rᵢ•Aᵢ` is then the
 `n`-attribute answer at the embedded key `xᵢ = rᵢ·x₁`. -/
 noncomputable def collapseOracleImpl (r : Fin n → F) :
-    QueryImpl (AGMOracleSpec F G n) (OracleComp (AGMOracleSpec F G 1))
-  | .sign m => query (spec := AGMOracleSpec F G 1) (AGMQuery.sign (collapseMsg r m))
-  | .verify m ρU ρV => query (spec := AGMOracleSpec F G 1)
-      (AGMQuery.verify (collapseMsg r m) (AGMRepr.collapseRepr r ρU)
-        (AGMRepr.collapseRepr r ρV))
-  | .help ρ₀ ρA ρZ => query (spec := AGMOracleSpec F G 1)
-      (AGMQuery.help (AGMRepr.collapseRepr r ρ₀) (fun _ => AGMRepr.linCombCollapse r ρA)
-        (AGMRepr.collapseRepr r ρZ))
+    QueryImpl (unifSpec + AGMOracleSpec F G n) (OracleComp (unifSpec + AGMOracleSpec F G 1))
+  | .inl t => query (spec := unifSpec) t
+  | .inr (.sign m) => query (spec := unifSpec + AGMOracleSpec F G 1)
+      (.inr (AGMQuery.sign (collapseMsg r m)))
+  | .inr (.verify m ρU ρV) => query (spec := unifSpec + AGMOracleSpec F G 1)
+      (.inr (AGMQuery.verify (collapseMsg r m) (AGMRepr.collapseRepr r ρU)
+        (AGMRepr.collapseRepr r ρV)))
+  | .inr (.help ρ₀ ρA ρZ) => query (spec := unifSpec + AGMOracleSpec F G 1)
+      (.inr (AGMQuery.help (AGMRepr.collapseRepr r ρ₀) (fun _ => AGMRepr.linCombCollapse r ρA)
+        (AGMRepr.collapseRepr r ρZ)))
 
 /-- The evaluation bridge of `AGMRepr.collapseRepr`: the collapsed representation, evaluated
 against the 1-attribute basis `(g₀, H, X₀, Xᵣ, fun _ => X₁)`, evaluates as `ρ` does against
@@ -175,27 +176,27 @@ lemma verify_collapse (r m : Fin n → F) (x₀ xᵣ x₁ : F) (t : Code G) :
   unfold verify
   rw [macScalar_collapseMsg]
 
-/-- The wrapper adversary of the reduction to `n = 1` (Claim 5.7). At fixed
-scalars `r⃗`, a 1-attribute adversary that runs `A` on the `n`-attribute public
-parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` with `collapseOracleImpl` as its oracle
-and returns the translated forgery. -/
-noncomputable def nTo1Adversary (A : AGMUFAdversary F G n) (r : Fin n → F) :
-    AGMUFAdversary F G 1 where
+/-- The wrapper adversary of the reduction to `n = 1` (Claim 5.7). Given the
+1-attribute public parameters, it draws the scalars `r⃗ ←$ Fⁿ` through its private
+coin oracle, as the paper's `B` draws `z₂, …, zₙ` after receiving its public parameters
+(p. 39). It then runs `A` on the `n`-attribute public parameters
+`(X₀, Xᵣ, fun i => rᵢ • X₁)` with `collapseOracleImpl r` as its oracle, and returns the
+translated forgery. -/
+noncomputable def nTo1Adversary (A : AGMUFAdversary F G n) : AGMUFAdversary F G 1 where
   run H pp := do
+    let r ← liftM ($ᵗ (Fin n → F))
     let pp_n : G × G × (Fin n → G) := (pp.1, pp.2.1, fun i => r i • pp.2.2 0)
     let (mStar_n, ρU_n, ρV_n) ← simulateQ (collapseOracleImpl r) (A.run H pp_n)
     pure (collapseMsg r mStar_n, AGMRepr.collapseRepr r ρU_n, AGMRepr.collapseRepr r ρV_n)
 
-/-- The 3-DL reduction for general `n` (Claim 5.7 on top of Lemma 5.4): samples
-the scalars `r⃗ ←$ Fⁿ`, wraps `A` as a 1-attribute adversary, and runs the
-`n = 1` reduction `microCMZ3DLReduction` on the wrapper at the challenge powers
-`pows`. Like `microCMZ3DLReduction` it takes the powers alone and is sound only
+/-- The 3-DL reduction for general `n` (Claim 5.7 on top of Lemma 5.4): the `n = 1`
+reduction `microCMZ3DLReduction` run on the wrapper `nTo1Adversary A`, at the challenge
+powers `pows`. Like `microCMZ3DLReduction` it takes the powers alone and is sound only
 at base `gen`; the `QDLogAdversary` shape is formed once, in
 `microCMZN3DLReductionExp`, always at `gen`. -/
 noncomputable def microCMZN3DLReduction (A : AGMUFAdversary F G n) (pows : Fin 3 → G) :
-    ProbComp F := do
-  let r ← $ᵗ (Fin n → F)
-  microCMZ3DLReduction gen (nTo1Adversary A r) pows
+    ProbComp F :=
+  microCMZ3DLReduction gen (nTo1Adversary A) pows
 
 /-- The 3-DL experiment for the general-`n` reduction, the counterpart of
 `microCMZ3DLReductionExp`: the challenge base is fixed to `gen` and the base slot

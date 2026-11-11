@@ -96,9 +96,8 @@ a static hypothesis on the adversary (`IsQueryBoundP` over the Sign oracle, at m
 `unifSpec + AGMOMUFOracleSpec F G n`, as for the plain `OMUFAdversary`, and
 `AGM_OMUFGame` answers that oracle in `ProbComp`, leaving the log untouched.
 Sampled scalars are not group elements, so they do not extend the
-representation basis. The comparison with fixed coins, and with the UF-CMVA
-forgers, is in `DESIGN_ALTERNATIVES.md`, *One-more forgers have a private coin
-oracle*.
+representation basis. The comparison with fixed coins is in
+`DESIGN_ALTERNATIVES.md`, *One-more forgers have a private coin oracle*.
 
 **Carrier.** `ProbComp`, as for the core scheme and the MAC games. The core never
 calls a hash, so no random oracle is threaded. The `π_is`-carrying variant of

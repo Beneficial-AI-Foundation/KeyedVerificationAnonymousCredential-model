@@ -78,11 +78,13 @@ The *implicit* secret key is embedded as `xᵢ = aaᵢ + bbᵢ·x` (so `Xᵢ = a
 bbᵢ•X`), `x₀ = z` (so `X₀ = z•H`), and `xᵣ` honestly known (so `Xᵣ = xᵣ•g`):
 `pp = gapDlEmbedParams`. Writing `(c, d) = gapDlKeyParts` for `c := z + xᵣ +
 Σᵢ aaᵢ·mᵢ` and `d := Σᵢ bbᵢ·mᵢ`, the game's key on message `m⃗` is
-`key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each simulated oracle reproduces `agmOracleImpl`'s
+`key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each simulated oracle reproduces `agmUFImpl`'s
 behaviour under this embedding (evaluating a submitted representation needs only
 the *known* group elements `g, H, pp` and the logged MAC codes, so the reduction
 computes every submitted element directly):
 
+- a coin query goes to the reduction's own coin oracle, the `unifSpec` of
+  `GapDLogAdversary`, and leaves the log unchanged.
 - `.sign m⃗`: sample `u ← gapSignScalarSample` (nonzero), set `U := u•g`; then
   `key•U = c•U + u•(d•X)` (since `x·d•U = u·d•X`), so `V := c•U + u•(d•X)`;
   append `(m⃗, (U,V))` to the log.
@@ -109,15 +111,16 @@ Verify query drops the `Σᵢ aᵢmᵢ•U` term (errata §10); and that query,
 needs `Ddh(U, d⁻¹•(V − c•U))` (errata §11). The nonzero `u` and the subsumed
 `Σᵢ bᵢmᵢ = 0` branch are departures from the paper, not misprints. -/
 noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
-    QueryImpl (AGMOracleSpec F G n)
+    QueryImpl (unifSpec + AGMOracleSpec F G n)
       (StateT (AGMLog F G n) (OracleComp (unifSpec + GapDLogOracleSpec G)))
-  | .sign m => StateT.mk fun log => do
+  | .inl t => query (spec := unifSpec) t
+  | .inr (.sign m) => StateT.mk fun log => do
       let u ← (gapSignScalarSample : OracleComp (unifSpec + GapDLogOracleSpec G) F)
       let U := u • gen
       let (c, d) := gapDlKeyParts aa bb z xr m
       let V := c • U + u • (d • X)
       pure ((U, V), log ++ [(m, (U, V))])
-  | .verify m ρU ρV => StateT.mk fun log => do
+  | .inr (.verify m ρU ρV) => StateT.mk fun log => do
       let tags := log.map Prod.snd
       let pp := gapDlEmbedParams gen aa bb z xr X H
       let σ := (ρU.evalParams gen H pp tags, ρV.evalParams gen H pp tags)
@@ -125,7 +128,7 @@ noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
       let bit ← query (spec := unifSpec + GapDLogOracleSpec G)
         (Sum.inr (d • σ.1, σ.2 - c • σ.1))
       pure (decide (σ.1 ≠ 0) && bit, log)
-  | .help ρ₀ ρA ρZ => StateT.mk fun log => do
+  | .inr (.help ρ₀ ρA ρZ) => StateT.mk fun log => do
       let tags := log.map Prod.snd
       let pp := gapDlEmbedParams gen aa bb z xr X H
       let A₀ := ρ₀.evalParams gen H pp tags

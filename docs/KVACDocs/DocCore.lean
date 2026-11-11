@@ -256,6 +256,6 @@ for `n` attributes over a prime-order group: the algorithms `Setup`,
 :::definition "ufcmva_game" (lean := "KVAC.Core.SignedLog, KVAC.Core.UFQuery, KVAC.Core.UFOracleSpec, KVAC.Core.ufOracleImpl, KVAC.Core.UFAdversary, KVAC.Core.UF_CMVAGame, KVAC.Core.UF_CMVAAdv") (parent := "core_amac") (tags := "paper, O24 Fig 5")
 *O24 Figure 5.* The unforgeability-under-chosen-message-and-verification
 (UF-CMVA) security game for an algebraic MAC {uses "algebraic_mac"}[]: the
-adversary holds signing and verification oracles and must forge a valid
-MAC code on an unqueried message vector.
+adversary holds signing and verification oracles and a private coin oracle
+beside them, and must forge a valid MAC code on an unqueried message vector.
 :::
