@@ -481,15 +481,16 @@ noncomputable def reductionHelpStep (X X' X'' : G) (aM bM : FixedMasks F)
 /--
 The reduction's **simulated oracle** — answers `A`'s queries with no secret key
 `sk`, using only the embedded public elements `(H, X₀, Xᵣ, X₁)`, the 3-DL powers
-`(X, X', X'')` over `gen`, and the masks. Each branch is a thin call to its
-factored `step` def: the Verify and Help oracle implementations carry `MvPolynomial`/`affineSubst`
-terms whose instance search loops in this import context, so splitting them keeps
-reduction on a `.sign` query from re-elaborating the others. A coin query of `A` is
-answered in `ProbComp`, as the game answers it, and leaves the log unchanged. -/
+`(X, X', X'')` over `gen`, and the masks. Each of the Sign, Verify and Help branches is a
+thin call to its factored `step` def: the Verify and Help oracle implementations carry
+`MvPolynomial`/`affineSubst` terms whose instance search loops in this import context, so
+splitting them keeps reduction on a `.sign` query from re-elaborating the others. A coin
+query of `A` is answered in `ProbComp`, as the game answers it, and leaves the log
+unchanged. -/
 noncomputable def reductionOracleImpl (X X' X'' : G)
     (aM bM : FixedMasks F) (ep : EmbeddedParams G) :
     QueryImpl (unifSpec + AGMOracleSpec F G 1) (StateT (RedLog F G) ProbComp)
-  | .inl t => (QueryImpl.ofLift unifSpec ProbComp).liftTarget (StateT (RedLog F G) ProbComp) t
+  | .inl t => query (spec := unifSpec) t
   | .inr (.sign m) => reductionSignStep (gen := gen) X X' aM bM m
   | .inr (.verify m ρU ρV) => reductionVerifyStep (gen := gen) X X' X'' aM bM ep m ρU ρV
   | .inr (.help ρ₀ ρA ρZ) => reductionHelpStep (gen := gen) X X' X'' aM bM ep ρ₀ ρA ρZ
@@ -575,9 +576,8 @@ structure RedTrace (F G : Type) where
 /-- The reduction's run. Given the challenge powers `X = x·g`, `X' = x²·g`, `X'' = x³·g`,
 sample the fixed-variable masks, build the embedded public parameters `H, X₀, Xᵣ, X₁`
 (O24 Eq. 13), and run `A` against `reductionOracleImpl` (no `sk`), its coin queries
-answered in `ProbComp`. The one place the
-embedding is built: `microCMZ3DLReduction` and the analysis experiment bind this
-and differ only in what they compute from the trace.
+answered in `ProbComp`. The one place the embedding is built: `microCMZ3DLReduction` and
+the analysis experiment bind this and differ only in what they compute from the trace.
 
 O24 Eq. 13 samples the η masks unconditioned; conditioning on `H ≠ 0` matches
 `setup`'s `H ←$ 𝔾^×` (see `reductionMaskSample` and `docs/DESIGN_ALTERNATIVES.md`,

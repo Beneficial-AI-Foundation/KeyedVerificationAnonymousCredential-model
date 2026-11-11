@@ -119,11 +119,12 @@ an adversary of this game with the same advantage, so a bound on this game over
 all adversaries covers the plain game of Figure 5. -/
 
 /-- The queries of the plain game as queries of the game with `Help`: a coin query goes to
-the coin oracle, and Sign and Verify go to the game's side of it. -/
+the coin oracle of `UFHelpAdversary`, and a Sign or Verify query to the oracle of the same
+name. -/
 def ufQueryToHelp {secParam : ℕ} (H : G) :
     QueryImpl (unifSpec + UFOracleSpec (μCMZBaseMACSyntax F gen) (secParam := secParam) (n := n) H)
       (OracleComp (unifSpec + UFHelpOracleSpec F G n))
-  | .inl t => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inl t)
+  | .inl t => query (spec := unifSpec) t
   | .inr (.sign m) => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.sign m))
   | .inr (.verify m σ) => query (spec := unifSpec + UFHelpOracleSpec F G n) (.inr (.verify m σ))
 

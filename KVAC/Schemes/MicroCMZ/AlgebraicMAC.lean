@@ -354,7 +354,7 @@ private theorem run_simulateQ_agmQueryToHelp_step (secParam : ℕ) (H : G) (sk :
         (agmUFImpl gen secParam sk H pp t).run log := by
   rcases t with t | m | ⟨m, ρU, ρV⟩ | ⟨ρ₀, ρA, ρZ⟩
   · rfl
-  · simp only [agmQueryToHelp, agmUFImpl, QueryImpl.add_apply_inr, StateT.run_mk,
+  · simp only [agmQueryToHelp, agmUFImpl_inr, QueryImpl.add_apply_inr, StateT.run_mk,
       simulateQ_bind, simulateQ_query, simulateQ_pure, OracleQuery.input_query,
       OracleQuery.cont_query, HasQuery.instOfMonadLift_query, id_map, StateT.run_bind,
       StateT.run_pure, ufHelpOracleImpl, ufOracleImpl, agmOracleImpl]
@@ -363,7 +363,10 @@ private theorem run_simulateQ_agmQueryToHelp_step (secParam : ℕ) (H : G) (sk :
       (Eq.trans ?_ (map_bind (m := ProbComp) _ _ _).symm)
     refine bind_congr (m := ProbComp) fun σ => ?_
     -- the two tuples differ only in a `MsgVec H` / `Fin n → F` ascription
-    exact congrArg (pure : _ → ProbComp _) (by simp; rfl)
+    exact congrArg (pure : _ → ProbComp _) (by
+      simp only [List.map_append, List.map_cons, List.map_nil, List.reverse_append,
+        List.reverse_cons, List.reverse_nil, List.nil_append, List.cons_append]
+      rfl)
   · rfl
   · rfl
 
@@ -383,7 +386,7 @@ private theorem run_simulateQ_agmQueryToHelp {α : Type} (secParam : ℕ) (H : G
       (fun z => ((z.1, z.2.map Prod.snd), (z.2.map Prod.fst).reverse)) <$>
         (simulateQ (agmUFImpl gen secParam sk H pp) oa).run log := by
   induction oa using OracleComp.inductionOn generalizing log with
-  | pure x => simp only [simulateQ_pure, StateT.run_pure, map_pure]
+  | pure x => simp
   | query_bind t oa ih =>
       simp only [simulateQ_bind, simulateQ_query, OracleQuery.input_query,
         OracleQuery.cont_query, id_map, StateT.run_bind, map_bind]

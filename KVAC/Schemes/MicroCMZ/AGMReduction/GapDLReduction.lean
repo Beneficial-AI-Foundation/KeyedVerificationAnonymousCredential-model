@@ -78,13 +78,13 @@ The *implicit* secret key is embedded as `xᵢ = aaᵢ + bbᵢ·x` (so `Xᵢ = a
 bbᵢ•X`), `x₀ = z` (so `X₀ = z•H`), and `xᵣ` honestly known (so `Xᵣ = xᵣ•g`):
 `pp = gapDlEmbedParams`. Writing `(c, d) = gapDlKeyParts` for `c := z + xᵣ +
 Σᵢ aaᵢ·mᵢ` and `d := Σᵢ bbᵢ·mᵢ`, the game's key on message `m⃗` is
-`key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each simulated oracle reproduces `agmOracleImpl`'s
+`key = (x₀+xᵣ+Σᵢ mᵢ·xᵢ) = c + x·d`. Each simulated oracle reproduces `agmUFImpl`'s
 behaviour under this embedding (evaluating a submitted representation needs only
 the *known* group elements `g, H, pp` and the logged MAC codes, so the reduction
 computes every submitted element directly):
 
-- a coin query goes to the reduction's own coin oracle (the `unifSpec` of
-  `GapDLogOracleSpec`) and leaves the log unchanged.
+- a coin query goes to the reduction's own coin oracle, the `unifSpec` of
+  `GapDLogAdversary`, and leaves the log unchanged.
 - `.sign m⃗`: sample `u ← gapSignScalarSample` (nonzero), set `U := u•g`; then
   `key•U = c•U + u•(d•X)` (since `x·d•U = u·d•X`), so `V := c•U + u•(d•X)`;
   append `(m⃗, (U,V))` to the log.
@@ -113,8 +113,7 @@ needs `Ddh(U, d⁻¹•(V − c•U))` (errata §11). The nonzero `u` and the su
 noncomputable def gapDlOracleImpl (aa bb : Fin n → F) (z xr : F) (X H : G) :
     QueryImpl (unifSpec + AGMOracleSpec F G n)
       (StateT (AGMLog F G n) (OracleComp (unifSpec + GapDLogOracleSpec G)))
-  | .inl t => StateT.mk fun log =>
-      (·, log) <$> query (spec := unifSpec + GapDLogOracleSpec G) (.inl t)
+  | .inl t => query (spec := unifSpec) t
   | .inr (.sign m) => StateT.mk fun log => do
       let u ← (gapSignScalarSample : OracleComp (unifSpec + GapDLogOracleSpec G) F)
       let U := u • gen

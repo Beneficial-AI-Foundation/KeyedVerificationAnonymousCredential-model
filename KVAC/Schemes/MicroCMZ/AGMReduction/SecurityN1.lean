@@ -78,9 +78,9 @@ Route: couple `reductionOracleImpl` (`Core.lean`) against `agmUFImpl`
 after the uniform-preserving keygen shear `(a, b) ↦ (a + x·b, b)`: the Sign oracle's case
 through `sign_masked_tag_dist_eq` (`SignMask.lean`, whose module doc records why the
 mask sample is kept opaque there), the Verify and Help oracles' cases through
-`represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). A coin query is answered in
-both runs by the same uniform draw, coupled identically; neither run changes its log, so the
-logs stay related by `redLogHonestInv`. -/
+`represented_value_eq_affineSubst_eval` (`SignCoupling.lean`). A coin query goes through
+`reductionCoinStep_relTriple` (`SignCoupling.lean`): both runs answer it with the same
+uniform draw and neither changes its log. -/
 lemma AGM_UF_CMVAGame_evalDist_eq (A : AGMUFAdversary F G 1) :
     evalDist (AGM_UF_CMVAGame gen secParam A)
       = evalDist ((fun t : RedBits => t.winBit) <$> redFull gen A) := by
@@ -240,9 +240,10 @@ off the 3-DL powers `(X, X', X'') = (x·g, x²·g, x³·g)`:
    `Pr[szBit] ≤ 3/p` (`redFull_szBit_le`) — *The bad-event bound* above.
 
 Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
-contains the paper's p.p.t. algebraic adversaries. O24's negligibility clause is not stated: it
-needs the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t.
-adversaries and reductions, and hardness assumptions over them.
+contains the paper's p.p.t. algebraic adversaries. O24's conclusion that μCMZ is an algebraic
+MAC, one for which "it is hard to forge MACs" (Definition 3.1, p. 25), is not stated: it needs
+the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t. adversaries
+and reductions, and hardness assumptions over them.
 -/
 theorem agm_ufcmva_le_n1_explicit (A : AGMUFAdversary F G 1) :
     AGM_UF_CMVAAdv gen A secParam ≤

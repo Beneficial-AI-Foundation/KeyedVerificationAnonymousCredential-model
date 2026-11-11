@@ -12,9 +12,9 @@ import VCVio.CryptoFoundations.SecExp
 The one-more unforgeability (OMUF) game for an `ATSyntax ProbComp`,
 following O24 §3.4 and Figure 6, and mirroring the UF-CMVA layer
 (`KVAC.Core.AlgebraicMAC.Security`) construct for construct, except that the
-adversary also has a private coin oracle and the experiment is generic in the
-carrier. After `q` blind-issuance sessions, the adversary must present `q + 1`
-valid message/token pairs with pairwise-distinct messages.
+experiment is generic in the carrier. After `q` blind-issuance sessions, the
+adversary must present `q + 1` valid message/token pairs with pairwise-distinct
+messages.
 
 ## Layout
 

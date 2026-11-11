@@ -37,10 +37,9 @@ variable {n : ℕ}
 variable (gen : G)
 variable [hgen : Fact (Function.Bijective (fun x : F => x • gen))]
 
-/-- **O24 Theorem 5.1.** For an algebraic adversary `A`, the
-advantage of `A.forget gen` in the UF-CMVA game with `Help` against the μCMZ base MAC is at
-most the 3-DL advantage of `microCMZN3DLReduction gen A` plus the gap-DL advantage of
-`gapDlReduction gen A` plus `5/p`.
+/-- **O24 Theorem 5.1.** For an algebraic adversary `A`, the advantage of `A.forget gen` in
+the UF-CMVA game with `Help` against the μCMZ base MAC is at most the 3-DL advantage of
+`microCMZN3DLReduction gen A` plus the gap-DL advantage of `gapDlReduction gen A` plus `5/p`.
 
 **Proof.** Theorem 5.1 rests on two theorems only, so it is proved exactly when both are:
 `UF_CMVAHelpAdv_forget` equates the advantage with the AGM advantage
@@ -48,9 +47,10 @@ most the 3-DL advantage of `microCMZN3DLReduction gen A` plus the gap-DL advanta
 same right-hand side.
 
 Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
-contains the paper's p.p.t. algebraic adversaries. O24's negligibility clause is not stated: it
-needs the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t.
-adversaries and reductions, and hardness assumptions over them. -/
+contains the paper's p.p.t. algebraic adversaries. O24's conclusion that μCMZ is an algebraic
+MAC, one for which "it is hard to forge MACs" (Definition 3.1, p. 25), is not stated: it needs
+the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t. adversaries
+and reductions, and hardness assumptions over them. -/
 theorem microCMZ_ufcmvaHelp_le (secParam : ℕ) (A : AGMUFAdversary F G n) :
     UF_CMVAHelpAdv gen (A.forget gen) secParam ≤
       microCMZN3DLReductionAdv gen A + gapDlogAdv gen (gapDlReduction gen A) +

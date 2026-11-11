@@ -450,6 +450,19 @@ triple lifts it through the mask sampling, which {uses "sign_masks"}[] shows
 is honestly distributed, and threads the invariant through the log append.
 :::
 
+:::theorem "coin_oracle_coupling" (lean := "KVAC.Schemes.MicroCMZ.reductionCoinStep_relTriple") (parent := "cmz_amac") (tags := "milestone")
+The coin case of the per-step couplings, beside {uses "sign_oracle_coupling"}[]: a coin
+query of the adversary is answered by {uses "simulated_sign_oracle"}[] and by the game of
+{uses "agm_model"}[] with the same uniform draw, and neither changes its log, so the
+answers agree and the state invariant of {uses "reduction_coupling_bricks"}[] is
+preserved.
+:::
+
+:::proof "coin_oracle_coupling"
+Both sides run the same draw and pair its answer with their own log. The identity coupling
+of the draw gives equal answers, and the invariant holds after the query as before it.
+:::
+
 :::theorem "sz_static_core" (lean := "KVAC.Schemes.MicroCMZ.eval_shift_eq_zero_of_affineSubst_eq_zero, KVAC.Schemes.MicroCMZ.card_filter_eval_eq_zero_le, KVAC.Schemes.MicroCMZ.probEvent_eval_shift_eq_zero_le") (parent := "cmz_amac") (tags := "milestone")
 The view-independent half of the Schwartz–Zippel argument. The shift
 lemma turns "the partial evaluation {uses "partial_evaluation_psi"}[]
@@ -582,7 +595,7 @@ carried here. The represented forgery is bounded in degree by
 An induction over the simulated oracle's query cases, of which only `sign`
 appends to the log; the Sign oracle appends an honest entry by the `embedTag_eq` of
 {uses "simulated_sign_oracle"}[], retyped through the `macScalar_maskedKey_eq`
-of {uses "reduction_coupling_bricks"}[], while `verify` and `help` leave the
+of {uses "reduction_coupling_bricks"}[], while `verify`, `help` and coin queries leave the
 log unchanged. Restating these facts by index is
 {bpref "transcript_index_transport"}[].
 :::
@@ -614,7 +627,7 @@ The keygen reparametrization trades the honest key for the masks of
 {uses "challenge_embedding"}[] by a uniform-preserving shear, the η pair,
 conditioned on `H ≠ 0`, taking the law of the nonzero crs from
 {uses "sign_masks"}[]; the per-step
-couplings {uses "sign_oracle_coupling"}[] and
+couplings {uses "sign_oracle_coupling"}[], {uses "coin_oracle_coupling"}[] and
 {uses "verify_help_oracle_coupling"}[] are then lifted across the whole
 transcript by induction on the oracle calls, carrying the state invariant and
 mask-uniformity lemmas of {uses "reduction_coupling_bricks"}[]; the win bit is a
@@ -737,9 +750,10 @@ adversary in the AGM game, with no condition on the adversary.
 :::proof "agm_forget_transfer"
 Induction on the adversary's program. The MAC codes the forgetful adversary
 keeps are those of the AGM game's log, so both games answer each query on the
-same elements, and the game with `Help` records the log's messages in reverse
-order, which freshness does not see, so the forged message is fresh in one game
-exactly when it is in the other.
+same elements, a coin query is answered by the same uniform draw in both games,
+and the game with `Help` records the log's messages in reverse order, which
+freshness does not see, so the forged message is fresh in one game exactly when
+it is in the other.
 :::
 
 :::theorem "mucmz_mac_security" (lean := "KVAC.Schemes.MicroCMZ.microCMZ_ufcmvaHelp_le") (parent := "cmz_amac") (tags := "paper, O24 Thm 5.1")
@@ -785,8 +799,8 @@ reduction trace {uses "reduction_trace"}[] and the analysis experiment
 extraction marginal {uses "extraction_marginal"}[], the deterministic core
 {uses "win_without_extraction_forces_bad"}[], and its bad-to-shift step
 {uses "bad_bit_forces_shift_bit"}[]; the per-step couplings
-{uses "sign_oracle_coupling"}[] and {uses "verify_help_oracle_coupling"}[],
-stated through
+{uses "sign_oracle_coupling"}[], {uses "coin_oracle_coupling"}[] and
+{uses "verify_help_oracle_coupling"}[], stated through
 {uses "masked_key_normal_form_bridge"}[]; the consistency step
 {uses "consistency_case_lem54"}[], its embedded restatements
 {uses "embedded_vanishing_lem54"}[] and {uses "embedded_consistency_bricks"}[] and

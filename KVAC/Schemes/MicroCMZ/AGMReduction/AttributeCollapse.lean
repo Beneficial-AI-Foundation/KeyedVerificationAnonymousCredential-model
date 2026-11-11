@@ -130,7 +130,7 @@ The oracle sends a `help` query's vector `ρ⃗` to the single representation
 `n`-attribute answer at the embedded key `xᵢ = rᵢ·x₁`. -/
 noncomputable def collapseOracleImpl (r : Fin n → F) :
     QueryImpl (unifSpec + AGMOracleSpec F G n) (OracleComp (unifSpec + AGMOracleSpec F G 1))
-  | .inl t => query (spec := unifSpec + AGMOracleSpec F G 1) (.inl t)
+  | .inl t => query (spec := unifSpec) t
   | .inr (.sign m) => query (spec := unifSpec + AGMOracleSpec F G 1)
       (.inr (AGMQuery.sign (collapseMsg r m)))
   | .inr (.verify m ρU ρV) => query (spec := unifSpec + AGMOracleSpec F G 1)
@@ -178,9 +178,10 @@ lemma verify_collapse (r m : Fin n → F) (x₀ xᵣ x₁ : F) (t : Code G) :
 
 /-- The wrapper adversary of the reduction to `n = 1` (Claim 5.7). Given the
 1-attribute public parameters, it draws the scalars `r⃗ ←$ Fⁿ` through its private
-coin oracle, as the paper's `B` draws `z₂, …, zₙ` after receiving them (p. 39). It
-then runs `A` on the `n`-attribute public parameters `(X₀, Xᵣ, fun i => rᵢ • X₁)` with
-`collapseOracleImpl r` as its oracle, and returns the translated forgery. -/
+coin oracle, as the paper's `B` draws `z₂, …, zₙ` after receiving its public parameters
+(p. 39). It then runs `A` on the `n`-attribute public parameters
+`(X₀, Xᵣ, fun i => rᵢ • X₁)` with `collapseOracleImpl r` as its oracle, and returns the
+translated forgery. -/
 noncomputable def nTo1Adversary (A : AGMUFAdversary F G n) : AGMUFAdversary F G 1 where
   run H pp := do
     let r ← liftM ($ᵗ (Fin n → F))

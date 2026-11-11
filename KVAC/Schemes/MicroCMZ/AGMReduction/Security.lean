@@ -82,8 +82,8 @@ combination collides with that of a message queried to the MAC oracle:
    fresh 1-attribute forgery, so the win transfers. The excluded event `x₁ = 0`
    costs `1/p`.
 3. *Lemma 5.4 on the wrapper*: `agm_ufcmva_le_n1_explicit`, applied once to
-   `nTo1Adversary A` as the paper applies Theorem 5.4 (p. 39), bounds its advantage by
-   `microCMZ3DLReductionAdv gen (nTo1Adversary A) + 3/p`, which is
+   `nTo1Adversary A` as the paper applies Lemma 5.4 (p. 39, printed "by Theorem 5.4"),
+   bounds its advantage by `microCMZ3DLReductionAdv gen (nTo1Adversary A) + 3/p`, which is
    `microCMZN3DLReductionAdv gen A + 3/p` by definition.
 
 The statement also covers `n = 0`, which O24's Definition 4.2 excludes
@@ -95,9 +95,10 @@ Summing: `Adv(n) ≤ Adv^{3-dl} + Adv^{gap-dl} + 5/p`; the departures from O24's
 printed bound are in the module docstring.
 
 Concrete inequality at fixed `F` and `G`, over every adversary of the type, a class that
-contains the paper's p.p.t. algebraic adversaries. O24's negligibility clause is not stated: it
-needs the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t.
-adversaries and reductions, and hardness assumptions over them. -/
+contains the paper's p.p.t. algebraic adversaries. O24's conclusion that μCMZ is an algebraic
+MAC, one for which "it is hard to forge MACs" (Definition 3.1, p. 25), is not stated: it needs
+the asymptotic layer that issue #148 records, a `λ`-indexed group family, p.p.t. adversaries
+and reductions, and hardness assumptions over them. -/
 theorem agm_ufcmva_le_explicit (A : AGMUFAdversary F G n) :
     AGM_UF_CMVAAdv gen A secParam ≤
       microCMZN3DLReductionAdv gen A + gapDlogAdv (gen) (gapDlReduction gen A) +
