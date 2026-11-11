@@ -439,9 +439,10 @@ def AGMOMUFAdversary.forget (A : AGMOMUFAdversary F G n) :
         (simulateQ (agmOMUFQueryToPlain gen H pp) (A.run H pp)).run []
     else fun _ _ => pure []
 
-/-- One query: the plain game answering the queries `agmOMUFQueryToPlain` makes for `t`,
-from the issued pairs and the reversed commitments of an AGM log `log`, is the AGM game
-answering `t` from `log`, read through the same two projections of the new log. -/
+/-- One query: the oracles of the plain Figure 6 game, run on the queries
+`agmOMUFQueryToPlain` forwards for `t` and started from the issued pairs and the reversed
+commitments of an AGM log `log`, compute what the AGM oracles compute on `t` from `log`,
+read through the same two projections of the new log. -/
 private theorem run_simulateQ_agmOMUFQueryToPlain_step (secParam : ℕ) (H : G) (sk : Key F n)
     (pp : Params G n) (t : (unifSpec + AGMOMUFOracleSpec F G n).Domain)
     (log : AGMOMUFLog F G n) :
@@ -452,32 +453,30 @@ private theorem run_simulateQ_agmOMUFQueryToPlain_step (secParam : ℕ) (H : G) 
           ((log.map Prod.fst).reverse :
             SignLog (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H) =
       (fun z => ((z.1, AGMOMUFLog.tags z.2), (z.2.map Prod.fst).reverse)) <$>
-        StateT.run ((HAdd.hAdd ((QueryImpl.ofLift unifSpec ProbComp).liftTarget
-            (StateT (AGMOMUFLog F G n) ProbComp))
-            (agmOMUFOracleImpl gen secParam sk H pp)) t) log := by
-  rcases t with t | ρ | ⟨m, ρU, ρV⟩
-  · rfl
-  · refine (bind_assoc (m := ProbComp) _ _ _).trans
-      (Eq.trans ?_ (map_bind (m := ProbComp) _ _ _).symm)
-    refine bind_congr fun r => ?_
-    set tags := AGMOMUFLog.tags log
-    set C' : G := ρ.evalParams gen H pp tags
-    have h : ∀ r' : Option (G × G),
-        ((r', tags ++ r'.toList), C' :: (log.map Prod.fst).reverse) =
-          ((r', AGMOMUFLog.tags (log ++ [(C', ρ.normalize tags.length, r')])),
-            ((log ++ [(C', ρ.normalize tags.length, r')]).map Prod.fst).reverse) := by
-      intro r'
-      cases r' <;>
-        simp only [AGMOMUFLog.tags_append_none, AGMOMUFLog.tags_append_some, Option.toList_none,
-          Option.toList_some, List.append_nil, List.map_append, List.map_cons, List.map_nil,
-          List.reverse_append, List.reverse_cons, List.reverse_nil, List.nil_append,
-          List.singleton_append, tags]
-    exact congrArg (pure : _ → ProbComp _) (h r)
-  · rfl
+        (agmOMUFImpl gen secParam sk H pp t).run log := by
+  match t with
+  | .inl _ => rfl
+  | .inr (.sign ρ) =>
+      refine (bind_assoc (m := ProbComp) _ _ _).trans
+        (Eq.trans ?_ (map_bind (m := ProbComp) _ _ _).symm)
+      refine bind_congr fun r => ?_
+      set tags := AGMOMUFLog.tags log
+      set C' : G := ρ.evalParams gen H pp tags
+      -- `h` is stated at `Option (G × G)`: at the type of `r`,
+      -- `Option ((μCMZATCoreSyntax F gen).BlindToken H)`, `simp` rewrites neither
+      -- `Option.toList` nor `AGMOMUFLog.tags`.
+      have h : ∀ r' : Option (G × G),
+          ((r', tags ++ r'.toList), C' :: (log.map Prod.fst).reverse) =
+            ((r', AGMOMUFLog.tags (log ++ [(C', ρ.normalize tags.length, r')])),
+              ((log ++ [(C', ρ.normalize tags.length, r')]).map Prod.fst).reverse) := by
+        rintro (_ | _) <;> simp [tags]
+      exact congrArg (pure : _ → ProbComp _) (h r)
+  | .inr (.verify ..) => rfl
 
-/-- The run of the plain game on queries forwarded by `agmOMUFQueryToPlain`, from the
-issued pairs and the reversed commitments of an AGM log `log`, is the run of the AGM game
-from `log`, read through the same two projections of the final log. -/
+/-- The oracles of the plain Figure 6 game, run on the queries `agmOMUFQueryToPlain`
+forwards for `oa` and started from the issued pairs and the reversed commitments of an AGM
+log `log`, compute what the AGM oracles compute on `oa` from `log`, read through the same
+two projections of the final log. -/
 private theorem run_simulateQ_agmOMUFQueryToPlain {α : Type} (secParam : ℕ) (H : G)
     (sk : Key F n) (pp : Params G n) (oa : OracleComp (unifSpec + AGMOMUFOracleSpec F G n) α)
     (log : AGMOMUFLog F G n) :
@@ -488,9 +487,7 @@ private theorem run_simulateQ_agmOMUFQueryToPlain {α : Type} (secParam : ℕ) (
           ((log.map Prod.fst).reverse :
             SignLog (μCMZATCoreSyntax F gen) (secParam := secParam) (n := n) H) =
       (fun z => ((z.1, AGMOMUFLog.tags z.2), (z.2.map Prod.fst).reverse)) <$>
-        StateT.run (simulateQ (HAdd.hAdd ((QueryImpl.ofLift unifSpec ProbComp).liftTarget
-            (StateT (AGMOMUFLog F G n) ProbComp))
-            (agmOMUFOracleImpl gen secParam sk H pp)) oa) log := by
+        (simulateQ (agmOMUFImpl gen secParam sk H pp) oa).run log := by
   induction oa using OracleComp.inductionOn generalizing log with
   | pure x =>
       simp only [simulateQ_pure, StateT.run_pure, map_pure]
@@ -506,31 +503,23 @@ private theorem run_simulateQ_agmOMUFQueryToPlain {α : Type} (secParam : ℕ) (
 `A.forget gen` in the plain Figure 6 game over the core scheme, at `A`'s number of
 attributes, is the advantage of `A` in the AGM OMUF game.
 
-**Proof.** Induction on `A.run` (`run_simulateQ_agmOMUFQueryToPlain`): the pairs
-`agmOMUFQueryToPlain` keeps are those the AGM log records as issued, so both games answer
-each query on the same elements, and the plain game records the log's commitments in
-reverse order, one per Sign query, so the two winning conditions read the same count and
-the same tokens. -/
+**Proof.** Induction on `A.run`: the pairs `agmOMUFQueryToPlain` keeps are those the AGM
+log records as issued, so both games answer each query on the same elements, and the plain
+game records the log's commitments in reverse order, one per Sign query, so the two winning
+conditions read the same count and the same tokens. -/
 theorem OMUFAdv_forget (secParam : ℕ) (A : AGMOMUFAdversary F G n) :
     OMUFAdv (μCMZATCoreSyntax F gen) (A.forget gen) secParam n = AGM_OMUFAdv gen A secParam := by
-  change Pr[= true | OMUFGame (μCMZATCoreSyntax F gen) (A.forget gen) secParam n] =
-    Pr[= true | AGM_OMUFGame gen secParam A]
-  congr 1
+  refine congrArg (Pr[= true | ·]) ?_
   simp only [OMUFGame, AGM_OMUFGame, AGMOMUFAdversary.forget, dite_true]
-  refine bind_congr (m := ProbComp) fun H => bind_congr (m := ProbComp) fun x => ?_
-  obtain ⟨sk, pp⟩ := x
-  have h := run_simulateQ_agmOMUFQueryToPlain gen secParam H sk pp (A.run H pp) []
-  simp only [AGMOMUFLog.tags_nil, List.map_nil, List.reverse_nil] at h
+  refine bind_congr fun H => bind_congr fun ⟨sk, pp⟩ => ?_
   dsimp only
   rw [simulateQ_map, StateT.run_map]
-  -- `erw`: after the `simp only … at h`, the plain game's initial log in `h` is
-  -- `@List.nil G`, while the goal's is `@List.nil (IssueMsg H)`, and `rw` does not
-  -- match the two.
-  erw [h]
-  refine (bind_map_left _ _ _).trans ((bind_map_left _ _ _).trans (bind_congr fun z => ?_))
+  refine (congrArg (· >>= _) (congrArg (_ <$> ·)
+      (run_simulateQ_agmOMUFQueryToPlain gen secParam H sk pp (A.run H pp) []))).trans
+    ((bind_map_left _ _ _).trans ((bind_map_left _ _ _).trans (bind_congr fun z => ?_)))
+  -- The two winning conditions differ only in how they count the Sign queries: the
+  -- length of the reversed commitments in the plain game, of the log in the AGM game.
   congr 2
-  exact congrArg (fun k => OMUFWins (μCMZATCoreSyntax F gen) H sk k
-      (List.map (AGMOMUFForgery.plain (F := F) gen H pp (AGMOMUFLog.tags z.2)) z.1))
-    (List.length_reverse.trans (List.length_map _))
+  exact congrArg (OMUFWins _ H sk · _) (List.length_reverse.trans (List.length_map _))
 
 end KVAC.Schemes.MicroCMZ
